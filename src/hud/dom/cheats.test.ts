@@ -6,14 +6,18 @@ import { cheatsView } from "../../dev/cheatsView.ts";
 import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
-import { domScale } from "../../ui/domScale.ts";
+import { domScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { showCheats } from "./cheats.ts";
 
-async function cheatsScreen(inWalk = false, canResetSave = false) {
+async function cheatsScreen(
+  inWalk = false,
+  canResetSave = false,
+  scale = domScale(1, { height: 560, width: 360, x: 0, y: 0 }),
+) {
   const doc = new FakeDocument();
-  const { element, layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
+  const { element, layer } = fakeLayer(doc, scale);
   const view = cheatsView(
     {
       body: fontFileMetrics("font-body"),
@@ -147,5 +151,33 @@ it("restores focus to the Reset save button when its confirmation closes", async
   shown.setInert(false);
   shown.focusReset();
   expect(doc.activeElement).toBe(reset);
+  shown.destroy();
+});
+
+it.each([
+  [360, 608, 2],
+  [412, 915, 2.625],
+  [390, 844, 3],
+])("places every Cheats button on its face's grid box at %ix%i and DPR %f", async (w, h, dpr) => {
+  const scale = domScale(dpr, { height: h, width: w, x: 0, y: 0 });
+  const { element, shown, view } = await cheatsScreen(false, true, scale);
+  const { viewport } = view.layout;
+  const px = (value: string | undefined) => Number.parseFloat(value ?? "");
+  for (const button of view.rows.flatMap((row) => row.buttons)) {
+    const control = element.all().find((node) => node.getAttribute("aria-label") === button.label)!;
+    const group = control.parent!;
+    const at = (name: string) => px(control.style.getPropertyValue(`--ui-action-${name}`));
+    const box = gridRect(scale, button.rect);
+    expect({
+      height: at("height"),
+      left: px(group.style.left) + at("x"),
+      top: px(group.style.top) + at("y"),
+      width: at("width"),
+    }).toEqual({
+      ...box,
+      left: box.left - gridX(scale, viewport.x),
+      top: box.top - gridY(scale, viewport.y),
+    });
+  }
   shown.destroy();
 });

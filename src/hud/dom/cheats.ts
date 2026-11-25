@@ -1,4 +1,7 @@
+import "@andornaut/game-kit/runtime/web/ui/dom/actionGroup.css";
+
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import { createActionGroup } from "@andornaut/game-kit/runtime/web/ui/dom/actionGroup";
 
 import type { CheatAction, CheatRowView, CheatsView } from "../../dev/cheatsView.ts";
 import { type DomArtSource, paintSheetArt } from "../../ui/dom/artElements.ts";
@@ -8,7 +11,7 @@ import type { DomPart } from "../../ui/dom/parts.ts";
 import { createTextLine, placeBox, placeFrame, placeText } from "../../ui/dom/pixelLine.ts";
 import { refuse } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { type DomScale, gridY } from "../../ui/domScale.ts";
+import { type DomScale, gridX, gridY } from "../../ui/domScale.ts";
 import { type DomPage, showPage } from "./page.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
 import type { DomQuestionPanel, DomQuestionPanelInput } from "./questionPanel.ts";
@@ -91,7 +94,9 @@ function dividerPart(doc: Document, origin: Point): RowPart {
   };
 }
 
-// One or two buttons, each its own native button.
+// One or two buttons, each its own native button, in a kit action group that places them on
+// the art-pixel grid: a pair side by side, a sole button centred. Each button's press area is its
+// face.
 function buttonsPart(
   doc: Document,
   input: DomCheatsInput,
@@ -100,8 +105,9 @@ function buttonsPart(
   press: { readonly accepts: () => boolean; readonly burst: (event: PointerEvent) => void },
   current: () => CheatRowView,
 ): RowPart {
-  const element = doc.createElement("div");
-  element.className = "adw-lines";
+  const group = createActionGroup(doc);
+  const { element } = group;
+  element.style.position = "absolute";
   const buttons = first.buttons.map((_, i) => {
     const label = doc.createElement("span");
     label.className = "adw-lines";
@@ -142,9 +148,25 @@ function buttonsPart(
   element.append(...buttons.map(({ button }) => button));
   return {
     controls: buttons.map(({ button }) => button),
-    dispose: () => buttons.forEach(({ dispose }) => dispose()),
+    dispose: () => {
+      buttons.forEach(({ dispose }) => dispose());
+      group.dispose();
+    },
     element,
     place: (scale, row) => {
+      const { rect } = row;
+      const project = { x: (x: number) => gridX(scale, x), y: (y: number) => gridY(scale, y) };
+      const { group: placed } = group.arrange(
+        { origin: rect, press: { margin: 0 }, project, width: rect.width },
+        row.buttons.flatMap((view, i) => {
+          const button = buttons[i]?.button;
+          return button === undefined
+            ? []
+            : [{ element: button, role: "secondary" as const, size: view.rect }];
+        }),
+      );
+      element.style.left = `${placed.x - gridX(scale, origin.x)}px`;
+      element.style.top = `${placed.y - gridY(scale, origin.y)}px`;
       buttons.forEach(({ button, face, label, view: control }, i) => {
         const view = row.buttons[i];
         if (view === undefined) {
@@ -153,8 +175,7 @@ function buttonsPart(
         button.classList.toggle("adw-disabled", view.available === false);
         control.setContent({ icon: label, kind: "icon", name: view.label });
         control.refresh();
-        placeBox(scale, origin, button, view.hit);
-        placeFrame(scale, view.hit, face, view.rect);
+        placeFrame(scale, view.rect, face, view.rect);
         const lines = view.lines.map((line) => {
           const text = createTextLine(doc, line);
           text.setAttribute("aria-hidden", "true");
