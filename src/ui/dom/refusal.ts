@@ -44,6 +44,11 @@ export const REFUSAL_STYLE = `
 // Controls whose refusal is under way.
 const refusing = new WeakSet<HTMLElement>();
 
+// Whether a refusal plays on element (refuse's element) now.
+export function refusalPlaying(element: HTMLElement): boolean {
+  return refusing.has(element);
+}
+
 // Plays the refusal cue on element for REFUSE's flashes: shaken (element unless given) shake, or
 // hold still under reduced motion, while element shows the red phases. A refusal under way plays
 // on.

@@ -15,13 +15,11 @@ import type { UiLayer } from "../ui/dom/uiLayer.ts";
 import { rectIndexAt } from "../ui/grid.ts";
 import { displayBitmapFont } from "../ui/phaser/displayText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
-import { REFUSE } from "../ui/refuse.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import { createNativePicture } from "./nativePicture.ts";
 import { nativeSceneAccepts, onSceneEvent } from "./overlay.ts";
 import { currentSettings } from "./profileStore.ts";
 import { followScene, htmlArtInput, htmlPanelPlace } from "./questionPanel.ts";
-import { refuseMotion } from "./refuseMotion.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { type ScenePicture, showAsPicture } from "./scenePicture.ts";
 import { guardScreenInput } from "./screenGuard.ts";
@@ -48,7 +46,6 @@ export class CardScene extends Scene {
   private press: TargetPress<number> | undefined;
   private pressed: number | undefined;
   private rects: readonly Rect[] = [];
-  private refusing = false;
   private drawn: (() => void) | undefined;
   private onChoose: (choice: Choice) => void = () => {};
   constructor(key: string = SCENE_KEYS.card) {
@@ -62,7 +59,6 @@ export class CardScene extends Scene {
     this.native = undefined;
     this.press = undefined;
     this.pressed = undefined;
-    this.refusing = false;
     this.onChoose = data.onChoose;
     this.entries = [
       ...data.view.options.map((option) => ({
@@ -101,6 +97,7 @@ export class CardScene extends Scene {
     }
     const source = {
       ...htmlArtInput(place),
+      accepts: () => this.accepts(),
       choose: (index: number) => this.choose(index),
       data: gameData,
       entries: this.entries,
@@ -121,6 +118,7 @@ export class CardScene extends Scene {
       now: () => this.time.now,
       ...(this.drawn === undefined ? {} : { onPaint: this.drawn }),
       reduced: currentSettings(this).reducedMotion,
+      reducedMotion: () => currentSettings(this).reducedMotion,
       subtitle: this.subtitle(data.view),
       view: data.view,
     };
@@ -202,29 +200,20 @@ export class CardScene extends Scene {
       this.native?.setLarge(index);
     }
   }
+  private accepts(): boolean {
+    return !this.chosen && nativeSceneAccepts(this);
+  }
+  // An option the walk cannot afford plays its refusal (choiceCards.ts), one at a time.
   private choose(index: number): void {
-    if (this.chosen || !nativeSceneAccepts(this)) {
+    if (!this.accepts()) {
       return;
     }
     const entry = this.entries[index];
     if (entry?.enabled) {
       this.chosen = true;
       this.onChoose(entry.choice);
-    } else if (entry !== undefined && !this.refusing) {
-      this.refusing = true;
-      const motion = { x: 0 };
-      let red = false;
-      const paint = () => this.native?.setRefusal(index, motion.x, red);
-      refuseMotion(this, currentSettings(this).reducedMotion, {
-        complete: () => {
-          this.refusing = false;
-        },
-        emphasis: (value) => {
-          red = value;
-          paint();
-        },
-        motion: { targets: [motion], update: paint, x: REFUSE.shake },
-      });
+    } else if (entry !== undefined) {
+      this.native?.refuse(index);
     }
   }
   private subtitle(view: CardView): string {

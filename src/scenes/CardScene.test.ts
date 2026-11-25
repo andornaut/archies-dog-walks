@@ -15,7 +15,6 @@ import { CardScene } from "./CardScene.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import { nativeSceneAccepts } from "./overlay.ts";
 import { htmlArtInput, htmlPanelPlace } from "./questionPanel.ts";
-import { refuseMotion } from "./refuseMotion.ts";
 
 vi.mock("phaser", () => ({
   Core: { Events: { PRE_RENDER: "prerender" } },
@@ -37,7 +36,6 @@ vi.mock("./questionPanel.ts", () => ({
   htmlArtInput: vi.fn(),
   htmlPanelPlace: vi.fn(),
 }));
-vi.mock("./refuseMotion.ts", () => ({ refuseMotion: vi.fn() }));
 vi.mock("./screenGuard.ts", () => ({ guardScreenInput: () => ({ drawn: vi.fn() }) }));
 
 beforeEach(() => vi.clearAllMocks());
@@ -61,9 +59,9 @@ function fixture(disabled = false) {
   const events = new EventEmitter();
   const keyboard = new EventEmitter();
   const panel = {
+    refuse: vi.fn(),
     setLarge: vi.fn(),
     setPressed: vi.fn(),
-    setRefusal: vi.fn(),
   } as unknown as NativeChoiceCards;
   Object.assign(scene, { events, game: { events: new EventEmitter() }, input: { keyboard }, time });
   vi.mocked(nativeSceneAccepts).mockReturnValue(true);
@@ -89,16 +87,19 @@ function fixture(disabled = false) {
 }
 
 it("requires painted admission, rejects repeat keys, and accepts one choice per presentation", () => {
-  const { choose, keyboard, view } = fixture();
+  const { choose, input, keyboard, view } = fixture();
   vi.mocked(nativeSceneAccepts).mockReturnValue(false);
   keyboard.emit("keydown", { code: "Digit1", repeat: false });
   expect(choose).not.toHaveBeenCalled();
+  expect(input.accepts()).toBe(false);
   vi.mocked(nativeSceneAccepts).mockReturnValue(true);
   keyboard.emit("keydown", { code: "Digit1", repeat: true });
   expect(choose).not.toHaveBeenCalled();
+  expect(input.accepts()).toBe(true);
   keyboard.emit("keydown", { code: "Digit1", repeat: false });
   keyboard.emit("keydown", { code: "Digit1", repeat: false });
   expect(choose).toHaveBeenCalledExactlyOnceWith(view.options[0]?.index);
+  expect(input.accepts()).toBe(false);
 });
 
 it("enlarges a held card, consumes its release, and cancels a carried press when paused", () => {
@@ -134,10 +135,11 @@ it.each([
   expect(choose).toHaveBeenCalledTimes(held ? 0 : 1);
 });
 
-it("keeps a disabled choice actionable for one refusal cue without choosing it", () => {
-  const { choose, keyboard } = fixture(true);
+it("plays an unaffordable choice's refusal on its option for a key or a tap, choosing nothing", () => {
+  const { choose, input, keyboard, panel, point } = fixture(true);
   keyboard.emit("keydown", { code: "Digit1", repeat: false });
-  keyboard.emit("keydown", { code: "Digit1", repeat: false });
+  input.gesture?.down?.(point);
+  input.gesture?.up?.(point, false);
   expect(choose).not.toHaveBeenCalled();
-  expect(refuseMotion).toHaveBeenCalledOnce();
+  expect(vi.mocked(panel.refuse).mock.calls).toEqual([[0], [0]]);
 });

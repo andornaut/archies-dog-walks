@@ -3,8 +3,8 @@
 export const REFUSE = { flashMs: 80, flashes: 4, shake: 3, shakeMs: 40 } as const;
 
 // The whole pixels a refused control sits right of its place through one shake right and back,
-// as the canvas draws its linear tween at whole pixels (rounded): each step's start, as a
-// fraction of the shake there and back, and its offset.
+// a linear move drawn at whole pixels (rounded): each step's start, as a fraction of the shake
+// there and back, and its offset.
 export function refuseShakeSteps(): { at: number; offset: number }[] {
   const { shake } = REFUSE;
   const out = Array.from({ length: shake }, (_, i) => ({
@@ -22,7 +22,8 @@ export function refuseShakeSteps(): { at: number; offset: number }[] {
 export const REFUSE_SHAKES = (REFUSE.flashMs * REFUSE.flashes) / (2 * REFUSE.shakeMs);
 
 // Whether a refused control's labels are red elapsedMs into its refusal: on its odd flashes, or
-// throughout under reduced motion, as refuseMotion and the DOM cue (refusal.ts) paint them.
+// throughout under reduced motion, as the scene-clocked controls and the DOM cue (refusal.ts) paint
+// them.
 export function refusalRed(reducedMotion: boolean, elapsedMs: number): boolean {
   const { flashMs, flashes } = REFUSE;
   return (

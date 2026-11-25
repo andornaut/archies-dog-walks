@@ -4,6 +4,12 @@
   outline: none;
 }
 
+/* A card's group is its parts' containing block and stacking context, still or shaking in a
+   refusal (refusal.ts). */
+.adw-choice-group {
+  transform: translateX(0);
+}
+
 .adw-choice-press-band {
   display: none;
 }
@@ -18,7 +24,8 @@
   background: var(--adw-green);
 }
 
-/* A refusal's red phases (refusal.ts): the label band fills dark red under a white label. */
+/* A refusal's red phases on the group (refusal.ts): the label band fills dark red under a white
+   label. */
 .adw-choice-group[data-refusal-red] .adw-choice-press-band {
   display: block;
   background: var(--adw-darkRed);

@@ -3,6 +3,11 @@ import "./choiceCards.css";
 
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import {
+  type ButtonRefusal,
+  type ButtonView,
+  refuseButton,
+} from "@andornaut/game-kit/runtime/web/ui/dom/button";
 
 import { cardGreyPath } from "../../assets/cardArt.ts";
 import { DIFFICULTY_KEY } from "../../assets/spriteKeys.ts";
@@ -13,14 +18,15 @@ import { CHARM } from "../../layout/buffLayout.ts";
 import { CARD_LAYOUT, cardRowIn, forkHomeRect } from "../../layout/cardLayout.ts";
 import { type CardView, MAX_CARD_OPTIONS } from "../../rules/choices.ts";
 import { cardHeader } from "../../ui/cardRow.ts";
-import { bindGameAction } from "../../ui/dom/actionBinding.ts";
+import { registerScenePointer } from "../../ui/dom/actionBinding.ts";
 import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
+import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { type NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import { type DomPart, framelessView, gridBoxPart, ringPart } from "../../ui/dom/parts.ts";
 import { createTextLine, placeBox, placeText } from "../../ui/dom/pixelLine.ts";
-import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
+import { refusalPlaying, refuse } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, type DomScale } from "../../ui/domScale.ts";
+import { type DomScale } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { panelButton } from "../../ui/modal/view.ts";
 import { PALETTE } from "../../ui/palette.ts";
@@ -49,7 +55,8 @@ interface Source extends Pick<DomDetailCardInput, "artUrl" | "loadSheet" | "pill
 export interface NativeChoiceCards extends DomQuestionPanel {
   setLarge(index: number | undefined): void;
   setPressed(index: number | undefined): void;
-  setRefusal(index: number, offset: number, red: boolean): void;
+  // Plays the option's refusal, as Enter or Space on it does.
+  refuse(index: number): void;
 }
 
 function imagePart(doc: Document, source: DomArtSource, key: string, rect: Rect): DomPart {
@@ -253,6 +260,8 @@ function surfaceParts(
 export function showChoiceCards(
   layer: UiLayer,
   input: Source & {
+    // Whether the scene takes a choice or plays a refusal now, as choose checks.
+    readonly accepts: () => boolean;
     readonly choose: (index: number) => void;
     readonly closeLabel: string;
     readonly data: GameData;
@@ -261,6 +270,7 @@ export function showChoiceCards(
     readonly headHome: (() => void) | null;
     readonly keyed: boolean;
     readonly picture?: boolean;
+    readonly reducedMotion: () => boolean;
     readonly subtitle: string;
     readonly toGame: (client: Point) => Point;
     readonly view: CardView;
@@ -324,47 +334,57 @@ export function showChoiceCards(
     label(input.view.title, centre, header.titleTop, 2, PALETTE.white, "title");
   }
   label(input.subtitle, centre, header.subtitleTop, 1, PALETTE.white);
+  // One refusal plays at a time across the options, on the option's group: it shakes the card and
+  // its red phases fill the label band dark red under a white label.
+  const playRefusal = (reducedMotion: boolean, group: HTMLElement) => {
+    if (!small.some((part) => refusalPlaying(part.element))) {
+      refuse(reducedMotion, group);
+    }
+  };
   const small = input.entries.map((entry, index) => {
     const surface = choiceCardSurface(input.data, input.fonts, input.view, entry, rects[index]!);
     const rendered = surfaceParts(doc, input, surface, !input.picture);
     const group = doc.createElement("div");
     group.className = "adw-choice-group";
-    const button = doc.createElement(input.picture ? "span" : "button");
-    button.className = "adw-choice-option adw-reset-button";
-    Object.assign(button.style, {
+    const name = [surface.label, ...surface.texts.slice(1).flatMap(({ lines }) => lines)].join(
+      ". ",
+    );
+    const refusal: ButtonRefusal = {
+      reducedMotion: input.reducedMotion,
+      refuse: (reducedMotion) => playRefusal(reducedMotion, group),
+    };
+    // A picture's option is inert art; a live option is a Kit button whose pointer presses the
+    // scene reads, refused while it cannot be afforded.
+    const option: ButtonView | undefined = input.picture
+      ? undefined
+      : createGameButton(doc, {
+          appearance: { className: "adw-choice-option" },
+          content: { kind: "icon", name },
+          getAction: () =>
+            shown.accepts() && input.accepts() ? { activate: () => input.choose(index) } : null,
+          getState: () => ({ availability: { kind: entry.enabled ? "available" : "refused" } }),
+          refusal,
+          skin: "authored",
+        });
+    const element = option?.element ?? doc.createElement("span");
+    if (option === undefined) {
+      element.className = "adw-choice-option adw-reset-button";
+      element.setAttribute("aria-label", name);
+      element.setAttribute("aria-disabled", String(!entry.enabled));
+    }
+    const releasePointer =
+      option === undefined ? () => undefined : registerScenePointer(option.element);
+    Object.assign(element.style, {
       pointerEvents: input.picture ? "none" : "auto",
       position: "absolute",
     });
-    button.setAttribute(
-      "aria-label",
-      [surface.label, ...surface.texts.slice(1).flatMap(({ lines }) => lines)].join(". "),
-    );
-    button.setAttribute("aria-disabled", String(!entry.enabled));
-    if (!input.picture) {
-      bindGameAction(
-        {
-          activate: () => input.choose(index),
-          available: () => shown.accepts(),
-          hold: { external: "choice-preview" },
-          pointer: "release",
-        },
-        button,
-      );
-    }
-    let offset = 0;
-    let scale = layer.scale();
-    const motion = () => {
-      group.style.transform = `translateX(${Math.round(offset) * artPixel(scale)}px)`;
-    };
-    group.append(...rendered.all.map(({ element }) => element), button);
+    group.append(...rendered.all.map(({ element: part }) => part), element);
     parts.push({
-      controls: input.picture ? [] : [button],
+      controls: option === undefined ? [] : [option.element],
       element: group,
       place: (next) => {
-        scale = next;
         rendered.all.forEach((part) => part.place(next));
-        placeBox(next, ORIGIN, button, surface.rect);
-        motion();
+        placeBox(next, ORIGIN, element, surface.rect);
       },
       ready: Promise.all(
         rendered.all.flatMap((part) => (part.ready === undefined ? [] : [part.ready])),
@@ -381,12 +401,17 @@ export function showChoiceCards(
     }
     return {
       ...rendered,
+      destroy: () => {
+        rendered.destroy();
+        releasePointer();
+        option?.dispose();
+      },
       element: group,
-      // A refusal's red phases fill the label band dark red under a white label.
-      motion: (value: number, red: boolean) => {
-        offset = value;
-        motion();
-        group.toggleAttribute(REFUSAL_RED, red);
+      option: element,
+      refuse: () => {
+        if (option !== undefined) {
+          refuseButton(refusal, option.element);
+        }
       },
     };
   });
@@ -418,11 +443,33 @@ export function showChoiceCards(
     input.view.source.kind === "fork" && input.headHome !== null
       ? forkHomeRect(rects[0]!, centre)
       : undefined;
+  // The scene reads a pointer press that starts on an option and handles its click, so the
+  // option's Kit action takes only Enter and Space.
+  let onOption = false;
+  const gesture: NativeGesture | undefined =
+    input.gesture === undefined
+      ? undefined
+      : {
+          ...input.gesture,
+          cancel: () => {
+            onOption = false;
+            input.gesture?.cancel?.();
+          },
+          down: (event) => {
+            onOption = small.some((part) => part.option.contains(event.target as Node));
+            input.gesture?.down?.(event);
+          },
+          up: (event, cancelled) => {
+            const handled = input.gesture?.up?.(event, cancelled) === true || onOption;
+            onOption = false;
+            return handled;
+          },
+        };
   const shown = showQuestionPanel(layer, {
     close: null,
     closeLabel: input.closeLabel,
     fonts: input.fonts,
-    ...(input.gesture === undefined ? {} : { gesture: input.gesture }),
+    ...(gesture === undefined ? {} : { gesture }),
     label: input.view.title,
     modal: !input.picture,
     ...(input.onPaint === undefined ? {} : { onPaint: input.onPaint }),
@@ -458,6 +505,7 @@ export function showChoiceCards(
       large.forEach((part) => part.destroy());
       shown.destroy();
     },
+    refuse: (index) => small[index]?.refuse(),
     setLarge: (index) => {
       small.forEach((part) => {
         part.element.hidden = index !== undefined;
@@ -474,6 +522,5 @@ export function showChoiceCards(
       small.forEach((part, i) => {
         part.element.classList.toggle("adw-choice-pressed", index === i);
       }),
-    setRefusal: (index, offset, red) => small[index]?.motion(offset, red),
   };
 }

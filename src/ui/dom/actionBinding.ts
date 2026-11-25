@@ -12,8 +12,7 @@ export type ActionOrigin =
   | { readonly kind: "click"; readonly event: MouseEvent }
   | { readonly kind: "hold"; readonly timeStamp: number };
 
-export type ExistingHold =
-  "choice-preview" | "end-badge-detail" | "home-selection-detail" | "shop-item-detail";
+export type ExistingHold = "end-badge-detail" | "home-selection-detail" | "shop-item-detail";
 
 export interface GameAction {
   readonly activate: (origin: ActionOrigin) => void;
@@ -30,6 +29,8 @@ const actions = new WeakMap<HTMLElement, GameAction>();
 type HoldControl = Pick<ButtonView, "element" | "holdAction">;
 
 const buttons = new WeakMap<HTMLElement, HoldControl>();
+// Kit controls whose scene reads their pointer presses, taps and holds, through its own gesture.
+const scenePointers = new WeakSet<HTMLElement>();
 const roots = new WeakMap<HTMLElement, { readonly accepts: () => boolean }>();
 
 // A standard control needs its nearest live input root before it accepts native clicks.
@@ -65,6 +66,19 @@ export function registerGameButton(view: HoldControl): () => void {
     if (buttons.get(element) === view) {
       buttons.delete(element);
     }
+  };
+}
+
+// The scene owns a registered Kit control's pointer presses: the shared hold handling claims no
+// tap or hold on it, so the kit's action takes only its native keys. The scene's gesture handles
+// the pointer contact, and its click with it.
+export function registerScenePointer(element: HTMLElement): () => void {
+  if (!buttons.has(element)) {
+    throw new Error("A scene pointer requires a registered Kit control");
+  }
+  scenePointers.add(element);
+  return () => {
+    scenePointers.delete(element);
   };
 }
 
@@ -173,6 +187,9 @@ export function bindGameActionHolds(
           while (element !== null && root.contains(element)) {
             const button = buttons.get(element);
             if (button !== undefined) {
+              if (scenePointers.has(element)) {
+                return null;
+              }
               const action = button.holdAction();
               if (action === null) {
                 return null;
