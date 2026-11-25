@@ -53,11 +53,17 @@ export interface BadgeView {
 // The PALETTE names a badge's text draws in on the cream panel, by whether it is earned: its
 // name, and its goal and progress. A locked badge's open card draws its line in the goal's
 // colour and its status (Locked) in the dark red of a shop price the bank does not cover. A
-// locked badge's goal and progress are an inactive label, exempt from 4.5:1, and hold the 3:1 a
-// disabled tile's label does.
+// locked badge's goal and progress are an inactive label, exempt from 4.5:1 on the cream panel,
+// where they hold the 3:1 a disabled tile's label does; while its row is focused or pressed they
+// take focusedGoal, the name's colour, and hold 4.5:1 on the focus fill.
 export const BADGE_TEXT_COLOURS = {
   earned: { goal: "darkBrown", name: "forest" },
-  locked: { goal: "neutralSlate", name: "neutralDarkSlate", status: GREYED.shortPrice },
+  locked: {
+    focusedGoal: "neutralDarkSlate",
+    goal: "neutralSlate",
+    name: "neutralDarkSlate",
+    status: GREYED.shortPrice,
+  },
 } as const;
 
 // Every badge in tier order, earned or locked by earned, the ids earned.

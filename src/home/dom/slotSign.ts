@@ -14,6 +14,8 @@ import { AFFORD_OUTSET, GREYED } from "../../ui/selection.ts";
 import { FEEDBACK } from "../feedback.ts";
 import { HOME_LAYOUT, slotSignText } from "../homeLayout.ts";
 import type { slotSign } from "../slotSign.ts";
+
+const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 export function createSlotSign(
   doc: Document,
   source: DomArtSource & {
@@ -63,6 +65,8 @@ export function createSlotSign(
   if (fallback !== undefined) {
     paint.append(fallback.element);
   }
+  // The fallback board's fill inside its ink border.
+  const fallbackFill = fallback?.element.firstElementChild as HTMLElement | null | undefined;
   const origin = layout.hit;
   const at = slotSignText(fontMetrics(body));
   const focusFace = doc.createElement("span");
@@ -158,6 +162,15 @@ export function createSlotSign(
       const pressDrop = art !== undefined && motion.pressed ? layout.pressDrop : 0;
       const cream = { ...at.cream, y: at.cream.y + pressDrop };
       placeBox(scale, origin, focusFace, cream);
+      // The pressed face is forest under white lines, over any focus fill.
+      focusFace.style.display = motion.pressed ? "none" : "";
+      fallbackFill?.style.setProperty(
+        "background-color",
+        hex(motion.pressed ? PALETTE.forest : PALETTE.cream),
+      );
+      labels.forEach((label, i) => {
+        label.style.color = hex(motion.pressed ? PALETTE.white : lines[i]!.colour);
+      });
       placeBackedText(
         body,
         scale,

@@ -5,26 +5,17 @@ import type { GameObjects, Scene, Tweens } from "phaser";
 import { SLICES } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { FEEDBACK, loopFrame } from "../home/feedback.ts";
-import { SELECT_FRAME } from "../home/shopPageView.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import type { CloseControl } from "../ui/closeControl.ts";
 import {
   type ArtLook,
   buttonState,
   type InteractionInput,
-  PLAIN_ITEM,
   type TileState,
-  tileState,
 } from "../ui/interaction.ts";
 import { MARK_OFFSET } from "../ui/mark.ts";
 import { PALETTE } from "../ui/palette.ts";
-import {
-  CREAM_PANEL_COLOURS,
-  drawFramedRect,
-  drawRing,
-  fillCutRect,
-  fillRect,
-} from "../ui/phaser/draw.ts";
+import { CREAM_PANEL_COLOURS, drawFramedRect, fillCutRect, fillRect } from "../ui/phaser/draw.ts";
 import { disabledTextureKey } from "../ui/phaser/greyTextures.ts";
 import {
   addPixelText,
@@ -177,11 +168,11 @@ function drawButtonChrome(
   pressed: boolean,
   rect: Rect,
 ): void {
-  const { face, lip } = BUTTON_COLOURS[look];
+  const { face, lip, pressedFace } = BUTTON_COLOURS[look];
   const top = pressed || lip === null ? BUTTON_PRESS_PX : 0;
   const drawn = { ...rect, height: rect.height - top, y: rect.y + top };
   fillCutRect(g, PALETTE.ink, drawn, 1);
-  fillRect(g, PALETTE[face], insetRect(1, drawn));
+  fillRect(g, PALETTE[pressed ? pressedFace : face], insetRect(1, drawn));
   if (top === 0 && lip !== null) {
     fillRect(g, PALETTE[lip], {
       height: BUTTON_LIP_PX,
@@ -261,8 +252,8 @@ function keyedLabels(
 }
 
 // A ui-button with a centred label in its interaction state, drawn in parent when given.
-// Pressed shows the sunk frame and moves the label, and any key number, with it; disabled sits
-// at the pressed depth and never moves.
+// Pressed shows the sunk frame and moves the label, and any key number, with it, in the look's
+// pressed label colour; disabled sits at the pressed depth and never moves.
 export function addMenuButton(
   scene: Scene,
   rect: Rect,
@@ -314,6 +305,10 @@ export function addMenuButton(
         down.setVisible(pressed);
       }
       const press = disabled || pressed ? BUTTON_PRESS_PX : 0;
+      const { label: raised, pressedLabel } = BUTTON_COLOURS[look];
+      if (pressedLabel !== raised) {
+        labels.forEach((text) => text.setTint(PALETTE[pressed ? pressedLabel : raised]));
+      }
       labels.forEach((text) =>
         text.setY(
           labelAt === undefined
@@ -488,56 +483,6 @@ export function addLoopingFrame(
   }
 }
 
-// The ui-select frame around rect at outset, playing its pulse tag. While the art is missing
-// it is drawn as the art draws it, without the pulse: an ink line, a 2px amber band, and at
-// the default outset an ink line on the edge.
-function addSelectFrame(
-  scene: Scene,
-  parent: GameObjects.Container,
-  rect: Rect,
-  reducedMotion: boolean,
-  outset = SELECT_OUTSET,
-): void {
-  const outer = selectOuter(rect, outset);
-  const g = scene.add.graphics();
-  const { amber, dots, keyline } = SELECT_FRAME;
-  drawStaticRing(g, outer);
-  drawRing(g, PALETTE.amber, insetRect(amber.inset, outer), amber.width);
-  drawRing(g, PALETTE.ink, insetRect(keyline.inset, outer), keyline.width);
-  for (const y of [outer.y + dots.inset, outer.y + outer.height - dots.inset - 1]) {
-    for (const x of [outer.x + dots.inset, outer.x + outer.width - dots.inset - 1]) {
-      fillRect(g, PALETTE.ink, { height: 1, width: 1, x, y });
-    }
-  }
-  parent.add(g);
-  addSelectionOrbit(scene, parent, outer, "frame", reducedMotion);
-}
-
-function drawStaticRing(g: GameObjects.Graphics, outer: Rect): void {
-  for (const y of [outer.y, outer.y + outer.height - 1]) {
-    fillRect(g, PALETTE.ink, { height: 1, width: outer.width - 2, x: outer.x + 1, y });
-  }
-  for (const x of [outer.x, outer.x + outer.width - 1]) {
-    fillRect(g, PALETTE.ink, { height: outer.height - 2, width: 1, x, y: outer.y + 1 });
-  }
-}
-
-// Shop focus retains its cyan band and ink keylines, separate from gold ownership selection.
-export function addShopFocusFrame(
-  scene: Scene,
-  parent: GameObjects.Container,
-  rect: Rect,
-  reducedMotion: boolean,
-): void {
-  const outer = selectOuter(rect);
-  const g = scene.add.graphics();
-  drawStaticRing(g, outer);
-  drawRing(g, PALETTE.cyan, insetRect(1, outer), 3);
-  drawRing(g, PALETTE.ink, insetRect(4, outer), 1);
-  parent.add(g);
-  addSelectionOrbit(scene, parent, outer, "shop", reducedMotion);
-}
-
 // The ui-check mark at rect's top-left corner: tag is its art's tag, such as "tick". While the
 // art is missing, a green square with the tag, or a plus for a tick.
 function addSelectMark(
@@ -581,12 +526,9 @@ export interface SelectTileOptions {
   edge: boolean;
   // The ui-check tag on a selected tile; none without one.
   mark?: string;
-  // How far the ui-select frame sits outside the tile; SELECT_OUTSET when unset.
-  outset?: number;
   reducedMotion: boolean;
   state: TileState;
-  // A walker, dog or gear tile, drawn with ui-tile; other controls such as tabs draw their
-  // face in code, inside the static gold selection frame when selected.
+  // A walker, dog or gear tile, drawn with ui-tile; other controls draw their face in code.
   tile: boolean;
 }
 
@@ -600,30 +542,27 @@ function drawTileFace(scene: Scene, edge: boolean, look: SelectLook, rect: Rect)
 }
 
 // A tappable item in its interaction state. Selected, it has the gold face and any ui-check
-// mark and is lifted 2px onto a plum shadow; a face drawn in code adds a gold selection frame.
-// Normal, its face is cream. Disabled, it is flat grey and never lifts. The caller draws its
-// pictures through tileTextureKey or addTileSprite in its look's art. The shadow goes in
-// parent so it stays put under the lift.
+// mark and is lifted 2px onto a plum shadow. Normal, its face is cream. Disabled, it is flat
+// grey and never lifts. The caller draws its pictures through tileTextureKey or addTileSprite
+// in its look's art. The shadow goes in parent so it stays put under the lift.
 export function addSelectTile(
   scene: Scene,
   parent: GameObjects.Container,
   rect: Rect,
   options: SelectTileOptions,
 ): SelectTile {
-  const { edge, mark, outset, reducedMotion, state, tile: isTile } = options;
+  const { edge, mark, reducedMotion, state, tile: isTile } = options;
   const look = selectLook(state);
   const selected = state === "selected";
   const tag = selected ? "selected-static" : state;
   const art = isTile && tag !== undefined ? addNineSlice(scene, "ui-tile", rect, tag) : undefined;
-  const framed = selected && art === undefined;
   if (selected) {
-    const outer = framed ? selectOuter(rect, outset) : rect;
     const shadow = scene.add.graphics();
     fillRect(shadow, PALETTE.plum, {
       height: FEEDBACK.liftPx,
-      width: outer.width - 2,
-      x: outer.x + 2,
-      y: outer.y + outer.height - FEEDBACK.liftPx,
+      width: rect.width - 2,
+      x: rect.x + 2,
+      y: rect.y + rect.height - FEEDBACK.liftPx,
     });
     parent.add(shadow);
   }
@@ -634,9 +573,7 @@ export function addSelectTile(
   const content = scene.add.container(0, 0);
   container.add(face);
   const tile: SelectTile = { container, content, lift, look };
-  if (framed) {
-    addSelectFrame(scene, container, rect, reducedMotion, outset);
-  } else if (selected) {
+  if (selected) {
     addSelectionOrbit(scene, container, rect, "tile", reducedMotion);
   }
   container.add(content);
@@ -647,35 +584,6 @@ export function addSelectTile(
     }
   }
   return tile;
-}
-
-// A tab in parent: a face drawn in code, selected while it is the open tab, its select frame
-// held still, and dipped while pressed, its label centred in the title font.
-export function addTab(
-  scene: Scene,
-  parent: GameObjects.Container,
-  rect: Rect,
-  label: string,
-  look: { open: boolean; pressed: boolean },
-): void {
-  const tile = addSelectTile(scene, parent, rect, {
-    edge: true,
-    reducedMotion: true,
-    state: tileState({ ...PLAIN_ITEM, picked: look.open }),
-    tile: false,
-  });
-  if (look.pressed) {
-    tile.container.y += FEEDBACK.pressDipPx;
-  }
-  tile.content.add(
-    addPixelText(scene, rect.x + rect.width / 2, rect.y + rect.height / 2, label, {
-      colour: PALETTE[tile.look.text],
-      font: "title",
-      originX: 0.5,
-      originY: 0.5,
-      scale: TEXT_SCALE,
-    }),
-  );
 }
 
 // A picture's texture on a tile in its art look: grey is its disabled tile's grey copy.

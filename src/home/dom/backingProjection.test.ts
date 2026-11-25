@@ -15,6 +15,7 @@ import { sheetFrame } from "../../ui/dom/sheetFrames.ts";
 import { artPixel, domScale, fontPixel, gridRect, gridY } from "../../ui/domScale.ts";
 import { gridRects, type GridSpec } from "../../ui/grid.ts";
 import { PALETTE } from "../../ui/palette.ts";
+import { GREYED } from "../../ui/selection.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { FEEDBACK } from "../feedback.ts";
 import { HOME_LAYOUT, slotSignText, tileFace } from "../homeLayout.ts";
@@ -308,6 +309,16 @@ it("projects the slot sign frame without changing hit or pressed-tag geometry", 
         top: `${backing.top - hit.top}px`,
         width: `${backing.width}px`,
       });
+      // The pressed face is forest under white lines, over the focus fill.
+      expect(focusFace.style.display).toBe(pressed ? "none" : "");
+      expect(labels.map((label) => label.style.color)).toEqual(
+        pressed
+          ? ["#ffffff", "#ffffff"]
+          : [
+              HOME_LAYOUT.slotSign.headColour,
+              sign.affordable ? HOME_LAYOUT.slotSign.priceColour : GREYED.shortPrice,
+            ].map((colour) => `#${PALETTE[colour].toString(16).padStart(6, "0")}`),
+      );
       const bounds = labels.map((label, index) => {
         expect(Number.parseFloat(label.style.fontSize!)).toBeCloseTo(8 * pixel);
         const text = sign.lines[index]!;

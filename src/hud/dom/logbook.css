@@ -26,6 +26,13 @@
   > [aria-hidden="true"] {
   opacity: 1;
 }
+/* A locked badge's goal and progress take their focused colour while the row is focused or
+   pressed; forced colours use HighlightText instead. */
+@media (forced-colors: none) {
+  .adw-logbook-badge:is(:focus-visible, [data-ui-pressed]) .adw-focus-colour .adw-text {
+    color: var(--adw-focus-colour) !important;
+  }
+}
 @media (forced-colors: active) {
   .adw-logbook-badge {
     --ui-button-focus-fill: Highlight;

@@ -32,9 +32,11 @@
   display: block;
   background: linear-gradient(to bottom, var(--adw-darkSlate) 0 6.25%, var(--adw-ink) 6.25%);
 }
-/* Forced colours paint Highlight over the whole face at full opacity, under the glyph. */
+/* Forced colours paint Highlight over the whole face at full opacity, under the glyph. The
+   artwork rule names the button and its Kit class so it outranks Kit's focused artwork opacity
+   whatever order the sheets load in. */
 @media (forced-colors: active) {
-  .adw-top-section-button:is(:focus-visible, [data-ui-pressed])
+  button.adw-top-section-button.ui-standard-button:is(:focus-visible, [data-ui-pressed])
     > .ui-button-face
     > [aria-hidden="true"] {
     opacity: 1;

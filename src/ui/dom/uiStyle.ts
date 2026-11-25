@@ -128,7 +128,8 @@ export const UI_STYLE = `
 .adw-button:not(.adw-standard-button).adw-go .adw-face{
   border-image-source:${skinFrame("ui-button-go")};background-color:var(--adw-green)}
 .adw-button:not(.adw-standard-button).adw-go[data-pressed] .adw-face{
-  border-image-source:${skinFrame("ui-button-go-pressed")}}
+  border-image-source:${skinFrame("ui-button-go-pressed")};background-color:var(--adw-forest)}
+.adw-button:not(.adw-standard-button).adw-go[data-pressed] .adw-text{color:var(--adw-white)!important}
 .adw-button:not(.adw-standard-button).adw-secondary .adw-face{border-image-source:${skinFrame("ui-button-secondary")}}
 .adw-button:not(.adw-standard-button).adw-secondary[data-pressed] .adw-face{
   border-image-source:${skinFrame("ui-button-secondary-pressed")}}
@@ -140,12 +141,15 @@ export const UI_STYLE = `
 .adw-close:not(.adw-standard-button)[data-pressed] .adw-close-face{
   background-image:${skinFrame("ui-icon-button-pressed")}}
 .adw-close-glyph:empty{background:var(--adw-icon-close) 0 0/100% 100%;image-rendering:pixelated}
-/* A focused speech bubble fills its inside cyan, its owner's name in plum to keep contrast. */
+/* A focused speech bubble fills its inside and its tail's cyan, its owner's name in plum to keep
+   contrast. */
 .adw-speech-focus{display:none;clip-path:polygon(${cutCorners(px(1))})}
-.adw-button:focus-visible .adw-speech-focus{display:block}
+.adw-speech-tail-focus{display:none}
+.adw-button:focus-visible :is(.adw-speech-focus,.adw-speech-tail-focus){display:block}
 .adw-button:focus-visible .adw-speech-name{color:var(--adw-plum)!important}
 @media (forced-colors:active){
-  .adw-button:focus-visible .adw-speech-focus{forced-color-adjust:none;background-color:Highlight!important}
+  .adw-button:focus-visible :is(.adw-speech-focus,.adw-speech-tail-focus){
+    forced-color-adjust:none;background-color:Highlight!important}
   .adw-button:focus-visible:has(.adw-speech-focus) .adw-text{forced-color-adjust:none;color:HighlightText!important}
 }
 /* The shade under a modal panel: ink at the canvas's modal shade's alpha, blended as it blends. */

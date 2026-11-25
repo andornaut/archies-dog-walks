@@ -136,7 +136,7 @@ it("restores a held item's retained row only when the native page accepts input"
   await settle();
   f.screen.focusRow("row");
   expect(f.doc.activeElement?.getAttribute("aria-label")).toBe(gameData.dogs.kilo.name);
-  expect(f.doc.activeElement?.getAttribute("data-picker-focus")).toBe("outline");
+  expect(f.doc.activeElement?.getAttribute("data-picker-focus")).toBe("face");
   f.doc.body.focus();
   f.screen.setInert(true);
   f.screen.focusRow("row");

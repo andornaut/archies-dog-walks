@@ -6,6 +6,8 @@ import { SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
 import { fontFileMetrics, fontInkRows, gameFont } from "../testing/fontInk.ts";
+import { blockPlace, inkEnd, shownText } from "../ui/dom/pixelLine.ts";
+import { deviceX, domScale, fontPixel } from "../ui/domScale.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
@@ -124,10 +126,27 @@ describe("settingsView", () => {
         const art = row.switch!.art;
         const state = row.texts.at(-1)!;
         expect(state.capTop - art.y - SETTINGS_CARD.row.switch.height).toBeGreaterThan(0);
-        expect(state.x + MEASURE.inkWidth("title", state.lines[0]!)).toBe(
-          art.x + SETTINGS_CARD.row.switch.width,
-        );
+        expect(state).toMatchObject({
+          anchor: "inkRight",
+          x: art.x + SETTINGS_CARD.row.switch.width,
+        });
       }
+    }
+  });
+
+  // The Settings switch's last column is x = 319 on the 360-wide screen.
+  it.each([1, 2, 3])("ends each state word's ink on its switch's last column at DPR %d", (dpr) => {
+    const scale = domScale(dpr, { height: SCREEN_CONFIG.height, width: 360, x: 0, y: 0 });
+    const font = gameFont("font-title");
+    for (const row of view({}).rows.filter(({ kind }) => kind === "switch")) {
+      const art = row.switch!.art;
+      const state = row.texts.at(-1)!;
+      const place = blockPlace(font, scale, state);
+      const end =
+        place.runs[0]!.left +
+        inkEnd(font, shownText("title", state.lines[0]!)) * fontPixel(scale, state.scale);
+      expect(art.x + SETTINGS_CARD.row.switch.width - 1).toBe(319);
+      expect(end).toBe(deviceX(scale, art.x + SETTINGS_CARD.row.switch.width));
     }
   });
 

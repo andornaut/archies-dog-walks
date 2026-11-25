@@ -46,14 +46,36 @@ const LOOKS: Readonly<Record<TileState, Omit<SelectLook, "state">>> = {
 // controls wear in place of normal, with ui-button's secondary tags.
 export type ButtonLook = ButtonState | "secondary";
 
-// How ui-button colours each look: its face, the lip under a raised one, and the label.
-// Primary is the green go button; disabled is flat, with no lip.
+// How ui-button colours each look: its face, the lip under a raised one, and the label, then
+// the face and label while pressed. Primary is the green go button, forest with a white label
+// while pressed; disabled is flat, with no lip.
 export const BUTTON_COLOURS = {
-  disabled: { face: GREYED.face, label: GREYED.text, lip: null },
-  normal: { face: "cream", label: "plum", lip: "tan" },
-  primary: { face: "green", label: "ink", lip: "forest" },
-  secondary: { face: "cream", label: "plum", lip: "tan" },
-} as const satisfies Record<ButtonLook, { face: string; label: string; lip: string | null }>;
+  disabled: {
+    face: GREYED.face,
+    label: GREYED.text,
+    lip: null,
+    pressedFace: GREYED.face,
+    pressedLabel: GREYED.text,
+  },
+  normal: { face: "cream", label: "plum", lip: "tan", pressedFace: "cream", pressedLabel: "plum" },
+  primary: {
+    face: "green",
+    label: "ink",
+    lip: "forest",
+    pressedFace: "forest",
+    pressedLabel: "white",
+  },
+  secondary: {
+    face: "cream",
+    label: "plum",
+    lip: "tan",
+    pressedFace: "cream",
+    pressedLabel: "plum",
+  },
+} as const satisfies Record<
+  ButtonLook,
+  { face: string; label: string; lip: string | null; pressedFace: string; pressedLabel: string }
+>;
 
 // The rows of ui-button's lip under a raised face, the bottom of its rect.
 export { BUTTON_LIP_PX };

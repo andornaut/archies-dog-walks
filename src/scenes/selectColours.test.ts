@@ -87,6 +87,14 @@ describe("interaction-state colours", () => {
           TEXT,
         ],
       ),
+      ...(["normal", "primary", "secondary"] as const).map(
+        (state): [string, number, number, number] => [
+          `a pressed ${state} button's label`,
+          PALETTE[BUTTON_COLOURS[state].pressedLabel],
+          PALETTE[BUTTON_COLOURS[state].pressedFace],
+          TEXT,
+        ],
+      ),
       [
         "a disabled button's label",
         PALETTE[BUTTON_COLOURS.disabled.label],
@@ -124,15 +132,25 @@ describe("interaction-state colours", () => {
         TEXT,
       ]),
       ["a locked badge's status", PALETTE[BADGE_TEXT_COLOURS.locked.status], PALETTE.cream, TEXT],
-      ...(["name", "status"] as const).map((text): [string, number, number, number] => [
-        `a focused or pressed locked badge's ${text}`,
-        PALETTE[BADGE_TEXT_COLOURS.locked[text]],
-        LOGBOOK_FOCUS,
-        TEXT,
-      ]),
+      ...(["focusedGoal", "name", "status"] as const).map(
+        (text): [string, number, number, number] => [
+          `a focused or pressed locked badge's ${text}`,
+          PALETTE[BADGE_TEXT_COLOURS.locked[text]],
+          LOGBOOK_FOCUS,
+          TEXT,
+        ],
+      ),
       ["a focused Settings row's label", PALETTE[normal.text], PALETTE.cyan, TEXT],
+      [
+        "a focused unaffordable Pet shop row's name",
+        PALETTE[selectLook("disabled").text],
+        PALETTE.cyan,
+        TEXT,
+      ],
+      ["a focused unaffordable Pet shop row's line", PALETTE[GREYED.text], PALETTE.cyan, TEXT],
       ["a focused Settings row's note", PALETTE.darkBrown, PALETTE.cyan, TEXT],
       ["a pressed Settings row's text", PALETTE.ink, PALETTE.green, TEXT],
+      ["a pressed standard button's label", PALETTE.white, PALETTE.forest, TEXT],
       ["a focused speech bubble's words and owner", PALETTE.plum, PALETTE.cyan, TEXT],
       [
         "a locked badge's goal and progress",

@@ -86,12 +86,18 @@ function text(
   parts: Parts,
   at: { x: number; y: number },
   value: string,
-  style: { align?: "inkRight"; colour?: number; font?: "body" | "title" } = {},
+  style: {
+    align?: "inkRight";
+    colour?: number;
+    focusColour?: number;
+    font?: "body" | "title";
+  } = {},
 ): void {
   parts.texts.push({
     ...(style.align === undefined ? {} : { align: style.align }),
     capTop: at.y,
     colour: style.colour ?? PALETTE.plum,
+    ...(style.focusColour === undefined ? {} : { focusColour: style.focusColour }),
     ...(style.font === undefined ? {} : { font: style.font }),
     lines: [value],
     scale: TEXT_SCALE,
@@ -263,13 +269,17 @@ function badgesTab(
       parts.art.push({ key: "ui-check", scale: 1, sheet: { tag: "tick" }, size: tick, ...check });
     }
     const colours = BADGE_TEXT_COLOURS[badge.earned ? "earned" : "locked"];
+    const focusedGoal = badge.earned ? undefined : BADGE_TEXT_COLOURS.locked.focusedGoal;
     const lines = [
-      ...cell.name.map((line) => [line, colours.name] as const),
-      ...[...cell.goal, ...cell.progress].map((line) => [line, colours.goal] as const),
+      ...cell.name.map((line) => [line, colours.name, undefined] as const),
+      ...[...cell.goal, ...cell.progress].map((line) => [line, colours.goal, focusedGoal] as const),
     ];
-    lines.forEach(([line, colour], n) => {
+    lines.forEach(([line, colour, focus], n) => {
       const at = { x: rect.x + WALL_TEXT.x, y: rect.y + (tops[i]?.[n] ?? 0) };
-      text(parts, at, line, { colour: PALETTE[colour] });
+      text(parts, at, line, {
+        colour: PALETTE[colour],
+        ...(focus === undefined ? {} : { focusColour: PALETTE[focus] }),
+      });
     });
   });
   return { bottom: badgesBottom(wallRows), wallRows };

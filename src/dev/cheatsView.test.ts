@@ -12,7 +12,7 @@ import type { PanelMeasure } from "../ui/modal/types.ts";
 import { MODAL_TITLE_SCALE, TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
 import { BANK_GRANTS, NEXT_WALK_OFF, startZones } from "./cheats.ts";
-import { type CheatsState, cheatsView } from "./cheatsView.ts";
+import { balancedWords, type CheatsState, cheatsView } from "./cheatsView.ts";
 
 const MEASURE: PanelMeasure = {
   body: fontFileMetrics("font-body"),
@@ -231,5 +231,28 @@ describe("Cheats layout", () => {
         );
       }
     }
+  });
+
+  it.each([
+    ["three words onto two lines", "Unlock Dog Slots", 10, ["Unlock", "Dog Slots"]],
+    ["two words onto two lines", "Yonge Street", 8, ["Yonge", "Street"]],
+    ["a label that fits", "Unlock Dogs", 11, ["Unlock Dogs"]],
+  ])("wraps %s with the widest line narrowest", (_what, text, room, lines) => {
+    expect(balancedWords((line) => line.length, room, text)).toEqual(lines);
+  });
+
+  it("wraps Unlock Dog Slots balanced in its button", () => {
+    const button = buttons(HOME).find(({ label }) => label === words.cheats.ownDogSlots)!;
+    expect(button.lines.map(({ text }) => text)).toEqual(
+      balancedWords(
+        (line) => MEASURE.inkWidth("title", line),
+        button.rect.width - 2 * MODAL.gap,
+        words.cheats.ownDogSlots,
+      ),
+    );
+    expect(button.lines).toHaveLength(2);
+    expect(MEASURE.inkWidth("title", button.lines[0]!.text)).toBeLessThan(
+      MEASURE.inkWidth("title", button.lines[1]!.text),
+    );
   });
 });

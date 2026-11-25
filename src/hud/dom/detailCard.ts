@@ -205,6 +205,10 @@ export function textPart(
 ): DomPart {
   const element = doc.createElement("p");
   element.className = "adw-lines";
+  if (text.focusColour !== undefined) {
+    element.classList.add("adw-focus-colour");
+    element.style.setProperty("--adw-focus-colour", hex(text.focusColour));
+  }
   const font = text.font ?? "body";
   // Where each span starts in the line as the font draws it, and its colour.
   let next = 0;

@@ -1,4 +1,4 @@
-import { ringRects } from "@andornaut/game-kit/runtime/rect";
+import { type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SLICES } from "../../data/layout.ts";
@@ -11,6 +11,18 @@ import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
 import type { DomScale } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import type { HomeSpeechView } from "../speechView.ts";
+
+// art: each tail's cream inside, row by row from the tail's top-left, which the bubble's focus
+// fill covers with its inside. ui-quip-tail-down narrows a column a row from columns 2 to 5.
+export const SPEECH_TAIL_INSIDES: Readonly<Record<string, readonly Rect[]>> = {
+  "ui-quip-tail-down": [
+    { height: 1, width: 4, x: 2, y: 0 },
+    { height: 1, width: 3, x: 3, y: 1 },
+    { height: 1, width: 2, x: 4, y: 2 },
+    { height: 1, width: 1, x: 5, y: 3 },
+  ],
+};
+
 export function createHomeSpeech(
   doc: Document,
   source: DomArtSource & {
@@ -128,6 +140,14 @@ export function createHomeSpeech(
       place: (scale) =>
         art.place(scale, origin, { ...source.imageSize(tail.key), x: tail.x, y: tail.y }),
     });
+    for (const row of SPEECH_TAIL_INSIDES[tail.key] ?? []) {
+      const inside = fillPart(doc, {
+        colour: PALETTE.cyan,
+        rect: { ...row, x: tail.x + row.x, y: tail.y + row.y },
+      });
+      inside.element.classList.add("adw-speech-tail-focus");
+      parts.push(inside);
+    }
   }
   element.append(...parts.map(({ element }) => element));
   let placement = "";

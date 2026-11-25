@@ -177,6 +177,28 @@ function columnsOf(rect: Rect): readonly [Rect, Rect] {
   ];
 }
 
+// text's words in the fewest lines no wider than room, as wrapWords takes them, split where the
+// widest line is narrowest; the earliest such split on a tie.
+export function balancedWords(
+  width: (line: string) => number,
+  room: number,
+  text: string,
+): string[] {
+  const greedy = wrapWords(width, room, text);
+  const words = text.split(/\s+/u).filter((word) => word !== "");
+  const splits = (from: number, count: number): string[][] =>
+    count === 1
+      ? [[words.slice(from).join(" ")]]
+      : Array.from({ length: words.length - from - count + 1 }, (_, n) => from + n + 1).flatMap(
+          (end) =>
+            splits(end, count - 1).map((rest) => [words.slice(from, end).join(" "), ...rest]),
+        );
+  const widest = (lines: readonly string[]) => Math.max(...lines.map(width));
+  return splits(0, greedy.length)
+    .filter((lines) => widest(lines) <= room)
+    .reduce((best, lines) => (widest(lines) < widest(best) ? lines : best), greedy);
+}
+
 function rowButtons(
   measure: PanelMeasure,
   row: Extract<CheatLine, { kind: "buttons" }>,
@@ -194,7 +216,7 @@ function rowButtons(
       throw new RangeError("Cheats label word exceeds its full-size button room");
     }
     const room = Math.max(width - 2 * MODAL.gap, longest);
-    const lines = wrapWords(measureLine, room, item.label);
+    const lines = balancedWords(measureLine, room, item.label);
     const pitch = measure.title.lineHeight * TEXT_SCALE;
     const inks = lines.map((line, i) => {
       const ink = measure.titleInk(line);

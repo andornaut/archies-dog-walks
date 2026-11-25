@@ -205,7 +205,6 @@ const START_BUTTON: Rect = HOME_LAYOUT.startButton;
 // Start walk's opacity while it waits for the rest of the art to load.
 const WAITING_ALPHA = 0.6;
 const GEAR_BADGE: Rect = HOME_LAYOUT.gearBadge;
-// The keyboard ring sits outside the ui-select frame.
 // The walker's speech bubble: its place, padding and most lines.
 // The gate scene, which crops the Pet shop group: its foot sits under the divider strip.
 const HERO_CROP: Rect = { ...GATE, width: SCREEN.width, x: 0 };

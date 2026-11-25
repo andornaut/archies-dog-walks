@@ -149,11 +149,8 @@ describe("home layout", () => {
     };
     const tick = opaque("ui-check", 3);
     const badges = [opaque("icon-lock"), opaque("icon-bill")];
-    // Both tile states reach their nine-slice frame edges. ui-select is the missing-tile fallback.
-    for (const key of ["ui-tile", "ui-select"]) {
-      const ink = opaque(key, 1);
-      expect(ink).toEqual({ height: 24, width: 24, x: 0, y: 0 });
-    }
+    // The tile's art reaches its nine-slice frame edges.
+    expect(opaque("ui-tile", 1)).toEqual({ height: 24, width: 24, x: 0, y: 0 });
     for (const [id, section, hits] of rows) {
       const fill = sectionFill(section);
       const safe = insetRect(HOME_LAYOUT.sectionContentPadding, fill);

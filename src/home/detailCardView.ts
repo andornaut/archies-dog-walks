@@ -107,6 +107,8 @@ export interface DetailText {
   readonly capTop: number;
   readonly colour: number;
   readonly font?: "body" | "title";
+  // The colour it takes while the control it is on is focused or pressed.
+  readonly focusColour?: number;
   readonly lines: readonly string[];
   readonly scale?: number;
   readonly spans?: readonly { readonly colour: number; readonly text: string }[];

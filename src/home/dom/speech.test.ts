@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 
+import { decodePng } from "@andornaut/art-kit/build/png";
 import { expect, it, vi } from "vitest";
 
 import { domArtPath } from "../../assets/domArt.ts";
@@ -11,7 +12,7 @@ import { domScale, gridRect } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { walkerSays } from "../homeLines.ts";
 import { homeSpeechView } from "../speechView.ts";
-import { createHomeSpeech } from "./speech.ts";
+import { createHomeSpeech, SPEECH_TAIL_INSIDES } from "./speech.ts";
 function fixture(hasArt: boolean, owner: "archie" | null = null) {
   const doc = new FakeDocument();
   const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
@@ -81,3 +82,29 @@ it("fills the speech owner face backing at fractional fits and high DPR", async 
     });
   }
 });
+
+it.each(Object.entries(SPEECH_TAIL_INSIDES))(
+  "covers exactly %s's cream inside with the focus fill",
+  (key, rows) => {
+    const image = decodePng(readFileSync(`public/art/images/${key}.png`));
+    const cream = [PALETTE.cream >> 16, (PALETTE.cream >> 8) & 0xff, PALETTE.cream & 0xff];
+    const inside = new Set<string>();
+    for (let y = 0; y < image.height; y++) {
+      for (let x = 0; x < image.width; x++) {
+        const at = (y * image.width + x) * 4;
+        const pixel = [image.data[at], image.data[at + 1], image.data[at + 2]];
+        if (image.data[at + 3] === 255 && pixel.every((value, i) => value === cream[i])) {
+          inside.add(`${x},${y}`);
+        }
+      }
+    }
+    const covered = rows.flatMap((row) =>
+      Array.from({ length: row.width * row.height }, (_, i) => {
+        const x = row.x + (i % row.width);
+        return `${x},${row.y + Math.floor(i / row.width)}`;
+      }),
+    );
+    expect(new Set(covered)).toEqual(inside);
+    expect(covered).toHaveLength(inside.size);
+  },
+);

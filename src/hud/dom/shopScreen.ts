@@ -369,7 +369,7 @@ export function showShopScreen(
       const stopFeedback = bindPanelFeedback(control, { accepts, burst: () => undefined });
       const tile = createSelectionTile(doc, input.source, input.fonts.title, {
         control,
-        focus: row.selectable ? "face" : "outline",
+        focus: "face",
         hit: row.rect,
         mark: "none",
         rect: row.rect,
@@ -382,10 +382,13 @@ export function showShopScreen(
           place: (at) => placeBox(at, row.rect, part.element, fill.rect),
         };
       });
+      // A row the bank does not cover keeps its greyed text on the focus and press fills.
       parts.push(
         ...row.texts.map((line) => {
           const part = textPart(line, row.rect);
-          part.element.classList.add("adw-selection-focus-ink");
+          if (row.selectable) {
+            part.element.classList.add("adw-selection-focus-ink");
+          }
           return part;
         }),
       );

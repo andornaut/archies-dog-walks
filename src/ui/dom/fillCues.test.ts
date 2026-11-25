@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 
 import { describe, expect, it } from "vitest";
 
@@ -6,6 +7,10 @@ import { UI_STYLE } from "./uiStyle.ts";
 
 // Each control family's stylesheet, comments and whitespace removed.
 const css = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
+const KIT_CONTROLS = readFileSync(
+  createRequire(import.meta.url).resolve("@andornaut/game-kit/runtime/web/ui/dom/controls.css"),
+  "utf8",
+);
 const squeeze = (text: string) => text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, "");
 const SHEETS = {
   choice: squeeze(css("../../hud/dom/choiceCards.css")),
@@ -15,6 +20,34 @@ const SHEETS = {
   top: squeeze(css("./nativeTopSection.css")),
   ui: squeeze(UI_STYLE),
 } as const;
+
+const FORCED_TOP_ARTWORK =
+  "button.adw-top-section-button.ui-standard-button:is(:focus-visible, [data-ui-pressed])" +
+  ' > .ui-button-face > [aria-hidden="true"]';
+// Kit's focused artwork opacity, which the forced-colours top-bar artwork must outrank.
+const KIT_FOCUSED_ARTWORK =
+  'button.ui-standard-button:focus-visible > .ui-button-face > [aria-hidden="true"]';
+
+type Specificity = readonly [number, number, number];
+const count = (text: string, pattern: RegExp) => (text.match(pattern) ?? []).length;
+const ranks = (a: Specificity, b: Specificity) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+// A complex selector's specificity: ids; classes, attributes and pseudo-classes; types. :is()
+// counts its most specific argument.
+function specificity(selector: string): Specificity {
+  const inner: Specificity[] = [];
+  const rest = selector.replace(/:is\(([^()]*)\)/g, (_, args: string) => {
+    inner.push(args.split(",").map(specificity).sort(ranks).at(-1)!);
+    return "";
+  });
+  return inner.reduce<Specificity>(
+    (sum, [a, b, c]) => [sum[0] + a, sum[1] + b, sum[2] + c],
+    [
+      count(rest, /#[\w-]+/g),
+      count(rest, /\.[\w-]+|\[[^\]]*\]|:(?!:)[\w-]+/g),
+      count(rest, /(?:^|[\s>+~])[a-z][\w-]*/gi),
+    ],
+  );
+}
 
 // The declarations of the first rule whose selector list ends with selector.
 function rule(sheet: string, selector: string): string {
@@ -58,6 +91,12 @@ describe("control state cues", () => {
       "opacity:1",
     ],
     [
+      "a focused or pressed locked badge's goal",
+      "logbook",
+      ".adw-logbook-badge:is(:focus-visible, [data-ui-pressed]) .adw-focus-colour .adw-text",
+      "color:var(--adw-focus-colour)!important",
+    ],
+    [
       "a focused or pressed Logbook row's text in forced colours",
       "logbook",
       ".adw-logbook-badge:is(:focus-visible, [data-ui-pressed]) .adw-text",
@@ -93,17 +132,24 @@ describe("control state cues", () => {
       ".adw-top-section-button:is(:focus-visible, [data-ui-pressed]) .adw-top-section-fill",
       "background:Highlight",
     ],
+    ["the forced-colours top-bar artwork", "top", FORCED_TOP_ARTWORK, "opacity:1"],
     [
-      "the forced-colours top-bar artwork",
-      "top",
-      '.adw-top-section-button:is(:focus-visible, [data-ui-pressed]) > .ui-button-face > [aria-hidden="true"]',
-      "opacity:1",
+      "a pressed primary button's label",
+      "ui",
+      ".adw-button:not(.adw-standard-button).adw-go[data-pressed] .adw-text",
+      "color:var(--adw-white)!important",
     ],
     [
       "a focused speech bubble",
       "ui",
-      ".adw-button:focus-visible .adw-speech-focus",
+      ".adw-button:focus-visible :is(.adw-speech-focus,.adw-speech-tail-focus)",
       "display:block",
+    ],
+    [
+      "a pressed standard button's fill",
+      "game",
+      ".adw-standard-button[data-ui-pressed]",
+      "--adw-button-fill:var(--adw-forest)",
     ],
     [
       "an enabled pressed standard button's dip",
@@ -113,6 +159,14 @@ describe("control state cues", () => {
     ],
   ] as const)("shows %s as a fill", (_what, sheet, selector, declaration) => {
     expect(rule(SHEETS[sheet], selector)).toContain(squeeze(declaration));
+  });
+
+  it("outranks Kit's focused artwork opacity with the forced-colours top-bar artwork", () => {
+    expect(squeeze(KIT_CONTROLS)).toContain(`${squeeze(KIT_FOCUSED_ARTWORK)}{`);
+    expect(specificity(KIT_FOCUSED_ARTWORK)).toEqual([0, 4, 1]);
+    expect(
+      ranks(specificity(FORCED_TOP_ARTWORK), specificity(KIT_FOCUSED_ARTWORK)),
+    ).toBeGreaterThan(0);
   });
 
   it("draws no focus ring, outline or ring-shaped shadow on a control", () => {

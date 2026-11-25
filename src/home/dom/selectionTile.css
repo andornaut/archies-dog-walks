@@ -30,25 +30,19 @@
     .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
   )
   .adw-selection-face,
-.adw-selection-tile:not([data-picker-focus="outline"]):is(
+.adw-selection-tile:is(
     :focus-visible,
     .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
   )
   .adw-selection-focus-fill {
   background-color: var(--adw-selection-focus-fill) !important;
 }
-.adw-selection-tile:not(
-    [data-picker-focus="outline"],
-    [data-picker-refusing],
-    .adw-refusing,
-    .adw-refusing-still
-  ):is(:focus-visible, .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused])
+.adw-selection-tile:not([data-picker-refusing], .adw-refusing, .adw-refusing-still):is(
+    :focus-visible,
+    .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+  )
   .adw-selection-focus-ink {
   color: var(--adw-selection-focus-ink) !important;
-}
-.adw-selection-tile[data-picker-focus="outline"]:focus-visible {
-  outline: var(--adw-slice-1) solid currentColor;
-  outline-offset: calc(-1 * var(--adw-slice-1));
 }
 .adw-selection-tile[data-ui-pressed] {
   --adw-selection-focus-fill: var(--adw-green);

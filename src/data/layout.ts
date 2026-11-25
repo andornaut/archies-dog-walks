@@ -73,8 +73,6 @@ export const SLICES = {
   // The home screen's section frames: the top slice holds the frame and the heading band.
   "ui-section": { bottom: 3, left: 3, right: 3, top: 24 },
   "ui-select": { bottom: 8, left: 8, right: 8, top: 8 },
-  // The shop's focused row, independent of selected cards and tabs.
-  "ui-shop-focus": { bottom: 13, left: 13, right: 13, top: 13 },
   // A three-slice: 4px caps and a middle that stretches.
   "ui-slider": { bottom: 0, left: 4, right: 4, top: 0 },
   // The band behind a choice card row's subtitle.
@@ -581,8 +579,6 @@ export const HOME_SCREEN = {
   // and the gap across between the drawn tiles' frames: 6, so the faces measured 1 px inside each
   // tile's ink outline are the stacked button gap (8) apart.
   dogTiles: { columns: 3, face: { height: 42, width: 105 }, frameGapX: 6 },
-  // art: the keyboard ring's outset, outside the ui-select frame.
-  focusOutset: 5,
   // The gate scene's top.
   gate: { y: 40 },
   // The divider strip's height.

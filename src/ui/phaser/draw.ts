@@ -43,11 +43,6 @@ export function drawRing(
   ringRects(thickness, rect).forEach((band) => fillRect(g, colour, band));
 }
 
-// The keyboard's focus ring: a 2px cyan frame outset pixels outside rect.
-export function drawFocusRing(graphics: GameObjects.Graphics, outset: number, rect: Rect): void {
-  drawRing(graphics, PALETTE.cyan, insetRect(-outset, rect), 2);
-}
-
 const SHADOW_RADIUS_Y = 2.5;
 
 // A solid pixel ellipse under a sprite, centred on its x about a pixel above its feet.

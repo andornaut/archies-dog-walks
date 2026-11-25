@@ -161,11 +161,11 @@ export interface SettingsMeasure extends PanelMeasure {
   ) => { left: number; right: number };
 }
 
-// Lines of text: x is where its pen starts, where its first line's ink starts (ink), or where
-// its widest line's advance ends (right), and capTop its first line's capitals' top, its lines a
-// font line apart.
+// Lines of text: x is where its pen starts, where its first line's ink starts (ink), where its
+// widest line's advance ends (right) or where its widest line's ink ends (inkRight), and capTop
+// its first line's capitals' top, its lines a font line apart.
 export interface SettingsText {
-  readonly anchor: "ink" | "pen" | "right";
+  readonly anchor: "ink" | "inkRight" | "pen" | "right";
   readonly capTop: number;
   readonly colour: number;
   readonly font: "body" | "title";
@@ -354,15 +354,15 @@ function controlRow(
     texts: [
       ...view.texts,
       {
-        anchor: "ink",
+        // Its ink ends on the switch's last column: a word wider than the switch grows left,
+        // clear of the row's edge.
+        anchor: "inkRight",
         capTop: art.y + control.height + SWITCH_STATE_GAP,
         colour: PALETTE[look.text],
         font: "title",
         lines: [word],
         scale: TEXT_SCALE,
-        // Right-aligned to the switch: a word wider than the switch grows left, clear of the
-        // row's edge.
-        x: control.x + control.width - measure.inkWidth("title", word),
+        x: control.x + control.width,
       },
     ],
   };
