@@ -213,7 +213,7 @@ Every refusal uses one cue, `REFUSE` in [`refuse.ts`](../src/ui/refuse.ts), on e
 - **Motion:** the step shake, 320ms in all. The control moves right only, in whole art pixels, through offsets 0, 1, 2, 3, 2, 1, 0 in each 80ms, four times. It never moves left of its place.
 - **Colour:** during the red phases, 80–160ms and 240–320ms, the face fills darkRed with a white label (7.34:1). A faced control shows this on its face, over any focus fill (on a picker tile, its name area; on a Settings row, the whole row, with its row icon drawn as a white silhouette); the label never turns red on its own. Every refusing control, the Help pager included, uses these phases and the shake below.
 - **Reduced motion:** no shake; the darkRed face with its white label holds for 0–320ms, then the control's prior look returns.
-- **Forced colours:** the red phases fill the face with ButtonText and draw its label and icon in ButtonFace, the inverse of the resting face, so a refusal stays distinct from Highlight focus.
+- **Forced colours:** the red phases fill the face (a choice card's band included) with ButtonText and draw its label and icon in ButtonFace, the inverse of the resting face, so a refusal stays distinct from Highlight focus. Start picker tiles and Pet shop rows, whose focus and press already use that inverse, fill their refusal with Highlight and draw the label, name and price in HighlightText.
 
 The [style guide](style-guide.md#ui) gives the colours.
 
