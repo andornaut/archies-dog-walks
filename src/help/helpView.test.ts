@@ -57,6 +57,20 @@ describe("helpView", () => {
     expect(view.body.capTop).toBe(top + metrics.inkBottom * scale + LABEL_HELP_GAP);
   });
 
+  it.each(gameData.help.map((page, i) => [i, page.title] as const))(
+    "titles page %d %s, amber, centred on its ink across the screen",
+    (page, title) => {
+      expect(helpView(gameData, MEASURE, page, undefined).title).toMatchObject({
+        capTop: HELP_LAYOUT.title.y,
+        centre: "ink",
+        centreX: HELP_LAYOUT.screen.width / 2,
+        colour: PALETTE.amber,
+        font: "title",
+        text: title,
+      });
+    },
+  );
+
   it.each(gameData.help.map((page, i) => [i, page.caption] as const))(
     "captions page %d's picture %s, plum, centred on its ink across the well",
     (page, caption) => {

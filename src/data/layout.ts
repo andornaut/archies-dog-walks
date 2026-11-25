@@ -879,8 +879,8 @@ export const HELP_SCREEN = {
   frame: { captionGap: 6, pad: 4, top: 8 },
   // art: the picture's size, the walk screen's rows under its walk bar less 16 columns a side.
   picture: { height: 196, width: 328 },
-  // The title's scale and left edge.
-  title: { scale: 2, x: 8 },
+  // The title's scale.
+  title: { scale: 2 },
   // The title's capitals under the frame's last row.
   titleGap: 26,
 } as const;

@@ -115,17 +115,6 @@ function cutRing({ height, width, x, y }: Rect): HelpFill[] {
   ];
 }
 
-// A left-aligned label's line: its look, and its capitals' top at y.
-function leftLine(
-  font: PanelText["font"],
-  colour: number,
-  scale: number,
-  at: { x: number; y: number },
-  text: string,
-): PanelText {
-  return { capTop: at.y, centre: "left", centreX: at.x, colour, font, line: 0, scale, text };
-}
-
 // The help page at page, its pages read now, with what pressed shows pressed: the framed picture
 // and its caption, the page's title and body, the pager (Previous, disabled on the first page,
 // the dots and Next) and the primary Back footer.
@@ -140,13 +129,16 @@ export function helpView(
   const words = data.menuText.help;
   const current = clampPage(pages.length, page);
   const shown = itemAt(pages, current);
-  const title = leftLine(
-    "title",
-    PALETTE.amber,
-    layout.title.scale,
-    { x: layout.title.x, y: layout.title.y },
-    shown.title,
-  );
+  const title: PanelText = {
+    capTop: layout.title.y,
+    centre: "ink",
+    centreX: layout.title.centreX,
+    colour: PALETTE.amber,
+    font: "title",
+    line: 0,
+    scale: layout.title.scale,
+    text: shown.title,
+  };
   // The body starts the label gap under the title's lowest ink, as the canvas measures it.
   const titleTop = Math.round(layout.title.y - measure.title.capTop * layout.title.scale);
   const inkBottom =

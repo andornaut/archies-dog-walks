@@ -32,7 +32,8 @@ describe("help's page", () => {
     ["the body's viewport", body.viewport, { height: 108, width: 360, x: 0, y: 325 }],
     ["the body's width", body.width, 330],
     ["the scrollbar's track", [scrollbar.x, scrollbar.trackWidth], [344, 8]],
-    ["the title's and body's left edge", [title.x, body.x], [frame.x, frame.x]],
+    ["the title's centre", title.centreX, frame.x + frame.width / 2],
+    ["the body's left edge", body.x, frame.x],
     ["the track's right edge", scrollbar.x + scrollbar.trackWidth, frame.x + frame.width],
     ["the page presses' top", presses.y, MIN_PRESS],
   ] as const)("places %s", (_, help, expected) => {
@@ -94,7 +95,7 @@ describe("help pages", () => {
     }
   });
   it("retains every page's full body in its scroll content above fixed controls, and its full-size title", () => {
-    const { scale: titleScale, x } = HELP_LAYOUT.title;
+    const { scale: titleScale } = HELP_LAYOUT.title;
     const inkBottom = y + (maxLines - 1) * lineHeight + inkRowsFromCapTop(BODY) * scale;
     const viewport = HELP_LAYOUT.body.viewport;
     expect(viewport.y).toBe(y - BODY_ASCENT_ROWS * scale);
@@ -114,7 +115,7 @@ describe("help pages", () => {
       return (
         lines.some((line) => bodyTextWidth(scale, line) > width) ||
         lines.length > maxLines ||
-        x + title.right > HELP_LAYOUT.screen.width - x
+        title.right - title.left > HELP_LAYOUT.frame.width
       );
     });
     expect(offenders.map(({ title }) => title)).toEqual([]);

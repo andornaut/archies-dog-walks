@@ -53,8 +53,8 @@ const BODY_HEIGHT =
   Math.floor((BUTTONS_Y - MODAL.gap - BODY_TOP) / HELP.body.lineHeight) * HELP.body.lineHeight;
 const BODY_VIEWPORT = { height: BODY_HEIGHT, width, x: 0, y: BODY_TOP } as const;
 
-// The help page's geometry at the render resolution. A text position is its first line's
-// left edge and capitals' top.
+// The help page's geometry at the render resolution. A text position is its capitals' top and
+// its first line's left edge, or the centre its ink is centred on.
 // The page has no heading and no close control: the top bar over it is the screen's own.
 // The framed picture comes first, its caption centred across the well under it, then the page's
 // title and body, then the pager: Previous, the page dots and Next in one row centred in its room,
@@ -87,7 +87,8 @@ export const HELP_LAYOUT = {
   },
   presses: { ...PAGE, height: PAGE.y + PAGE.height - MIN_PRESS, y: MIN_PRESS },
   screen: SCREEN,
-  title: { ...HELP.title, y: TITLE_Y },
+  // The page's title, centred across the screen on its visible ink.
+  title: { ...HELP.title, centreX: width / 2, y: TITLE_Y },
   well: WELL,
 } as const;
 
