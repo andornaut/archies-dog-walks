@@ -70,7 +70,7 @@ export function mountRoadBanner(
     element.setAttribute("aria-hidden", "true");
   }
   const status = doc.createElement("span");
-  status.className = "adw-spoken";
+  status.className = "visually-hidden";
   status.setAttribute("role", "status");
   status.setAttribute("aria-live", "polite");
   status.setAttribute("aria-atomic", "true");

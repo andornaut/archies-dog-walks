@@ -1,5 +1,4 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
-import { fontMetrics, laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { debuffIconKey } from "../../assets/iconKeys.ts";
 import { gameData } from "../../data/index.ts";
@@ -10,6 +9,7 @@ import { debuffLasting } from "../../rules/durations.ts";
 import { currentZone } from "../../rules/route.ts";
 import { read } from "../../rules/units.ts";
 import type { RunState } from "../../state/runState.ts";
+import { lineInk } from "../../ui/lineInk.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import {
@@ -86,28 +86,8 @@ export function createHudChrome(
   }[] = [];
   const body = painter.fonts.body;
   const inkOf = (text: string) => {
-    const ink = laidGlyphs(body, TEXT_SCALE, text).flatMap(({ ink }) =>
-      ink === null ? [] : [ink],
-    );
-    const glyphs = [...text].flatMap((char) => {
-      const glyph = body.glyphs.get(char);
-      return glyph !== undefined && glyph.width > 0 && glyph.height > 0 ? [glyph] : [];
-    });
-    const cap = fontMetrics(body).capTop;
-    return {
-      bottom:
-        glyphs.length === 0
-          ? 0
-          : (Math.max(...glyphs.map(({ height, yOffset }) => yOffset + height)) - cap) * TEXT_SCALE,
-      top:
-        glyphs.length === 0
-          ? 0
-          : (Math.min(...glyphs.map(({ yOffset }) => yOffset)) - cap) * TEXT_SCALE,
-      width:
-        ink.length === 0
-          ? 0
-          : Math.max(...ink.map(({ right }) => right)) - Math.min(...ink.map(({ left }) => left)),
-    };
+    const { bottom, left, right, top } = lineInk(body, text);
+    return { bottom, top, width: right - left };
   };
   const nameWidth = Math.max(
     0,

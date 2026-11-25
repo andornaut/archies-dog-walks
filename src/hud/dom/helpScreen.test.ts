@@ -78,7 +78,7 @@ describe("the HTML help screen", () => {
     controls[1]?.fire("click", { detail: 0 });
     expect(presses[1]).toHaveBeenCalledOnce();
     const page = nodes.find((node) => node.id === dialog?.getAttribute("aria-describedby"));
-    const spoken = page?.all().filter((node) => node.className === "adw-spoken");
+    const spoken = page?.all().filter((node) => node.className === "visually-hidden");
     expect(spoken?.map(({ textContent }) => textContent)[0]).toBe(gameData.help[0]?.title);
   });
 

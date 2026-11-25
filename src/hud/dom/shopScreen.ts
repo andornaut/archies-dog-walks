@@ -13,6 +13,7 @@ import type { ShopPageView } from "../../home/shopPageView.ts";
 import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { type ModalLifecycle, mountModalLifecycle } from "../../ui/dom/modalLifecycle.ts";
+import { type DomPart, fillPart, gridFillPart } from "../../ui/dom/parts.ts";
 import {
   backedTextPlaces,
   createTextLine,
@@ -40,8 +41,8 @@ import type { ScrollbarRects } from "../../ui/scrollbar.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { scrollPlace } from "./logbook.ts";
 import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
-import { addTapBurst, type DomPart } from "./questionPanel.ts";
-import { createPageTab, fillPart } from "./shopPage.ts";
+import { addTapBurst } from "./questionPanel.ts";
+import { createPageTab } from "./shopPage.ts";
 
 export interface ShopScreenArt {
   readonly key: string;
@@ -375,13 +376,7 @@ export function showShopScreen(
         rect: row.rect,
         state: row.state,
       });
-      const parts: DomPart[] = row.fills.map((fill) => {
-        const part = fillPart(doc, fill);
-        return {
-          element: part.element,
-          place: (at) => placeBox(at, row.rect, part.element, fill.rect),
-        };
-      });
+      const parts: DomPart[] = row.fills.map((fill) => gridFillPart(doc, row.rect, fill));
       // A row the bank does not cover keeps its greyed text on the focus fill and turns ink, as
       // any row's does, on the press fill.
       parts.push(

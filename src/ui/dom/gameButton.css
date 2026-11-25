@@ -5,18 +5,9 @@
   --adw-button-lip: var(--adw-tan);
   --adw-button-text: var(--adw-plum);
   --adw-button-unit: var(--adw-slice-1, 1px);
-  appearance: none;
   position: absolute;
-  margin: 0;
-  padding: 0;
-  border: 0;
   border-radius: 0;
-  background: none;
   color: var(--adw-button-text);
-  font: inherit;
-  cursor: pointer;
-  touch-action: manipulation;
-  outline: none;
   box-shadow: none;
 }
 .adw-standard-button[data-ui-button-role="primary"] {

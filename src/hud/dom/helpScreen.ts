@@ -3,6 +3,13 @@ import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { HELP_LAYOUT, helpScrollbar } from "../../help/helpLayout.ts";
 import { HELP_DOTS, type HelpView } from "../../help/helpView.ts";
 import { pageCloseControl } from "../../ui/closeControl.ts";
+import {
+  borderedPart,
+  boxPart,
+  type DomBox,
+  type DomPart,
+  framelessView,
+} from "../../ui/dom/parts.ts";
 import { createTextLine, type DomTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import { followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
@@ -18,7 +25,6 @@ import { type PanelText } from "../../ui/modal/types.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { BODY_ASCENT_ROWS } from "../../ui/textFit.ts";
 import {
-  type DomPart,
   type DomQuestionPanel,
   type DomQuestionPanelInput,
   showQuestionPanel,
@@ -36,26 +42,12 @@ export type DomHelpInput = Pick<
   readonly view: HelpView;
 };
 
-const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
-
 // Ids that tie each screen's dialog to its page.
 let screens = 0;
 
-// A box of one colour, its edges on the art-pixel grid; height, where given, in art pixels.
-function fillPart(
-  doc: Document,
-  colour: number,
-  place: (scale: DomScale) => Parameters<typeof setBox>[1],
-): DomPart {
-  const element = doc.createElement("div");
-  element.className = "adw-framed";
-  element.style.backgroundColor = hex(colour);
-  return { element, place: (scale) => setBox(element, place(scale)) };
-}
-
 // Where the dots go, in whole device pixels: each its side in art pixels, the row laid out in
 // art pixels from the snapped column under its middle, so every dot and gap is the same size.
-function dotBoxes(scale: DomScale, dots: HelpView["dots"]): Parameters<typeof setBox>[1][] {
+function dotBoxes(scale: DomScale, dots: HelpView["dots"]): DomBox[] {
   const first = dots[0]?.rect;
   const last = dots.at(-1)?.rect;
   if (first === undefined || last === undefined) {
@@ -76,30 +68,11 @@ function dotBoxes(scale: DomScale, dots: HelpView["dots"]): Parameters<typeof se
 function dotPart(
   doc: Document,
   dot: HelpView["dots"][number],
-  box: (scale: DomScale) => Parameters<typeof setBox>[1],
+  box: (scale: DomScale) => DomBox,
 ): DomPart {
-  const ring = fillPart(doc, dot.current ? HELP_DOTS.current : HELP_DOTS.ring, box);
-  if (dot.current) {
-    return ring;
-  }
-  const hole = doc.createElement("div");
-  hole.className = "adw-framed";
-  hole.style.backgroundColor = hex(PALETTE.darkBrown);
-  ring.element.append(hole);
-  return {
-    element: ring.element,
-    place: (scale) => {
-      ring.place(scale);
-      const { height, width } = box(scale);
-      const pixel = artPixel(scale);
-      setBox(hole, {
-        height: height - 2 * pixel,
-        left: pixel,
-        top: pixel,
-        width: width - 2 * pixel,
-      });
-    },
-  };
+  return dot.current
+    ? boxPart(doc, HELP_DOTS.current, box)
+    : borderedPart(doc, { border: HELP_DOTS.ring, fill: PALETTE.darkBrown }, box);
 }
 
 // Lines of text in parent, placed as the canvas places them.
@@ -246,7 +219,7 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
     [body, view.body.lines.join(" ")],
   ] as const) {
     const spoken = doc.createElement("span");
-    spoken.className = "adw-spoken";
+    spoken.className = "visually-hidden";
     spoken.textContent = text;
     element.append(spoken);
   }
@@ -327,18 +300,12 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
     presses: input.presses,
     ...(gesture === undefined ? {} : { gesture }),
     toGame: input.toGame,
-    view: {
+    view: framelessView(view.illustration, {
       buttons: view.buttons,
       close: NO_CLOSE,
-      covered: [],
       footer: view.footer,
-      frame: "none",
-      note: [],
-      notePlate: undefined,
-      panel: view.illustration,
-      title: [],
       titleY: view.title.capTop,
-    },
+    }),
   });
   const stopUnderlay = followModalUnderlay(layer.input, shown.element);
   return {

@@ -1,9 +1,5 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
-import {
-  type BitmapFont,
-  fontMetrics,
-  laidGlyphs,
-} from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { type BitmapFont, fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { domArtPath } from "../../assets/domArt.ts";
 import { ownerCardFaceKey } from "../../assets/spriteKeys.ts";
@@ -21,7 +17,8 @@ import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetF
 import { textBlock } from "../../ui/dom/textBlock.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridTransform, gridX, gridY } from "../../ui/domScale.ts";
-import { PALETTE } from "../../ui/palette.ts";
+import { lineInk } from "../../ui/lineInk.ts";
+import { cssHex, PALETTE } from "../../ui/palette.ts";
 import type { FaceBox, FaceRow } from "../faceText.ts";
 import { type HudArtDescriptor, prepareHudArt } from "./prepareHudArt.ts";
 export interface HudMomentState {
@@ -122,7 +119,6 @@ export interface HudMomentPainter {
   dispose(): void;
 }
 const ORIGIN = { x: 0, y: 0 };
-const hex = (value: number) => `#${value.toString(16).padStart(6, "0")}`;
 // Scene clocks own lifetimes and tweens. This painter owns only native pixels and asset readiness.
 export function createHudMoments(
   layer: UiLayer,
@@ -338,8 +334,8 @@ export function createHudMoments(
         const fallback = doc.createElement("span");
         fallback.className = "adw-art";
         Object.assign(fallback.style, {
-          backgroundColor: hex(colours.fill),
-          borderColor: hex(colours.border),
+          backgroundColor: cssHex(colours.fill),
+          borderColor: cssHex(colours.border),
           borderStyle: "solid",
           boxSizing: "border-box",
         });
@@ -353,7 +349,7 @@ export function createHudMoments(
         const rim = doc.createElement("span");
         rim.className = "adw-art";
         Object.assign(rim.style, {
-          borderColor: hex(colour),
+          borderColor: cssHex(colour),
           borderStyle: "solid",
           boxSizing: "border-box",
         });
@@ -391,12 +387,8 @@ export function createHudMoments(
     group,
     hasArt,
     inkWidth: (scale, text) => {
-      const inks = laidGlyphs(fonts.body, scale, shownText("body", text)).flatMap(({ ink }) =>
-        ink === null ? [] : [ink],
-      );
-      return inks.length === 0
-        ? 0
-        : Math.max(...inks.map(({ right }) => right)) - Math.min(...inks.map(({ left }) => left));
+      const { left, right } = lineInk(fonts.body, shownText("body", text), scale);
+      return right - left;
     },
     prepare: (assets) => prepareHudArt(source, assets),
     update(next) {

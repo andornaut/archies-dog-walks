@@ -9,6 +9,7 @@ import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import { createControlGlyph } from "../../ui/dom/controlGlyph.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { mountModalLifecycle, type NativeGesture } from "../../ui/dom/modalLifecycle.ts";
+import { type DomPart, panelFramePart } from "../../ui/dom/parts.ts";
 import {
   createTextLine,
   type DomTextLine,
@@ -43,17 +44,6 @@ import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
 // frame, the top bar's included: it calls backgroundCancel where the panel is closeable and
 // otherwise does nothing. Number keys press a question's buttons, Tab and Shift+Tab keep focus
 // among its buttons and close control, and Enter or Space presses the focused one.
-
-// A part a panel draws beyond its frame, title, note and buttons (a detail card's well, art and
-// text), placed again as the scale changes.
-export interface DomPart {
-  // The part's controls, which Tab reaches before the panel's buttons and close control, in
-  // order; keys on them go through to the scene under, which acts on its own focus.
-  readonly controls?: readonly HTMLElement[];
-  readonly element: HTMLElement;
-  readonly place: (scale: DomScale) => void;
-  readonly ready?: Promise<readonly string[]>;
-}
 
 export interface DomQuestionPanelInput {
   // Base screens opt out of modal ownership; pictures can remain modal without native buttons.
@@ -193,12 +183,11 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   // A question's ui-panel in its rim, or a modal card's ui-detail-card.
   const rim = doc.createElement("div");
   rim.className = "adw-rim";
-  const panel = doc.createElement("div");
-  panel.className = view.frame === "card" ? "adw-card" : "adw-panel";
+  const panel = panelFramePart(doc, view.frame === "card" ? "card" : "panel", view.panel);
   if (view.frame === "card") {
-    dialog.append(panel);
+    dialog.append(panel.element);
   } else if (view.frame === "panel") {
-    dialog.append(rim, panel);
+    dialog.append(rim, panel.element);
   }
 
   // The parts drawn at game pixels, placed again as the scale changes.
@@ -232,7 +221,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     dialog.style.transform = gridTransform(scale);
     setBox(rim, paintedPanel(scale));
   });
-  frame(panel, ORIGIN, view.panel);
+  placed.push(panel.place);
   for (const part of input.parts ?? []) {
     dialog.append(part.element);
     placed.push(part.place);

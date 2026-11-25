@@ -92,11 +92,11 @@ import {
   rowScale,
 } from "../layout/projection.ts";
 import { walkerFootY } from "../layout/screenLayout.ts";
-import { type OwnerNameInk, ownerNameInk } from "../presentation/ownerName.ts";
 import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
 import { read } from "../rules/units.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
 import { gridRects } from "../ui/grid.ts";
+import { type LineInk, lineInk } from "../ui/lineInk.ts";
 import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
 import { navigationMenuWidth, PAUSE_MENU_ITEMS, pauseMenuItemLabel } from "../ui/navigationMenu.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
@@ -120,7 +120,7 @@ function roadRow(projection: RoadProjection, road: Rect, row: number) {
 
 // An owner's quip's lead in slot, for the tallest measured name, and the panel it grows
 // line's panel to.
-function ownerLead(ink: OwnerNameInk, slot: LeadSlot, line: Rect) {
+function ownerLead(ink: LineInk, slot: LeadSlot, line: Rect) {
   const lead = ownerLeadLayout(slot, ink);
   return { ...lead, panel: ownerLeadPanel(line, lead) };
 }
@@ -168,7 +168,7 @@ export function layoutExport(
   const bodyFont = readBitmapFont("font-body");
   const body = fontMetrics(bodyFont);
   const leadInk = Object.values(data.dogs)
-    .map((dog) => ownerNameInk(bodyFont, dog.owner.name))
+    .map((dog) => lineInk(bodyFont, dog.owner.name))
     .sort(
       (a, b) => b.bottom - b.top - (a.bottom - a.top) || b.right - b.left - (a.right - a.left),
     )[0]!;

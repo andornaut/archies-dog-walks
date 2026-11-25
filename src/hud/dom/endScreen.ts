@@ -5,35 +5,33 @@ import { badgeStripHits, type BadgeView } from "../../home/badgesView.ts";
 import type { DetailArt, DetailText } from "../../home/detailCardView.ts";
 import { END_LAYOUT } from "../../home/endLayout.ts";
 import type { EndResults, EndScreenView } from "../../home/endScreenView.ts";
-import { closeControl } from "../../ui/closeControl.ts";
 import { sheetArt } from "../../ui/dom/artElements.ts";
 import { contentSeparatorPart } from "../../ui/dom/contentSeparator.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import {
-  createTextLine,
-  type DomTextLine,
-  placeBox,
-  placeFrame,
-  placeText,
-} from "../../ui/dom/pixelLine.ts";
+  type DomPart,
+  fillPart,
+  framedPart,
+  framelessView,
+  panelFramePart,
+} from "../../ui/dom/parts.ts";
+import { createTextLine, type DomTextLine, placeBox, placeText } from "../../ui/dom/pixelLine.ts";
 import { followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridX, gridY } from "../../ui/domScale.ts";
 import { type PanelText } from "../../ui/modal/types.ts";
-import { PALETTE } from "../../ui/palette.ts";
+import { cssHex, PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import type { DomBadgeCardInput } from "./badgeCard.ts";
 import { badgeStripParts } from "./celebration.ts";
-import { artPart, type DomDetailCardInput, framedPart, textPart } from "./detailCard.ts";
+import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
 import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
 import {
-  type DomPart,
   type DomQuestionPanel,
   type DomQuestionPanelInput,
   showQuestionPanel,
 } from "./questionPanel.ts";
-import { fillPart } from "./shopPage.ts";
 
 // Native results, controls and authored animation projections.
 
@@ -127,7 +125,7 @@ function linesPart(
   if (spoken) {
     for (const text of spoken === true ? [lines.map(({ text }) => text).join(" ")] : spoken) {
       const words = doc.createElement("span");
-      words.className = "adw-spoken";
+      words.className = "visually-hidden";
       words.textContent = text;
       parent.append(words);
     }
@@ -142,19 +140,6 @@ function linesPart(
         }
       }),
   };
-}
-
-// A ui-quip bubble, whole art pixels wide and tall from its snapped corner.
-function bubblePart(doc: Document, rect: Rect): DomPart {
-  const element = doc.createElement("div");
-  element.className = "adw-quip-frame";
-  return { element, place: (scale) => placeFrame(scale, ORIGIN, element, rect) };
-}
-
-function panelPart(doc: Document, rect: Rect): DomPart {
-  const element = doc.createElement("div");
-  element.className = "adw-plate-frame";
-  return { element, place: (scale) => placeFrame(scale, ORIGIN, element, rect) };
 }
 
 // Back to title: the go button's face and its label, pressed or bobbing as the scene says.
@@ -285,14 +270,8 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
       accepts: () => accepts(),
       burst: (event) => panel.burst(input.toGame({ x: event.clientX, y: event.clientY })),
     });
-    Object.assign(element.style, {
-      background: "transparent",
-      border: "0",
-      padding: "0",
-      pointerEvents: "auto",
-      position: "absolute",
-    });
-    face.style.setProperty("--ui-button-focus-fill", `#${PALETTE.cyan.toString(16)}66`);
+    Object.assign(element.style, { pointerEvents: "auto", position: "absolute" });
+    face.style.setProperty("--ui-button-focus-fill", `${cssHex(PALETTE.cyan)}66`);
     return {
       controls: [element],
       dispose: () => {
@@ -329,7 +308,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
   const ownerParts: DomPart[] = [
     contentSeparatorPart(doc, "art", results.rule),
     ...results.wells.map((rect) => fillPart(doc, { colour: PALETTE.tan, rect })),
-    ...results.bubbles.map((rect) => bubblePart(doc, rect)),
+    ...results.bubbles.map((rect) => panelFramePart(doc, "quip", rect)),
     ...results.ownerRows.art.map((art) => artPart(doc, input, art)),
     ...faces.map(({ part }) => part),
     ...results.ownerRows.texts.map((text) => textPart(doc, input, text)),
@@ -372,7 +351,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
   };
   const colours = END_LAYOUT.side.band;
   const parts: DomPart[] = [
-    panelPart(doc, results.panel),
+    panelFramePart(doc, "plate", results.panel),
     fillPart(doc, { colour: PALETTE[colours.outline], rect: results.band.outline }),
     fillPart(doc, { colour: PALETTE[colours.fill], rect: results.band.fill }),
     fillPart(doc, { colour: PALETTE[colours.lip], rect: results.band.lip }),
@@ -462,17 +441,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
     parts: [content],
     presses: [],
     toGame: input.toGame,
-    view: {
-      buttons: [],
-      close: closeControl(screen),
-      covered: [],
-      frame: "none",
-      note: [],
-      notePlate: undefined,
-      panel: screen,
-      title: [],
-      titleY: 0,
-    },
+    view: framelessView(screen),
   });
   accepts = panel.accepts;
   return {

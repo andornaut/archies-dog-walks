@@ -84,7 +84,6 @@ import {
   shortDollarAmountText,
   signedShortDollarText,
 } from "../presentation/currency.ts";
-import { ownerNameInk } from "../presentation/ownerName.ts";
 import { amountText } from "../rules/causes.ts";
 import { firesText } from "../rules/choices.ts";
 import { payFor } from "../rules/run.ts";
@@ -94,6 +93,7 @@ import type { Owned } from "../save/schema.ts";
 import { readBitmapFont } from "../tools/fontFile.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
+import { lineInk } from "../ui/lineInk.ts";
 import { MODAL, modalTitleLayout } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
@@ -170,7 +170,7 @@ function faceRole(
 function ownerQuipRoles(): TextRoleCase[] {
   return keysOf(gameData.dogs).flatMap((dog) => {
     const { name } = gameData.dogs[dog].owner;
-    const ink = ownerNameInk(gameFont("font-body"), name);
+    const ink = lineInk(gameFont("font-body"), name);
     const quips = [...gameData.quips[dog].happier, ...gameData.quips[dog].upset].map((text) => ({
       text,
     }));

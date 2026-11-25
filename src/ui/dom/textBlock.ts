@@ -2,6 +2,7 @@ import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { type DomScale, gridX, gridY } from "../domScale.ts";
+import { cssHex } from "../palette.ts";
 import type { PillColours } from "./labelBlock.ts";
 import {
   blockPlace,
@@ -12,7 +13,6 @@ import {
   spokenText,
 } from "./pixelLine.ts";
 const ORIGIN = { x: 0, y: 0 };
-const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 // One immutable text block. Shared font layout owns anchors, ink centring and name-pill bounds.
 export function textBlock(
   doc: Document,
@@ -35,7 +35,7 @@ export function textBlock(
     pill.setAttribute("aria-hidden", "true");
     const colours = input.pillColours(index);
     if (colours !== undefined) {
-      pill.style.backgroundColor = hex(colours.pill);
+      pill.style.backgroundColor = cssHex(colours.pill);
     }
     return pill;
   });
@@ -49,11 +49,11 @@ export function textBlock(
       span.textContent = run.text;
     }
     const named = run.pill === undefined ? undefined : input.pillColours(run.pill);
-    span.style.color = hex(named?.name ?? block.colour);
+    span.style.color = cssHex(named?.name ?? block.colour);
     return span;
   });
   const spoken = doc.createElement("span");
-  spoken.className = "adw-spoken";
+  spoken.className = "visually-hidden";
   spoken.textContent = `${block.lines.map((line) => spokenText(shownText(block.font, line))).join(" ")} `;
   element.append(...pills, ...runs, spoken);
   return {

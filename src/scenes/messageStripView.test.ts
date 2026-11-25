@@ -12,11 +12,11 @@ import {
   ownerLeadPanel,
   stripLeadSlot,
 } from "../hud/messageStrip.ts";
-import { ownerNameInk } from "../presentation/ownerName.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { FakeDocument } from "../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont } from "../testing/fontInk.ts";
 import type { DomTextBlock } from "../ui/dom/pixelLine.ts";
+import { lineInk } from "../ui/lineInk.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { MessageStrip } from "./messageStripView.ts";
 
@@ -58,7 +58,7 @@ describe("owner-led native notices", () => {
     const text = Array.from({ length: 14 }, () => "Woof").join(" ");
     strip.say({ icon: { dog: "sequoia", kind: "owner", mood: "happy" }, text });
     strip.update(0, 1, 0);
-    const ink = ownerNameInk(body, owner);
+    const ink = lineInk(body, owner);
     const metrics = fontFileMetrics("font-body");
     const lead = ownerLeadLayout(stripLeadSlot(metrics), ink);
     expect(rows[0]!.length).toBeGreaterThan(2);

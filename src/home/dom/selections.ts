@@ -11,7 +11,7 @@ import { createTextLine, placeBackedText, placeText, setBox } from "../../ui/dom
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
 import { type DomScale, frameRect, gridX, gridY } from "../../ui/domScale.ts";
 import { itemTileLook } from "../../ui/interaction.ts";
-import { PALETTE } from "../../ui/palette.ts";
+import { cssHex, PALETTE } from "../../ui/palette.ts";
 import { plainMarks } from "../../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { plateStripView, pricePlateView } from "../pricePlateView.ts";
@@ -41,7 +41,6 @@ export interface NativeHomeSelection {
   place(scale: DomScale, motion: SelectionMotion): void;
   setFrame(index: number, frame: string | number | SheetFrame): void;
 }
-const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 // Home-specific art and copy compose the shared native tile.
 export function createHomeSelection(
   doc: Document,
@@ -93,7 +92,7 @@ export function createHomeSelection(
     const box = doc.createElement("span");
     box.className = "adw-framed";
     if (colour !== undefined) {
-      box.style.backgroundColor = hex(colour);
+      box.style.backgroundColor = cssHex(colour);
     }
     paint.append(box);
     parts.push((scale) => setBox(box, local(scale, rect)));

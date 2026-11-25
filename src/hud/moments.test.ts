@@ -6,7 +6,6 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
-import { ownerNameInk } from "../presentation/ownerName.ts";
 import { maxHearts } from "../rules/dogs.ts";
 import { modifiersOf } from "../rules/modifiers.ts";
 import { faceMood } from "../rules/treats.ts";
@@ -15,6 +14,7 @@ import { bodyRunWidth } from "../testing/bodyFont.ts";
 import { defined } from "../testing/defined.ts";
 import { fitInFont, fontFileMetrics, gameFont } from "../testing/fontInk.ts";
 import { PACK_PLACES } from "../testing/packPlaces.ts";
+import { lineInk } from "../ui/lineInk.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents, clampHearts } from "../units.ts";
@@ -393,7 +393,7 @@ describe("a fired line's bubble", () => {
   const { topBar } = SCREEN_LAYOUT;
   const bars = Array.from({ length: Object.keys(gameData.debuffs).length + 1 }, (_, i) => i);
   const owners = Object.entries(gameData.dogs).flatMap(([dog, data]) => {
-    const ink = ownerNameInk(gameFont("font-body"), data.owner.name);
+    const ink = lineInk(gameFont("font-body"), data.owner.name);
     const room = ownerLeadLayout(stripLeadSlot(BODY), ink).room;
     return [
       ...gameData.quips[dog as keyof typeof gameData.dogs].happier,

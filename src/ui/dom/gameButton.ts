@@ -1,4 +1,5 @@
 import "@andornaut/game-kit/runtime/web/ui/dom/controls.css";
+import "./buttonReset.css";
 import "./gameButton.css";
 
 import {
@@ -25,7 +26,11 @@ export function createGameButton(document: Document, options: GameButtonOptions)
     ...button,
     appearance: {
       ...options.appearance,
-      className: [standard && "adw-standard-button", options.appearance?.className]
+      className: [
+        "adw-reset-button",
+        standard && "adw-standard-button",
+        options.appearance?.className,
+      ]
         .filter(Boolean)
         .join(" "),
       contentClassName: [

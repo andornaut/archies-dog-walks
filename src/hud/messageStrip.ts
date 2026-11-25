@@ -5,8 +5,8 @@ import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/te
 import { MESSAGE_STRIP, OWNER_LEAD } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId, GameData } from "../data/types.ts";
-import type { OwnerNameInk } from "../presentation/ownerName.ts";
 import { read } from "../rules/units.ts";
+import type { LineInk } from "../ui/lineInk.ts";
 import { effectIconKey, type EffectItem } from "./effectIcons.ts";
 import type { NameMark } from "./effectNames.ts";
 import { type FaceBox, type FaceRow, faceRows, type FaceText } from "./faceText.ts";
@@ -165,7 +165,7 @@ export function stripLeadSlot(body: FontMetrics, bars = 0, bar: Rect = WALK_BAR_
 }
 
 // An owner's lead in slot, using the name's actual visible ink bounds.
-export function ownerLeadLayout(slot: LeadSlot, nameInk: OwnerNameInk): OwnerLeadLayout {
+export function ownerLeadLayout(slot: LeadSlot, nameInk: LineInk): OwnerLeadLayout {
   const { face, nameGap, rise } = OWNER_LEAD;
   const framed = face + 2;
   const nameWidth = nameInk.right - nameInk.left;
@@ -197,7 +197,7 @@ export function ownerLeadPanel(panel: Rect, lead: OwnerLeadLayout): Rect {
 // each grown to an owner's lead.
 export function linePanels(
   body: FontMetrics,
-  owners: readonly { readonly ink: OwnerNameInk; readonly rows: number }[],
+  owners: readonly { readonly ink: LineInk; readonly rows: number }[],
   bars: number,
   bar: Rect = WALK_BAR_RECT,
 ): Rect[] {

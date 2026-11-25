@@ -2,6 +2,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { type DomArtSource, imageArt } from "../../ui/dom/artElements.ts";
+import { colourBox } from "../../ui/dom/parts.ts";
 import { createTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import { artPixel, type DomScale, frameRect } from "../../ui/domScale.ts";
 import type { PanelText } from "../../ui/modal/types.ts";
@@ -33,9 +34,7 @@ export function createGearBadge(
     },
   ): void;
 } {
-  const element = doc.createElement("span");
-  element.className = "adw-framed";
-  element.style.backgroundColor = `#${PALETTE.plum.toString(16).padStart(6, "0")}`;
+  const element = colourBox(doc, PALETTE.plum, "span");
   const art = source.hasArt(view.key) ? imageArt(doc, source, view.key) : undefined;
   const fallback = art === undefined ? createTextLine(doc, view.fallback) : undefined;
   if (art !== undefined) {

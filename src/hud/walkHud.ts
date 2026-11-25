@@ -16,10 +16,11 @@ import {
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { DebuffId, DogId, GameData } from "../data/types.ts";
 import type { ScreenLayout } from "../layout/screenLayout.ts";
-import { ownerNameInk, type OwnerNameLine } from "../presentation/ownerName.ts";
+import { type OwnerNameLine } from "../presentation/ownerName.ts";
 import { walkLength } from "../rules/route.ts";
 import { zoneLength } from "../runner/walkMotion.ts";
 import type { RunState } from "../state/runState.ts";
+import { lineInk } from "../ui/lineInk.ts";
 import { GAME_PROGRESS, GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
 import { TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { TOP_BAR_FACE, wellCapsTop } from "../ui/topBarTrim.ts";
@@ -250,7 +251,7 @@ export function ownerPhotoRect(size: number, face: Point): Rect {
 // One whole name centred by visible ink, with the same ink top for every owner.
 export function hudOwnerName(font: BitmapFont, text: string): CardLine {
   const { inkTop, scale, x } = DOG_CARD.owner.name;
-  const ink = ownerNameInk(font, text, scale);
+  const ink = lineInk(font, text, scale);
   return { ink, text, top: inkTop - ink.top, x: x - (ink.right - ink.left) / 2 };
 }
 

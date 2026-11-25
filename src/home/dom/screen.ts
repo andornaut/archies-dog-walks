@@ -1,9 +1,11 @@
+import "../../ui/dom/buttonReset.css";
+
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SCREEN_CONFIG } from "../../data/screen.ts";
-import { fillPart } from "../../hud/dom/shopPage.ts";
 import type { DomArtSource } from "../../ui/dom/artElements.ts";
+import { fillPart } from "../../ui/dom/parts.ts";
 import { createTextLine, placeText, setBox, spokenText } from "../../ui/dom/pixelLine.ts";
 import {
   deviceX,
@@ -140,7 +142,7 @@ export function createNativeHomeView(
   if (snapshot.bubbleInteractive) {
     (speechControl as HTMLButtonElement).type = "button";
   }
-  speechControl.className = "adw-button";
+  speechControl.className = "adw-button adw-reset-button";
   speechControl.style.position = "absolute";
   speechControl.style.pointerEvents = snapshot.bubbleInteractive ? "auto" : "none";
   speechControl.setAttribute("aria-label", snapshot.speech.lines.map(spokenText).join(" "));

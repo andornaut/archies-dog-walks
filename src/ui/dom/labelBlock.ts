@@ -11,6 +11,7 @@ import {
   fontPixel,
   wholeArtPixels,
 } from "../domScale.ts";
+import { cssHex } from "../palette.ts";
 import { displayGlyphs, inkEnd, namePillBoxes, penRuns, setBox, spokenText } from "./pixelLine.ts";
 import type { WEB_FONTS } from "./uiLayer.ts";
 
@@ -101,8 +102,6 @@ export function labelPlace(
   };
 }
 
-const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
-
 // The colours of a name's pill of a kind and of its name, or undefined for none.
 export type PillColours = (index: number) => { name: number; pill: number } | undefined;
 
@@ -129,7 +128,7 @@ export function drawLabel(
     const colours = input.pillColours(index);
     const fill = label.pills === "grey" ? input.grey : colours?.pill;
     if (fill !== undefined) {
-      pill.style.backgroundColor = hex(fill);
+      pill.style.backgroundColor = cssHex(fill);
     }
     return pill;
   });
@@ -147,7 +146,7 @@ export function drawLabel(
     const named =
       run.pill === undefined || label.pills === "grey" ? undefined : input.pillColours(run.pill);
     Object.assign(span.style, {
-      color: hex(named?.name ?? label.colour),
+      color: cssHex(named?.name ?? label.colour),
       fontSize: `${place.fontSize}px`,
       left: `${run.left}px`,
       lineHeight: `${place.lineHeight}px`,
@@ -156,7 +155,7 @@ export function drawLabel(
     return span;
   });
   const spoken = doc.createElement("span");
-  spoken.className = "adw-spoken";
+  spoken.className = "visually-hidden";
   spoken.textContent = `${label.lines.map(({ text }) => spokenText(text)).join(" ")} `;
   element.replaceChildren(...pills, ...runs, spoken);
 }

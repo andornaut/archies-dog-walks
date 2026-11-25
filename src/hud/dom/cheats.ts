@@ -4,6 +4,7 @@ import type { CheatAction, CheatRowView, CheatsView } from "../../dev/cheatsView
 import { type DomArtSource, sheetArt } from "../../ui/dom/artElements.ts";
 import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
+import type { DomPart } from "../../ui/dom/parts.ts";
 import { createTextLine, placeBox, placeFrame, placeText } from "../../ui/dom/pixelLine.ts";
 import { refuse } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
@@ -11,7 +12,6 @@ import { type DomScale, gridY } from "../../ui/domScale.ts";
 import { bodyScrollbarPart } from "./bodyScrollbar.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
 import {
-  type DomPart,
   type DomQuestionPanel,
   type DomQuestionPanelInput,
   showQuestionPanel,

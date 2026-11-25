@@ -34,6 +34,7 @@ import { containGameButtonClicks } from "./actionBinding.ts";
 import { type DomArtSource, imageArt, sheetArt } from "./artElements.ts";
 import { createGameButton } from "./gameButton.ts";
 import { guardNativeInput, revealPaint } from "./modalLifecycle.ts";
+import { colourBox, gridFillPart } from "./parts.ts";
 import { backedTextPlaces, createTextLine, placeBox, placeText, setBox } from "./pixelLine.ts";
 import type { UiLayer } from "./uiLayer.ts";
 export interface NativeTopSectionPress {
@@ -81,7 +82,6 @@ interface BarControl {
   readonly setPressed: (pressed: boolean) => void;
 }
 const ORIGIN = { x: 0, y: 0 } as const;
-const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 // Screen owners select actions and input guards; every native top section shares this layout.
 export function createNativeTopSection(
   layer: UiLayer,
@@ -112,25 +112,21 @@ export function createNativeTopSection(
   let inert = false;
   let epoch = 0;
   let inputBottom: number | undefined;
-  const box = (parent: HTMLElement, colour: number, rect: Parameters<typeof placeBox>[3]) => {
-    const element = doc.createElement("span");
-    element.className = "adw-framed";
-    element.style.backgroundColor = hex(colour);
-    parent.append(element);
-    placed.push((scale) => placeBox(scale, ORIGIN, element, rect));
-  };
   topBarRects(layout.bar)
     .filter(({ rect }) => rect.height !== 1 || rect.y !== TOP_BAR_TRIM.line.row)
-    .forEach(({ colour, rect }) => box(underlayElement, PALETTE[colour], rect));
+    .forEach(({ colour, rect }) => {
+      const part = gridFillPart(doc, ORIGIN, { colour: PALETTE[colour], rect }, "span");
+      underlayElement.append(part.element);
+      placed.push(part.place);
+    });
   let effectCount = 0;
   let effectPressed: number | undefined;
   const effectArt = layout.effectWells.map(() => image("ui-hud-effect-well"));
   effectArt.forEach((art) => underlayElement.append(art.element));
   // A pressed well fills forest inside its frame, as every pressed button does, and dips with
   // its icon.
-  const wellPress = doc.createElement("span");
-  wellPress.className = "adw-framed adw-top-section-well-press";
-  wellPress.style.backgroundColor = hex(PALETTE.forest);
+  const wellPress = colourBox(doc, PALETTE.forest, "span");
+  wellPress.classList.add("adw-top-section-well-press");
   underlayElement.append(wellPress);
   const placeEffects = (scale: DomScale) => {
     const wells = topSectionLayout(config.buttons, { ...config, effects: effectCount }).effectWells;

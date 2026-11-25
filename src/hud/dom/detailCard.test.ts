@@ -2,8 +2,9 @@ import { expect, it, vi } from "vitest";
 
 import { FakeDocument } from "../../testing/fakeDom.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
+import { framedPart } from "../../ui/dom/parts.ts";
 import { artPixel, domScale, gridRect } from "../../ui/domScale.ts";
-import { artPart, framedPart } from "./detailCard.ts";
+import { artPart } from "./detailCard.ts";
 
 it("keeps art hidden, and settles, where its frames are not a sheet's", async () => {
   const error = vi.spyOn(console, "error").mockImplementation(() => undefined);

@@ -4,6 +4,7 @@ import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { domArtPath } from "../../assets/domArt.ts";
 import type { DetailArt, DetailCardView, DetailText } from "../../home/detailCardView.ts";
 import { contentSeparatorPart } from "../../ui/dom/contentSeparator.ts";
+import { type DomPart, framedPart } from "../../ui/dom/parts.ts";
 import { blockPlace, setBox, shownText, spokenText } from "../../ui/dom/pixelLine.ts";
 import { type SheetFrame, sheetFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
@@ -18,9 +19,9 @@ import {
   gridY,
   wholeArtPixels,
 } from "../../ui/domScale.ts";
+import { cssHex } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import {
-  type DomPart,
   type DomQuestionPanel,
   type DomQuestionPanelInput,
   showQuestionPanel,
@@ -48,44 +49,8 @@ export interface DomDetailCardInput extends Pick<
   readonly presses?: readonly (() => void)[];
 }
 
-const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
-
 // Ids that tie each card's dialog to its text.
 let cards = 0;
-
-// A framed box with one authored-pixel border; principal wells follow their logical allocation.
-export function framedPart(doc: Document, view: DetailCardView["framed"][number]): DomPart {
-  const element = doc.createElement("div");
-  element.className = "adw-framed";
-  element.style.backgroundColor = hex(view.border);
-  const fill = doc.createElement("div");
-  fill.className = "adw-framed";
-  fill.style.backgroundColor = hex(view.fill);
-  element.append(fill);
-  return {
-    element,
-    place: (scale) => {
-      const pixel = artPixel(scale);
-      const { height, width, x, y } = view.rect;
-      const box =
-        view.projection === "layout"
-          ? gridRect(scale, view.rect)
-          : {
-              height: height * pixel,
-              left: gridX(scale, x),
-              top: gridY(scale, y),
-              width: width * pixel,
-            };
-      setBox(element, box);
-      setBox(fill, {
-        height: box.height - 2 * pixel,
-        left: pixel,
-        top: pixel,
-        width: box.width - 2 * pixel,
-      });
-    },
-  };
-}
 
 // The device pixels from holder's snapped corner to art that aims at aim's column: its middle
 // there, rounded to whole art pixels, and kept within the edge's straight part, whose length is
@@ -209,7 +174,7 @@ export function textPart(
   element.className = "adw-lines";
   if (text.focusColour !== undefined) {
     element.classList.add("adw-focus-colour");
-    element.style.setProperty("--adw-focus-colour", hex(text.focusColour));
+    element.style.setProperty("--adw-focus-colour", cssHex(text.focusColour));
   }
   const font = text.font ?? "body";
   // Where each span starts in the line as the font draws it, and its colour.
@@ -245,7 +210,7 @@ export function textPart(
     pill.setAttribute("aria-hidden", "true");
     const colours = input.pillColours(index);
     if (colours !== undefined) {
-      pill.style.backgroundColor = hex(colours.pill);
+      pill.style.backgroundColor = cssHex(colours.pill);
     }
     return { colours, pill };
   });
@@ -257,11 +222,11 @@ export function textPart(
     span.textContent = run.text;
     const named = run.pill === undefined ? undefined : input.pillColours(run.pill);
     const own = spans.filter(({ from }) => from <= run.from).at(-1)?.colour;
-    span.style.color = hex(named?.name ?? own ?? text.colour);
+    span.style.color = cssHex(named?.name ?? own ?? text.colour);
     return span;
   });
   const spoken = doc.createElement("span");
-  spoken.className = "adw-spoken";
+  spoken.className = "visually-hidden";
   spoken.textContent = `${text.lines.map((line) => spokenText(shownText(font, line))).join(" ")} `;
   element.append(...pills.map(({ pill }) => pill), ...runs, spoken);
   return {

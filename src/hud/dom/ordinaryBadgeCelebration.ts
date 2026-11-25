@@ -5,15 +5,15 @@ import { ownerFaceKey } from "../../assets/spriteKeys.ts";
 import { gameData } from "../../data/index.ts";
 import type { DogId } from "../../data/types.ts";
 import type { BadgeView } from "../../home/badgesView.ts";
-import { closeControl } from "../../ui/closeControl.ts";
 import { sheetArt } from "../../ui/dom/artElements.ts";
+import { type DomPart, framelessView } from "../../ui/dom/parts.ts";
 import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import type { DomScale } from "../../ui/domScale.ts";
 import type { DomBadgeCardInput } from "./badgeCard.ts";
 import { type BadgeCelebrationView, badgeStripParts } from "./celebration.ts";
 import { textPart } from "./detailCard.ts";
-import { type DomPart, showQuestionPanel } from "./questionPanel.ts";
+import { showQuestionPanel } from "./questionPanel.ts";
 
 type Shared = Omit<DomBadgeCardInput, "view" | "dismiss">;
 
@@ -95,17 +95,12 @@ export function showOrdinaryBadgeCelebration(
     parts: [...badges.parts, ...view.names.map((name) => textPart(doc, input, name)), ...faces],
     presses: [input.close],
     toGame: input.toGame,
-    view: {
+    view: framelessView(view.panel, {
       buttons: [view.button],
-      close: closeControl(view.panel),
       covered: [view.panel, view.button.hit],
-      frame: "none",
-      note: [],
-      notePlate: undefined,
-      panel: view.panel,
       title: view.title,
       titleY: view.titleY,
-    },
+    }),
   });
   return {
     badges,

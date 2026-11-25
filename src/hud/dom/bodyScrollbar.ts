@@ -1,9 +1,9 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
+import type { DomPart } from "../../ui/dom/parts.ts";
 import { setBox } from "../../ui/dom/pixelLine.ts";
 import { type DomScale, gridRect, gridX, gridY, scrollbarBoxes } from "../../ui/domScale.ts";
 import { scrollbarRects, type ScrollbarSpec } from "../../ui/scrollbar.ts";
-import type { DomPart } from "./questionPanel.ts";
 
 // A modal body's scroll: its viewport, its content's height from the viewport's top, and its
 // scrollbar.

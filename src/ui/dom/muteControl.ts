@@ -5,7 +5,7 @@ import crashArt from "virtual:adw-crash-art";
 
 import { MENU_TEXT } from "../../data/menuText.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
-import { PALETTE } from "../palette.ts";
+import { cssHex, PALETTE } from "../palette.ts";
 import { TITLE_CAP_ROWS } from "../textFit.ts";
 import { topSectionLayout, topSectionStateCapTop } from "../topSection.ts";
 import { bindGameActionHolds } from "./actionBinding.ts";
@@ -45,7 +45,7 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
     "white",
     "yellow",
   ] as const) {
-    view.style.setProperty(`--adw-${name}`, `#${PALETTE[name].toString(16).padStart(6, "0")}`);
+    view.style.setProperty(`--adw-${name}`, cssHex(PALETTE[name]));
   }
   const active = () => !parent.inert && !parent.hidden;
   const toggle = () => {

@@ -1,5 +1,4 @@
 import { insetRect, type Point, type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
-import { laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { Scene, Tweens } from "phaser";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";
@@ -17,6 +16,7 @@ import type { ChangeLabel } from "../hud/hudView.ts";
 import { arcControl } from "../hud/moments.ts";
 import { cardHearts } from "../hud/walkHud.ts";
 import { slotIndexOf } from "../state/pack.ts";
+import { lineInk } from "../ui/lineInk.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { arcFlight } from "./arcFlight.ts";
@@ -220,17 +220,11 @@ export class HeartFeedback {
     rect: Rect;
   } {
     const text = `${label.amount < 0 ? "−" : "+"}${Math.abs(label.amount)}`;
-    const glyphs = laidGlyphs(this.hooks.painter.fonts.title, 2, plainMarks(text)).flatMap(
-      ({ ink }) => (ink === null ? [] : [ink]),
+    const { bottom, left, right, top } = lineInk(
+      this.hooks.painter.fonts.title,
+      plainMarks(text),
+      2,
     );
-    const left = Math.min(...glyphs.map((ink) => ink.left));
-    const right = Math.max(...glyphs.map((ink) => ink.right));
-    const rows = [...plainMarks(text)].flatMap((char) => {
-      const glyph = this.hooks.painter.fonts.title.glyphs.get(char);
-      return glyph !== undefined && glyph.width > 0 && glyph.height > 0 ? [glyph] : [];
-    });
-    const top = Math.min(...rows.map((glyph) => glyph.yOffset * 2));
-    const bottom = Math.max(...rows.map((glyph) => (glyph.yOffset + glyph.height) * 2));
     const size = {
       height: Math.ceil(bottom - top) + 2 * CHIP_PAD,
       width: Math.ceil(right - left) + 2 * CHIP_PAD,

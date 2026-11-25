@@ -76,7 +76,8 @@ html[data-frame-turn] #game > canvas {
   display: none;
 }
 
-/* Read by screen readers, not shown: the game's controls, which the canvas cannot expose. */
+/* Read by screen readers, not shown: the game's controls, which the canvas cannot expose, and the
+   HTML interface's spoken text. */
 .visually-hidden {
   position: absolute;
   width: 1px;

@@ -1,0 +1,16 @@
+/* Every native control's reset: no native look, spacing, fill or outline, the parent's colour and
+   font, and the pointer cursor and manipulation touch. Skins and placement come from the control's
+   own rules. */
+.adw-reset-button {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}

@@ -1,7 +1,7 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { artPixel, type DomScale, frameRect, gridRect, gridX, gridY } from "../domScale.ts";
-import { PALETTE } from "../palette.ts";
+import { cssHex, PALETTE } from "../palette.ts";
 import { setBox } from "./pixelLine.ts";
 
 // Content rules share one art-pixel stroke without changing their logical anchors or widths.
@@ -10,7 +10,7 @@ export function createContentSeparator(doc: Document): HTMLElement {
   element.className = "adw-framed adw-separator";
   element.setAttribute("aria-hidden", "true");
   Object.assign(element.style, {
-    backgroundColor: `#${PALETTE.tan.toString(16).padStart(6, "0")}`,
+    backgroundColor: cssHex(PALETTE.tan),
     pointerEvents: "none",
     position: "absolute",
   });

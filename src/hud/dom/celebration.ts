@@ -7,12 +7,11 @@ import {
   panelBadgeStrip,
   stripUnderClose,
 } from "../../home/badgesView.ts";
-import { closeControl } from "../../ui/closeControl.ts";
+import { type DomPart, framelessView, panelFramePart } from "../../ui/dom/parts.ts";
 import {
   boundsAdvance,
   capRows,
   createTextLine,
-  placeFrame,
   placeText,
   setBox,
   shownText,
@@ -36,7 +35,6 @@ import type { CentredRow, DottedRule, ZoneCelebrationView } from "../celebration
 import { confettiPart, type DomBadgeCardInput } from "./badgeCard.ts";
 import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
 import {
-  type DomPart,
   type DomQuestionPanel,
   type DomQuestionPanelInput,
   showQuestionPanel,
@@ -49,13 +47,8 @@ type Shared = Pick<DomDetailCardInput, "artUrl" | "fonts" | "loadSheet" | "pillC
 
 const ORIGIN = { x: 0, y: 0 } as const;
 
-const FRAME_CLASSES = { "ui-panel": "adw-plate-frame", "ui-quip": "adw-quip-frame" } as const;
-
-function framePart(doc: Document, frame: ZoneCelebrationView["frame"]): DomPart {
-  const element = doc.createElement("div");
-  element.className = FRAME_CLASSES[frame.key];
-  return { element, place: (scale) => placeFrame(scale, ORIGIN, element, frame.rect) };
-}
+// The celebrations' frames take no presses, which go through to the canvas.
+const FRAMES = { "ui-panel": "plate", "ui-quip": "quip" } as const;
 
 // The rule's dots, an art pixel each, step art pixels apart, as many as fit between the snapped
 // frame's sides inset art pixels in, centred there, on the frame's art-pixel grid.
@@ -116,26 +109,6 @@ function rowPart(doc: Document, input: Shared, row: CentredRow): DomPart[] {
   });
 }
 
-// A panel view with no frame of its own: its parts or the canvas draw it.
-function frameless(
-  panel: Rect,
-  buttons: QuestionPanelView["buttons"],
-  title: readonly PanelText[],
-  titleY: number,
-): QuestionPanelView {
-  return {
-    buttons,
-    close: closeControl(panel),
-    covered: [panel, ...buttons.map(({ hit }) => hit)],
-    frame: "none",
-    note: [],
-    notePlate: undefined,
-    panel,
-    title,
-    titleY,
-  };
-}
-
 // Native headline, plate or bubble and action; the scene retains the world celebration actors.
 export function showZoneCelebration(
   layer: UiLayer,
@@ -152,7 +125,7 @@ export function showZoneCelebration(
     ...(input.headline === undefined
       ? []
       : zoneHeadlineParts(doc, input.headline.font, input.headline.text)),
-    framePart(doc, view.frame),
+    panelFramePart(doc, FRAMES[view.frame.key], view.frame.rect),
     ...(view.rule === undefined ? [] : [rulePart(doc, view.frame.rect, view.rule)]),
     ...view.art.map((art) => artPart(doc, input, art)),
     ...view.texts.map((text) => textPart(doc, input, text)),
@@ -168,7 +141,10 @@ export function showZoneCelebration(
     parts,
     presses: [input.press],
     toGame: input.toGame,
-    view: frameless(view.frame.rect, [view.button], [], view.frame.rect.y),
+    view: framelessView(view.frame.rect, {
+      buttons: [view.button],
+      covered: [view.frame.rect, view.button.hit],
+    }),
   });
 }
 
@@ -239,7 +215,7 @@ export function badgeStripParts(
       }
     },
     parts: [
-      framePart(doc, { key: "ui-panel", rect: view.panel }),
+      panelFramePart(doc, "plate", view.panel),
       ...badges.flatMap(({ confetti, picture }) => [confetti, picture]),
     ],
     setPop: (index, scale) => {

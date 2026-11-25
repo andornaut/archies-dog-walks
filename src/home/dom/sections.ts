@@ -1,9 +1,9 @@
 import { type BitmapFont, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SLICES } from "../../data/layout.ts";
-import { fillPart } from "../../hud/dom/shopPage.ts";
 import { type DomArtSource, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";
 import { cutDomArt } from "../../ui/dom/domCuts.ts";
+import { fillPart } from "../../ui/dom/parts.ts";
 import {
   backedTextPlaces,
   createTextLine,
@@ -20,7 +20,7 @@ import {
   gridRect,
   gridY,
 } from "../../ui/domScale.ts";
-import { PALETTE } from "../../ui/palette.ts";
+import { cssHex, PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { HOME_LAYOUT } from "../homeLayout.ts";
 import type { Sections } from "../sections.ts";
@@ -156,9 +156,9 @@ export function createHomeSections(
     element.append(fill);
     if ("colour" in section.fill) {
       const fillColour = PALETTE[section.fill.colour];
-      fill.style.backgroundColor = `#${fillColour.toString(16).padStart(6, "0")}`;
+      fill.style.backgroundColor = cssHex(fillColour);
     } else if (!source.hasArt(section.fill.key)) {
-      fill.style.backgroundColor = `#${PALETTE[section.fill.fallback].toString(16).padStart(6, "0")}`;
+      fill.style.backgroundColor = cssHex(PALETTE[section.fill.fallback]);
     } else {
       // CSS repeats a whole file, so the fill is cut from its sheet.
       const { key } = section.fill;

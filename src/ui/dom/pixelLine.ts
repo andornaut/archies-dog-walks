@@ -30,7 +30,7 @@ import {
   pillIndex,
   pillRows,
 } from "../namePills.ts";
-import { PALETTE } from "../palette.ts";
+import { cssHex, PALETTE } from "../palette.ts";
 import { plainMarks } from "../pixelFont.ts";
 import { WEB_FONTS } from "./uiLayer.ts";
 
@@ -168,15 +168,13 @@ export function setBox(
   });
 }
 
-const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
-
 // A text line's element: its text, font and colour; placeText positions it. Display text is a
 // span a character (displayGlyphs).
 export function createTextLine(doc: Document, line: DomTextLine): HTMLElement {
   const element = doc.createElement("span");
   element.className = `adw-text adw-font-${line.font}`;
   const text = shownText(line.font, line.text);
-  element.style.color = hex(line.colour);
+  element.style.color = cssHex(line.colour);
   if (line.font !== "display") {
     element.textContent = text;
     return element;
@@ -195,7 +193,7 @@ export function displayGlyphs(doc: Document, text: string): HTMLElement[] {
     glyph.setAttribute("aria-hidden", "true");
     glyph.textContent = char;
     if (char === DISPLAY_HEART.char) {
-      glyph.style.color = hex(DISPLAY_HEART.colour);
+      glyph.style.color = cssHex(DISPLAY_HEART.colour);
     }
     return glyph;
   });

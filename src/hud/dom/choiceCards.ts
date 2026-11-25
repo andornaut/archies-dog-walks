@@ -1,3 +1,4 @@
+import "../../ui/dom/buttonReset.css";
 import "./choiceCards.css";
 
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
@@ -13,16 +14,16 @@ import { CHARM } from "../../layout/buffLayout.ts";
 import { CARD_LAYOUT, cardRowIn, forkHomeRect } from "../../layout/cardLayout.ts";
 import { type CardView, MAX_CARD_OPTIONS } from "../../rules/choices.ts";
 import { cardHeader } from "../../ui/cardRow.ts";
-import { closeControl } from "../../ui/closeControl.ts";
 import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import { type DomArtSource, imageArt, imageNineSlice } from "../../ui/dom/artElements.ts";
 import { type NativeGesture } from "../../ui/dom/modalLifecycle.ts";
+import { type DomPart, framelessView, gridBoxPart } from "../../ui/dom/parts.ts";
 import { createTextLine, placeBox, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridRect } from "../../ui/domScale.ts";
 import { panelButton } from "../../ui/modal/view.ts";
-import { PALETTE } from "../../ui/palette.ts";
+import { cssHex, PALETTE } from "../../ui/palette.ts";
 import {
   type ChoiceCardFonts,
   type ChoiceCardSurface,
@@ -31,10 +32,9 @@ import {
 } from "../choiceCardView.ts";
 import { walkBarIconKey } from "../effectIcons.ts";
 import { type DomDetailCardInput, textPart } from "./detailCard.ts";
-import { type DomPart, type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
+import { type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
 
 const ORIGIN = { x: 0, y: 0 } as const;
-const colour = (value: number) => `#${value.toString(16).padStart(6, "0")}`;
 interface Source extends Pick<DomDetailCardInput, "artUrl" | "loadSheet" | "pillColours"> {
   readonly fonts: ChoiceCardFonts & {
     readonly display?: import("@andornaut/game-kit/runtime/text/bitmapFont").BitmapFont;
@@ -208,16 +208,14 @@ function surfaceParts(
     band.className = "adw-art adw-choice-press-band";
     band.setAttribute("aria-hidden", "true");
     const { height, room, y } = CARD_LAYOUT.band;
-    all.push({
-      element: band,
-      place: (scale) =>
-        placeBox(scale, ORIGIN, band, {
-          height,
-          width: room,
-          x: rect.x + (rect.width - room) / 2,
-          y: rect.y + y,
-        }),
-    });
+    all.push(
+      gridBoxPart(ORIGIN, band, {
+        height,
+        width: room,
+        x: rect.x + (rect.width - room) / 2,
+        y: rect.y + y,
+      }),
+    );
     labels[0]?.element.classList.add("adw-choice-press-label");
   }
   all.push(...labels);
@@ -237,7 +235,7 @@ function surfaceParts(
     const ring = doc.createElement("span");
     ring.className = "adw-art";
     ring.style.borderStyle = "solid";
-    ring.style.borderColor = colour(PALETTE.amber);
+    ring.style.borderColor = cssHex(PALETTE.amber);
     all.push({
       element: ring,
       place: (scale) => {
@@ -290,7 +288,7 @@ function surfaceParts(
       if (!saved.has(node)) {
         saved.set(node, node.style.color);
       }
-      node.style.color = red ? colour(PALETTE.red) : saved.get(node)!;
+      node.style.color = red ? cssHex(PALETTE.red) : saved.get(node)!;
       for (const child of node.children) {
         walk(child as HTMLElement);
       }
@@ -380,13 +378,8 @@ export function showChoiceCards(
     const group = doc.createElement("div");
     group.className = "adw-choice-group";
     const button = doc.createElement(input.picture ? "span" : "button");
-    button.className = "adw-choice-option";
+    button.className = "adw-choice-option adw-reset-button";
     Object.assign(button.style, {
-      appearance: "none",
-      background: "transparent",
-      border: "0",
-      cursor: "pointer",
-      padding: "0",
       pointerEvents: input.picture ? "none" : "auto",
       position: "absolute",
     });
@@ -484,7 +477,7 @@ export function showChoiceCards(
     parts,
     presses: homeRect === undefined || input.headHome === null ? [] : [input.headHome],
     toGame: input.toGame,
-    view: {
+    view: framelessView(SCREEN_LAYOUT.walkView, {
       buttons:
         homeRect === undefined
           ? []
@@ -496,15 +489,8 @@ export function showChoiceCards(
                 input.data.runText.homeQuestion.headHome,
               ),
             ],
-      close: closeControl(SCREEN_LAYOUT.walkView),
-      covered: [],
-      frame: "none",
-      note: [],
-      notePlate: undefined,
-      panel: SCREEN_LAYOUT.walkView,
-      title: [],
       titleY: 0,
-    },
+    }),
   });
   if (input.picture) {
     shown.setInert(true);

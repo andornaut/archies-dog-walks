@@ -83,3 +83,8 @@ export const NEUTRAL_RAMP: readonly number[] = [
 export function colourFromHex(hex: string): number {
   return Number.parseInt(hex.replace(/^#/, ""), 16);
 }
+
+// A colour as CSS writes it, "#rrggbb".
+export function cssHex(colour: number): string {
+  return `#${colour.toString(16).padStart(6, "0")}`;
+}

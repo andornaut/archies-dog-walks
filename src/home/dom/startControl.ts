@@ -4,7 +4,7 @@ import { BUTTON_SIZE } from "../../ui/buttonGeometry.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { createTextLine, placeFrame, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import { artPixel, type DomScale, gridRect } from "../../ui/domScale.ts";
-import { PALETTE } from "../../ui/palette.ts";
+import { cssHex, PALETTE } from "../../ui/palette.ts";
 import { BUTTON_COLOURS } from "../../ui/selection.ts";
 import { HOME_LAYOUT } from "../homeLayout.ts";
 export interface NativeStartControl {
@@ -90,10 +90,7 @@ export function createStartControl(
       }
       button.setPressed(state.down && ready);
       element.style.opacity = String(state.waiting ? input.waitingAlpha : 1);
-      element.style.setProperty(
-        "--adw-button-text",
-        state.refusing ? `#${PALETTE.red.toString(16).padStart(6, "0")}` : "",
-      );
+      element.style.setProperty("--adw-button-text", state.refusing ? cssHex(PALETTE.red) : "");
       const box = gridRect(scale, rect);
       const pixel = artPixel(scale);
       setBox(element, box);

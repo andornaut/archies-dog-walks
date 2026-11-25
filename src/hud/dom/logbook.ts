@@ -9,6 +9,7 @@ import { pageCloseControl } from "../../ui/closeControl.ts";
 import { contentSeparatorPart } from "../../ui/dom/contentSeparator.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import type { NativeGesture } from "../../ui/dom/modalLifecycle.ts";
+import { type DomPart, fillPart, framedBoxPart, framelessView } from "../../ui/dom/parts.ts";
 import { setBox } from "../../ui/dom/pixelLine.ts";
 import { dimDrawn, followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
@@ -23,8 +24,8 @@ import {
 import { PALETTE } from "../../ui/palette.ts";
 import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
-import { type DomPart, type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
-import { createPageTab, fillPart, framedBoxPart } from "./shopPage.ts";
+import { type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
+import { createPageTab } from "./shopPage.ts";
 
 // The Logbook in HTML over the canvas: the page, its title and Back drawn as a
 // panel's (showQuestionPanel), the open tab's content clipped to the list's frame and moved up by
@@ -353,20 +354,14 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
     parts: [pagePart, tabPart, list, scrollbar],
     presses: [],
     toGame: input.toGame,
-    view: {
-      buttons: [],
+    view: framelessView(page.panel, {
       // The page draws no close control; the panel still places one, which close: null leaves
       // out.
       close: pageCloseControl(page.panel),
-      covered: [],
       footer: page.back,
-      frame: "none",
-      note: [],
-      notePlate: undefined,
-      panel: page.panel,
       title: page.title,
       titleY: page.title[0]?.capTop ?? page.panel.y,
-    },
+    }),
   });
   clip.addEventListener(
     "wheel",

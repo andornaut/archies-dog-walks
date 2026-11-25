@@ -93,7 +93,8 @@ export const UI_STYLE = `
   pointer-events:auto}
 /* The rim leaves out its corner pixels, following the panel's cut corners. */
 .adw-rim{background:var(--adw-tan);clip-path:polygon(${cutCorners(px(1))})}
-.adw-panel{${nineSlice("ui-panel", "ui-panel")};background-color:var(--adw-cream)}
+/* A ui-panel, and a plate (celebrationStyle.ts) that passes its presses through to the canvas. */
+.adw-panel,.adw-plate-frame{${nineSlice("ui-panel", "ui-panel")};background-color:var(--adw-cream)}
 .adw-card{${nineSlice("ui-detail-card", "ui-detail-card")};background-color:var(--adw-cream)}
 .adw-plate{background:var(--adw-tan)}
 /* A panel that takes no presses: every press goes through to the canvas. */
@@ -103,8 +104,6 @@ export const UI_STYLE = `
 .adw-framed{left:0;top:0}
 .adw-art{background-repeat:no-repeat;background-size:100% 100%;image-rendering:pixelated}
 .adw-pill{clip-path:polygon(${cutCorners("var(--adw-cut)")})}
-/* Text only a screen reader reads. */
-.adw-spoken{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .adw-lines{position:absolute;left:0;top:0;margin:0;font:inherit}
 .adw-text{position:absolute;margin:0;white-space:pre;letter-spacing:0;
   font-kerning:normal;font-synthesis:none;font-variant-ligatures:none;font-weight:400;
@@ -112,8 +111,6 @@ export const UI_STYLE = `
 .adw-font-body{font-family:"ADW Body"}
 .adw-font-title{font-family:"ADW Title"}
 .adw-font-display{font-family:"ADW Display";text-shadow:${DISPLAY_SHADOW}}
-.adw-button,.adw-close,.adw-slot-sign{margin:0;padding:0;border:0;background:none;color:inherit;font:inherit;
-  cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;outline:none}
 .adw-face,.adw-close-face,.adw-close-glyph{position:absolute;box-sizing:border-box;pointer-events:none}
 /* A focused speech bubble fills its inside and its tail's cyan, its owner's name in plum to keep
    contrast. */

@@ -21,6 +21,7 @@ import {
 import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { guardNativeInput } from "../../ui/dom/modalLifecycle.ts";
+import type { DomPart } from "../../ui/dom/parts.ts";
 import {
   blockPlace,
   createTextLine,
@@ -31,11 +32,11 @@ import {
 import { refuse } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridX, gridY, wholeArtPixels } from "../../ui/domScale.ts";
+import { cssHex } from "../../ui/palette.ts";
 import { bodyScrollbarPart } from "./bodyScrollbar.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
 import {
   addTapBurst,
-  type DomPart,
   type DomQuestionPanel,
   type DomQuestionPanelInput,
   showQuestionPanel,
@@ -83,8 +84,6 @@ export interface DomSettings extends Pick<
   update(view: SettingsView, focus: number | null): void;
 }
 
-const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
-
 const ORIGIN = { x: 0, y: 0 } as const;
 
 // A block of text, its runs made afresh each time it is placed, since a volume's changes.
@@ -102,7 +101,7 @@ function textElement(doc: Document, fonts: Readonly<Record<SettingsText["font"],
           span.className = `adw-text adw-font-${text.font}`;
           span.textContent = run.text;
           Object.assign(span.style, {
-            color: hex(text.colour),
+            color: cssHex(text.colour),
             fontSize: `${place.fontSize}px`,
             left: `${run.left - gridX(scale, origin.x)}px`,
             lineHeight: `${place.lineHeight}px`,
@@ -208,7 +207,7 @@ function rowPart(
   element.tabIndex = -1;
   element.setAttribute("aria-label", first.label);
   const description = doc.createElement("span");
-  description.className = "adw-spoken";
+  description.className = "visually-hidden";
   described += 1;
   description.id = `adw-settings-row-${described}`;
   element.setAttribute("aria-describedby", description.id);
@@ -246,7 +245,7 @@ function rowPart(
     const row = view();
     const { rect } = row;
     placeBox(scale, origin(), element, rect);
-    face.style.backgroundColor = row.face === undefined ? "" : hex(row.face.colour);
+    face.style.backgroundColor = row.face === undefined ? "" : cssHex(row.face.colour);
     placeBox(scale, rect, face, row.face?.rect ?? rect);
     element.toggleAttribute("data-ui-pressed", row.dip > 0);
     if (row.icon !== undefined) {

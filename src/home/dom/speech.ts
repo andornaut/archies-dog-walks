@@ -2,10 +2,9 @@ import { type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SLICES } from "../../data/layout.ts";
-import { framedPart, textPart } from "../../hud/dom/detailCard.ts";
-import type { DomPart } from "../../hud/dom/questionPanel.ts";
-import { fillPart } from "../../hud/dom/shopPage.ts";
+import { textPart } from "../../hud/dom/detailCard.ts";
 import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
+import { type DomPart, fillPart, framedPart } from "../../ui/dom/parts.ts";
 import { createTextLine, placeText } from "../../ui/dom/pixelLine.ts";
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
 import type { DomScale } from "../../ui/domScale.ts";

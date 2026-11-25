@@ -1,6 +1,7 @@
 import { domArtPath } from "../../assets/domArt.ts";
 import { type BadgeCardView, CONFETTI } from "../../home/badgeCardView.ts";
-import { placeFrame, setBox } from "../../ui/dom/pixelLine.ts";
+import { type DomPart, fillPart, framelessView, panelFramePart } from "../../ui/dom/parts.ts";
+import { setBox } from "../../ui/dom/pixelLine.ts";
 import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
@@ -13,8 +14,7 @@ import {
   wholeArtPixels,
 } from "../../ui/domScale.ts";
 import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
-import { type DomPart, type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
-import { fillPart } from "./shopPage.ts";
+import { type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
 
 // A badge's card in HTML over the canvas: the ui-panel and close control,
 // any confetti behind the badge, the badge at 2x and its name, status, goal and line, at the
@@ -120,8 +120,6 @@ export function showBadgeCard(layer: UiLayer, input: DomBadgeCardInput): DomQues
   const doc = layer.element.ownerDocument;
   cards += 1;
   const { view } = input;
-  const frame = doc.createElement("div");
-  frame.className = "adw-panel";
   const texts = doc.createElement("div");
   texts.className = "adw-lines";
   texts.id = `adw-badge-${cards}`;
@@ -130,7 +128,7 @@ export function showBadgeCard(layer: UiLayer, input: DomBadgeCardInput): DomQues
   const confetti =
     view.confetti === undefined ? undefined : confettiPart(doc, input, view.panel, view.confetti);
   const parts: DomPart[] = [
-    { element: frame, place: (scale) => placeFrame(scale, { x: 0, y: 0 }, frame, view.panel) },
+    panelFramePart(doc, "panel", view.panel),
     ...(confetti === undefined ? [] : [confetti]),
     ...view.fills.map((fill) => fillPart(doc, fill)),
     ...view.art.map((art) => artPart(doc, input, art)),
@@ -156,18 +154,10 @@ export function showBadgeCard(layer: UiLayer, input: DomBadgeCardInput): DomQues
     parts,
     presses: [],
     toGame: input.toGame,
-    view: {
-      buttons: [],
+    view: framelessView(view.panel, {
       close: view.close,
-      covered: [],
-      frame: "none",
       ...(view.footer === undefined ? {} : { footer: view.footer }),
-      note: [],
-      notePlate: undefined,
-      panel: view.panel,
-      title: [],
-      titleY: view.panel.y,
-    },
+    }),
   });
   return {
     ...shown,

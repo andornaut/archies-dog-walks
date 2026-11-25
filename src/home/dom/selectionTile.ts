@@ -9,7 +9,7 @@ import { createTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import { artPixel, type DomScale, frameRect, gridRect, gridX, gridY } from "../../ui/domScale.ts";
 import type { TileState } from "../../ui/interaction.ts";
 import { MARK_OFFSET } from "../../ui/mark.ts";
-import { PALETTE } from "../../ui/palette.ts";
+import { cssHex, PALETTE } from "../../ui/palette.ts";
 import { GREYED, selectLook } from "../../ui/selection.ts";
 import { FEEDBACK } from "../feedback.ts";
 export interface NativeTileFill {
@@ -28,7 +28,6 @@ export interface NativeSelectionTile {
   readonly ready: Promise<readonly string[]>;
   place(scale: DomScale, motion: NativeTileMotion): void;
 }
-const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 // Native picks and shop rows share a persistent edge, state fill, motion and marker.
 export function createSelectionTile(
   doc: Document,
@@ -48,10 +47,10 @@ export function createSelectionTile(
   element.setAttribute("data-picker-focus", view.focus);
   element.setAttribute("data-picker-state", view.state);
   const look = selectLook(view.state);
-  element.style.setProperty("--adw-selection-fill", hex(PALETTE[look.face]));
+  element.style.setProperty("--adw-selection-fill", cssHex(PALETTE[look.face]));
   element.style.setProperty(
     "--adw-selection-edge",
-    hex(PALETTE[view.state === "disabled" ? GREYED.edge : "ink"]),
+    cssHex(PALETTE[view.state === "disabled" ? GREYED.edge : "ink"]),
   );
   element.style.position = "absolute";
   element.style.pointerEvents = "auto";
@@ -75,7 +74,7 @@ export function createSelectionTile(
   const shadow = view.state === "selected" ? doc.createElement("span") : undefined;
   if (shadow !== undefined) {
     shadow.className = "adw-framed";
-    shadow.style.backgroundColor = hex(PALETTE.plum);
+    shadow.style.backgroundColor = cssHex(PALETTE.plum);
     host.append(shadow);
   }
   host.append(paint);
@@ -104,7 +103,7 @@ export function createSelectionTile(
   if (fallbackMark !== undefined && fallbackBox !== undefined && fallbackLabel !== undefined) {
     fallbackMark.className = "adw-framed";
     fallbackBox.className = "adw-framed";
-    fallbackBox.style.backgroundColor = hex(PALETTE.green);
+    fallbackBox.style.backgroundColor = cssHex(PALETTE.green);
     fallbackMark.append(fallbackBox, fallbackLabel);
     paint.append(fallbackMark);
   }

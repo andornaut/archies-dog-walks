@@ -26,7 +26,7 @@ import {
   stepMessageStrip,
   stripLeadSlot,
 } from "../hud/messageStrip.ts";
-import { ownerNameInk } from "../presentation/ownerName.ts";
+import { lineInk } from "../ui/lineInk.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 // A line said from the run scene, as a MessageLine: the HUD shows it on its message strip.
@@ -116,7 +116,7 @@ function draw(painter: HudMomentPainter, depth: number, bars: number, line: Stri
   const owner = typeof line.lead === "string" ? undefined : line.lead;
   const name = owner === undefined ? "" : gameData.dogs[owner.dog].owner.name;
   const slot = stripLeadSlot(body, bars);
-  const nameInk = owner === undefined ? undefined : ownerNameInk(painter.fonts.body, name);
+  const nameInk = owner === undefined ? undefined : lineInk(painter.fonts.body, name);
   const lead = nameInk === undefined ? undefined : ownerLeadLayout(slot, nameInk);
   const textX = lead?.textX ?? slot.textX;
   const said = faceTextWithNamePills(gameData, {

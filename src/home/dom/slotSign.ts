@@ -2,20 +2,18 @@ import { insetRect, type Rect, ringRects } from "@andornaut/game-kit/runtime/rec
 import { type BitmapFont, fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SLICES } from "../../data/layout.ts";
-import { framedPart } from "../../hud/dom/detailCard.ts";
-import { fillPart } from "../../hud/dom/shopPage.ts";
 import { type DomArtSource, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
+import { fillPart, framedPart } from "../../ui/dom/parts.ts";
 import { createTextLine, placeBackedText, placeBox, setBox } from "../../ui/dom/pixelLine.ts";
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
 import { artPixel, type DomScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
-import { PALETTE } from "../../ui/palette.ts";
+import { cssHex, PALETTE } from "../../ui/palette.ts";
 import { AFFORD_OUTSET, GREYED } from "../../ui/selection.ts";
 import { FEEDBACK } from "../feedback.ts";
 import { HOME_LAYOUT, slotSignText } from "../homeLayout.ts";
 import type { slotSign } from "../slotSign.ts";
 
-const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 export function createSlotSign(
   doc: Document,
   source: DomArtSource & {
@@ -166,10 +164,10 @@ export function createSlotSign(
       focusFace.style.display = motion.pressed ? "none" : "";
       fallbackFill?.style.setProperty(
         "background-color",
-        hex(motion.pressed ? PALETTE.forest : PALETTE.cream),
+        cssHex(motion.pressed ? PALETTE.forest : PALETTE.cream),
       );
       labels.forEach((label, i) => {
-        label.style.color = hex(motion.pressed ? PALETTE.white : lines[i]!.colour);
+        label.style.color = cssHex(motion.pressed ? PALETTE.white : lines[i]!.colour);
       });
       placeBackedText(
         body,

@@ -279,7 +279,7 @@ describe("an HTML detail card that takes no presses", () => {
     dialog?.fire("keydown", { code: "Tab", preventDefault: () => undefined, shiftKey: false });
     expect(doc.activeElement).toBe(dialog);
     const described = nodes.find((node) => node.id === dialog?.getAttribute("aria-describedby"));
-    const spoken = described?.all().find((node) => node.className === "adw-spoken");
+    const spoken = described?.all().find((node) => node.className === "visually-hidden");
     expect(spoken?.textContent).toBe("Keen eye Spots more ");
     const art = nodes.find((node) => node.className === "adw-art");
     expect(art?.style.visibility).toBe("hidden");

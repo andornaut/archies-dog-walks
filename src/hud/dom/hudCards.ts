@@ -10,13 +10,8 @@ import { ownerMaxHearts } from "../../rules/dogs.ts";
 import { faceMood } from "../../rules/treats.ts";
 import type { RunState } from "../../state/runState.ts";
 import { type DomArtSource, imageArt, sheetArt } from "../../ui/dom/artElements.ts";
-import {
-  createTextLine,
-  type DomTextLine,
-  placeBox,
-  placeText,
-  setBox,
-} from "../../ui/dom/pixelLine.ts";
+import { gridFillPart } from "../../ui/dom/parts.ts";
+import { createTextLine, type DomTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, deviceX, deviceY, type DomScale, gridTransform } from "../../ui/domScale.ts";
@@ -68,8 +63,6 @@ const ORIGIN = { x: 0, y: 0 } as const;
 const LOSS_TAG = "heart-loss";
 // ui-lead-tag's native dimensions, placed at the card layout's lead anchor.
 const LEAD_ART = { height: 11, width: 27 } as const;
-const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
-
 // Art uses the scene clock; feedback uses the caller's held moment clock.
 export function createHudCards(
   layer: UiLayer,
@@ -132,12 +125,9 @@ export function createHudCards(
     }
   };
   const frame = (parent: HTMLElement, placed: Draw[], colour: number, rect: Rect) => {
-    const element = doc.createElement("span");
-    element.className = "adw-framed";
-    element.style.backgroundColor = hex(colour);
-    parent.append(element);
-    placed.push((scale) => placeBox(scale, ORIGIN, element, rect));
-    return element;
+    const part = gridFillPart(doc, ORIGIN, { colour, rect }, "span");
+    parent.append(part.element);
+    placed.push((scale) => part.place(scale));
   };
   const build = (index: number, lead: number | undefined, run: RunState): CardView => {
     const rect = SCREEN_LAYOUT.dogSlots[index]!;
@@ -230,7 +220,7 @@ export function createHudCards(
       holder.append(flashHost);
       if (index === lead) {
         const spoken = doc.createElement("span");
-        spoken.className = "adw-spoken";
+        spoken.className = "visually-hidden";
         spoken.textContent = data.runText.lead;
         holder.append(spoken);
         const art = imageArt(doc, source, "ui-lead-tag");
@@ -279,7 +269,7 @@ export function createHudCards(
         false,
       );
       const ownerName = doc.createElement("span");
-      ownerName.className = "adw-spoken";
+      ownerName.className = "visually-hidden";
       ownerName.textContent = dog.owner.name;
       holder.append(ownerName);
       if (fired) {

@@ -4,7 +4,7 @@ import type { GameObjects, Scene } from "phaser";
 import { PULL_ART } from "../assets/spriteKeys.ts";
 import type { DogId } from "../data/types.ts";
 import { arrowheadPixels } from "../ui/arrowhead.ts";
-import { PALETTE } from "../ui/palette.ts";
+import { cssHex, PALETTE } from "../ui/palette.ts";
 import { playEffect, playTag, playTagOnce, spriteTopY } from "./sprites.ts";
 
 // A frame of a texture: its first frame when frame is absent.
@@ -68,7 +68,7 @@ function letterIcon(scene: Scene, key: string, letter: string, colour: number): 
     if (canvas === null || context === undefined) {
       return key;
     }
-    context.fillStyle = `#${colour.toString(16).padStart(6, "0")}`;
+    context.fillStyle = cssHex(colour);
     context.beginPath();
     context.arc(ICON_SIZE / 2, ICON_SIZE / 2, ICON_SIZE / 2, 0, 2 * Math.PI);
     context.fill();

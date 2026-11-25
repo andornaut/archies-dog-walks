@@ -5,14 +5,6 @@
   position: absolute;
   box-sizing: border-box;
   pointer-events: auto;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-  touch-action: manipulation;
 }
 .adw-logbook-badge > .ui-button-face {
   position: absolute;

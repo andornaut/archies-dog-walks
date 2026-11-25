@@ -102,14 +102,16 @@ describe("native HUD cards", () => {
       shown[0]
         ?.all()
         .some(
-          (node) => node.className === "adw-spoken" && node.textContent === gameData.runText.lead,
+          (node) =>
+            node.className === "visually-hidden" && node.textContent === gameData.runText.lead,
         ),
     ).toBe(false);
     expect(
       shown[1]
         ?.all()
         .some(
-          (node) => node.className === "adw-spoken" && node.textContent === gameData.runText.lead,
+          (node) =>
+            node.className === "visually-hidden" && node.textContent === gameData.runText.lead,
         ),
     ).toBe(true);
     const face = shown[1]
@@ -274,7 +276,7 @@ it("speaks intact owner names once while keeping their visual lines hidden", asy
     expect(fragments).toHaveLength(1);
     expect(fragments.every((node) => node.getAttribute("aria-hidden") === "true")).toBe(true);
     expect(
-      nodes.filter((node) => node.className === "adw-spoken" && node.textContent === original),
+      nodes.filter((node) => node.className === "visually-hidden" && node.textContent === original),
     ).toHaveLength(1);
     expect(fragments.map((node) => node.textContent).join(" ")).toBe(original);
   });

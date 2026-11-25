@@ -299,7 +299,7 @@ it("scrolls all owner art, names and quotes together while results chrome and Ba
     ),
   );
   const spoken = nodes
-    .filter((node) => node.className === "adw-spoken")
+    .filter((node) => node.className === "visually-hidden")
     .map((node) => node.textContent);
   expect(spoken.filter((text) => ownerNames.includes(text as (typeof ownerNames)[number]))).toEqual(
     ownerNames,
