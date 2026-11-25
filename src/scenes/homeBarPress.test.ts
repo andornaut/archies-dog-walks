@@ -1,6 +1,5 @@
 import { EventEmitter } from "node:events";
 
-import { isOutside } from "@andornaut/game-kit/runtime/input/outsideTap";
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { exitApp } from "@andornaut/game-kit/runtime/web/pwa/dom/exitApp";
 import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
@@ -14,7 +13,6 @@ import {
   listenHomeBar,
   openHomePage,
   routeHomeBar,
-  sceneRegionOutside,
 } from "./homeBarPress.ts";
 import { openOverlay } from "./overlay.ts";
 import { nativeTopSectionButtons } from "./topSection.ts";
@@ -122,9 +120,7 @@ it("routes retained Home Exit only when both capability and the actual bar expos
   vi.mocked(exitShown).mockReturnValue(true);
   routeHomeBar(overlay.scene, "exit");
   expect(exit).toHaveBeenCalledOnce();
-  expect(isOutside(sceneRegionOutside(overlay.scene, []), { x: 240, y: 20 })).toBe(true);
   vi.mocked(nativeTopSectionButtons).mockReturnValue(["mute", "menu", "exit"]);
-  expect(isOutside(sceneRegionOutside(overlay.scene, []), { x: 240, y: 20 })).toBe(false);
   overlay.scene.events.emit("shutdown");
   vi.mocked(exitShown).mockReturnValue(false);
 });

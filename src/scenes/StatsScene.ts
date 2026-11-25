@@ -38,10 +38,10 @@ import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { lineInk } from "../ui/lineInk.ts";
 import { badgeCard } from "./badges.ts";
 import { pillColours } from "./effectNameColours.ts";
-import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
+import { listenHomeBar } from "./homeBarPress.ts";
 import { canvasDetailMeasure } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
-import { closeOverlay, listenDismiss, nativeSceneAccepts, type OverlayData } from "./overlay.ts";
+import { closeOverlay, nativeSceneAccepts, onBackPressed, type OverlayData } from "./overlay.ts";
 import { currentSettings, earnedAchievements, profileSave } from "./profileStore.ts";
 import {
   addHtmlBadgeCard,
@@ -56,7 +56,6 @@ import { LIST_SCROLL_RULE } from "./scrollView.ts";
 
 type Target = LogbookTarget;
 const TABS = STATS_TABS;
-const PANEL = STATS_LAYOUT.panel;
 const VIEW = STATS_LAYOUT.view;
 const SCROLL = STATS_LAYOUT.scroll;
 const OPEN_TAB: StatsTab = "badges";
@@ -107,15 +106,10 @@ export class StatsScene extends Scene {
     document.addEventListener("keydown", onKey, true);
     this.events.once("shutdown", () => document.removeEventListener("keydown", onKey, true));
     // The Logbook is a page, not a modal, as the Pet shop is: its live top bar keeps its buttons,
-    // and a tap on the bar's empty area or beside the game closes it, as Back does; the page itself
-    // has no outside. An open badge card is modal, and its own backdrop takes those taps instead.
-    // The system back closes an open card first.
-    listenDismiss(
-      this,
-      sceneRegionOutside(this, [PANEL]),
-      () => this.back(),
-      () => this.back(),
-    );
+    // and it has no outside, so a tap on the bar's empty area or beside the game does nothing. An
+    // open badge card is modal, and its own backdrop closes it. The system back closes an open
+    // card first, then the Logbook.
+    onBackPressed(this, () => this.back());
     // A page the top bar opens over the Logbook closes an open card first.
     listenHomeBar(
       this,

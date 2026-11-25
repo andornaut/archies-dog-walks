@@ -82,11 +82,11 @@ import { GREYED, pictureBox, selectLook } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
-import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
+import { listenHomeBar } from "./homeBarPress.ts";
 import { detailView } from "./homePanels.ts";
 import { BADGE_KEYS, purchasePicture, SHOP_ART } from "./itemArt.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
-import { closeOverlay, listenDismiss, openOverlay, type OverlayData } from "./overlay.ts";
+import { closeOverlay, onBackPressed, openOverlay, type OverlayData } from "./overlay.ts";
 import {
   currentSettings,
   profileSave,
@@ -126,7 +126,6 @@ export interface ShopClosed {
 type Target = { id: string; kind: "row" } | { kind: "tab"; tab: ShopTab };
 
 const LAYOUT = SHOP_LAYOUT;
-const PANEL: Rect = LAYOUT.panel;
 const TAB_RECTS: readonly Rect[] = shopTabRects(SHOP_TABS.length);
 const ROW = LAYOUT.row;
 const OWNED_DX = ROW.ownedDx;
@@ -314,15 +313,10 @@ export class ShopScene extends Scene {
         this.onKey(event.code);
       }
     });
-    // The shop is a page, not a modal: its live top bar keeps its buttons, and a tap on the bar's
-    // empty area or beside the game closes the shop, as Back does; the page itself has no outside.
-    // An item modal's backdrop owns those taps. System back closes the item first, as Escape does.
-    listenDismiss(
-      this,
-      sceneRegionOutside(this, [PANEL]),
-      () => this.back(),
-      () => this.back(),
-    );
+    // The shop is a page, not a modal: its live top bar keeps its buttons, and it has no outside,
+    // so a tap on the bar's empty area or beside the game does nothing. An item modal's backdrop
+    // closes the item. System back closes the item first, then the shop, as Escape does.
+    onBackPressed(this, () => this.back());
     // A page the top bar opens over the shop closes an open item modal first.
     listenHomeBar(this, () => {
       if (this.detail !== undefined) {

@@ -1,10 +1,8 @@
-import type { OutsideArea } from "@andornaut/game-kit/runtime/input/outsideTap";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { SCREEN_LAYOUT } from "../data/screen.ts";
-import { screenArea } from "../input/outsideTap.ts";
 import { topSectionButtonAt } from "../ui/topSection.ts";
-import { HOME_LAYOUT, type HomeBarButton, homeBarButtons, homeBarShown } from "./homeLayout.ts";
+import { HOME_LAYOUT, type HomeBarButton, homeBarShown } from "./homeLayout.ts";
 
 // Where an overlay sits: on a home page (the start screen, the Pet shop, the Logbook), or on a
 // walk.
@@ -22,11 +20,6 @@ export function overlayRegion(region: OverlayRegion): Rect {
 }
 
 export type HomeBarAction = "exit" | "mute" | "openMenu";
-
-// A nonmodal page's outside dismissal excludes the live home bar's controls.
-export function regionOutside(exit: boolean, covered: readonly Rect[]): OutsideArea {
-  return screenArea([...covered, ...homeBarButtons(exit).map(([, { hit }]) => hit)]);
-}
 
 // Input reads the same control positions and nearest-face routing as the shared top section.
 export function homeBarButtonAt(exit: boolean, x: number, y: number): HomeBarButton | undefined {

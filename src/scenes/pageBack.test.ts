@@ -1,19 +1,9 @@
 import { readFileSync } from "node:fs";
 
-import { isOutside } from "@andornaut/game-kit/runtime/input/outsideTap";
-import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
-import type { Scene } from "phaser";
 import { expect, it, vi } from "vitest";
 
 import { helpActionForKey } from "../help/helpInput.ts";
-import { HELP_LAYOUT } from "../help/helpLayout.ts";
-import { HOME_LAYOUT, homeBarButtons } from "../home/homeLayout.ts";
-import { SHOP_LAYOUT } from "../home/shopLayout.ts";
-import { STATS_LAYOUT } from "../home/statsLayout.ts";
-import { WALK_BAR_BUTTONS } from "../hud/walkHud.ts";
-import { topSectionLayout } from "../ui/topSection.ts";
-import { helpOutside, HelpScene } from "./HelpScene.ts";
-import { sceneRegionOutside } from "./homeBarPress.ts";
+import { HelpScene } from "./HelpScene.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { ShopScene } from "./ShopScene.ts";
 import { StatsScene } from "./StatsScene.ts";
@@ -33,9 +23,8 @@ vi.mock("./profileStore.ts", async (original) => ({
   updateProfile: vi.fn(() => Promise.resolve()),
 }));
 
-// The Help, Logbook and Pet shop pages: Back (close), Escape, the system back and a tap outside
-// the page (the live bar's empty area, or beside the game) leave each one to the screen it opened
-// over. The page itself has no outside.
+// The Help, Logbook and Pet shop pages: Back (close), Escape and the system back leave each one to
+// the screen it opened over.
 interface PageScene {
   act(action: unknown): void;
   back(): void;
@@ -89,8 +78,32 @@ it.each(
   expect(stage.stop).toHaveBeenCalledOnce();
 });
 
-it.each(PAGES)("%s closes on the system back and an outside tap", (_name, _type, path) => {
-  expect(readFileSync(path, "utf8")).toMatch(/listenDismiss\(\s*this,/);
+// A page sits level with the top bar and the rest of the screen, so none has an outside: a tap on
+// the bar's empty area, the walk bar's wells or beside the game does nothing over any of the five,
+// from home or from Pause, while the system back leaves it and the home bar's Sound and Menu act
+// over it (listenHomeBar; the walk bar's are topBarAction's). Only a modal over a page, Reset
+// save?, the install steps' card or the Menu, closes on a tap outside it.
+const OUTSIDE_TAP = /\b(?:catchOutsideTaps|listenDismiss|listenOutsideTap)\(/;
+
+it.each([
+  ["Cheats", "src/scenes/CheatsScene.ts"],
+  ["Help", "src/scenes/HelpScene.ts"],
+  ["Logbook", "src/scenes/StatsScene.ts"],
+  ["Pet shop", "src/scenes/ShopScene.ts"],
+  ["Settings", "src/scenes/SettingsScene.ts"],
+])("%s takes no outside tap but leaves on the system back under a live bar", (_name, path) => {
+  const source = readFileSync(path, "utf8");
+  expect(source).not.toMatch(OUTSIDE_TAP);
+  expect(source).toMatch(/onBackPressed\(\s*this,/);
+  expect(source).toMatch(/listenHomeBar\(\s*this,/);
+});
+
+it.each([
+  ["the Menu", "src/scenes/MenuScene.ts", OUTSIDE_TAP],
+  ["Reset save?", "src/scenes/cheatsPage.ts", /backgroundCancel: closeQuestion\b/],
+  ["the install steps' card", "src/hud/dom/settings.ts", /backgroundCancel: input\.closeSteps\b/],
+])("%s over a page closes on a tap outside it", (_name, path, outside) => {
+  expect(readFileSync(path, "utf8")).toMatch(outside);
 });
 
 it.each([
@@ -130,28 +143,3 @@ it("Escape dismisses the Pet shop item without buying or leaving its invoking pa
   expect(stage.resume).not.toHaveBeenCalled();
   expect(stage.stop).not.toHaveBeenCalled();
 });
-
-const centre = (rect: Rect): Point => ({ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 });
-const SCENE = {} as Scene;
-const HOME_BAR = homeBarButtons(false).map(([, { hit }]) => centre(hit));
-const WALK_BAR = topSectionLayout(WALK_BAR_BUTTONS).controls.map(([, { hit }]) => centre(hit));
-const BANK = { x: HOME_LAYOUT.topBar.well.x, y: HOME_LAYOUT.topBar.mid };
-const PAGE_POINTS = (page: Rect) => [
-  centre(page),
-  { x: page.x, y: page.y },
-  { x: page.x + page.width - 1, y: page.y + page.height - 1 },
-];
-
-it.each([
-  ["Help over a home page", helpOutside(SCENE, "home"), HELP_LAYOUT.page, HOME_BAR],
-  ["Help over a walk", helpOutside(SCENE, "walk"), HELP_LAYOUT.page, WALK_BAR],
-  ["Logbook", sceneRegionOutside(SCENE, [STATS_LAYOUT.panel]), STATS_LAYOUT.panel, HOME_BAR],
-  ["Pet shop", sceneRegionOutside(SCENE, [SHOP_LAYOUT.panel]), SHOP_LAYOUT.panel, HOME_BAR],
-])(
-  "%s: a tap on the bar's empty area is outside; the page and the bar's buttons are not",
-  (_name, area, page, buttons) => {
-    expect(isOutside(area, BANK)).toBe(true);
-    expect(PAGE_POINTS(page).some((point) => isOutside(area, point))).toBe(false);
-    expect(buttons.some((point) => isOutside(area, point))).toBe(false);
-  },
-);
