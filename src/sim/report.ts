@@ -14,12 +14,7 @@ import type {
   ZoneId,
 } from "../data/types.ts";
 import { DEFAULT_WALKER } from "../data/walkers.ts";
-import {
-  type AchievementData,
-  achievementJudge,
-  picksOf,
-  type RunFacts,
-} from "../rules/achievements.ts";
+import { type AchievementData, picksOf, type RunFacts } from "../rules/achievements.ts";
 import { slotCountTotal } from "../runner/slotConfig.ts";
 import { minimumSlotDelivery, SLOT_RUNTIME_DELIVERY_FLOOR } from "../runner/slotDelivery.ts";
 import {
@@ -28,6 +23,7 @@ import {
   itemCategory,
   type WalkItemKind,
 } from "../runner/walkItems.ts";
+import { achievementJudge } from "../save/achievementJudge.ts";
 import { MAX_RUN_DOGS, TALLY_IDS } from "../save/schema.ts";
 import type { PackDogs } from "../state/runState.ts";
 import { type Delivered, DELIVERY_GROUPS, sumDeliveries, type ZoneDelivery } from "./delivery.ts";

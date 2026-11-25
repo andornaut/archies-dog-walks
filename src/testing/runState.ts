@@ -1,11 +1,11 @@
 import type { DogId, Modifier } from "../data/types.ts";
-import {
-  type ActiveModifier,
-  blankRun,
-  type ModifierSource,
-  type Pack,
-  type PackSlot,
-  type RunState,
+import { blankRun } from "../rules/newRun.ts";
+import type {
+  ActiveModifier,
+  ModifierSource,
+  Pack,
+  PackSlot,
+  RunState,
 } from "../state/runState.ts";
 import { clampHearts } from "../units.ts";
 

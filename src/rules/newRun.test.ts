@@ -5,14 +5,14 @@ import { DOGS } from "../data/dogs.ts";
 import { ENCOUNTERS } from "../data/encounters.ts";
 import { SHOP_GEAR } from "../data/shop.ts";
 import type { DogId, GearId } from "../data/types.ts";
-import { packPlace, sizeHearts, startHearts } from "../rules/dogs.ts";
-import { read } from "../rules/units.ts";
+import { packOrder } from "../state/pack.ts";
 import { heartsByDog } from "../testing/runState.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
 import { TEST_WALKER_DATA } from "../testing/walkers.ts";
 import { TEST_WORLD } from "../testing/world.ts";
-import { packOrder } from "./pack.ts";
-import { newRun } from "./runState.ts";
+import { packPlace, sizeHearts, startHearts } from "./dogs.ts";
+import { newRun } from "./newRun.ts";
+import { read } from "./units.ts";
 
 const data = {
   debuffs: DEBUFFS,

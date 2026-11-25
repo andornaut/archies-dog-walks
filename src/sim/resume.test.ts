@@ -4,6 +4,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { gameData } from "../data/index.ts";
 import { LANE_COUNT } from "../data/screen.ts";
 import { type InputEvent, takeCardChoice, takeDueInputs } from "../dev/inputLog.ts";
+import { newRun } from "../rules/newRun.ts";
 import { screenRoadGeometry } from "../runner/screenGeometry.ts";
 import {
   chooseCard,
@@ -20,7 +21,7 @@ import {
 import { startRoad } from "../runner/walk.ts";
 import { encodeResume, launchWalk, type ResumeWalk } from "../save/resume.ts";
 import { checkpointOf } from "../save/runSlices.ts";
-import { newRun, type PackDogs, type RunState } from "../state/runState.ts";
+import type { PackDogs, RunState } from "../state/runState.ts";
 import { simConfig } from "../testing/sim.ts";
 import { simulateRun } from "./simulate.ts";
 import { SKILL_PRESETS } from "./skills.ts";

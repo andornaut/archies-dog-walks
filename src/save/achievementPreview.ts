@@ -1,8 +1,9 @@
 import { newlyEarned } from "@andornaut/game-kit/runtime/achievements";
 
 import type { AchievementId, GameData } from "../data/types.ts";
-import { achievementJudge, isMoneyGoal } from "../rules/achievements.ts";
+import { isMoneyGoal } from "../rules/achievements.ts";
 import type { RunState } from "../state/runState.ts";
+import { achievementJudge } from "./achievementJudge.ts";
 import { type AwardContext, recordRunEnd, runEndFacts, type RunResult } from "./checkpoint.ts";
 import { runResultOf } from "./runSlices.ts";
 import type { SaveDocument } from "./schema.ts";

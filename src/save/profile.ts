@@ -12,14 +12,14 @@ import type {
 } from "@andornaut/game-kit/runtime/save/saveStore";
 
 import type { AchievementId, HintId } from "../data/types.ts";
+import type { Change } from "../rules/causes.ts";
+import type { Cents } from "../units.ts";
 import {
   type AchievementFacts,
   type AchievementJudge,
   achievementJudge,
   type AchievementScope,
-} from "../rules/achievements.ts";
-import type { Change } from "../rules/causes.ts";
-import type { Cents } from "../units.ts";
+} from "./achievementJudge.ts";
 import { earnedIfBanked } from "./achievementPreview.ts";
 import {
   type AwardContext,

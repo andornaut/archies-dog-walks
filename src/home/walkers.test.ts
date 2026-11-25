@@ -2,12 +2,12 @@ import { fillNames } from "@andornaut/game-kit/runtime/lines";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
+import { homeLine } from "../content/homeText.ts";
 import { gameData } from "../data/index.ts";
 import type { WalkerId } from "../data/types.ts";
 import { agilityPercent, perkEffect } from "../rules/effectText.ts";
 import { newPlayerSave } from "../testing/saves.ts";
 import { type ItemTile, itemTileLook, type TileState } from "../ui/interaction.ts";
-import { homeLine } from "./homeText.ts";
 import { tapWalker, walkerDetailLines, type WalkerTap, walkerTile } from "./walkers.ts";
 
 const save = {

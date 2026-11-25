@@ -12,7 +12,7 @@ import { SHOP_GEAR } from "../data/shop.ts";
 import type { DogId, EncounterId, GearId } from "../data/types.ts";
 import { UPGRADES } from "../data/upgrades.ts";
 import { packOrder } from "../state/pack.ts";
-import { type ModifierSource, newRun, type RunState } from "../state/runState.ts";
+import type { ModifierSource, RunState } from "../state/runState.ts";
 import { activeModifier, heartsByDog, testState } from "../testing/runState.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
 import { TEST_WALKER_DATA } from "../testing/walkers.ts";
@@ -23,6 +23,7 @@ import { cardFor, chooseOption, openCard } from "./choices.ts";
 import { ownerMaxHearts } from "./dogs.ts";
 import { grabGear } from "./gearDrops.ts";
 import { modifiersOf } from "./modifiers.ts";
+import { newRun } from "./newRun.ts";
 import { spareTreatRoom, spendSpareTreat, storeSpareTreat } from "./spareTreats.ts";
 import { read } from "./units.ts";
 

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import type { DogId, Size, WalkerId } from "../data/types.ts";
-import { newRun } from "../state/runState.ts";
+import { newRun } from "./newRun.ts";
 import { read } from "./units.ts";
 import {
   newWalkers,

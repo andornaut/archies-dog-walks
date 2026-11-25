@@ -11,7 +11,7 @@ import { RUN_TEXT } from "../data/runText.ts";
 import { SHOP_GEAR } from "../data/shop.ts";
 import type { CardOption, CardSource, DogId, EncounterId, UpgradeId } from "../data/types.ts";
 import { UPGRADE_DRAW_ORDER, UPGRADES } from "../data/upgrades.ts";
-import { newRun, type RunState } from "../state/runState.ts";
+import type { RunState } from "../state/runState.ts";
 import { activeModifier, heartsByDog, testState } from "../testing/runState.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
 import { TEST_WALKER_DATA } from "../testing/walkers.ts";
@@ -28,6 +28,7 @@ import {
   openCard,
 } from "./choices.ts";
 import { placeInPack, startHearts } from "./dogs.ts";
+import { newRun } from "./newRun.ts";
 import { read } from "./units.ts";
 
 const data = {

@@ -1,6 +1,7 @@
 import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 import { fillLine, fillNames, signedText } from "@andornaut/game-kit/runtime/lines";
 
+import { HOME_TEXT_FIELDS, homeLine } from "../content/homeText.ts";
 import type {
   Debuff,
   DebuffId,
@@ -25,8 +26,8 @@ import type {
   Upgrade,
   WalkerPerk,
 } from "../data/types.ts";
-import { HOME_TEXT_FIELDS, homeLine } from "../home/homeText.ts";
 import { type Cents, cents } from "../units.ts";
+import { heartsChangeText } from "./causes.ts";
 import type { ModifiedValue } from "./modified.ts";
 import { modifiersOf, modifierValue } from "./modifiers.ts";
 import { read } from "./units.ts";
@@ -58,11 +59,6 @@ export function formatDollars(amount: Cents): string {
 // A money effect's amount, signed by its change: "+$5", "−$1.50".
 function moneyChangeText(change: MoneyEffect["change"], amount: Cents): string {
   return signedText(change === "gain" ? 1 : -1, formatDollars(amount));
-}
-
-// A change in hearts, signed: "+3♥", "−1♥".
-export function heartsChangeText(amount: number): string {
-  return signedText(amount, `${Math.abs(amount)}♥`);
 }
 
 function moneyText(data: TextData, effect: MoneyEffect): string {

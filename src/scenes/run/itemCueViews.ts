@@ -1,7 +1,7 @@
 import type { GameObjects } from "phaser";
 
 import { gameData } from "../../data/index.ts";
-import { bobOffset, itemBobs } from "../../rules/itemCues.ts";
+import { bobOffset, itemBobs } from "../../runner/itemCues.ts";
 import type { WalkItem } from "../../runner/walkItems.ts";
 
 // The walk screen's reading aid for road items: the grab-worthy ones bob, from the item's

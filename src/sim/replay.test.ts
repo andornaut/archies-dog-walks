@@ -14,10 +14,11 @@ import {
 } from "../dev/inputLog.ts";
 import { runSetupLimitsFor } from "../dev/pageRunSetup.ts";
 import { loadoutFor, withSetupStart } from "../dev/setupRun.ts";
+import { newRun } from "../rules/newRun.ts";
 import { screenRoadGeometry } from "../runner/screenGeometry.ts";
 import { chooseCard, runStreams, startSession, stepSession } from "../runner/session.ts";
 import { startRoad } from "../runner/walk.ts";
-import { newRun, type RunState } from "../state/runState.ts";
+import type { RunState } from "../state/runState.ts";
 import { simConfig } from "../testing/sim.ts";
 import type { PolicyId } from "./policies.ts";
 import { simulateRun } from "./simulate.ts";

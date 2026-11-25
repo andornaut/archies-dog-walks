@@ -8,8 +8,8 @@ import { distanceAtY } from "../layout/projection.ts";
 import { startAmbient, stepAmbient } from "../road/ambient.ts";
 import { newRoadsidePlaces, placeRoadside, ROADSIDE } from "../road/roadsideProps.ts";
 import { type KeptScenery, struckBy, struckNow } from "../road/struckScenery.ts";
+import { newRun } from "../rules/newRun.ts";
 import { currentZone, currentZoneId, zoneAt } from "../rules/route.ts";
-import { newRun } from "../state/runState.ts";
 import { screenRoadGeometry } from "./screenGeometry.ts";
 import {
   chooseCard,

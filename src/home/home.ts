@@ -1,6 +1,7 @@
 import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
+import { HOME_TEXT_FIELDS } from "../content/homeText.ts";
 import type { DogId, GameData, GearId, Size } from "../data/types.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { quipLine } from "../rules/choices.ts";
@@ -10,7 +11,6 @@ import { price, unlockPrice } from "../rules/shop.ts";
 import { read } from "../rules/units.ts";
 import type { Owned, SaveDocument } from "../save/schema.ts";
 import { type Cents, cents } from "../units.ts";
-import { HOME_TEXT_FIELDS } from "./homeText.ts";
 
 // The pack being picked, in the order picked, and the gear to take.
 export interface HomeLoadout {

@@ -1,5 +1,6 @@
 import { fillLine } from "@andornaut/game-kit/runtime/lines";
 
+import { HOME_TEXT_FIELDS } from "../content/homeText.ts";
 import type { DogId, GameData, GearId, WalkerId } from "../data/types.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { SIZE_AGILITY, sizeHearts } from "../rules/dogs.ts";
@@ -13,7 +14,6 @@ import {
 import type { Owned } from "../save/schema.ts";
 import type { Cents } from "../units.ts";
 import { type HomeLoadout, isAffordable, type Purchase, purchasePrice } from "./home.ts";
-import { HOME_TEXT_FIELDS } from "./homeText.ts";
 import { walkerDetailLines, walkerLockedLine } from "./walkers.ts";
 
 type DetailData = Pick<

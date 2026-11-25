@@ -5,7 +5,7 @@ import { gameData } from "../data/index.ts";
 import { LANE_COUNT } from "../data/screen.ts";
 import type { CardSource, ZoneId } from "../data/types.ts";
 import { cardFor, openCard } from "../rules/choices.ts";
-import { newRun } from "../state/runState.ts";
+import { newRun } from "../rules/newRun.ts";
 import { screenRoadGeometry } from "./screenGeometry.ts";
 import {
   awaitsZonePlan,

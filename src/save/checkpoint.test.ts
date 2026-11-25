@@ -5,7 +5,6 @@ import { describe, expect, it } from "vitest";
 import { gameData } from "../data/index.ts";
 import type { DogId, WalkerId, ZoneId } from "../data/types.ts";
 import { buy } from "../home/home.ts";
-import { achievementJudge } from "../rules/achievements.ts";
 import { walkerGoal } from "../rules/walkers.ts";
 import type { EndReason } from "../state/runState.ts";
 import { packOf, runFactsFor } from "../testing/achievements.ts";
@@ -17,6 +16,7 @@ import {
   veteranSave,
 } from "../testing/saves.ts";
 import { cents } from "../units.ts";
+import { achievementJudge } from "./achievementJudge.ts";
 import { earnedIfBanked } from "./achievementPreview.ts";
 import {
   bankCheckpoint,

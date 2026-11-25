@@ -14,7 +14,7 @@ import { SHOP_GEAR } from "../data/shop.ts";
 import type { CardSource, GearId } from "../data/types.ts";
 import { UPGRADES } from "../data/upgrades.ts";
 import { mapPack } from "../state/pack.ts";
-import { newRun, type RunState } from "../state/runState.ts";
+import type { RunState } from "../state/runState.ts";
 import { defined } from "../testing/defined.ts";
 import { heartsByDog } from "../testing/runState.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
@@ -32,6 +32,7 @@ import {
   gearInEffect,
   grabGear,
 } from "./gearDrops.ts";
+import { newRun } from "./newRun.ts";
 import { price } from "./shop.ts";
 import { spareTreatRoom } from "./spareTreats.ts";
 import { read } from "./units.ts";

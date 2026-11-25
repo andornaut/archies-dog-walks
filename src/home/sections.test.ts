@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import { homeLine } from "../content/homeText.ts";
 import { gameData } from "../data/index.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
-import { homeLine } from "./homeText.ts";
 import { homeSections } from "./sections.ts";
 
 const data = { ...gameData, tuning: TEST_TUNING };

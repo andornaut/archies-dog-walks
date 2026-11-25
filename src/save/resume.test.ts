@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { gameData } from "../data/index.ts";
 import { LANE_COUNT } from "../data/screen.ts";
 import type { ZoneId } from "../data/types.ts";
+import { newRun } from "../rules/newRun.ts";
 import { firstZoneId } from "../rules/route.ts";
 import { moverPlace } from "../runner/movers.ts";
 import { componentHitLength, itemHeight } from "../runner/obstacleGeometry.ts";
@@ -17,7 +18,7 @@ import {
 } from "../runner/session.ts";
 import { startRoad } from "../runner/walk.ts";
 import { footprintOf, type WalkItem } from "../runner/walkItems.ts";
-import { newRun, type RunState } from "../state/runState.ts";
+import type { RunState } from "../state/runState.ts";
 import { newPlayerSave, testContext } from "../testing/saves.ts";
 import { clampHearts } from "../units.ts";
 import { saveFormat } from "./load.ts";

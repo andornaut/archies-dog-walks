@@ -40,15 +40,17 @@ import {
   takeDueInputs,
 } from "../dev/inputLog.ts";
 import type { LaneDirection } from "../layout/lanes.ts";
-import { achievementJudge, runCountersOf } from "../rules/achievements.ts";
+import { runCountersOf } from "../rules/achievements.ts";
 import { cardFor, type CardView, chooseOption, openCard } from "../rules/choices.ts";
 import { modifiersOf, modifierValue } from "../rules/modifiers.ts";
+import { newRun } from "../rules/newRun.ts";
 import { currentZone, defaultRoute, firstZoneId, walkLength } from "../rules/route.ts";
 import { tipValue } from "../rules/run.ts";
 import { read } from "../rules/units.ts";
 import { zoneStats } from "../rules/zones.ts";
+import { achievementJudge } from "../save/achievementJudge.ts";
 import { mapPack } from "../state/pack.ts";
-import { type ModifierSource, newRun, type PackDogs } from "../state/runState.ts";
+import type { ModifierSource, PackDogs } from "../state/runState.ts";
 import { packOf, runFactsFor } from "../testing/achievements.ts";
 import { lanesReachedAtEnd, pathShortfalls } from "../testing/avoidable.ts";
 import { defined } from "../testing/defined.ts";

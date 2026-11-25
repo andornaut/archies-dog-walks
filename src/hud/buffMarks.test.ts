@@ -9,10 +9,11 @@ import type { OptionView } from "../rules/choices.ts";
 import { laneSpeedText } from "../rules/effectText.ts";
 import { grabGear } from "../rules/gearDrops.ts";
 import { type ModifiedValue, modifierCause } from "../rules/modified.ts";
+import { newRun } from "../rules/newRun.ts";
 import { read } from "../rules/units.ts";
 import type { WalkItem } from "../runner/walkItems.ts";
 import { packDogs } from "../state/pack.ts";
-import { type ModifierSource, newRun } from "../state/runState.ts";
+import type { ModifierSource } from "../state/runState.ts";
 import { cents } from "../units.ts";
 import {
   type BuffPop,

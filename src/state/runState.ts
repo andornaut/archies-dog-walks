@@ -1,13 +1,11 @@
-import { type Pixels, pixels } from "@andornaut/game-kit/runtime/units";
+import type { Pixels } from "@andornaut/game-kit/runtime/units";
 
 import type {
   CardSource,
   DebuffId,
   DodgeEffect,
   DogId,
-  Effect,
   EncounterId,
-  GameData,
   GearId,
   MinorObstacleId,
   Modifier,
@@ -17,14 +15,7 @@ import type {
   WalkerId,
   ZoneId,
 } from "../data/types.ts";
-import { packPlace, startHearts } from "../rules/dogs.ts";
-import type { Lasting } from "../rules/durations.ts";
-import { applyEffects } from "../rules/effects.ts";
-import { firstZoneId } from "../rules/route.ts";
-import { read } from "../rules/units.ts";
-import { walkerEffects } from "../rules/walkers.ts";
-import { type Cents, cents, type Hearts } from "../units.ts";
-import { packFor, packOrder } from "./pack.ts";
+import type { Cents, Hearts } from "../units.ts";
 
 // A run in progress. Plain JSON throughout: arrays for sets, records for maps, numbers for
 // units, so a slice of it can be saved and loaded as it is.
@@ -59,6 +50,11 @@ export type EffectSource =
 
 export type ModifierSource = EffectSource | { readonly debuff: DebuffId; readonly kind: "debuff" };
 
+// The last zone an effect lasts through, by zone index. Absent: it lasts the run.
+export interface Lasting {
+  readonly untilZone?: number;
+}
+
 // A modifier in effect, with what it came from so a change can name it, and the last zone it
 // lasts through.
 export type ActiveModifier = Lasting & Modifier & { readonly source: ModifierSource };
@@ -83,8 +79,6 @@ interface SpareTreats {
   readonly spent: number;
   readonly stored: number;
 }
-
-const NO_SPARE_TREATS: SpareTreats = { held: 0, spent: 0, stored: 0 };
 
 export type EndReason = "finished" | "noDogs" | "wentHome";
 
@@ -156,94 +150,4 @@ export interface Loadout {
   readonly dogs: PackDogs;
   readonly gear: GearId | null;
   readonly walker: WalkerId;
-}
-
-// A run at its start with nothing on it yet but its gear, pack, route and walker: no money, no
-// effects, nothing counted, walking zone 0 from its start.
-export function blankRun(start: Pick<RunState, "gear" | "pack" | "route" | "walker">): RunState {
-  const { gear, pack, route, walker } = start;
-  return {
-    bumpsByKind: {},
-    bumpsByZone: [],
-    cardsThisZone: 0,
-    debuffs: [],
-    debuffsGot: {},
-    dodges: [],
-    firstZone: 0,
-    foundGear: null,
-    gear,
-    heartsForgiven: 0,
-    immunities: [],
-    modifiers: [],
-    money: cents(0),
-    optionPicks: {},
-    pack,
-    phase: { kind: "walking" },
-    route,
-    skipPass: null,
-    skipUsed: false,
-    spareTreats: NO_SPARE_TREATS,
-    startMoney: cents(0),
-    tallies: {},
-    upgradesPicked: [],
-    walker,
-    zoneDistance: pixels(0),
-    zoneEndMoney: cents(0),
-    zoneIndex: 0,
-  };
-}
-
-// A run's opening state, in the world's first zone: the walker's effects and the gear's applied,
-// then each owner's starting hearts, full for the pack's size, and the starting money. Throws for a
-// dog listed twice or more dogs than the player has slots.
-export function newRun(
-  data: Pick<
-    GameData,
-    "debuffs" | "dogs" | "encounters" | "shopGear" | "tuning" | "walkerPerks" | "walkers" | "world"
-  >,
-  dogSlots: number,
-  loadout: Loadout,
-): RunState {
-  if (new Set(loadout.dogs).size !== loadout.dogs.length) {
-    throw new Error(`A dog can walk only once in a pack: ${loadout.dogs.join(", ")}`);
-  }
-  if (loadout.dogs.length > dogSlots) {
-    throw new Error(`A pack of ${loadout.dogs.length} needs that many dog slots, not ${dogSlots}`);
-  }
-  const order = packOrder(data.dogs, loadout.dogs);
-  const packWith = (modifiers: readonly Modifier[]) =>
-    packFor(
-      (dog) => ({
-        dog,
-        hearts: startHearts(data.tuning, modifiers, packPlace(order, dog), data.dogs[dog]),
-        status: "walking",
-      }),
-      order,
-    );
-  const { walker } = loadout;
-  const empty = blankRun({
-    gear: loadout.gear,
-    pack: packWith([]),
-    route: [firstZoneId(data)],
-    walker,
-  });
-  const applyFrom = (source: EffectSource, effects: readonly Effect[], state: RunState) =>
-    applyEffects(data, { affected: [], source }, effects, state);
-  const walked = applyFrom({ kind: "walker", walker }, walkerEffects(data, walker), empty);
-  const geared =
-    loadout.gear === null
-      ? walked
-      : applyFrom(
-          { gear: loadout.gear, kind: "gear" },
-          data.shopGear[loadout.gear].effects,
-          walked,
-        );
-  const money = read(data.tuning, "money", "startPurse");
-  return {
-    ...geared,
-    money,
-    pack: packWith(geared.modifiers),
-    startMoney: money,
-    zoneEndMoney: money,
-  };
 }

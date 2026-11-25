@@ -8,14 +8,9 @@ import type {
   Upgrade,
   UpgradeDuration,
 } from "../data/types.ts";
-import type { ActiveDebuff, RunState } from "../state/runState.ts";
+import type { ActiveDebuff, Lasting, RunState } from "../state/runState.ts";
 import { modifiedStat } from "./modifiers.ts";
 import { read } from "./units.ts";
-
-// The last zone an effect lasts through, by zone index. Absent: it lasts the run.
-export interface Lasting {
-  readonly untilZone?: number;
-}
 
 // Whether the walk waits at a fork, between zones, after the zone index has moved on.
 function atFork(state: Pick<RunState, "phase">): boolean {

@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../../data/index.ts";
 import { LANE_COUNT } from "../../data/screen.ts";
+import { newRun } from "../../rules/newRun.ts";
 import type { LaneMotion } from "../../runner/laneMotion.ts";
 import { screenRoadGeometry } from "../../runner/screenGeometry.ts";
 import {
@@ -16,7 +17,6 @@ import {
 import { startRoad, type Walk } from "../../runner/walk.ts";
 import { type WalkItem } from "../../runner/walkItems.ts";
 import { laneMoveSeconds } from "../../runner/walkMotion.ts";
-import { newRun } from "../../state/runState.ts";
 import { blendWalk, leadWalk, stepAlpha } from "./interpolate.ts";
 
 const STEP_MS = STEP_SECONDS * 1000;

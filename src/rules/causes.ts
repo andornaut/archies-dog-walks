@@ -5,7 +5,6 @@ import { minorObstacleName } from "../content/obstacleLooks.ts";
 import type { DogId, GameData, GearId } from "../data/types.ts";
 import type { ActiveModifier, EffectSource, ModifierSource } from "../state/runState.ts";
 import { type Cents, type Hearts, roundDollars } from "../units.ts";
-import { heartsChangeText } from "./effectText.ts";
 import type { Contribution } from "./modifiers.ts";
 
 // One reason behind a change, with how much of the change it accounts for, in the change's
@@ -177,6 +176,11 @@ export function causeName(data: CauseData, change: Change, cause: NamedCause): s
 // never reads "$0", unless it is nothing at all, such as a tip while Stinky.
 function wholeDollarText(amount: number): string {
   return amount === 0 ? "$0" : `$${Math.max(1, Math.round(Math.abs(amount) / 100))}`;
+}
+
+// A change in hearts, signed: "+3♥", "−1♥".
+export function heartsChangeText(amount: number): string {
+  return signedText(amount, `${Math.abs(amount)}♥`);
 }
 
 // A signed amount in the change's unit, such as "−2♥" or "+$2".

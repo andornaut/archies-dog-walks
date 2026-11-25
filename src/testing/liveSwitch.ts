@@ -1,6 +1,7 @@
 import { gameData } from "../data/index.ts";
 import { LANE_COUNT } from "../data/screen.ts";
 import type { ZoneId } from "../data/types.ts";
+import { newRun } from "../rules/newRun.ts";
 import { screenRoadGeometry } from "../runner/screenGeometry.ts";
 import {
   jumpToNeighbourhood,
@@ -11,7 +12,7 @@ import {
 import { startRoad } from "../runner/walk.ts";
 import { encodeResume, launchWalk } from "../save/resume.ts";
 import { checkpointOf } from "../save/runSlices.ts";
-import { newRun, type RunState } from "../state/runState.ts";
+import type { RunState } from "../state/runState.ts";
 
 // A live neighbourhood switch from Cheats, as RunScene plays it: a walk midway along route
 // (walking its last slot) switched to zone, the next zone it forks to, and the run a launch

@@ -38,6 +38,7 @@ import {
 import { onFrameTurnChange, PHONE_EVENTS, startWakeLock, stopWakeLock } from "../pwa/index.ts";
 import { requestGameUpdateCheck } from "../pwa/launch.ts";
 import { type CardView, type Choice, outcomeChanges } from "../rules/choices.ts";
+import { newRun } from "../rules/newRun.ts";
 import { currentZone, currentZoneId, previousZone, previousZoneId } from "../rules/route.ts";
 import { screenRoadGeometry } from "../runner/screenGeometry.ts";
 import {
@@ -64,7 +65,7 @@ import { pageZonePlanner } from "../runner/zonePlanner.ts";
 import { dogsFinishedWith } from "../save/checkpoint.ts";
 import type { ResumeWalk } from "../save/resume.ts";
 import { checkpointOf, runResultOf } from "../save/runSlices.ts";
-import { type Loadout, newRun, type RunState } from "../state/runState.ts";
+import type { Loadout, RunState } from "../state/runState.ts";
 import { colourFromHex, PALETTE } from "../ui/palette.ts";
 import { noteWalkStarted } from "./cheatChoices.ts";
 import type { HudSceneData } from "./HudScene.ts";

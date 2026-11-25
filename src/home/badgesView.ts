@@ -14,12 +14,8 @@ import type {
 } from "../data/types.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
 import { dollarText } from "../presentation/currency.ts";
-import {
-  type AchievementData,
-  achievementJudge,
-  conditionTarget,
-  isMoneyCondition,
-} from "../rules/achievements.ts";
+import { type AchievementData, conditionTarget, isMoneyCondition } from "../rules/achievements.ts";
+import { achievementJudge } from "../save/achievementJudge.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";

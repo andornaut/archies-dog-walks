@@ -49,7 +49,7 @@ import { capturePlanningFailure, type SpawnFlow, type ZoneWalkEvents } from "./w
 vi.mock("./simulate.ts", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./simulate.ts")>();
   const { cents } = await import("../units.ts");
-  const { newRun } = await import("../state/runState.ts");
+  const { newRun } = await import("../rules/newRun.ts");
   const { runCountersOf } = await import("../rules/achievements.ts");
   const { seededRandom } = await import("@andornaut/game-kit/runtime/random");
   const { SKILL_PRESETS } = await import("./skills.ts");

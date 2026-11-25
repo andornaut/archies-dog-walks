@@ -15,6 +15,7 @@ import { cardRowIn } from "../layout/cardLayout.ts";
 import { laneCentreXs } from "../layout/lanes.ts";
 import type { Change } from "../rules/causes.ts";
 import { cardFor, type CardView, forkCard, MAX_CARD_OPTIONS } from "../rules/choices.ts";
+import { newRun } from "../rules/newRun.ts";
 import { firstZoneId, forkPaths, middleZoneId } from "../rules/route.ts";
 import { tipValue } from "../rules/run.ts";
 import { read } from "../rules/units.ts";
@@ -29,7 +30,7 @@ import { walkProjection } from "../runner/walkGeometry.ts";
 import { type WalkItem, type WalkItemKind } from "../runner/walkItems.ts";
 import { zoneLength } from "../runner/walkMotion.ts";
 import { heartsOf, mapPack } from "../state/pack.ts";
-import { newRun, type PackDogs, type PackSlot, type RunState } from "../state/runState.ts";
+import type { PackDogs, PackSlot, RunState } from "../state/runState.ts";
 import { addCents, cents, clampHearts } from "../units.ts";
 import { HELP_LAYOUT } from "./helpLayout.ts";
 

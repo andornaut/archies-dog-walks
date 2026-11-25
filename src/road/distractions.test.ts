@@ -11,6 +11,7 @@ import { gameData } from "../data/index.ts";
 import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { MinorObstacleId } from "../data/types.ts";
 import { laneCentreXs } from "../layout/lanes.ts";
+import { newRun } from "../rules/newRun.ts";
 import { currentZone } from "../rules/route.ts";
 import { read } from "../rules/units.ts";
 import { DART_VERGE_LANES } from "../runner/dartOutcomes.ts";
@@ -28,7 +29,6 @@ import { startRoad } from "../runner/walk.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
 import { type WalkItem } from "../runner/walkItems.ts";
 import { zoneLength } from "../runner/walkMotion.ts";
-import { newRun } from "../state/runState.ts";
 import { defined } from "../testing/defined.ts";
 import {
   type Distraction,

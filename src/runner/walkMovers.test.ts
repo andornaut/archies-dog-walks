@@ -14,9 +14,10 @@ import type {
   ZoneId,
 } from "../data/types.ts";
 import { WORLD } from "../data/world.ts";
+import { newRun } from "../rules/newRun.ts";
 import { read } from "../rules/units.ts";
 import { weightedZones } from "../rules/zones.ts";
-import { newRun, type PackDogs } from "../state/runState.ts";
+import type { PackDogs } from "../state/runState.ts";
 import { moverFixture } from "../testing/moverFixtures.ts";
 import {
   type HopMovement,

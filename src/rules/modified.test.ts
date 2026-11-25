@@ -20,12 +20,7 @@ import type {
   WalkerPerkId,
 } from "../data/types.ts";
 import { UPGRADES } from "../data/upgrades.ts";
-import {
-  type EffectSource,
-  type ModifierSource,
-  newRun,
-  type RunState,
-} from "../state/runState.ts";
+import type { EffectSource, ModifierSource, RunState } from "../state/runState.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
 import { TEST_WALKER_DATA } from "../testing/walkers.ts";
 import { TEST_WORLD } from "../testing/world.ts";
@@ -33,6 +28,7 @@ import { cardFor, chooseOption, openCard } from "./choices.ts";
 import { maxHearts, placeInPack } from "./dogs.ts";
 import { applyEffects } from "./effects.ts";
 import type { ModifiedValue } from "./modified.ts";
+import { newRun } from "./newRun.ts";
 import { standingModified } from "./standing.ts";
 import { read } from "./units.ts";
 

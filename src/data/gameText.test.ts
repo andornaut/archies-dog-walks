@@ -1,7 +1,7 @@
 import { type FieldTable, strayNames } from "@andornaut/game-kit/runtime/lines";
 import { describe, expect, it } from "vitest";
 
-import { HOME_TEXT_FIELDS } from "../home/homeText.ts";
+import { HOME_TEXT_FIELDS } from "../content/homeText.ts";
 import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
 import { RUN_TEXT_FIELDS } from "../hud/runText.ts";
 import { read } from "../rules/units.ts";
