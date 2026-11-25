@@ -1,9 +1,10 @@
 import { itemAt, partitionPoint } from "@andornaut/game-kit/runtime/arrays";
+import type { Random } from "@andornaut/game-kit/runtime/random";
 
 import { laneMask } from "../layout/lanes.ts";
 import { approachOutcomes } from "./approach.ts";
 import { stopsOnVerge } from "./dartOutcomes.ts";
-import { type MoverSpec, type MoverStand, type PlannerStreams } from "./moverModel.ts";
+import { type MoverSpec, type MoverStand } from "./moverModel.ts";
 import { crossingScroll, laneAt, type MoverPath, moverPlace, type MoverStep } from "./movers.ts";
 import { type MoverCaps } from "./moverScreen.ts";
 import { shyOutcomes } from "./shy.ts";
@@ -499,19 +500,15 @@ export function moverRestSpans(
 // The guaranteed path, a lane for each row: from pathStart, it holds each lane for at least
 // PATH_HOLD_ROWS rows, and on each row after that it changes lane with PATH_CHANGE_CHANCE, to a
 // lane drawn evenly among those on the road up to pathReach lanes either way. Every row draws
-// twice from the movers stream, whatever the path does there.
-export function drawPath(
-  streams: PlannerStreams,
-  plan: SpawnPlan<string>,
-  rowCount: number,
-): number[] {
+// twice from random, whatever the path does there.
+export function drawPath(random: Random, plan: SpawnPlan<string>, rowCount: number): number[] {
   const most = pathReach(plan);
   const path: number[] = [];
   let lane = plan.pathStart;
   let held = 0;
   for (let row = 0; row < rowCount; row++) {
-    const change = streams.movers();
-    const pick = streams.movers();
+    const change = random();
+    const pick = random();
     if (held >= PATH_HOLD_ROWS && change < PATH_CHANGE_CHANCE) {
       const options: number[] = [];
       for (let step = -most; step <= most; step++) {

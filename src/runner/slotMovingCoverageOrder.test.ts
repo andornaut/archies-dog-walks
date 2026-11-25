@@ -63,7 +63,11 @@ function source(kind: string, blocksLane: boolean, lanes = 1): SlotSource<string
 }
 function fixture(pools: readonly (readonly SlotSource<string>[])[]) {
   const prepared = new Map<string, PreparedSlotKind<string>[]>();
-  const streams = pools.map(() => ({ movers: vi.fn(() => 0.5), spawns: vi.fn(() => 0.5) }));
+  const streams = pools.map(() => ({
+    draws: vi.fn(() => 0.5),
+    hops: vi.fn(() => 0.5),
+    steps: vi.fn(() => 0.5),
+  }));
   const opened = vi.fn(),
     closed = vi.fn();
   const jobs: WitnessJob<string>[] = pools.map((pool, ordinal) => ({
@@ -147,12 +151,17 @@ function firstAttempt(f: ReturnType<typeof fixture>) {
     }
   } finally {
     const draws = f.streams.map((stream) => [
-      stream.movers.mock.calls.length,
-      stream.spawns.mock.calls.length,
+      stream.draws.mock.calls.length,
+      stream.hops.mock.calls.length,
+      stream.steps.mock.calls.length,
     ]);
     cursor.return({ status: "inconclusive" });
     expect(
-      f.streams.map((stream) => [stream.movers.mock.calls.length, stream.spawns.mock.calls.length]),
+      f.streams.map((stream) => [
+        stream.draws.mock.calls.length,
+        stream.hops.mock.calls.length,
+        stream.steps.mock.calls.length,
+      ]),
     ).toEqual(draws);
   }
   expect(f.attempts.length).toBeGreaterThan(0);

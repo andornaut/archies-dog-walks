@@ -194,7 +194,7 @@ describe("native slot constraint transactions", () => {
       lane: 0,
     }));
     const wall = (kind: string, width: number) =>
-      prepareSlotKind({ movers: () => 0.9, spawns: () => 0.9 }, road, {
+      prepareSlotKind({ draws: () => 0.9, hops: () => 0.9, steps: () => 0.9 }, road, {
         compile: () => ({ blocksLane: true, first: true, footprint: { lanes: width, rows: 1 } }),
         footprint: { lanes: width, rows: 1 },
         kind,
@@ -203,7 +203,7 @@ describe("native slot constraint transactions", () => {
       });
     const actual = wall("actual", 1);
     const earlier = wall("earlier", 2);
-    const dart = prepareSlotKind({ movers: () => 0.9, spawns: () => 0.9 }, road, {
+    const dart = prepareSlotKind({ draws: () => 0.9, hops: () => 0.9, steps: () => 0.9 }, road, {
       compile: () => ({
         blocksLane: true,
         first: true,

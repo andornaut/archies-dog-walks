@@ -1,14 +1,18 @@
-import { randomStream, seededRandom } from "@andornaut/game-kit/runtime/random";
+import { randomStream } from "@andornaut/game-kit/runtime/random";
 
 import type { ConfiguredMovement, GameData, Movement, World } from "../data/types.ts";
-import type { PlannerStreams } from "../runner/moverModel.ts";
+import type { MoverStreams } from "../runner/moverModel.ts";
 import { mapZones } from "./world.ts";
 
 export type HopMovement = Extract<Movement, { kind: "hop" }>;
 
-// The planner's streams for a seed: spawns as one stream seeded with it, movers named from it.
-export function plannerStreams(seed: number): PlannerStreams {
-  return { movers: randomStream(seed, "movers"), spawns: seededRandom(seed) };
+// A mover's streams for a seed, each named from it by purpose.
+export function plannerStreams(seed: number): MoverStreams {
+  return {
+    draws: randomStream(seed, "draws"),
+    hops: randomStream(seed, "hops"),
+    steps: randomStream(seed, "steps"),
+  };
 }
 
 // The world with every zone at this mover share.

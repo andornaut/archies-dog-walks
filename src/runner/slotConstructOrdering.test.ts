@@ -111,7 +111,11 @@ function profiles() {
     weight: 1,
   };
   const compile = (source: SlotSource<string>) =>
-    preparation.prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, geometry, source);
+    preparation.prepareSlotKind(
+      { draws: () => 0.5, hops: () => 0.5, steps: () => 0.5 },
+      geometry,
+      source,
+    );
   return {
     exit: compile(exit),
     fixed: compile(fixed),

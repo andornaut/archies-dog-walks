@@ -74,7 +74,7 @@ describe("red herrings", { timeout: 60_000 }, () => {
     const spec = moverSpec(REAL, streams, footprintOf(REAL, herring.kind), herring.movement);
     let herrings = 0;
     for (let mover = 0; mover < HERRING_MOVERS_ENOUGH; mover++) {
-      herrings += Number(isHerring(spec, drawMover(streams)));
+      herrings += Number(isHerring(spec, drawMover(streams.draws)));
     }
     expect(Math.abs(herrings / HERRING_MOVERS_ENOUGH - herring.share)).toBeLessThan(
       HERRING_SHARE_TOLERANCE,

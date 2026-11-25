@@ -172,13 +172,14 @@ function auditedFixture() {
 describe("native slot motion retry capabilities", () => {
   it("keeps one original draw vector and all template charges while a full bus gains a legal retry", () => {
     const raw = slotMotionStreams(context, key, source.kind);
-    const streams = { movers: vi.fn(raw.movers), spawns: vi.fn(raw.spawns) };
+    const streams = { draws: vi.fn(raw.draws), hops: vi.fn(raw.hops), steps: vi.fn(raw.steps) };
     const expectedRaw = slotMotionStreams(context, key, source.kind);
     const expectedStreams = {
-      movers: vi.fn(expectedRaw.movers),
-      spawns: vi.fn(expectedRaw.spawns),
+      draws: vi.fn(expectedRaw.draws),
+      hops: vi.fn(expectedRaw.hops),
+      steps: vi.fn(expectedRaw.steps),
     };
-    const requested = drawMover(expectedStreams);
+    const requested = drawMover(expectedStreams.draws);
     const prepared = prepareSlotKind(streams, geometry, source);
     const original = [0, ...DART_LIFTS].flatMap((lift) =>
       moverPlacements(grid, prepared.request.mover!, requested, lift),
@@ -192,8 +193,9 @@ describe("native slot motion retry capabilities", () => {
     expect(prepared.compiledCount).toBe(300);
     expect(prepared.placements).toHaveLength(16);
     expect(prepared.draws).toEqual(requested);
-    expect(streams.movers.mock.calls).toEqual(expectedStreams.movers.mock.calls);
-    expect(streams.spawns.mock.calls).toEqual(expectedStreams.spawns.mock.calls);
+    expect(streams.draws.mock.calls).toEqual(expectedStreams.draws.mock.calls);
+    expect(streams.hops.mock.calls).toEqual(expectedStreams.hops.mock.calls);
+    expect(streams.steps.mock.calls).toEqual(expectedStreams.steps.mock.calls);
     expect(prepared.placements[0]?.selection?.draws.speed).toBe(0.25);
     expect(
       prepared.placements.every(
@@ -461,7 +463,11 @@ describe("native slot motion retry capabilities", () => {
       const raw = entropy.slotMotionStreams;
       const records: { key: string; streams: ReturnType<typeof observedStreams> }[] = [];
       function observedStreams(streams: ReturnType<typeof slotMotionStreams>) {
-        return { movers: vi.fn(streams.movers), spawns: vi.fn(streams.spawns) };
+        return {
+          draws: vi.fn(streams.draws),
+          hops: vi.fn(streams.hops),
+          steps: vi.fn(streams.steps),
+        };
       }
       const capture = vi
         .spyOn(entropy, "slotMotionStreams")
@@ -487,11 +493,12 @@ describe("native slot motion retry capabilities", () => {
         expect(audit.compiledTemplates).toBe(new Set(tier).size + 9);
         expect(generate.mock.calls.filter(([work]) => work !== undefined)).toHaveLength(1);
         const expected = observedStreams(raw(context, key, kind.kind));
-        drawMover(expected);
+        drawMover(expected.draws);
         const descriptions = records.filter((record) => record.key === key);
         expect(descriptions).toHaveLength(1);
-        expect(descriptions[0]!.streams.movers.mock.results).toEqual(expected.movers.mock.results);
-        expect(descriptions[0]!.streams.spawns.mock.results).toEqual(expected.spawns.mock.results);
+        expect(descriptions[0]!.streams.draws.mock.results).toEqual(expected.draws.mock.results);
+        expect(descriptions[0]!.streams.hops.mock.results).toEqual(expected.hops.mock.results);
+        expect(descriptions[0]!.streams.steps.mock.results).toEqual(expected.steps.mock.results);
       } finally {
         capture.mockRestore();
         generate.mockRestore();

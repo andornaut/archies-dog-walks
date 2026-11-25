@@ -6,7 +6,7 @@ import {
   type MoverDraws,
   type MoverPlacement,
   type MoverPlacementWork,
-  type PlannerStreams,
+  type MoverStreams,
 } from "./moverModel.ts";
 import { moverPlacementsWithWork } from "./moverPlanning.ts";
 import { crossLength } from "./movers.ts";
@@ -134,7 +134,7 @@ export function nativeSlotPreparationOrderingHint(
 }
 
 export function prepareSlotKind<Kind extends string>(
-  streams: PlannerStreams,
+  streams: MoverStreams,
   geometry: Geometry<Kind>,
   source: SlotSource<Kind>,
 ): PreparedSlotKind<Kind> {
@@ -146,7 +146,7 @@ export function prepareSlotKind<Kind extends string>(
 
 export function prepareSlotKindWithin<Kind extends string>(
   work: SlotPreparationWork,
-  streams: PlannerStreams,
+  streams: MoverStreams,
   geometry: Geometry<Kind>,
   source: SlotSource<Kind>,
 ): SlotPreparationResult<Kind> {
@@ -180,7 +180,7 @@ export function prepareSlotKindWithin<Kind extends string>(
 }
 
 export function describeSlotKind<Kind extends string>(
-  streams: PlannerStreams,
+  streams: MoverStreams,
   source: SlotSource<Kind>,
 ): SlotKindDescriptor<Kind> {
   let compiled: ReturnType<SlotSource<Kind>["compile"]>;
@@ -210,7 +210,7 @@ export function describeSlotKind<Kind extends string>(
   if (request.mover === undefined) {
     return { herring: false, request, source };
   }
-  const draws = drawMover(streams);
+  const draws = drawMover(streams.draws);
   return { draws, herring: isHerring(request.mover, draws), request, source };
 }
 

@@ -57,7 +57,11 @@ const profile = () => {
   return { compile, footprint, motion, source };
 };
 const work = () => ({ propagate: vi.fn(() => true) });
-const streams = () => ({ movers: vi.fn(() => 0.5), spawns: vi.fn(() => 0.5) });
+const streams = () => ({
+  draws: vi.fn(() => 0.5),
+  hops: vi.fn(() => 0.5),
+  steps: vi.fn(() => 0.5),
+});
 
 it("reuses a frozen full-profile minimum from native preparation without compiling or drawing again", () => {
   const { compile, source } = profile();
@@ -71,7 +75,11 @@ it("reuses a frozen full-profile minimum from native preparation without compili
   const prepared = result.prepared;
   expect(source.footprint.lanes).toBe(2);
   expect(Math.min(...prepared.placements.map(({ lanes }) => lanes.count))).toBe(4);
-  const draws = [random.movers.mock.calls.length, random.spawns.mock.calls.length];
+  const draws = [
+    random.draws.mock.calls.length,
+    random.hops.mock.calls.length,
+    random.steps.mock.calls.length,
+  ];
   const compiled = template.mock.calls.length;
   const guard = work();
   const first = nativeSlotPreparationOrderingHint(guard, prepared);
@@ -85,7 +93,11 @@ it("reuses a frozen full-profile minimum from native preparation without compili
   expect(Object.isFrozen(first.hint)).toBe(true);
   expect(guard.propagate).toHaveBeenCalledTimes(2);
   expect(compile).toHaveBeenCalledTimes(1);
-  expect([random.movers.mock.calls.length, random.spawns.mock.calls.length]).toEqual(draws);
+  expect([
+    random.draws.mock.calls.length,
+    random.hops.mock.calls.length,
+    random.steps.mock.calls.length,
+  ]).toEqual(draws);
   expect(template).toHaveBeenCalledTimes(compiled);
 });
 

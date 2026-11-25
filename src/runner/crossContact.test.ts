@@ -41,7 +41,7 @@ const spec: MoverSpec & { readonly motion: Extract<MoverSpec["motion"], { kind: 
 
 it("reserves every continuous collision interval while excluding the generic taller body", () => {
   const draws = drawMover(
-    slotMotionStreams({ seed: 534215944, zoneIndex: 0 }, "active:minorMoving:2", "ferrets"),
+    slotMotionStreams({ seed: 6, zoneIndex: 0 }, "active:minorMoving:2", "ferrets").draws,
   );
   const motions = [
     spec,

@@ -20,14 +20,13 @@ import { slowestDebuffedAgility, slowestPackAgility } from "../rules/walkers.ts"
 import { zoneStats } from "../rules/zones.ts";
 import type { RunState } from "../state/runState.ts";
 import { assignedMovement, type ProfiledMovement } from "./movementAssignments.ts";
-import type { PlannerStreams } from "./moverModel.ts";
 import { moverMovement, moverSpec } from "./moverSpecs.ts";
 import { componentHitLength, itemHeight, plannedCellInset } from "./obstacleGeometry.ts";
 import { pickSkin } from "./obstacleLooks.ts";
 import type { SlotAudit } from "./slotAudit.ts";
 import { apportionSlotCounts, slotCountTotal, type SlotGuarantee } from "./slotConfig.ts";
 import { minimumSlotDelivery, type SlotDelivery, type SlotPartialAudit } from "./slotDelivery.ts";
-import type { SlotSeedContext } from "./slotEntropy.ts";
+import { type SlotSeedContext, zoneRandom } from "./slotEntropy.ts";
 import type { SlotAssignment } from "./slotPlan.ts";
 import { SLOT_LIMITS, type SlotDiagnostics, type SlotPlanningFailure } from "./slotPlanner.ts";
 import type { PlannedSpawns, SpawnPlan, SpawnQuota } from "./spawning.ts";
@@ -149,18 +148,25 @@ export function firstContactSeconds(
   return run.zoneIndex === 0 ? read(data.tuning, "seconds", "firstZoneContact") : undefined;
 }
 
-// A zone's auxiliary requests, drawn from its spawns stream: of each lucky find kind, zoneStats'
-// luckyFinds rounded by chanceRound, in the kinds' order, then shuffled, each a quota of its own
-// held to its spaced stretch of the zone (spacedStretch) and, where its look moves, a mover at the
-// zone's mover share; then its gear drops (drawGearDrops), each a quota of its own held to its
-// spaced stretch; then its tips and treats, scaled as Rush hour and the like scale them. None
-// blocks a lane.
+// A zone's auxiliary requests: of each lucky find kind, zoneStats' luckyFinds rounded by
+// chanceRound, in the kinds' order, then shuffled, each a quota of its own held to its spaced
+// stretch of the zone (spacedStretch) and, where its look moves, a mover at the zone's mover share;
+// then its gear drops (drawGearDrops), each a quota of its own held to its spaced stretch; then its
+// tips and treats, scaled as Rush hour and the like scale them. None blocks a lane. Each purpose
+// draws from its own zone stream (zoneRandom): the finds' counts, their order, whether each
+// moves, the movers' hops and steps, and the gear drops.
 export function auxiliarySpawnQuotas(
   data: WalkData,
-  streams: PlannerStreams,
+  context: SlotSeedContext,
   run: RunState,
 ): SpawnQuota<WalkItemKind>[] {
-  const random = streams.spawns;
+  const counts = zoneRandom(context, "luckyFinds");
+  const order = zoneRandom(context, "luckyOrder");
+  const moves = zoneRandom(context, "luckyMovement");
+  const specs = {
+    hops: zoneRandom(context, "luckyHops"),
+    steps: zoneRandom(context, "luckySteps"),
+  };
   const zone = currentZone(data, run);
   const zoneId = currentZoneId(data, run);
   const stats = zoneStats(data.tuning, zone, run.zoneIndex);
@@ -170,22 +176,22 @@ export function auxiliarySpawnQuotas(
     blocksLane: false,
     count,
     kind,
-    mover: moverSpec(data, streams, footprintOf(data, kind), movement),
+    mover: moverSpec(data, specs, footprintOf(data, kind), movement),
   });
   const finds = shuffled(
-    random,
+    order,
     (Object.entries(stats.luckyFinds) as [EncounterId, number][]).flatMap(([kind, expected]) =>
-      Array.from({ length: chanceRound(random, expected) }, () => kind),
+      Array.from({ length: chanceRound(counts, expected) }, () => kind),
     ),
   );
   const lucky = finds.map((kind, i): SpawnQuota<WalkItemKind> => {
     const within = spacedStretch(finds.length, i);
-    const movement = moverMovement(data, random, zone.moverShare, zoneId, kind);
+    const movement = moverMovement(data, moves, zone.moverShare, zoneId, kind);
     return movement === null
       ? { blocksLane: false, count: 1, footprint: footprintOf(data, kind), kind, within }
       : { ...moverQuota(kind, movement, 1), within };
   });
-  const drops = drawGearDrops(data, random, run);
+  const drops = drawGearDrops(data, zoneRandom(context, "gearDrops"), run);
   return [
     ...lucky,
     ...drops.map((gear, i): SpawnQuota<WalkItemKind> => ({
@@ -258,8 +264,9 @@ export interface ZonePlanningContext extends SlotSeedContext {
 }
 
 // Plans the run's current zone: its spawns, each obstacle and lucky encounter drawn by the
-// zone's weights. Last, each minor obstacle with skins picks its skin (pickSkin) from the spawns
-// stream, after every spawn is placed, so the picks move no spawn. A zone with no certified
+// zone's weights, from streams named by the context's seed, its zone and their purpose. Last,
+// each minor obstacle with skins picks its skin (pickSkin) from the zone's skins stream, after
+// every spawn is placed. A zone with no certified
 // layout fails with its reason.
 export function planZoneWithContext(
   data: WalkData,
@@ -276,7 +283,6 @@ export function planZoneWithContext(
     | "tallestPackBand"
   >,
   context: ZonePlanningContext,
-  streams: PlannerStreams,
   walk: Walk,
 ): ZonePlanOutcome {
   const { road, run } = walk;
@@ -383,7 +389,7 @@ export function planZoneWithContext(
   assertGuaranteesMatchWeights(catalogue, guarantees);
   const input: ZoneSlotInput<WalkItemKind> = {
     actualRun: run,
-    auxiliary: withHitLengths(auxiliarySpawnQuotas(data, streams, run)).map((quota) => ({
+    auxiliary: withHitLengths(auxiliarySpawnQuotas(data, context, run)).map((quota) => ({
       ...quota,
       hazard: false,
     })),
@@ -444,9 +450,10 @@ export function planZoneWithContext(
   }));
   const { admission, events, herrings, path } = result.planned;
   const zone = currentZone(data, run).id;
+  const skins = zoneRandom(context, "skins");
   const pending = events.map((event): WalkSpawn => {
     const skin = isMinorObstacle(data, event.kind)
-      ? pickSkin(data, streams.spawns, zone, event.kind)
+      ? pickSkin(data, skins, zone, event.kind)
       : undefined;
     return skin === undefined ? event : { ...event, skin };
   });

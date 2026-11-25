@@ -39,7 +39,7 @@ function fixture(overrides: Partial<WitnessWork<string>> = {}, auxiliary = false
   }));
   const jobs: WitnessJob<string>[] = ["first", "second", "third", "fourth"].map((key, ordinal) => {
     const inert = auxiliary && key === "third";
-    const prepared = prepareSlotKind({ movers: () => 0, spawns: () => 0 }, road, {
+    const prepared = prepareSlotKind({ draws: () => 0, hops: () => 0, steps: () => 0 }, road, {
       compile: () => ({ blocksLane: !inert, first: true, footprint: { lanes: 1, rows: 1 } }),
       footprint: { lanes: 1, rows: 1 },
       kind: key,

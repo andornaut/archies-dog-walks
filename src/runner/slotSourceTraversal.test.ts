@@ -33,7 +33,7 @@ const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   zoneLength: 1000,
 };
 function fixture() {
-  const draws = { movers: vi.fn(() => 0), spawns: vi.fn(() => 0) };
+  const draws = { draws: vi.fn(() => 0), hops: vi.fn(() => 0), steps: vi.fn(() => 0) };
   const sources = ["first", "second", "third"].map((kind) =>
     prepareSlotKind(draws, geometry, {
       compile: () => ({ blocksLane: false, footprint: { lanes: 1, rows: 1 } }),
@@ -98,7 +98,11 @@ describe("fair weighted-source traversal prototype", () => {
       propagate: vi.fn(() => true),
       stopped: () => false,
     };
-    const before = [test.draws.movers.mock.calls.length, test.draws.spawns.mock.calls.length];
+    const before = [
+      test.draws.draws.mock.calls.length,
+      test.draws.hops.mock.calls.length,
+      test.draws.steps.mock.calls.length,
+    ];
     const cursor = traverseSlotSources(work, sources());
     const first = cursor.next();
     if (first.done) {
@@ -125,9 +129,11 @@ describe("fair weighted-source traversal prototype", () => {
       actual.forEach((candidate, offset) => expect(candidate).toBe(ordered[index]![offset]));
     }
     expect(closed.sort()).toEqual(["first", "second", "third"]);
-    expect([test.draws.movers.mock.calls.length, test.draws.spawns.mock.calls.length]).toEqual(
-      before,
-    );
+    expect([
+      test.draws.draws.mock.calls.length,
+      test.draws.hops.mock.calls.length,
+      test.draws.steps.mock.calls.length,
+    ]).toEqual(before);
   });
 
   it.each(["cancel", "stop", "budget"] as const)(

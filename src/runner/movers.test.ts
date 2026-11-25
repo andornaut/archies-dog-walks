@@ -968,7 +968,7 @@ describe("moverPlacements", () => {
       variation: { delaySeconds: 1, lengthShare: 0, speedShare: 0 },
     };
     const [placement] = moverPlacements(geometry, stepper, {
-      ...drawMover({ movers: () => 0.5, spawns: () => 0.5 }),
+      ...drawMover(() => 0.5),
       delays,
     });
     const steps = placement?.path.motion === "steps" ? placement.path.steps : [];
@@ -1062,7 +1062,7 @@ describe("moverPlacements", () => {
   it.each([0, 0.5, 1].map((lift) => ({ lift, travel: 330 - lift * (330 - 150) })))(
     "lifts a dart's start $lift of the way up to its cue's limit",
     ({ lift, travel }) => {
-      const draws = drawMover({ movers: () => 0, spawns: () => 0 });
+      const draws = drawMover(() => 0);
       const placements = moverPlacements(geometry, spec(cross(3, 0.4)), draws, lift);
       expect(placements).toHaveLength(2);
       for (const { path } of placements) {
@@ -1191,7 +1191,7 @@ describe("moverPlacements", () => {
   it.each([-0.3, 0, 0.8].flatMap((tilt) => [0, 1].map((start) => ({ start, tilt }))))(
     "plans a dart that stops on the verge as one that crosses, at tilt $tilt from start $start",
     ({ start, tilt }) => {
-      const draws = { ...drawMover({ movers: () => 0.5, spawns: () => 0.5 }), start };
+      const draws = { ...drawMover(() => 0.5), start };
       const planned = (motion: CrossMotion) =>
         moverPlacements(geometry, spec(motion), draws).map((placement) => ({
           ...placement,

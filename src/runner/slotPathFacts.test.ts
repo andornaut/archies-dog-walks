@@ -30,7 +30,7 @@ const geometry: Omit<spawning.SpawnPlan<string>, "quotas"> = {
   stepSeconds: 0.05,
   zoneLength: 2000,
 };
-const streams = { movers: () => 0.5, spawns: () => 0.5 };
+const streams = { draws: () => 0.5, hops: () => 0.5, steps: () => 0.5 };
 function fixedFixture(plan = geometry) {
   const prepared = candidates.prepareSlotKind(streams, plan, {
     compile: () => ({ blocksLane: true, first: true, footprint: { lanes: 1, rows: 1 } }),

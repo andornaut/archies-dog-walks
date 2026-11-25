@@ -47,10 +47,11 @@ export type SessionData = CardData & Pick<GameData, "upgradeDrawOrder"> & PullDa
 
 // The run's random streams, each named from the seed, so a seed replays the same walk however
 // the walk is driven. forks draws a fork's paths and upgrades what they carry, which the walk
-// never draws from, so a seed offers the same forks however the walk goes. Each zone is planned
-// from streams of its own, spawns-<zone index> and movers-<zone index>. draws counts the numbers
-// cards, forks and upgrades have drawn for boundary resumes. Movement-debuff streams restart
-// from the seed and zone index without a saved cursor.
+// never draws from, so a seed offers the same forks however the walk goes. cards draws only the
+// dogs' dodges. Each zone is planned from the seed and its zone index alone, from streams named
+// by purpose (slotEntropy.ts) that restart from the seed with no saved count. draws counts the
+// numbers cards, forks and upgrades have drawn for boundary resumes. Movement-debuff streams
+// restart from the seed and zone index without a saved cursor.
 export interface RunStreams {
   readonly cards: Random;
   debuffMovement(zone: number): Random;
@@ -461,20 +462,14 @@ function planCurrentZone(
   geometry: SessionGeometry,
   walk: Walk,
 ): Walk {
-  const zone = walk.run.zoneIndex;
-  const planner = {
-    movers: randomStream(streams.seed, `movers-${zone}`),
-    spawns: randomStream(streams.seed, `spawns-${zone}`),
-  };
   const outcome = planZoneWithContext(
     data,
     geometry(walk.run),
     {
       ...(streams.observeSpawns === undefined ? {} : { observePlan: streams.observeSpawns }),
       seed: streams.seed,
-      zoneIndex: zone,
+      zoneIndex: walk.run.zoneIndex,
     },
-    planner,
     walk,
   );
   if (outcome.status === "failed") {

@@ -89,7 +89,11 @@ function source(kind: string, mover = prefix): SlotKind<string> {
     weight: 1,
   };
 }
-const streams = () => ({ movers: vi.fn(() => 0.5), spawns: vi.fn(() => 0.5) });
+const streams = () => ({
+  draws: vi.fn(() => 0.5),
+  hops: vi.fn(() => 0.5),
+  steps: vi.fn(() => 0.5),
+});
 function allowance(limit: number, initial = 0) {
   let used = initial;
   return {
@@ -148,8 +152,9 @@ describe("bounded native preparation", () => {
       expect(work.used()).toBe(original.compiledCount);
       expect(work.template).toHaveBeenCalledTimes(original.compiledCount);
       expect(isNativeSlotPreparation(result.prepared)).toBe(true);
-      expect(boundedStreams.movers.mock.calls).toEqual(originalStreams.movers.mock.calls);
-      expect(boundedStreams.spawns.mock.calls).toEqual(originalStreams.spawns.mock.calls);
+      expect(boundedStreams.draws.mock.calls).toEqual(originalStreams.draws.mock.calls);
+      expect(boundedStreams.hops.mock.calls).toEqual(originalStreams.hops.mock.calls);
+      expect(boundedStreams.steps.mock.calls).toEqual(originalStreams.steps.mock.calls);
       const tail = allowance(original.compiledCount - 1);
       expect(prepareSlotKindWithin(tail, streams(), geometry, kind)).toEqual({ status: "budget" });
       expect(tail.used()).toBe(original.compiledCount - 1);
@@ -175,8 +180,9 @@ describe("bounded native preparation", () => {
     expect(work.used()).toBe(65536);
     expect(work.template).toHaveBeenCalledTimes(7);
     expect(created).toBe(6);
-    expect(boundedStreams.movers.mock.calls).toEqual(originalStreams.movers.mock.calls);
-    expect(boundedStreams.spawns.mock.calls).toEqual(originalStreams.spawns.mock.calls);
+    expect(boundedStreams.draws.mock.calls).toEqual(originalStreams.draws.mock.calls);
+    expect(boundedStreams.hops.mock.calls).toEqual(originalStreams.hops.mock.calls);
+    expect(boundedStreams.steps.mock.calls).toEqual(originalStreams.steps.mock.calls);
   });
 
   it("bills the one-unit fixed, herring and empty-profile floors without exposing a partial preparation", () => {
@@ -216,8 +222,8 @@ describe("bounded native preparation", () => {
 
 function producerFixture(compiledTemplates: number, invalidLateProfile = false) {
   const alpha = source("alpha");
-  const badDraw = entropy.slotMotionStreams(context, "active:minorMoving:7", "alpha").movers();
-  expect(entropy.slotMotionStreams(context, "active:minorMoving:0", "alpha").movers()).not.toBe(
+  const badDraw = entropy.slotMotionStreams(context, "active:minorMoving:7", "alpha").draws();
+  expect(entropy.slotMotionStreams(context, "active:minorMoving:0", "alpha").draws()).not.toBe(
     badDraw,
   );
   const catalogue = [
@@ -225,7 +231,7 @@ function producerFixture(compiledTemplates: number, invalidLateProfile = false) 
       ? {
           ...alpha,
           compile: (draws: Parameters<SlotKind<string>["compile"]>[0]) => {
-            if (draws.movers() === badDraw) {
+            if (draws.draws() === badDraw) {
               throw Error("Invalid late profile");
             }
             return alpha.compile(draws);

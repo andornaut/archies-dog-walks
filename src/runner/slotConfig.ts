@@ -1,5 +1,5 @@
 import type { SpawnSlotCounts, SpawnSlotRole } from "../data/types.ts";
-import type { PlannerStreams } from "./moverModel.ts";
+import type { MoverStreams } from "./moverModel.ts";
 import { type Footprint, quotaFootprint, type SpawnQuota } from "./spawning.ts";
 
 // Tie order for integer allocation and stable role iteration.
@@ -39,7 +39,7 @@ export interface SlotKind<Kind extends string> {
   readonly role: SpawnSlotRole;
   readonly weight: number;
   // The adapter derives this specification from authored geometry and full motion data.
-  readonly compile: (streams: PlannerStreams) => Omit<SpawnQuota<Kind>, "count" | "kind">;
+  readonly compile: (streams: MoverStreams) => Omit<SpawnQuota<Kind>, "count" | "kind">;
 }
 // Moving profiles own their full shape; the standing-quota default is separate.
 export function slotFootprint(quota: SpawnQuota<string>): Footprint {

@@ -61,7 +61,11 @@ const source = (mover: MoverSpec): SlotKind<string> => ({
   role: "minorMoving",
   weight: 2,
 });
-const streams = () => ({ movers: vi.fn(() => 0.6), spawns: vi.fn(() => 0.4) });
+const streams = () => ({
+  draws: vi.fn(() => 0.4),
+  hops: vi.fn(() => 0.6),
+  steps: vi.fn(() => 0.4),
+});
 const aliases = (values: readonly object[]) => values.map((value) => values.indexOf(value));
 
 describe("fresh slot descriptors and domains", () => {
@@ -69,13 +73,11 @@ describe("fresh slot descriptors and domains", () => {
     const kind = source(cross);
     const draws = streams();
     const descriptor = describeSlotKind(draws, kind);
-    const moverCalls = draws.movers.mock.calls.length;
-    const spawnCalls = draws.spawns.mock.calls.length;
+    const calls = [draws.draws, draws.hops, draws.steps].map((stream) => stream.mock.calls.length);
     expect(kind.compile).toHaveBeenCalledExactlyOnceWith(draws);
     const expectedStreams = streams();
-    expect(descriptor.draws).toEqual(drawMover(expectedStreams));
-    expect(moverCalls).toBe(expectedStreams.movers.mock.calls.length);
-    expect(spawnCalls).toBe(expectedStreams.spawns.mock.calls.length);
+    expect(descriptor.draws).toEqual(drawMover(expectedStreams.draws));
+    expect(calls).toEqual([expectedStreams.draws.mock.calls.length, 0, 0]);
     const work = { beforePlacement: vi.fn() };
     const domain = compileSlotKindDomain(work, geometry, descriptor);
     expect(domain.placements.length).toBeGreaterThan(0);
@@ -87,8 +89,9 @@ describe("fresh slot descriptors and domains", () => {
     expect(Object.isFrozen(domain.request)).toBe(false);
     expect(Object.isFrozen(domain.placements)).toBe(false);
     expect(work.beforePlacement).toHaveBeenCalledTimes(domain.compiledCount);
-    expect(draws.movers).toHaveBeenCalledTimes(moverCalls);
-    expect(draws.spawns).toHaveBeenCalledTimes(spawnCalls);
+    expect(
+      [draws.draws, draws.hops, draws.steps].map((stream) => stream.mock.calls.length),
+    ).toEqual(calls);
     expect(kind.compile).toHaveBeenCalledTimes(1);
     const prepared = prepareSlotKind(streams(), geometry, kind);
     expect(domain).toEqual(prepared);
@@ -153,12 +156,20 @@ describe("fresh slot descriptors and domains", () => {
     );
     const rank = Math.max(...raw.map((placement) => placement.rank ?? 0));
     expect(rank).toBeGreaterThan(0);
-    const calls = [draws.movers.mock.calls.length, draws.spawns.mock.calls.length];
+    const calls = [
+      draws.draws.mock.calls.length,
+      draws.hops.mock.calls.length,
+      draws.steps.mock.calls.length,
+    ];
     const domain = compileSlotKindDomain(undefined, geometry, descriptor);
     expect(domain.compiledCount).toBe(new Set(raw).size);
     expect(domain.placements).toEqual(raw.filter((placement) => placement.rank === rank));
     expect(domain.placements.every((placement) => placement.path.motion === "approach")).toBe(true);
-    expect([draws.movers.mock.calls.length, draws.spawns.mock.calls.length]).toEqual(calls);
+    expect([
+      draws.draws.mock.calls.length,
+      draws.hops.mock.calls.length,
+      draws.steps.mock.calls.length,
+    ]).toEqual(calls);
     expect(kind.compile).toHaveBeenCalledTimes(1);
     expect(isNativeSlotPreparation(domain)).toBe(false);
   });
@@ -173,8 +184,9 @@ describe("fresh slot descriptors and domains", () => {
     for (const [source, message] of invalid) {
       const draws = streams();
       expect(() => describeSlotKind(draws, source)).toThrow(message);
-      expect(draws.movers).not.toHaveBeenCalled();
-      expect(draws.spawns).not.toHaveBeenCalled();
+      expect(draws.draws).not.toHaveBeenCalled();
+      expect(draws.hops).not.toHaveBeenCalled();
+      expect(draws.steps).not.toHaveBeenCalled();
     }
   });
 
@@ -190,8 +202,9 @@ describe("fresh slot descriptors and domains", () => {
     const descriptor = describeSlotKind(draws, fixed);
     expect(descriptor).toMatchObject({ herring: false, request: { hazard: false } });
     expect(descriptor.draws).toBeUndefined();
-    expect(draws.movers).not.toHaveBeenCalled();
-    expect(draws.spawns).not.toHaveBeenCalled();
+    expect(draws.draws).not.toHaveBeenCalled();
+    expect(draws.hops).not.toHaveBeenCalled();
+    expect(draws.steps).not.toHaveBeenCalled();
     const herring = source({
       ...cross,
       motion: {

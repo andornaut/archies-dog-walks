@@ -4,7 +4,6 @@ import { ZonePlanningError } from "../runner/session.ts";
 import type { WalkItemKind } from "../runner/walkItems.ts";
 import { planZoneWithContext } from "../runner/zonePlan.ts";
 import * as slotInput from "../runner/zoneSlotInput.ts";
-import { plannerStreams } from "./movers.ts";
 
 type PlanArguments = Parameters<typeof planZoneWithContext>;
 
@@ -12,13 +11,12 @@ export function planZoneForSeed(
   data: PlanArguments[0],
   geometry: PlanArguments[1],
   seed: number,
-  walk: PlanArguments[4],
+  walk: PlanArguments[3],
 ) {
   const outcome = planZoneWithContext(
     data,
     geometry,
     { seed, zoneIndex: walk.run.zoneIndex },
-    plannerStreams(seed),
     walk,
   );
   if (outcome.status === "failed") {
@@ -32,7 +30,7 @@ export function captureZoneInput(
   data: PlanArguments[0],
   geometry: PlanArguments[1],
   seed: number,
-  walk: PlanArguments[4],
+  walk: PlanArguments[3],
 ): slotInput.ZoneSlotInput<WalkItemKind> {
   const stop = new Error("Zone input captured");
   let captured: slotInput.ZoneSlotInput<WalkItemKind> | undefined;

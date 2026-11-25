@@ -274,7 +274,7 @@ describe("movers", { timeout: 200_000 }, () => {
     }
     const streams = plannerStreams(1);
     const spec = moverSpec(tuned, streams, footprintOf(tuned, kind), movement);
-    const drawn = drawMover(streams);
+    const drawn = drawMover(streams.draws);
     const draws = Object.freeze({
       ...drawn,
       count: controls.count,
@@ -448,7 +448,7 @@ describe("movers", { timeout: 200_000 }, () => {
   const stalkedRows = (spawns: readonly Planned[]) =>
     new Set(spawns.flatMap(({ mover }) => (mover?.motion === "approach" ? [mover.rows] : [])));
   it.each(counted)("moves each $kind within its range of times across seeds", ({ kind, range }) => {
-    const { delays, lengths } = drawMover(plannerStreams(1));
+    const { delays, lengths } = drawMover(plannerStreams(1).draws);
     expect(range.max).toBeLessThanOrEqual(Math.min(delays.length, lengths.length));
     const everyCount = Array.from({ length: range.max - range.min + 1 }, (_, i) => range.min + i);
     const stalks = movementOf(kind)?.kind === "approach";
@@ -542,7 +542,7 @@ describe("movers", { timeout: 200_000 }, () => {
         if (request.mover === undefined) {
           throw new Error(`Expected a native mover request for walking ${kind}`);
         }
-        const draws = drawMover(plannerStreams(1));
+        const draws = drawMover(plannerStreams(1).draws);
         return moverPlacements(
           {
             ...geometry,

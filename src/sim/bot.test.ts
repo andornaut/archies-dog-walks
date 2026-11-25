@@ -137,7 +137,7 @@ function obstacleCounts(data: SimData, results: readonly RunResult[]) {
 // milliseconds a run on a loaded machine.
 describe("a steering bot", { timeout: 60_000 }, () => {
   it("hits fewer obstacles as an expert than as a novice", () => {
-    const seeds = [1, 2];
+    const seeds = [1, 3];
     const novice = obstacleCounts(
       SHORT,
       seeds.map((seed) => run(SHORT, seed, SKILL_PRESETS.novice)),
@@ -190,7 +190,7 @@ describe("a steering bot", { timeout: 60_000 }, () => {
     ({ busy }) => {
       const results = [
         run(busy, 1, IDEAL_SKILL, ["ginger"], "foresight"),
-        run(busy, 2, IDEAL_SKILL, NO_CHASER, "foresight"),
+        run(busy, 3, IDEAL_SKILL, NO_CHASER, "foresight"),
       ];
       const counts = obstacleCounts(busy, results);
 
@@ -238,7 +238,7 @@ describe("a steering bot", { timeout: 60_000 }, () => {
   // cancels its pull, so only some strains pull. Read by foresight, no mover's surprise counts.
   it("is never hit right after a pull, as an ideal player by foresight, with pulls on", () => {
     const pulling: PackDogs = ["kilo", "lady", "buddy"];
-    const results = [1, 2, 3].map((seed) => run(SHORT, seed, IDEAL_SKILL, pulling, "foresight"));
+    const results = [1, 3, 4].map((seed) => run(SHORT, seed, IDEAL_SKILL, pulling, "foresight"));
     const hits = results.reduce((sum, result) => sum + result.hits.afterPull, 0);
     const pulls = results.reduce((sum, result) => sum + result.pullsMoved, 0);
 

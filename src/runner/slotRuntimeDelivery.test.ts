@@ -38,7 +38,7 @@ function fixture(missing: number | undefined, guaranteed = 0) {
     lane: geometry.pathStart,
   }));
   const jobs: WitnessJob<string>[] = Array.from({ length: 10 }, (_, ordinal) => {
-    const prepared = prepareSlotKind({ movers: () => 0, spawns: () => 0 }, geometry, {
+    const prepared = prepareSlotKind({ draws: () => 0, hops: () => 0, steps: () => 0 }, geometry, {
       compile: () => ({ blocksLane: true, footprint: { lanes: 1, rows: 1 } }),
       footprint: { lanes: 1, rows: 1 },
       kind: `wall-${ordinal}`,

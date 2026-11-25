@@ -273,7 +273,7 @@ describe("compiled native slot domains", () => {
   it("projects trusted stop groups before translation while preserving raw identities and foreign validation", () => {
     const source = stopSource;
     const prepared = native.prepareSlotKind(
-      { movers: () => 0.9, spawns: () => 0.9 },
+      { draws: () => 0.9, hops: () => 0.9, steps: () => 0.9 },
       geometry,
       source,
     );
@@ -294,27 +294,38 @@ describe("compiled native slot domains", () => {
     expect(projected).toMatchObject({ entries: [], status: "entries" });
     expect(projection.statistics().skippedTemplates).toBeGreaterThan(0);
     const evaluations = work.check.mock.calls.length;
-    const another = native.prepareSlotKind({ movers: () => 0.9, spawns: () => 0.9 }, geometry, {
-      ...source,
-      kind: "another",
-    });
+    const another = native.prepareSlotKind(
+      { draws: () => 0.9, hops: () => 0.9, steps: () => 0.9 },
+      geometry,
+      {
+        ...source,
+        kind: "another",
+      },
+    );
     expect(projection.at(work, anchor, another)).toMatchObject({ entries: [], status: "entries" });
     expect(work.check).toHaveBeenCalledTimes(evaluations);
     expect(projection.statistics().stopReuse).toBeGreaterThan(0);
-    const unequal = native.prepareSlotKind({ movers: () => 0.9, spawns: () => 0.9 }, geometry, {
-      ...source,
-      compile: () => {
-        const compiled = source.compile();
-        return {
-          ...compiled,
-          blocksLane: false,
-          mover: {
-            ...compiled.mover,
-            motion: { ...compiled.mover.motion, pause: { seconds: 0.1, stops: [[1, 1]] as const } },
-          },
-        };
+    const unequal = native.prepareSlotKind(
+      { draws: () => 0.9, hops: () => 0.9, steps: () => 0.9 },
+      geometry,
+      {
+        ...source,
+        compile: () => {
+          const compiled = source.compile();
+          return {
+            ...compiled,
+            blocksLane: false,
+            mover: {
+              ...compiled.mover,
+              motion: {
+                ...compiled.mover.motion,
+                pause: { seconds: 0.1, stops: [[1, 1]] as const },
+              },
+            },
+          };
+        },
       },
-    });
+    );
     const unequalResult = projection.at(work, anchor, unequal);
     expect(unequalResult.status).toBe("entries");
     if (unequalResult.status !== "entries") {
@@ -362,10 +373,14 @@ describe("compiled native slot domains", () => {
       ),
     ]).toEqual([]);
     expect(anchorWork).toHaveBeenCalledTimes(1);
-    const unblocked = native.prepareSlotKind({ movers: () => 0.9, spawns: () => 0.9 }, geometry, {
-      ...source,
-      compile: () => ({ ...source.compile(), blocksLane: false }),
-    });
+    const unblocked = native.prepareSlotKind(
+      { draws: () => 0.9, hops: () => 0.9, steps: () => 0.9 },
+      geometry,
+      {
+        ...source,
+        compile: () => ({ ...source.compile(), blocksLane: false }),
+      },
+    );
     const safePath = path.map((row) => ({ ...row, lane: 0 }));
     const domain = createSlotCandidateDomains({ ...geometry, pathStart: 0 }, safePath);
     const steps = [

@@ -209,13 +209,13 @@ export interface MoverDraws {
   readonly turnAt: number;
 }
 
-// The planner's random streams. spawns places every spawn and draws each mover's speed, first two
-// delays and share; movers draws each mover's count, later delays, start, shyness, tilt, outcome,
-// where it turns back or stops, reach side and move lengths, and each mover's start lane, so those
-// never shift the spawns stream.
-export interface PlannerStreams {
-  readonly movers: Random;
-  readonly spawns: Random;
+// A mover's random streams, one for each purpose, so a draw added for one never shifts another:
+// draws takes the mover's fixed draws (drawMover), hops a hopper's ways to hop and steps a
+// stepper's steps (moverSpec).
+export interface MoverStreams {
+  readonly draws: Random;
+  readonly hops: Random;
+  readonly steps: Random;
 }
 
 export interface MoverSpawn<Kind extends string> {

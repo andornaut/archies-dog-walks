@@ -36,8 +36,7 @@ const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   zoneLength: 500,
 };
 function fixture() {
-  const movers = vi.fn(() => 0.5),
-    spawns = vi.fn(() => 0.5),
+  const streams = { draws: vi.fn(() => 0.5), hops: vi.fn(() => 0.5), steps: vi.fn(() => 0.5) },
     compile = vi.fn(() => ({
       blocksLane: true,
       first: true,
@@ -60,7 +59,7 @@ function fixture() {
         warningSeconds: 0,
       },
     }));
-  const prepared = prepareSlotKind({ movers, spawns }, geometry, {
+  const prepared = prepareSlotKind(streams, geometry, {
     compile,
     footprint: { lanes: 1, rows: 1 },
     kind: "dart",
@@ -113,14 +112,14 @@ function fixture() {
     stopped: () => false,
     test: (owner, candidate) => state.commit(owner, candidate.entry),
   };
-  return { compile, domains, job, movers, path, ports, prepared, spawns, state, work };
+  return { compile, domains, job, path, ports, prepared, state, streams, work };
 }
 
 describe("original draw native frontiers", () => {
   it("retains the complete native occurrence multiset and every lift without minting tier EOF proof", () => {
-    const { compile, domains, job, movers, prepared, spawns, work } = fixture();
+    const { compile, domains, job, prepared, streams, work } = fixture();
     const snapshot = JSON.stringify(prepared);
-    const draws = [movers.mock.calls.length, spawns.mock.calls.length];
+    const draws = Object.values(streams).map((stream) => stream.mock.calls.length);
     const frontiers = domains.motionTiers(work, prepared);
     expect(frontiers.status).toBe("tiers");
     if (frontiers.status !== "tiers") {
@@ -161,7 +160,7 @@ describe("original draw native frontiers", () => {
     expect(domains.completedCardinality(order, job.key, prepared)).toBe(
       new Set(full.map(({ id }) => id)).size,
     );
-    expect([movers.mock.calls.length, spawns.mock.calls.length]).toEqual(draws);
+    expect(Object.values(streams).map((stream) => stream.mock.calls.length)).toEqual(draws);
     expect(compile).toHaveBeenCalledOnce();
     expect(JSON.stringify(prepared)).toBe(snapshot);
   });

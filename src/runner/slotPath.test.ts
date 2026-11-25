@@ -190,13 +190,10 @@ describe("guaranteed full-profile paths", () => {
     const draws: number[] = [];
     const rows = zoneRows(geometry, rowSpacing({ ...geometry, quotas: [] }));
     const original = drawPath(
-      {
-        movers: () => {
-          const value = random();
-          draws.push(value);
-          return value;
-        },
-        spawns: slotRandom(input.context, "path-reserved"),
+      () => {
+        const value = random();
+        draws.push(value);
+        return value;
       },
       { ...geometry, quotas: [] },
       rows.length,
@@ -253,13 +250,10 @@ describe("guaranteed full-profile paths", () => {
       const draws: number[] = [];
       const rows = zoneRows(geometry, rowSpacing({ ...geometry, quotas: [] }));
       const original = drawPath(
-        {
-          movers: () => {
-            const value = random();
-            draws.push(value);
-            return value;
-          },
-          spawns: () => 0,
+        () => {
+          const value = random();
+          draws.push(value);
+          return value;
         },
         { ...geometry, quotas: [] },
         rows.length,

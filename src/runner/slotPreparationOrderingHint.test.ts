@@ -33,28 +33,32 @@ const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   zoneLength: 2000,
 };
 function fixture() {
-  const prepared = prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, geometry, {
-    compile: () => ({
-      blocksLane: true,
-      mover: {
-        footprint: { lanes: 2, rows: 1 },
-        motion: {
-          firstDelaySeconds: [0, 0],
-          kind: "approach",
-          secondRoadShare: [0.5, 0.5],
-          stepSeconds: 0.1,
-          steps: { max: 2, min: 2 },
+  const prepared = prepareSlotKind(
+    { draws: () => 0.5, hops: () => 0.5, steps: () => 0.5 },
+    geometry,
+    {
+      compile: () => ({
+        blocksLane: true,
+        mover: {
+          footprint: { lanes: 2, rows: 1 },
+          motion: {
+            firstDelaySeconds: [0, 0],
+            kind: "approach",
+            secondRoadShare: [0.5, 0.5],
+            stepSeconds: 0.1,
+            steps: { max: 2, min: 2 },
+          },
+          movement: "approach",
+          variation: { delaySeconds: 0, lengthShare: 0, speedShare: 0 },
+          warningSeconds: 0,
         },
-        movement: "approach",
-        variation: { delaySeconds: 0, lengthShare: 0, speedShare: 0 },
-        warningSeconds: 0,
-      },
-    }),
-    footprint: { lanes: 2, rows: 1 },
-    kind: "following",
-    role: "minorMoving",
-    weight: 1,
-  });
+      }),
+      footprint: { lanes: 2, rows: 1 },
+      kind: "following",
+      role: "minorMoving",
+      weight: 1,
+    },
+  );
   const path = zoneRows(geometry, rowSpacing({ ...geometry, quotas: [] })).map((distance) => ({
     distance,
     lane: geometry.pathStart,

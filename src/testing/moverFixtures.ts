@@ -77,7 +77,7 @@ export function moverFixture(
           }
         : {}),
     },
-    draws.placement === "seeded" ? drawMover(streams) : undefined,
+    draws.placement === "seeded" ? drawMover(streams.draws) : undefined,
   );
   const first = placements[0];
   if (first === undefined) {

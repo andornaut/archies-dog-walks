@@ -48,7 +48,7 @@ interface Spec {
   readonly within?: readonly [number, number];
 }
 function crossing(road: typeof geometry) {
-  return prepareSlotKind({ movers: () => 0.9, spawns: () => 0.9 }, road, {
+  return prepareSlotKind({ draws: () => 0.9, hops: () => 0.9, steps: () => 0.9 }, road, {
     compile: () => ({
       blocksLane: true,
       first: true,
@@ -79,7 +79,7 @@ function crossing(road: typeof geometry) {
 }
 function reactive(road: typeof geometry) {
   const footprint = { lanes: 2, rows: 1 };
-  return prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, road, {
+  return prepareSlotKind({ draws: () => 0.5, hops: () => 0.5, steps: () => 0.5 }, road, {
     compile: () => ({
       blocksLane: true,
       first: true,
@@ -110,28 +110,32 @@ function fixture(road: typeof geometry, specs: readonly Spec[], limit = Infinity
   }));
   const jobs: WitnessJob<string>[] = specs.map((spec, ordinal) => {
     const footprint = { lanes: spec.width ?? 1, rows: spec.rows ?? 1 };
-    const prepared = prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, road, {
-      compile: () => ({
-        blocksLane: spec.auxiliary !== true,
-        first: true,
-        ...(spec.moving
-          ? {
-              mover: {
-                footprint,
-                motion: { kind: "ride", speedMultiplier: 1.5 },
-                movement: "inLane",
-                variation: { delaySeconds: 0, lengthShare: 0, speedShare: 0 },
-                warningSeconds: 0,
-              },
-            }
-          : { footprint }),
-        ...(spec.within === undefined ? {} : { within: spec.within }),
-      }),
-      footprint,
-      kind: spec.key,
-      role: spec.auxiliary ? "auxiliaryFixed" : spec.moving ? "minorMoving" : "minorFixed",
-      weight: 1,
-    });
+    const prepared = prepareSlotKind(
+      { draws: () => 0.5, hops: () => 0.5, steps: () => 0.5 },
+      road,
+      {
+        compile: () => ({
+          blocksLane: spec.auxiliary !== true,
+          first: true,
+          ...(spec.moving
+            ? {
+                mover: {
+                  footprint,
+                  motion: { kind: "ride", speedMultiplier: 1.5 },
+                  movement: "inLane",
+                  variation: { delaySeconds: 0, lengthShare: 0, speedShare: 0 },
+                  warningSeconds: 0,
+                },
+              }
+            : { footprint }),
+          ...(spec.within === undefined ? {} : { within: spec.within }),
+        }),
+        footprint,
+        kind: spec.key,
+        role: spec.auxiliary ? "auxiliaryFixed" : spec.moving ? "minorMoving" : "minorFixed",
+        weight: 1,
+      },
+    );
     return {
       columnPick: () => 0,
       fixed: !spec.moving && !spec.auxiliary,
@@ -689,7 +693,7 @@ describe("native witness construction mode", () => {
     pin(jobs[1]!, 2, 1);
     const prefix = state.entries();
     const broad = [...jobs[0]!.preparations()][0]!;
-    const narrow = prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, road, {
+    const narrow = prepareSlotKind({ draws: () => 0.5, hops: () => 0.5, steps: () => 0.5 }, road, {
       compile: () => ({ blocksLane: true, first: true, footprint: { lanes: 1, rows: 1 } }),
       footprint: { lanes: 1, rows: 1 },
       kind: "narrow",
@@ -766,7 +770,7 @@ describe("native witness construction mode", () => {
         compiled.push("first");
         yield first;
         compiled.push("later");
-        yield prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, road, {
+        yield prepareSlotKind({ draws: () => 0.5, hops: () => 0.5, steps: () => 0.5 }, road, {
           compile: () => ({ blocksLane: true, first: true, footprint: { lanes: 2, rows: 1 } }),
           footprint: { lanes: 2, rows: 1 },
           kind: "later-weighted",
@@ -1035,7 +1039,7 @@ describe("native witness construction mode", () => {
     const job = jobs[0]!;
     const later = [...job.preparations()][0]!;
     const footprint = { lanes: 2, rows: 1 };
-    const first = prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, road, {
+    const first = prepareSlotKind({ draws: () => 0.5, hops: () => 0.5, steps: () => 0.5 }, road, {
       compile: () => ({
         blocksLane: true,
         first: true,
@@ -1070,7 +1074,7 @@ describe("native witness construction mode", () => {
       const prefix = state.entries();
       const job = jobs[2]!;
       const first = [...job.preparations()][0]!;
-      const later = prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, road, {
+      const later = prepareSlotKind({ draws: () => 0.5, hops: () => 0.5, steps: () => 0.5 }, road, {
         compile: () => ({ blocksLane: true, first: true, footprint: { lanes: 1, rows: 1 } }),
         footprint: { lanes: 1, rows: 1 },
         kind: "later-weighted",
@@ -1260,7 +1264,7 @@ describe("native witness construction mode", () => {
         try {
           const footprint = { lanes: geometry.laneCount, rows: 1 };
           compiled.push(`${job.key}:wide`);
-          yield prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, geometry, {
+          yield prepareSlotKind({ draws: () => 0.5, hops: () => 0.5, steps: () => 0.5 }, geometry, {
             compile: () => ({ blocksLane: true, first: true, footprint }),
             footprint,
             kind: `${job.key}:wide`,
@@ -1270,7 +1274,7 @@ describe("native witness construction mode", () => {
           compiled.push(`${job.key}:good`);
           yield good;
           compiled.push(`${job.key}:tail`);
-          yield prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, geometry, {
+          yield prepareSlotKind({ draws: () => 0.5, hops: () => 0.5, steps: () => 0.5 }, geometry, {
             compile: () => ({ blocksLane: true, first: true, footprint: { lanes: 1, rows: 1 } }),
             footprint: { lanes: 1, rows: 1 },
             kind: `${job.key}:tail`,
@@ -1354,13 +1358,17 @@ describe("native witness construction mode", () => {
     expect(construct(spied.ports).status).toBe("compatible");
     spied.clear();
     const footprint = { lanes: 2, rows: 1 };
-    const replacement = prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, road, {
-      compile: () => ({ blocksLane: true, first: true, footprint }),
-      footprint,
-      kind: "subject",
-      role: "minorFixed",
-      weight: 1,
-    });
+    const replacement = prepareSlotKind(
+      { draws: () => 0.5, hops: () => 0.5, steps: () => 0.5 },
+      road,
+      {
+        compile: () => ({ blocksLane: true, first: true, footprint }),
+        footprint,
+        kind: "subject",
+        role: "minorFixed",
+        weight: 1,
+      },
+    );
     jobs[1]!.preparations = () => [replacement];
     const result = construct(spied.ports);
     expect(result.status).toBe("compatible");
@@ -1766,7 +1774,7 @@ describe("runtime row pressure", () => {
     const road = { ...geometry, maxEmptyRows: Infinity };
     const { jobs, path, ports, state } = fixture(road, [{ key: "cover" }, { key: "subject" }]);
     const kind = (key: string) =>
-      prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, road, {
+      prepareSlotKind({ draws: () => 0.5, hops: () => 0.5, steps: () => 0.5 }, road, {
         compile: () => ({ blocksLane: true, first: true, footprint: { lanes: 1, rows: 1 } }),
         footprint: { lanes: 1, rows: 1 },
         kind: key,

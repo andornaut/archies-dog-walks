@@ -271,18 +271,17 @@ describe("safe slot planning", () => {
       }
       const moving = replayed.assignments.find(({ entry }) => entry.event.mover !== undefined);
       expect(moving).toBeDefined();
-      for (const suffix of ["motion", "steps"]) {
-        const key = `slots-0-${moving!.key}-${moving!.binding.kind}-${suffix}`;
-        expect(calls.get(key)?.values.length, key).toBeGreaterThan(0);
-      }
+      const key = `slots-0-${moving!.key}-${moving!.binding.kind}-draws`;
+      expect(calls.get(key)?.values.length, key).toBeGreaterThan(0);
       for (const { binding, entry, key } of replayed.assignments) {
         const source = compiled.catalogue.find(
           (candidate) => candidate.kind === binding.kind && candidate.role === binding.role,
         )!;
         const prepared = prepareSlotKind(
           {
-            movers: stream(context.seed, `slots-0-${key}-${source.kind}-motion`),
-            spawns: stream(context.seed, `slots-0-${key}-${source.kind}-steps`),
+            draws: stream(context.seed, `slots-0-${key}-${source.kind}-draws`),
+            hops: stream(context.seed, `slots-0-${key}-${source.kind}-hops`),
+            steps: stream(context.seed, `slots-0-${key}-${source.kind}-steps`),
           },
           compiled.geometry,
           source,
@@ -777,7 +776,7 @@ describe("safe slot planning", () => {
   });
 
   it("fits an unchanged turn-back dart without treating its sweep as simultaneous occupancy", () => {
-    const frozenContext = { ...context, seed: 584548801 };
+    const frozenContext = { ...context, seed: 42 };
     const input: ZoneSlotInput<string> = {
       actualRun: testState({ archie: 3 }),
       auxiliary: [],
@@ -841,7 +840,7 @@ describe("safe slot planning", () => {
       { distance: rows[10]!, lane: 0, row: 10, slot: 0 },
       prepared,
     )[0]!;
-    expect(entry.event.mover).toMatchObject({ motion: "cross", turnAfter: 4.8715919349342585 });
+    expect(entry.event.mover).toMatchObject({ motion: "cross", turnAfter: 4.46020707313437 });
     const board = slotFeasibility.createSlotFeasibility(compiled.geometry, path);
     expect(board.commit(entry)).toEqual({ accepted: true });
     const audit = auditSlotPlan(
@@ -909,7 +908,7 @@ describe("safe slot planning", () => {
     if (path?.motion !== "ride" || path.merge === undefined) {
       return;
     }
-    expect(path.speedMultiplier).toBe(2.1754283209796994);
+    expect(path.speedMultiplier).toBe(2.1624483953230085);
     const { merge } = path;
     expect(merge.cue / compiled.geometry.scrollSpeed).toBe(0.6);
     expect(merge.length / compiled.geometry.scrollSpeed).toBe(0.4);
@@ -944,11 +943,8 @@ describe("safe slot planning", () => {
   });
 
   it("raises a full-width dart before commitment and certifies its actual frozen lift", () => {
-    for (const { lift, seed } of [
-      { lift: 1, seed: 567771182 },
-      { lift: 0.5, seed: 534215944 },
-    ]) {
-      const captured = { ...context, seed };
+    for (const lift of [1, 0.5]) {
+      const captured = { ...context, seed: 5 };
       const input: ZoneSlotInput<string> = {
         actualRun: testState({ archie: 3 }),
         auxiliary: [],

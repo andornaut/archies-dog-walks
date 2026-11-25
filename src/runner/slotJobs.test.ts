@@ -33,7 +33,7 @@ const geometry: Omit<SpawnPlan<string>, "quotas"> = {
 };
 const spacing = rowSpacing({ ...geometry, quotas: [] });
 const path = zoneRows(geometry, spacing).map((distance) => ({ distance, lane: 0 }));
-const streams = () => ({ movers: () => 0.9, spawns: () => 0.9 });
+const streams = () => ({ draws: () => 0.9, hops: () => 0.9, steps: () => 0.9 });
 const fixed = (kind: string, lanes: number, rows = 1, blocksLane = true) =>
   prepareSlotKind(streams(), geometry, {
     compile: () => ({ blocksLane, first: true, footprint: { lanes, rows } }),

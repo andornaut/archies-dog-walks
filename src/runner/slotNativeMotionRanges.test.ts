@@ -30,7 +30,7 @@ function fixture() {
     stepSeconds: 0.05,
     zoneLength: 2000,
   };
-  const streams = { movers: vi.fn(() => 0.6), spawns: vi.fn(() => 0.4) };
+  const streams = { draws: vi.fn(() => 0.4), hops: vi.fn(() => 0.6), steps: vi.fn(() => 0.4) };
   const source = {
     compile: vi.fn(() => ({
       blocksLane: true,
@@ -78,7 +78,11 @@ describe("native whole-profile motion ranges", () => {
       const { anchor, count, geometry, prepared, projection, selected, source, streams } =
         fixture();
       const before = JSON.stringify(prepared);
-      const draws = [streams.movers.mock.calls.length, streams.spawns.mock.calls.length];
+      const draws = [
+        streams.draws.mock.calls.length,
+        streams.hops.mock.calls.length,
+        streams.steps.mock.calls.length,
+      ];
       const propagate = vi.fn(() => true);
       const result = projection.view({ propagate }, prepared, selected);
       expect(result.status).toBe("view");
@@ -109,7 +113,11 @@ describe("native whole-profile motion ranges", () => {
       );
       expect(JSON.stringify(prepared)).toBe(before);
       expect(source.compile).toHaveBeenCalledTimes(1);
-      expect([streams.movers.mock.calls.length, streams.spawns.mock.calls.length]).toEqual(draws);
+      expect([
+        streams.draws.mock.calls.length,
+        streams.hops.mock.calls.length,
+        streams.steps.mock.calls.length,
+      ]).toEqual(draws);
     } finally {
       repeated.mockRestore();
     }

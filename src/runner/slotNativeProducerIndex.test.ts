@@ -39,7 +39,7 @@ function inputs(kind: "cross" | "ride" = "ride") {
     stepSeconds: 0.05,
     zoneLength: 2000,
   };
-  const streams = { movers: vi.fn(() => 0.6), spawns: vi.fn(() => 0.4) };
+  const streams = { draws: vi.fn(() => 0.4), hops: vi.fn(() => 0.6), steps: vi.fn(() => 0.4) };
   const source = {
     compile: vi.fn(() => ({
       blocksLane: true,
@@ -171,8 +171,9 @@ describe("native producer motion indexing", () => {
         );
         expect(actual.projection.statistics().membershipVisits).toBe(0);
         expect(actual.source.compile).toHaveBeenCalledOnce();
-        expect(actual.streams.movers).toHaveBeenCalledTimes(17);
-        expect(actual.streams.spawns).toHaveBeenCalledTimes(4);
+        expect(actual.streams.draws).toHaveBeenCalledTimes(21);
+        expect(actual.streams.hops).not.toHaveBeenCalled();
+        expect(actual.streams.steps).not.toHaveBeenCalled();
       } finally {
         alias.mockRestore();
         retain.mockRestore();

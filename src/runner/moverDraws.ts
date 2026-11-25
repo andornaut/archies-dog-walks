@@ -1,11 +1,7 @@
+import type { Random } from "@andornaut/game-kit/runtime/random";
+
 import type { MoveCount } from "../data/types.ts";
-import type {
-  MoverDraws,
-  MoverMotion,
-  MoverSpec,
-  MoverVariation,
-  PlannerStreams,
-} from "./moverModel.ts";
+import type { MoverDraws, MoverMotion, MoverSpec, MoverVariation } from "./moverModel.ts";
 
 // How many move delays and lengths each mover draws: as many as the most moves any kind makes.
 const MOVE_DRAWS = 6;
@@ -24,24 +20,22 @@ export const EVEN_DRAWS: MoverDraws = {
   turnAt: 0,
 };
 
-// Every mover draws the same number of times from each stream, whatever it is and wherever it goes.
-export function drawMover(streams: PlannerStreams): MoverDraws {
-  const { movers, spawns } = streams;
-  const delays = [spawns(), spawns()] as const;
-  const share = spawns();
-  const speed = spawns();
-  const count = movers();
-  const later = Array.from({ length: MOVE_DRAWS - delays.length }, () => movers());
-  const start = movers();
-  const shy = movers();
-  const tilt = movers();
-  const turn = movers();
-  const turnAt = movers();
-  const side = movers();
+// Every mover draws the same number of times, whatever it is and wherever it goes.
+export function drawMover(random: Random): MoverDraws {
+  const delays = Array.from({ length: MOVE_DRAWS }, () => random());
+  const share = random();
+  const speed = random();
+  const count = random();
+  const start = random();
+  const shy = random();
+  const tilt = random();
+  const turn = random();
+  const turnAt = random();
+  const side = random();
   return {
     count,
-    delays: [...delays, ...later],
-    lengths: Array.from({ length: MOVE_DRAWS }, () => movers()),
+    delays,
+    lengths: Array.from({ length: MOVE_DRAWS }, () => random()),
     share,
     shy,
     side,

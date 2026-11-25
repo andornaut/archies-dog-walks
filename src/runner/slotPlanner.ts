@@ -257,13 +257,10 @@ export function planSlotSpawns<Kind extends string>(
   const pathDraws: number[] = [];
   const pathRandom = fork("path");
   const pathLanes = drawPath(
-    {
-      movers: () => {
-        const value = pathRandom();
-        pathDraws.push(value);
-        return value;
-      },
-      spawns: fork("path-reserved"),
+    () => {
+      const value = pathRandom();
+      pathDraws.push(value);
+      return value;
     },
     base,
     rows.length,

@@ -35,40 +35,48 @@ const path = zoneRows(geometry, rowSpacing({ ...geometry, quotas: [] })).map((di
 }));
 
 function fixture(moversRestOn = false) {
-  const prepared = prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, geometry, {
-    compile: () => ({
-      blocksLane: true,
-      mover: {
-        footprint: { lanes: 2, rows: 2 },
-        hitLength: 58,
-        motion: {
-          count: { max: 1, min: 1 },
-          kind: "steps",
-          sequences: [[{ lanes: 1, travel: 32 }]],
-          stepSeconds: 0.2,
+  const prepared = prepareSlotKind(
+    { draws: () => 0.5, hops: () => 0.5, steps: () => 0.5 },
+    geometry,
+    {
+      compile: () => ({
+        blocksLane: true,
+        mover: {
+          footprint: { lanes: 2, rows: 2 },
+          hitLength: 58,
+          motion: {
+            count: { max: 1, min: 1 },
+            kind: "steps",
+            sequences: [[{ lanes: 1, travel: 32 }]],
+            stepSeconds: 0.2,
+          },
+          movement: "step",
+          variation: { delaySeconds: 0, lengthShare: 0, speedShare: 0 },
+          warningSeconds: 0,
         },
-        movement: "step",
-        variation: { delaySeconds: 0, lengthShare: 0, speedShare: 0 },
-        warningSeconds: 0,
-      },
-    }),
-    footprint: { lanes: 2, rows: 2 },
-    kind: "walker",
-    role: "minorMoving",
-    weight: 1,
-  });
+      }),
+      footprint: { lanes: 2, rows: 2 },
+      kind: "walker",
+      role: "minorMoving",
+      weight: 1,
+    },
+  );
   const mover = slotPlacementsAt(
     geometry,
     { distance: path[4]!.distance, lane: 2, row: 4, slot: 0 },
     prepared,
   )[0]!;
-  const pickup = prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, geometry, {
-    compile: () => ({ blocksLane: false, moversPassOver: true, moversRestOn }),
-    footprint: { lanes: 1, rows: 1 },
-    kind: "pickup",
-    role: "auxiliaryFixed",
-    weight: 1,
-  });
+  const pickup = prepareSlotKind(
+    { draws: () => 0.5, hops: () => 0.5, steps: () => 0.5 },
+    geometry,
+    {
+      compile: () => ({ blocksLane: false, moversPassOver: true, moversRestOn }),
+      footprint: { lanes: 1, rows: 1 },
+      kind: "pickup",
+      role: "auxiliaryFixed",
+      weight: 1,
+    },
+  );
   const prize = slotPlacementsAt(
     geometry,
     { distance: path[5]!.distance, lane: 4, row: 5, slot: 1 },

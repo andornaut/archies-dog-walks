@@ -10,7 +10,7 @@ import {
   type MoverFootprint,
   type MoverMotion,
   type MoverSpec,
-  type PlannerStreams,
+  type MoverStreams,
 } from "./moverModel.ts";
 import { type StepShape } from "./movers.ts";
 import { type WalkItemKind } from "./walkItems.ts";
@@ -135,7 +135,7 @@ function crossStart(
 // How a mover of movement moves (moverSpec). A stepper's and a hopper's draws are made here.
 function moverMotion(
   data: Pick<GameData, "tuning">,
-  streams: PlannerStreams,
+  streams: Pick<MoverStreams, "hops" | "steps">,
   movement: Movement,
 ): MoverMotion {
   const { tuning } = data;
@@ -216,7 +216,7 @@ function moverMotion(
         count: movement.times,
         kind: "steps",
         sequences: countsOf(movement.times).flatMap((times) =>
-          hopSequences(streams.movers, movement.most, sideways, times),
+          hopSequences(streams.hops, movement.most, sideways, times),
         ),
         ...(movement.shy === true
           ? {
@@ -232,10 +232,8 @@ function moverMotion(
       };
     }
     case "step": {
-      const { max, min } = movement.steps;
-      const steps = Array.from({ length: max }, (_, i) =>
-        randomPick(i < min ? streams.spawns : streams.movers, STEP_SHAPES),
-      );
+      const { max } = movement.steps;
+      const steps = Array.from({ length: max }, () => randomPick(streams.steps, STEP_SHAPES));
       const mirrored = steps.map(({ lanes, travel }) => ({ lanes: -lanes as -1 | 0 | 1, travel }));
       return {
         count: movement.steps,
@@ -252,8 +250,8 @@ function moverMotion(
   }
 }
 
-// How a mover moves, by its movement and the tuning. A stepper's steps are drawn here, as many as
-// its most, the first min from the spawns stream and any more from the movers stream; it may take
+// How a mover moves, by its movement and the tuning. A stepper's steps are drawn here from its
+// steps stream, as many as its most; it may take
 // the first steps of them, or of their mirror image, as many as its drawn count. A bounce, a
 // follower, a stop-and-go and a sway draw nothing here (patternMotion). A dive is a dart that
 // always stops in a lane, never on the verge, sliding its last lane. A merge is a rider that
@@ -261,11 +259,11 @@ function moverMotion(
 // good or turns back, pausing once in one of its stops, and of which a share may be red
 // herrings, which the planner leaves off the road (herringSpawn). A hopper may make
 // any hops it can, as many as its drawn count, of up to HOP_SEQUENCES_MOST ways for each count,
-// drawn here from the movers stream where there are more. The planner takes whichever way keeps
+// drawn here from the hops stream where there are more. The planner takes whichever way keeps
 // the road passable, drawing among those from the zone's seed.
 export function moverSpec(
   data: Pick<GameData, "tuning">,
-  streams: PlannerStreams,
+  streams: Pick<MoverStreams, "hops" | "steps">,
   footprint: MoverFootprint,
   movement: ProfiledMovement,
 ): MoverSpec {
