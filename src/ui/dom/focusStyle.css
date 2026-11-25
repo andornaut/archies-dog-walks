@@ -12,10 +12,6 @@
   pointer-events: none;
 }
 
-.crash .crash-button:focus-visible {
-  outline: none;
-}
-
 /* Editable seed fields keep their border, selection and native editing behaviour. */
 .adw-row input:focus-visible {
   outline: none;
