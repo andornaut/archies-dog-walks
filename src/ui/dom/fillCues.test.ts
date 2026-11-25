@@ -163,6 +163,14 @@ describe("control state cues", () => {
       "forced-color-adjust:none",
     ],
     [
+      "a focused unaffordable Pet shop row's text in forced colours",
+      "tileForced",
+      ".adw-selection-tile:not([data-picker-refusing], .adw-refusing, .adw-refusing-still):is(" +
+        ":focus-visible, .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused])" +
+        " .adw-selection-press-ink",
+      "color:var(--adw-selection-focus-ink)!important;forced-color-adjust:none",
+    ],
+    [
       "a pressed primary button's label",
       "ui",
       ".adw-button:not(.adw-standard-button).adw-go[data-pressed] .adw-text",
