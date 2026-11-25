@@ -66,3 +66,4 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0232 | Correct documentation drift                                                  | [adw-0232.md](../work/adw-0232.md) |
 | adw-0236 | Adopt Delivery Kit 8.1.1                                                     | [adw-0236.md](../work/adw-0236.md) |
 | adw-0241 | Pack the published game assets into reusable groups                          | [adw-0241.md](../work/adw-0241.md) |
+| adw-0243 | Ship the game assets as prebuilt group archives                              | [adw-0243.md](../work/adw-0243.md) |
