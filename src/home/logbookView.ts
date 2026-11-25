@@ -2,7 +2,6 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { dogFaceKey } from "../assets/spriteKeys.ts";
 import type { GameData } from "../data/types.ts";
-import { scrollMax } from "../input/listScroll.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { stackRows } from "../ui/pageLayout.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -319,8 +318,7 @@ export interface LogbookState {
   readonly tab: StatsTab;
 }
 
-// The Logbook's page, tabs and open tab, laid out without a scrollbar, then again beside one in
-// the narrower frame if the tab is longer than the list's view.
+// The Logbook's page, tabs and open tab, laid out clear of the scrollbar's room.
 export function logbookView(measure: LogbookMeasure, data: Data, state: LogbookState): LogbookView {
   const words = data.menuText.stats;
   const page = shopPageView(measure, {
@@ -331,10 +329,6 @@ export function logbookView(measure: LogbookMeasure, data: Data, state: LogbookS
     })),
     title: words.title,
   });
-  const fits = statsListFrame(false);
-  const unscrolled = tabContent(measure, data, state, fits.right);
-  const scrolls = scrollMax(STATS_LAYOUT.view, unscrolled.content.bottom) > 0;
-  const frame = scrolls ? statsListFrame(true) : fits;
-  const laid = scrolls ? tabContent(measure, data, state, frame.right) : unscrolled;
-  return { ...laid, frame, page };
+  const frame = statsListFrame();
+  return { ...tabContent(measure, data, state, frame.right), frame, page };
 }

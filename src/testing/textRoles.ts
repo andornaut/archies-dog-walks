@@ -373,7 +373,7 @@ function shopRoles(): TextRoleCase[] {
     rows
       .filter((row) => text(row) !== "")
       .flatMap((row) => {
-        const room = shopRowTextRoom(SHOP_LAYOUT.row.scrollWidth, rightWidth(row));
+        const room = shopRowTextRoom(SHOP_LAYOUT.row.width, rightWidth(row));
         return wraps
           ? wrappedRole(role, "font-body", room, [text(row)])
           : plainRole(role, "font-body", { room, style: TEXT_STYLE }, [text(row)]);

@@ -225,9 +225,7 @@ function shopTextLayout(
     }
     return { bottom: bottom + LAYOUT.list.padBottom, frame, headings, rows: placed };
   };
-  const natural = build(shopListFrame(false));
-  const layout =
-    scrollMax(natural.frame.rect, natural.bottom) > 0 ? build(shopListFrame(true)) : natural;
+  const layout = build(shopListFrame());
   return { ...layout, message: { ...message, lines } };
 }
 
@@ -248,7 +246,7 @@ export class ShopScene extends Scene {
   private htmlDetail: KeptPanel | undefined;
   private focusId: string | null = null;
   // The open list's area, rows' width and heading note's right edge, by whether it scrolls.
-  private frame = shopListFrame(false);
+  private frame = shopListFrame();
   // The persistent native page, mounted after the shared UI readiness barrier.
   private native: NativeShopScreen | undefined;
   private nativeDragging = false;
@@ -534,7 +532,7 @@ export class ShopScene extends Scene {
     const view: ShopScreenView = {
       clip: this.frame.rect,
       headings: layout.headings.map(({ note, text, y }) => ({
-        band: shopHeadingBand(this.frame, y),
+        band: shopHeadingBand(y),
         note,
         title: text,
       })),

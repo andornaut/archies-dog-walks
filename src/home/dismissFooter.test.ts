@@ -125,7 +125,7 @@ it("keeps the Shop and Logbook scroll viewport clear of their fixed Back", () =>
   expect(back.rect.x + back.rect.width / 2).toBe(PAGE_LAYOUT.back.x + PAGE_LAYOUT.back.width / 2);
   expect(back.rect).toMatchObject({ height: PAGE_LAYOUT.back.height, y: PAGE_LAYOUT.back.y });
   expect(back.hit).toEqual(back.rect);
-  for (const rect of [SHOP_LAYOUT.list.rect, SHOP_LAYOUT.list.unscrolledRect, STATS_LAYOUT.view]) {
+  for (const rect of [SHOP_LAYOUT.list.rect, STATS_LAYOUT.view]) {
     expect(rect.y + rect.height).toBe(back.rect.y - MODAL.gap);
   }
 });

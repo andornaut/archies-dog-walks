@@ -215,16 +215,12 @@ describe("the Dogs tab's blocks", () => {
   });
 });
 
-// A tab's values end as far in from the card's right edge as its labels start from its left,
-// with no scrollbar; beside one they end at the rows' right edge, as the shop's rows do. The
-// earned count with every badge earned, ending there beside the scrollbar, starts inside the
-// rows.
+// A tab's values end at the rows' right edge, as the shop's rows do, whether or not it scrolls.
+// The earned count with every badge earned, ending there, starts inside the rows.
 describe("the rows' right edge", () => {
-  it.each<[string, boolean, number]>([
-    ["with no scrollbar", false, panel.x + panel.width - (rows.left - panel.x)],
-    ["beside the scrollbar", true, rows.right],
-  ])("%s", (_, scrolls, right) => {
-    expect(statsListFrame(scrolls).right).toBe(right);
+  it("ends the values short of the scrollbar's track", () => {
+    expect(statsListFrame().right).toBe(rows.right);
+    expect(rows.right).toBe(scrollbar.x - 6);
   });
 
   it("fits the earned count between the rows' edges", () => {
@@ -233,7 +229,7 @@ describe("the rows' right edge", () => {
       BADGES.map(({ id }) => id),
     );
     const text = earnedText(gameData, all);
-    const left = statsListFrame(true).right - inkWidth("font-body", STYLE, text);
+    const left = statsListFrame().right - inkWidth("font-body", STYLE, text);
     expect(left).toBeGreaterThanOrEqual(rows.left);
   });
 });

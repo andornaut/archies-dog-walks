@@ -2568,12 +2568,6 @@
           "width": 342,
           "x": 0,
           "y": 144
-        },
-        "unscrolledRect": {
-          "height": 348,
-          "width": 360,
-          "x": 0,
-          "y": 144
         }
       },
       "message": {
@@ -2604,10 +2598,9 @@
         },
         "ownedDx": 20,
         "plateInset": 6,
-        "scrollWidth": 330,
         "textDx": 46,
         "textGap": 6,
-        "width": 344,
+        "width": 330,
         "x": 8
       },
       "tab": {

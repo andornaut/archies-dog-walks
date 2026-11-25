@@ -251,7 +251,7 @@ describe("ownedCountNote", () => {
   it.each(cases)("%s: counts owned of all, clear of heading", (list, have, count, max) => {
     const text = ownedCountNote(data, have, list);
     expect(text).toBe(note(count, max));
-    const band = shopHeadingBand(shopListFrame(true), SHOP_LAYOUT.list.firstHeadingY);
+    const band = shopHeadingBand(SHOP_LAYOUT.list.firstHeadingY);
     const titleRight = band.x + inkWidth("font-title", style, titles[list].toUpperCase());
     const noteLeft = band.x + band.width - inkWidth("font-body", style, text);
     expect(titleRight + 8).toBeLessThanOrEqual(noteLeft);
@@ -326,16 +326,16 @@ describe("the shop's headings", () => {
     ["dogs", dogs.dogHeadingY, lastSlotBottom(allSlots.length), dogs.dogRows.y],
     ["gear", gear.headingY, stripTop, gear.rows.y],
   ])("%s: as far over its rows as under what is above it", (_, y, above, rows) => {
-    const band = shopHeadingBand(shopListFrame(true), y);
-    const inset = SHOP_LAYOUT.panel.x + SHOP_LAYOUT.panel.width - (band.x + band.width);
-    expect(band.x - SHOP_LAYOUT.panel.x).toBe(inset);
+    const band = shopHeadingBand(y);
+    expect([band.x, band.x + band.width]).toEqual([8, 338]);
     expect(rows - (band.y + band.height)).toBe(band.y - above);
     expect(rows - (band.y + band.height)).toBe(SHOP_PAGE.tab.listGap);
   });
 
-  it("shares the message's vertical strip without a scrollbar", () => {
+  it("shares the message's vertical strip", () => {
     const { plate } = message;
-    expect(shopHeadingBand(shopListFrame(false), dogs.slotHeadingY)).toEqual(plate);
+    const band = shopHeadingBand(dogs.slotHeadingY);
+    expect([band.y, band.height]).toEqual([plate.y, plate.height]);
   });
 });
 
@@ -414,30 +414,23 @@ describe("the shop's list", () => {
     }
   });
 
-  // Each list scrolls its last row into view. Its rows and heading note end where its scrollbar
-  // allows: at the tabs' right edge with no scrollbar, else short of the track. A selected row's
-  // frame stays inside the list area.
+  // Each list scrolls its last row into view. Its rows and heading note end short of the track
+  // whether or not it scrolls, and a selected row's frame stays inside the list area.
   it.each(lists)("%s: scrolls to its last row, rows to their edge", (_, spec, count) => {
     const bottom = shopListBottom(spec, count);
     const max = scrollMax(rect, bottom);
     const lastRowBottom = spec.y + (Math.max(1, count) - 1) * spec.pitch + spec.height;
     expect(lastRowBottom - max).toBeLessThanOrEqual(listBottom - padBottom);
     expect(bottom - max).toBeLessThanOrEqual(listBottom);
-    const scrolls = max > 0;
-    const frame = shopListFrame(scrolls);
-    const tabsRight = Math.max(...shopTabRects(SHOP_TABS.length).map(({ width, x }) => x + width));
-    const track = shopScrollbar(scrolls ? 1 : 0, 0)?.track;
+    const frame = shopListFrame();
+    const track = shopScrollbar(1, 0)!.track;
     for (const row of stackRows(
       { ...spec, width: frame.rowWidth, x: SHOP_LAYOUT.row.x },
       Array.from({ length: count }, () => spec.height),
     )) {
       const right = row.x + row.width;
       expect(frame.headingRight).toBe(right);
-      if (track === undefined) {
-        expect(right).toBe(tabsRight);
-      } else {
-        expect(right).toBeLessThan(track.x);
-      }
+      expect(right).toBe(track.x - SHOP_PAGE.row.scrollGap);
       const outer = { left: row.x - SELECT_OUTSET, right: right + SELECT_OUTSET };
       expect(outer.left).toBeGreaterThanOrEqual(frame.rect.x);
       expect(outer.right).toBeLessThanOrEqual(frame.rect.x + frame.rect.width);

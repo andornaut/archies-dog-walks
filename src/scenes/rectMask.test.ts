@@ -3,7 +3,6 @@ import type { Textures } from "phaser";
 import { describe, expect, it } from "vitest";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";
-import { shopListFrame } from "../home/shopLayout.ts";
 import { paintRectMask } from "./rectMask.ts";
 
 // A texture manager whose canvases record the rects painted white on them since their last
@@ -50,8 +49,12 @@ function fakeTextures() {
   };
 }
 
-// The shop's list scrolls on a tab that holds more rows than fit (Dogs) and not on one that
-// fits (Gear); each tab switch redraws the list masked to its frame.
+// Two list frames, a narrow one and a wide one; each switch between them redraws the mask.
+const FRAMES = {
+  narrow: { height: 348, width: 342, x: 0, y: 144 },
+  wide: { height: 348, width: 360, x: 0, y: 144 },
+};
+const frame = (narrow: boolean) => (narrow ? FRAMES.narrow : FRAMES.wide);
 describe("paintRectMask", () => {
   it.each<[string, boolean[], number]>([
     ["Dogs then Gear", [true, false], 2],
@@ -61,12 +64,12 @@ describe("paintRectMask", () => {
   ])("masks the list to the open tab's frame across %s", (_case, scrolls, refreshes) => {
     const { made, textures } = fakeTextures();
     for (const scrolling of scrolls) {
-      paintRectMask(textures, SCREEN_CONFIG, "list-mask", shopListFrame(scrolling).rect);
+      paintRectMask(textures, SCREEN_CONFIG, "list-mask", frame(scrolling));
     }
     const last = scrolls.at(-1) ?? false;
     expect([...made.keys()]).toEqual(["list-mask"]);
     expect(made.get("list-mask")).toEqual({
-      painted: [shopListFrame(last).rect],
+      painted: [frame(last)],
       refreshes,
     });
   });

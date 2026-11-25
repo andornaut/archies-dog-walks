@@ -390,25 +390,25 @@ it("keeps native row tap, explicit detail hold and consumed scroll releases dist
   }
 });
 
-it("centres Shop heading ink in each strip and mirrors the scrollbar clearance", () => {
+it("centres Shop heading ink in each strip from the rows' left edge to their right", () => {
   const words = gameData.homeText.shop;
   for (const scale of [
     domScale(1, { height: 1280, width: 575, x: 0, y: 0 }),
     domScale(2.625, { height: 844, width: 390, x: 0, y: 0 }),
   ]) {
     const { root, screen, view } = fixture({ scale });
-    for (const [list, title, capTop, scrolls] of [
-      ["slots", words.slots, SHOP_LAYOUT.dogs.slotHeadingY, true],
-      ["dogs", words.dogs, SHOP_LAYOUT.dogs.dogHeadingY, true],
-      ["gear", words.tabs.gear, SHOP_LAYOUT.gear.headingY, false],
+    for (const [list, title, capTop] of [
+      ["slots", words.slots, SHOP_LAYOUT.dogs.slotHeadingY],
+      ["dogs", words.dogs, SHOP_LAYOUT.dogs.dogHeadingY],
+      ["gear", words.tabs.gear, SHOP_LAYOUT.gear.headingY],
     ] as const) {
-      const frame = shopListFrame(scrolls);
-      const band = shopHeadingBand(frame, capTop);
+      const frame = shopListFrame();
+      const band = shopHeadingBand(capTop);
       const note = ownedCountNote(gameData, newPlayerSave.owned, list);
       screen.update({ ...view, clip: frame.rect, headings: [{ band, note, title }] });
       const pixel = fontPixel(scale, TEXT_SCALE);
       const strip = gridRect(scale, band);
-      const page = gridRect(scale, SHOP_LAYOUT.panel);
+      const headingLeft = gridX(scale, SHOP_LAYOUT.row.x);
       const headingRight = gridX(scale, frame.headingRight);
       for (const [font, text] of [
         ["font-title", title.toUpperCase()],
@@ -418,7 +418,7 @@ it("centres Shop heading ink in each strip and mirrors the scrollbar clearance",
         const pen = Number.parseFloat(label.style.left!);
         const columns = fontInk(font, { scale: pixel }, text);
         if (font === "font-title") {
-          expect(pen + columns.left - page.left).toBe(page.left + page.width - headingRight);
+          expect(pen + columns.left).toBe(headingLeft);
         } else {
           expect(pen + columns.right).toBe(headingRight);
         }

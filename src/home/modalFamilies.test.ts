@@ -270,10 +270,7 @@ it("reserves reflowed Shop descriptions and messages before following content", 
       name: gameData.shopGear.fannyPack.name,
     });
   const heights = [1, 3, 1].map((count) => layout(count).height);
-  const rows = stackRows(
-    { ...spec, width: SHOP_LAYOUT.row.scrollWidth, x: SHOP_LAYOUT.row.x },
-    heights,
-  );
+  const rows = stackRows({ ...spec, width: SHOP_LAYOUT.row.width, x: SHOP_LAYOUT.row.x }, heights);
   const pitch = fonts.body.lineHeight * 2;
   expect(rows[0]!.height).toBe(spec.height);
   expect(rows[1]!.height).toBeGreaterThan(spec.height);

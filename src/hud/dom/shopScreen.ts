@@ -190,9 +190,8 @@ export function showShopScreen(
     return {
       element,
       place: (at) => {
-        const panel = gridRect(at, SHOP_LAYOUT.panel);
+        const left = gridX(at, band.x);
         const right = gridX(at, band.x + band.width);
-        const left = 2 * panel.left + panel.width - right;
         const pixel = fontPixel(at, TEXT_SCALE);
         for (const { bitmap, end, line, span, start } of labels) {
           const place = backedTextPlaces(bitmap, at, ORIGIN, band, [line], "layout")[0]!;

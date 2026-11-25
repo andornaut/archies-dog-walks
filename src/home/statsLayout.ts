@@ -29,12 +29,12 @@ const PITCH = STATS.pitch;
 // Between the Dogs tab's blocks and the Walks tab's sections, under the last row's pitch.
 const BLOCK_GAP = STATS.blockGap;
 // Label and value rows run across the shop's rows: from the headings' left edge to the rows'
-// right edge, beside the scrollbar at right (statsListFrame).
+// right edge, clear of the scrollbar's room (statsListFrame).
 const ROWS = {
   gap: 4,
   left: SHOP_LAYOUT.headingX,
   pitch: PITCH,
-  right: SHOP_LAYOUT.row.x + SHOP_LAYOUT.row.scrollWidth,
+  right: SHOP_LAYOUT.row.x + SHOP_LAYOUT.row.width,
 };
 
 // The Logbook's geometry.
@@ -70,8 +70,8 @@ export const STATS_LAYOUT = {
     top: TOP,
   },
   panel: PANEL,
-  // Label and value rows, pitch apart: the label's ink from left and the value's ink up to right
-  // beside the scrollbar, or further right on a tab with none (statsListFrame).
+  // Label and value rows, pitch apart: the label's ink from left and the value's ink up to right,
+  // clear of the scrollbar's room (statsListFrame).
   rows: ROWS,
   // Content scrolled to its end keeps the shop list's padBottom of cream under its last row. A
   // page key moves it the view's height less pageOverlap; an arrow key moves it keyStep.
@@ -150,11 +150,10 @@ export function detailPanelHeight(
   return inkBottom + detailText.foot + detailText.frame;
 }
 
-// A tab's view, its mask, and where its values' ink ends, by whether it scrolls: as the shop's
-// list runs, a tab with no scrollbar to the tabs' right edge, as far in from the page's right
-// edge as its labels' ink is from its left, and one with a scrollbar to rows.right.
-export function statsListFrame(scrolls: boolean): { rect: Rect; right: number } {
-  const { headingRight, rect } = shopListFrame(scrolls);
+// A tab's view, its mask, and where its values' ink ends (rows.right), as the shop's list runs,
+// the same whether or not the tab scrolls.
+export function statsListFrame(): { rect: Rect; right: number } {
+  const { headingRight, rect } = shopListFrame();
   return { rect, right: headingRight };
 }
 

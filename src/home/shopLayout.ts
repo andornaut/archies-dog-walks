@@ -27,10 +27,11 @@ const PANEL = PAGE_LAYOUT.rect;
 const PAGE_TITLE = cardTitleRow(PANEL);
 const BACK = PAGE_LAYOUT.back;
 const TRACK_X = PAGE_LAYOUT.scrollbar.x;
-// Rows run across the page's inset, or with a scrollbar stop scrollGap short of its track.
+// The tabs span the page's inset. Rows start at the inset and stop scrollGap short of the
+// scrollbar's track whether or not the list scrolls, so its room is always reserved.
 const ROW_X = PANEL.x + PAGE_LAYOUT.inset;
-const ROW_WIDTH = PANEL.width - 2 * PAGE_LAYOUT.inset;
-const ROW_SCROLL_WIDTH = TRACK_X - SHOP.row.scrollGap - ROW_X;
+const TAB_SPAN = PANEL.width - 2 * PAGE_LAYOUT.inset;
+const ROW_WIDTH = TRACK_X - SHOP.row.scrollGap - ROW_X;
 // The tabs' targets sit under the heading, each selected face lifted below it and centred in its
 // target.
 const TAB_Y =
@@ -40,7 +41,7 @@ const TAB = {
   drawY: TAB_Y + Math.floor((SHOP.tab.height - SHOP.tab.drawHeight) / 2),
   gap: SHOP.tab.gap,
   height: SHOP.tab.height,
-  span: ROW_WIDTH,
+  span: TAB_SPAN,
   x: ROW_X,
   y: TAB_Y,
 };
@@ -48,8 +49,7 @@ const TAB = {
 const TAB_BOTTOM = TAB.drawY + TAB.drawHeight + SELECT_OUTSET;
 const TAB_GAP = SHOP.tab.listGap;
 // The list area: from listClear rows under the tabs' targets to the group gap over Back, from the
-// page's left edge to trackGap short of the scrollbar's track, or with no scrollbar across the
-// page.
+// page's left edge to trackGap short of the scrollbar's track.
 const LIST_Y = Math.max(TAB_BOTTOM, TAB.y + TAB.height) + SHOP.tab.listClear;
 const LIST = {
   height: BACK.y - MODAL.gap - LIST_Y,
@@ -57,7 +57,6 @@ const LIST = {
   x: PANEL.x,
   y: LIST_Y,
 };
-const LIST_UNSCROLLED = { ...LIST, width: PANEL.width };
 // The message's plate across the tabs' span at the list's top. Each tab's first heading takes
 // the plate's strip, its capitals centred on it as the message's are, and the first rows start
 // TAB_GAP under the plate, so a message never covers a row.
@@ -100,15 +99,14 @@ export const SHOP_LAYOUT = {
   // Headings sit on the page at the rows' left, a note right-aligned at their right.
   headingX: ROW_X,
   // The headings and rows scroll in rect, masked to it, with padBottom of page under the last
-  // row when scrolled to the bottom; a list with no scrollbar is masked to unscrolledRect. A
-  // page key moves the list its height less pageOverlap, keeping the row at the edge in view.
+  // row when scrolled to the bottom. A page key moves the list its height less pageOverlap,
+  // keeping the row at the edge in view.
   // firstHeadingY is where each tab's first heading puts its capitals.
   list: {
     firstHeadingY: FIRST_HEADING_Y,
     padBottom: SHOP.list.padBottom,
     pageOverlap: SHOP.list.pageOverlap,
     rect: LIST,
-    unscrolledRect: LIST_UNSCROLLED,
   },
   // The last tap's message: one line on the ui-hint plate across the tabs' span at the list's
   // top, over the first heading, from textDx inside the plate's left and right edges, its
@@ -123,14 +121,13 @@ export const SHOP_LAYOUT = {
   // In a row: the 36x36 art box and the art in it, the badge over the row's top-left
   // corner, the name and line, and the price plate or OWNED (ownedDx left of the tick's right
   // edge) plateInset inside the right edge, the name and line keeping textGap clear of it. A
-  // row is width wide, or scrollWidth beside a scrollbar.
+  // row is width wide, its right edge clear of the scrollbar's room.
   row: {
     art: SHOP.row.art,
     badge: SHOP.row.badge,
     box: SHOP.row.box,
     ownedDx: SHOP.row.ownedDx,
     plateInset: SHOP.row.plateInset,
-    scrollWidth: ROW_SCROLL_WIDTH,
     textDx: SHOP.row.textDx,
     textGap: SHOP.row.textGap,
     width: ROW_WIDTH,
@@ -163,32 +160,18 @@ export function shopListBottom(
   return spec.y + (Math.max(1, count) - 1) * spec.pitch + spec.height + SHOP_LAYOUT.list.padBottom;
 }
 
-// The open list's area (its mask and hit area), its rows' width and its heading note's right
-// edge, by whether it scrolls: a list with no scrollbar runs to the tabs' right edge.
-export function shopListFrame(scrolls: boolean): {
-  headingRight: number;
-  rect: Rect;
-  rowWidth: number;
-} {
+// The list's area (its mask and hit area), its rows' width and its heading notes' right edge,
+// the same whether or not the list scrolls.
+export function shopListFrame(): { headingRight: number; rect: Rect; rowWidth: number } {
   const { list, row } = SHOP_LAYOUT;
-  const rowWidth = scrolls ? row.scrollWidth : row.width;
-  return {
-    headingRight: row.x + rowWidth,
-    rect: scrolls ? list.rect : list.unscrolledRect,
-    rowWidth,
-  };
+  return { headingRight: row.x + row.width, rect: list.rect, rowWidth: row.width };
 }
 
-// Shop headings share the plate's strip height. Mirror the right clearance needed by the
-// scrollbar from the page's left edge, without narrowing the rows themselves.
-export function shopHeadingBand(frame: { readonly headingRight: number }, capTop: number): Rect {
-  const x = 2 * PANEL.x + PANEL.width - frame.headingRight;
-  return {
-    height: PLATE.height,
-    width: frame.headingRight - x,
-    x,
-    y: capTop - HEADING_CAP_OFFSET,
-  };
+// A heading's strip, the plate's height, across the rows: its ink from their left edge and its
+// note's ink up to their right.
+export function shopHeadingBand(capTop: number): Rect {
+  const { row } = SHOP_LAYOUT;
+  return { height: PLATE.height, width: row.width, x: row.x, y: capTop - HEADING_CAP_OFFSET };
 }
 
 // The faces of count tabs, left to right across the tab span, gap apart, splitting what is left
