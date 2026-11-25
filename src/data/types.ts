@@ -913,12 +913,9 @@ export interface HomeText {
   // The Pet shop page: its title, its tabs, the headings over its lists and their notes, the
   // line every dog slot row shows, and the word on an owned row.
   readonly shop: {
-    // The confirm every purchase asks first: its Buy and Cancel buttons, the {amount} the bank
-    // would keep, and its title with the item's {name}.
+    // A purchase's Buy and Cancel buttons.
     readonly confirmBuy: string;
     readonly confirmCancel: string;
-    readonly confirmLeft: string;
-    readonly confirmTitle: string;
     readonly dogs: string;
     readonly owned: string;
     // The note right of each list's heading: {owned} of the list's {max} purchases.

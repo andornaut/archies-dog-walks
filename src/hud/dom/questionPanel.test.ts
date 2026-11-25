@@ -591,7 +591,7 @@ it("routes an explicit footer to dismissal without changing semantic actions or 
   const close = vi.fn();
   const buy = vi.fn();
   const rect = { height: 260, width: 280, x: 40, y: 120 };
-  const card = modalCardView(MEASURE, rect, gameData.homeText.shop.confirmTitle, [
+  const card = modalCardView(MEASURE, rect, gameData.homeText.shop.title, [
     {
       label: gameData.homeText.shop.confirmBuy,
       primary: true,

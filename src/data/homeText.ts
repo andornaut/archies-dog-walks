@@ -98,8 +98,6 @@ export const HOME_TEXT = {
   shop: {
     confirmBuy: "Buy",
     confirmCancel: "Cancel",
-    confirmLeft: "{amount} left after",
-    confirmTitle: "Buy {name}?",
     dogs: "Dogs",
     owned: "Owned",
     ownedCount: "{owned} of {max} owned",

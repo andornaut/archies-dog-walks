@@ -52,8 +52,6 @@ export const HOME_TEXT_FIELDS = {
   sectionWalker: [],
   sectionWalkerPrompt: [],
   shop: {
-    confirmLeft: ["amount"],
-    confirmTitle: ["name"],
     ownedCount: ["max", "owned"],
     slotLine: [],
   },
