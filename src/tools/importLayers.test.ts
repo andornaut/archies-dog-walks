@@ -3,10 +3,13 @@
 //
 // The import graph of src/ follows the cross-game source bands. Every module outside the tests
 // sits in a row of BANDS and imports only its own group and groups in lower rows: never a group in
-// its own row (strict layers) or above. No module lies on an import cycle. Type-only imports,
-// re-exports and `typeof import()` count as edges. Tests and src/testing/ are exempt from the
-// layer rule but not from the cycle rule. KNOWN lists today's violations exactly: the check fails
-// on a violation not listed and on a listed one that no longer occurs, so the table only shrinks.
+// its own row (strict layers) or above; type-only imports, re-exports and `typeof import()` count.
+// No cycle is made of runtime imports alone; a type-only import may close one. An import is
+// type-only when it is `import type`, `export type` or `typeof import()`: under
+// verbatimModuleSyntax, `import { type A }` still loads its module. Tests and src/testing/ are
+// exempt from the layer rule but not from the cycle rule. KNOWN lists today's violations exactly:
+// the check fails on a violation not listed and on a listed one that no longer occurs, so the
+// table only shrinks.
 import { readdirSync, readFileSync } from "node:fs";
 import { posix } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,7 +19,8 @@ import { describe, expect, it } from "vitest";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
 
-type Graph = ReadonlyMap<string, readonly string[]>;
+/** Each module's imports of src/ modules; an import is type-only when every form of it is. */
+type Graph = ReadonlyMap<string, readonly { readonly to: string; readonly typeOnly: boolean }[]>;
 type Group = string | { readonly name: string; readonly paths: readonly string[] };
 type Kind = "cycle" | "sideways" | "upward";
 
@@ -105,101 +109,12 @@ const BANDS: readonly { readonly band: string; readonly rows: readonly Group[][]
 ];
 
 /**
- * Today's violations, `importer -> imported`: under `cycle`, every import whose two modules lie on
- * one cycle. CLEANUP (added 2026-11-25): remove this check when the known-violations table is empty
- * and ESLint guards the layers (adw-0259).
+ * Today's violations, `importer -> imported`: under `cycle`, every runtime import on a cycle of
+ * runtime imports. CLEANUP (added 2026-11-25): remove this check when the
+ * known-violations table is empty and ESLint guards the layers (adw-0259).
  */
 const KNOWN: Readonly<Record<Kind, readonly string[]>> = {
-  cycle: [
-    "src/data/achievements.ts -> src/data/types.ts",
-    "src/data/debuffs.ts -> src/data/types.ts",
-    "src/data/dogs.ts -> src/data/types.ts",
-    "src/data/encounters.ts -> src/data/types.ts",
-    "src/data/hints.ts -> src/data/types.ts",
-    "src/data/minorObstacles.ts -> src/data/types.ts",
-    "src/data/movementProfiles.ts -> src/data/minorObstacles.ts",
-    "src/data/movementProfiles.ts -> src/data/types.ts",
-    "src/data/shop.ts -> src/data/types.ts",
-    "src/data/tuning.ts -> src/data/types.ts",
-    "src/data/types.ts -> src/data/achievements.ts",
-    "src/data/types.ts -> src/data/debuffs.ts",
-    "src/data/types.ts -> src/data/dogs.ts",
-    "src/data/types.ts -> src/data/encounters.ts",
-    "src/data/types.ts -> src/data/hints.ts",
-    "src/data/types.ts -> src/data/minorObstacles.ts",
-    "src/data/types.ts -> src/data/movementProfiles.ts",
-    "src/data/types.ts -> src/data/shop.ts",
-    "src/data/types.ts -> src/data/tuning.ts",
-    "src/data/types.ts -> src/data/upgrades.ts",
-    "src/data/types.ts -> src/data/walkers.ts",
-    "src/data/types.ts -> src/data/world.ts",
-    "src/data/upgrades.ts -> src/data/types.ts",
-    "src/data/walkers.ts -> src/data/types.ts",
-    "src/data/world.ts -> src/data/types.ts",
-    "src/runner/slotDelivery.ts -> src/runner/slotPlan.ts",
-    "src/runner/slotPlan.ts -> src/runner/slotDelivery.ts",
-    "src/runner/slotWitnessConstruct.ts -> src/runner/slotWitnessOrder.ts",
-    "src/runner/slotWitnessConstruct.ts -> src/runner/slotWitnessSearch.ts",
-    "src/runner/slotWitnessOrder.ts -> src/runner/slotWitnessSearch.ts",
-    "src/runner/slotWitnessSearch.ts -> src/runner/slotWitnessConstruct.ts",
-    "src/scenes/HelpPictureScene.ts -> src/scenes/HudScene.ts",
-    "src/scenes/HelpPictureScene.ts -> src/scenes/hudWalk.ts",
-    "src/scenes/HelpPictureScene.ts -> src/scenes/run/packView.ts",
-    "src/scenes/HelpPictureScene.ts -> src/scenes/run/runMoments.ts",
-    "src/scenes/HelpScene.ts -> src/scenes/HelpPictureScene.ts",
-    "src/scenes/HelpScene.ts -> src/scenes/MenuScene.ts",
-    "src/scenes/HelpScene.ts -> src/scenes/homeBarPress.ts",
-    "src/scenes/HelpScene.ts -> src/scenes/titleNavigation.ts",
-    "src/scenes/HudScene.ts -> src/scenes/HelpScene.ts",
-    "src/scenes/HudScene.ts -> src/scenes/feedbackMoments.ts",
-    "src/scenes/HudScene.ts -> src/scenes/heartFeedback.ts",
-    "src/scenes/HudScene.ts -> src/scenes/hudWalk.ts",
-    "src/scenes/HudScene.ts -> src/scenes/run/runMoments.ts",
-    "src/scenes/MenuScene.ts -> src/scenes/SettingsScene.ts",
-    "src/scenes/MenuScene.ts -> src/scenes/cheatsModal.ts",
-    "src/scenes/MenuScene.ts -> src/scenes/homeBarPress.ts",
-    "src/scenes/PauseScene.ts -> src/scenes/HelpScene.ts",
-    "src/scenes/PauseScene.ts -> src/scenes/RunScene.ts",
-    "src/scenes/PauseScene.ts -> src/scenes/SettingsScene.ts",
-    "src/scenes/PauseScene.ts -> src/scenes/cheatsModal.ts",
-    "src/scenes/RunScene.ts -> src/scenes/HudScene.ts",
-    "src/scenes/RunScene.ts -> src/scenes/PauseScene.ts",
-    "src/scenes/RunScene.ts -> src/scenes/hudWalk.ts",
-    "src/scenes/RunScene.ts -> src/scenes/run/menuFlow.ts",
-    "src/scenes/RunScene.ts -> src/scenes/run/packView.ts",
-    "src/scenes/RunScene.ts -> src/scenes/run/runMoments.ts",
-    "src/scenes/RunScene.ts -> src/scenes/run/runStart.ts",
-    "src/scenes/SettingsScene.ts -> src/scenes/homeBarPress.ts",
-    "src/scenes/cheatsModal.ts -> src/scenes/RunScene.ts",
-    "src/scenes/feedbackMoments.ts -> src/scenes/hudWalk.ts",
-    "src/scenes/heartFeedback.ts -> src/scenes/hudWalk.ts",
-    "src/scenes/homeBarPress.ts -> src/scenes/MenuScene.ts",
-    "src/scenes/homeBarPress.ts -> src/scenes/SettingsScene.ts",
-    "src/scenes/homeBarPress.ts -> src/scenes/titleNavigation.ts",
-    "src/scenes/hudWalk.ts -> src/scenes/PauseScene.ts",
-    "src/scenes/run/itemViews.ts -> src/scenes/run/moverView.ts",
-    "src/scenes/run/itemViews.ts -> src/scenes/run/standPart.ts",
-    "src/scenes/run/menuFlow.ts -> src/scenes/PauseScene.ts",
-    "src/scenes/run/menuFlow.ts -> src/scenes/SettingsScene.ts",
-    "src/scenes/run/moverView.ts -> src/scenes/run/itemViews.ts",
-    "src/scenes/run/moverView.ts -> src/scenes/run/signatureView.ts",
-    "src/scenes/run/moverView.ts -> src/scenes/run/standPart.ts",
-    "src/scenes/run/packView.ts -> src/scenes/feedbackMoments.ts",
-    "src/scenes/run/runMoments.ts -> src/scenes/run/packView.ts",
-    "src/scenes/run/runStart.ts -> src/scenes/RunScene.ts",
-    "src/scenes/run/signatureView.ts -> src/scenes/run/itemViews.ts",
-    "src/scenes/run/signatureView.ts -> src/scenes/run/standPart.ts",
-    "src/scenes/run/standPart.ts -> src/scenes/run/itemViews.ts",
-    "src/scenes/titleNavigation.ts -> src/scenes/RunScene.ts",
-    "src/tools/artManifest.ts -> src/tools/files.ts",
-    "src/tools/files.ts -> src/tools/artManifest.ts",
-    "src/ui/dom/artElements.ts -> src/ui/dom/pixelLine.ts",
-    "src/ui/dom/domCuts.ts -> src/ui/dom/artElements.ts",
-    "src/ui/dom/pixelLine.ts -> src/ui/dom/uiLayer.ts",
-    "src/ui/dom/uiLayer.ts -> src/ui/dom/domCuts.ts",
-    "src/ui/interaction.ts -> src/ui/selection.ts",
-    "src/ui/selection.ts -> src/ui/interaction.ts",
-  ],
+  cycle: [],
   sideways: ["src/input/hold.ts -> src/holdRule.ts"],
   upward: [
     "src/data/screen.ts -> src/layout/projection.ts",
@@ -229,8 +144,7 @@ const KNOWN: Readonly<Record<Kind, readonly string[]>> = {
   ],
 };
 
-const ROWS = BANDS.flatMap(({ rows }) => rows);
-const PLACES = ROWS.flatMap((groups, row) =>
+const PLACES = BANDS.flatMap(({ rows }) => rows).flatMap((groups, row) =>
   groups.flatMap((group) =>
     typeof group === "string"
       ? [{ group, path: group, row }]
@@ -263,37 +177,57 @@ function layerViolation(from: string, to: string): Kind | undefined {
 
 /**
  * The relative and /src/ specifiers a module imports, re-exports or loads with a literal dynamic
- * import or `typeof import()`, type-only forms included.
+ * import or `typeof import()`, in source order, each marked type-only or not.
  */
-function specifiers(text: string): string[] {
-  return ts
-    .preProcessFile(text, true, true)
-    .importedFiles.map(({ fileName }) => fileName)
-    .filter((specifier) => /^(?:\.{1,2}\/|\/src\/)/u.test(specifier));
+function imports(text: string): { specifier: string; typeOnly: boolean }[] {
+  const found: { specifier: string; typeOnly: boolean }[] = [];
+  const add = (specifier: ts.Node | undefined, typeOnly: boolean): void => {
+    if (specifier !== undefined && ts.isStringLiteral(specifier)) {
+      found.push({ specifier: specifier.text, typeOnly });
+    }
+  };
+  const visit = (node: ts.Node): void => {
+    if (ts.isImportDeclaration(node)) {
+      add(node.moduleSpecifier, node.importClause?.phaseModifier === ts.SyntaxKind.TypeKeyword);
+    } else if (ts.isExportDeclaration(node)) {
+      add(node.moduleSpecifier, node.isTypeOnly);
+    } else if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+      add(node.arguments[0], false);
+    } else if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument)) {
+      add(node.argument.literal, true);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(ts.createSourceFile("module.ts", text, ts.ScriptTarget.Latest));
+  return found.filter(({ specifier }) => /^(?:\.{1,2}\/|\/src\/)/u.test(specifier));
 }
 
 /** Each module with the root-relative src/ modules it imports, its source read by `read`. */
 function importGraph(read: (module: string) => string, modules: readonly string[]): Graph {
   return new Map(
-    modules.map((module) => [
-      module,
-      [
-        ...new Set(
-          specifiers(read(module))
-            .map((specifier) =>
-              specifier.startsWith("/")
-                ? specifier.slice(1)
-                : posix.join(posix.dirname(module), specifier),
-            )
-            .filter((target) => target.startsWith("src/") && target.endsWith(".ts")),
-        ),
-      ],
-    ]),
+    modules.map((module) => {
+      const targets = new Map<string, boolean>();
+      for (const { specifier, typeOnly } of imports(read(module))) {
+        const to = specifier.startsWith("/")
+          ? specifier.slice(1)
+          : posix.join(posix.dirname(module), specifier);
+        if (to.startsWith("src/") && to.endsWith(".ts")) {
+          targets.set(to, typeOnly && (targets.get(to) ?? true));
+        }
+      }
+      return [module, [...targets].map(([to, typeOnly]) => ({ to, typeOnly }))];
+    }),
   );
 }
 
-/** Each import whose two modules lie in one strongly connected set, a self-import included. */
+/**
+ * Each runtime import that lies on a cycle of runtime imports, a self-import included. Type-only
+ * imports close no cycle, as in import-x/no-cycle; the layer rule fixes their direction.
+ */
 function cycleEdges(graph: Graph): string[] {
+  const runtime = new Map(
+    [...graph].map(([from, targets]) => [from, targets.filter(({ typeOnly }) => !typeOnly)]),
+  );
   const index = new Map<string, number>();
   const low = new Map<string, number>();
   const component = new Map<string, number>();
@@ -302,15 +236,15 @@ function cycleEdges(graph: Graph): string[] {
     index.set(node, index.size);
     low.set(node, index.get(node) ?? 0);
     stack.push(node);
-    for (const next of graph.get(node) ?? []) {
-      if (!graph.has(next)) {
+    for (const { to } of runtime.get(node) ?? []) {
+      if (!runtime.has(to)) {
         continue;
       }
-      if (!index.has(next)) {
-        visit(next);
-        low.set(node, Math.min(low.get(node) ?? 0, low.get(next) ?? 0));
-      } else if (!component.has(next)) {
-        low.set(node, Math.min(low.get(node) ?? 0, index.get(next) ?? 0));
+      if (!index.has(to)) {
+        visit(to);
+        low.set(node, Math.min(low.get(node) ?? 0, low.get(to) ?? 0));
+      } else if (!component.has(to)) {
+        low.set(node, Math.min(low.get(node) ?? 0, index.get(to) ?? 0));
       }
     }
     if (low.get(node) === index.get(node)) {
@@ -323,15 +257,15 @@ function cycleEdges(graph: Graph): string[] {
       } while (member !== undefined && member !== node);
     }
   };
-  for (const node of [...graph.keys()].sort()) {
+  for (const node of [...runtime.keys()].sort()) {
     if (!index.has(node)) {
       visit(node);
     }
   }
-  return [...graph].flatMap(([from, targets]) =>
+  return [...runtime].flatMap(([from, targets]) =>
     targets
-      .filter((to) => component.has(to) && component.get(to) === component.get(from))
-      .map((to) => `${from} -> ${to}`),
+      .filter(({ to }) => component.has(to) && component.get(to) === component.get(from))
+      .map(({ to }) => `${from} -> ${to}`),
   );
 }
 
@@ -339,7 +273,7 @@ function cycleEdges(graph: Graph): string[] {
 function violations(graph: Graph): Record<Kind, string[]> {
   const found: Record<Kind, string[]> = { cycle: cycleEdges(graph), sideways: [], upward: [] };
   for (const [from, targets] of graph) {
-    for (const to of targets) {
+    for (const { to } of targets) {
       const kind = layerViolation(from, to);
       if (kind !== undefined) {
         found[kind].push(`${from} -> ${to}`);
@@ -366,11 +300,11 @@ function modules(directory: string): string[] {
 describe("the import check", () => {
   it("parses static, type-only, multi-line, re-export, dynamic and typeof imports", () => {
     expect(
-      specifiers(
+      imports(
         [
           'import { a } from "./a.ts";',
           'import type { B } from "../b.ts";',
-          "import {\n  c,\n  type D,\n} from './c.ts';",
+          "import {\n  type C,\n  type D,\n} from './c.ts';",
           'export { e } from "./e.ts";',
           'export type * from "/src/f.ts";',
           'import "./side.ts";',
@@ -381,38 +315,44 @@ describe("the import check", () => {
         ].join("\n"),
       ),
     ).toEqual([
-      "./a.ts",
-      "../b.ts",
-      "./c.ts",
-      "./e.ts",
-      "/src/f.ts",
-      "./side.ts",
-      "./g.ts",
-      "./h.ts",
+      { specifier: "./a.ts", typeOnly: false },
+      { specifier: "../b.ts", typeOnly: true },
+      { specifier: "./c.ts", typeOnly: false },
+      { specifier: "./e.ts", typeOnly: false },
+      { specifier: "/src/f.ts", typeOnly: true },
+      { specifier: "./side.ts", typeOnly: false },
+      { specifier: "./g.ts", typeOnly: false },
+      { specifier: "./h.ts", typeOnly: true },
     ]);
   });
 
-  it("reports every import on a cycle, type-only cycles included, and passes a chain", () => {
-    const graph = importGraph(
-      (module) =>
-        ({
-          "src/a.ts": 'import type { B } from "./b.ts";',
-          "src/b.ts": 'import { type A } from "./a.ts";\nimport { c } from "./c.ts";',
-          "src/c.ts": 'import { d } from "./d/d.ts";',
-          "src/d/d.ts": 'export * from "../e.ts";',
-          "src/e.ts": 'type C = typeof import("./c.ts");',
-          "src/f.ts": 'import { a } from "./a.ts";',
-          "src/g.ts": 'import { g } from "./g.ts";',
-        })[module] ?? "",
-      ["src/a.ts", "src/b.ts", "src/c.ts", "src/d/d.ts", "src/e.ts", "src/f.ts", "src/g.ts"],
-    );
+  it("fails cycles of runtime imports and passes cycles a type-only import closes", () => {
+    const sources: Readonly<Record<string, string>> = {
+      "src/a.ts": 'import type { B } from "./b.ts";',
+      "src/b.ts": 'import type { A } from "./a.ts";',
+      "src/c.ts": 'import { d } from "./d.ts";',
+      "src/d.ts": 'import type { C } from "./c.ts";',
+      "src/e.ts": 'import { type F } from "./f.ts";',
+      "src/f.ts": 'import { type E } from "./e.ts";',
+      "src/g.ts": 'export * from "./h/h.ts";',
+      "src/h/h.ts": 'const g = await import("../g.ts");',
+      "src/i.ts": 'import { i } from "./i.ts";',
+      "src/j.ts": 'import type { J } from "./j.ts";',
+      "src/k.ts": 'import { l } from "./l.ts";',
+      "src/l.ts": 'import { m } from "./m.ts";',
+      "src/m.ts": 'import { k } from "./k.ts";\nimport type { A } from "./a.ts";',
+      "src/n.ts": 'import { a } from "./a.ts";',
+    };
+    const graph = importGraph((module) => sources[module] ?? "", Object.keys(sources));
     expect(cycleEdges(graph).sort()).toEqual([
-      "src/a.ts -> src/b.ts",
-      "src/b.ts -> src/a.ts",
-      "src/c.ts -> src/d/d.ts",
-      "src/d/d.ts -> src/e.ts",
-      "src/e.ts -> src/c.ts",
-      "src/g.ts -> src/g.ts",
+      "src/e.ts -> src/f.ts",
+      "src/f.ts -> src/e.ts",
+      "src/g.ts -> src/h/h.ts",
+      "src/h/h.ts -> src/g.ts",
+      "src/i.ts -> src/i.ts",
+      "src/k.ts -> src/l.ts",
+      "src/l.ts -> src/m.ts",
+      "src/m.ts -> src/k.ts",
     ]);
   });
 
