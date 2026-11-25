@@ -68,6 +68,11 @@ export const NO_DRAWS: StreamDraws = { cards: 0, forks: 0, upgrades: 0 };
 // The road's geometry for the run's pack, which changes when an owner fires you.
 type SessionGeometry = (run: RunState) => RoadGeometry;
 
+// Where a choice or a neighbourhood cheat plans the zone that falls due: "inStep" plans it in the
+// step; "deferred" leaves the session awaiting its plan (awaitsZonePlan) for withZonePlan to take
+// the plan planZoneFromSeed makes elsewhere, such as in a worker, which is the same plan.
+export type ZonePlanning = "deferred" | "inStep";
+
 // What a step applies before it walks, in order: a lane move, or heading home, which ends the
 // walk before the step.
 export type SessionInput =
@@ -182,11 +187,13 @@ export function startSession(
   };
 }
 
-// A live neighbourhood cheat replaces the unfinished route slot without awarding completion.
+// A live neighbourhood cheat replaces the unfinished route slot without awarding completion. A
+// session awaiting its plan jumps as the planned session would.
 export function jumpToNeighbourhood(
   data: SessionData,
   streams: RunStreams,
   geometry: SessionGeometry,
+  planning: ZonePlanning,
   laneCount: number,
   zone: ZoneId,
   session: Session,
@@ -196,7 +203,7 @@ export function jumpToNeighbourhood(
     return { events: [], session };
   }
   // At the fork the last neighbourhood has already ended and its distance has been counted.
-  const leaving = !session.needsZonePlan;
+  const leaving = !session.needsZonePlan || awaitsZonePlan(session);
   const nextRun = resetZoneProgress({
     ...(leaving ? expireAtZoneEnd(run.zoneIndex, run) : run),
     phase: { kind: "walking" },
@@ -206,11 +213,29 @@ export function jumpToNeighbourhood(
     road: { ...startRoad(laneCount, road.speedFactor), nextItemId: road.nextItemId },
     run: nextRun,
   });
-  return continueWalk(data, streams, geometry, [], {
+  return continueWalk(data, streams, geometry, planning, [], {
     ...start,
     distanceBeforeZone: session.distanceBeforeZone + (leaving ? run.zoneDistance : 0),
     timeMs: session.timeMs,
   });
+}
+
+// Whether the session waits for its zone's plan before it walks on: its cards are chosen and the
+// zone it is about to walk is not yet planned, as a "deferred" step leaves it.
+export function awaitsZonePlan(session: Session): boolean {
+  return (
+    session.needsZonePlan &&
+    session.card === null &&
+    session.queue.length === 0 &&
+    !session.zoneEndPending &&
+    session.walk.run.phase.kind !== "ended"
+  );
+}
+
+// The session awaiting its plan, with the walk planZoneFromSeed planned for it, as the step that
+// deferred the plan would have left it planning in the step.
+export function withZonePlan(session: Session, planned: Walk): Session {
+  return { ...session, needsZonePlan: false, walk: planned };
 }
 
 // A walk about to start, its first zone not yet planned: the point a walk resumes from until
@@ -241,7 +266,7 @@ export function resumeSession(
   if (!session.needsZonePlan || session.card !== null || session.zoneEndPending) {
     throw new Error("A walk resumes only between zones or at its start");
   }
-  return continueWalk(data, streams, geometry, [], { ...session, debuffMovement: null });
+  return continueWalk(data, streams, geometry, "inStep", [], { ...session, debuffMovement: null });
 }
 
 // The session at a fork as a walk resumes from it: the fork card closed and queued first again,
@@ -322,7 +347,14 @@ export function stepSession(
     walk,
     zoneEndPending: session.zoneEndPending || step.zoneEnded,
   };
-  return continueWalk(data, streams, geometry, events, heldForFiring(data, fired, walked));
+  return continueWalk(
+    data,
+    streams,
+    geometry,
+    "inStep",
+    events,
+    heldForFiring(data, fired, walked),
+  );
 }
 
 // Applies the choice on the open card, then opens the next card, or ends the zone, or plans
@@ -331,6 +363,17 @@ export function chooseCard(
   data: SessionData,
   streams: RunStreams,
   geometry: SessionGeometry,
+  choice: Choice,
+  session: Session,
+): SessionStep {
+  return chooseCardPlanning(data, streams, geometry, "inStep", choice, session);
+}
+
+function chooseCardPlanning(
+  data: SessionData,
+  streams: RunStreams,
+  geometry: SessionGeometry,
+  planning: ZonePlanning,
   choice: Choice,
   session: Session,
 ): SessionStep {
@@ -348,7 +391,14 @@ export function chooseCard(
     card: null,
     walk: { ...session.walk, run: outcome.state },
   };
-  return continueWalk(data, streams, geometry, events, heldForFiring(data, outcome.fired, chosen));
+  return continueWalk(
+    data,
+    streams,
+    geometry,
+    planning,
+    events,
+    heldForFiring(data, outcome.fired, chosen),
+  );
 }
 
 // The choice made on the card that view shows, or nothing once that card is no longer open: a
@@ -357,12 +407,13 @@ export function chooseShownCard(
   data: SessionData,
   streams: RunStreams,
   geometry: SessionGeometry,
+  planning: ZonePlanning,
   view: CardView,
   choice: Choice,
   session: Session,
 ): SessionStep {
   return session.card === view
-    ? chooseCard(data, streams, geometry, choice, session)
+    ? chooseCardPlanning(data, streams, geometry, planning, choice, session)
     : { events: [], session };
 }
 
@@ -376,9 +427,20 @@ export function headHomeSession(session: Session): SessionStep {
   };
 }
 
+// The walk with its current zone planned from the seed, as a step plans it: the same seed and
+// walk plan the same zone wherever they are planned.
+export function planZoneFromSeed(
+  data: SessionData,
+  geometry: SessionGeometry,
+  seed: number,
+  walk: Walk,
+): Walk {
+  return planCurrentZone(data, { seed }, geometry, walk);
+}
+
 function planCurrentZone(
   data: SessionData,
-  streams: RunStreams,
+  streams: Pick<RunStreams, "observeSpawns" | "seed">,
   geometry: SessionGeometry,
   walk: Walk,
 ): Walk {
@@ -425,6 +487,7 @@ function continueWalk(
   data: SessionData,
   streams: RunStreams,
   geometry: SessionGeometry,
+  planning: ZonePlanning,
   events: SessionEvent[],
   current: Session,
 ): SessionStep {
@@ -444,9 +507,12 @@ function continueWalk(
     return { events, session: { ...session, card: view, queue, walk: { ...walk, run } } };
   }
   if (session.zoneEndPending) {
-    return endZone(data, streams, geometry, events, { ...session, zoneEndPending: false });
+    return endZone(data, streams, geometry, planning, events, {
+      ...session,
+      zoneEndPending: false,
+    });
   }
-  if (session.needsZonePlan) {
+  if (session.needsZonePlan && planning === "inStep") {
     const next = planCurrentZone(data, streams, geometry, walk);
     events.push({ kind: "zonePlanned", unplanned: walk });
     return { events, session: { ...session, needsZonePlan: false, walk: next } };
@@ -460,6 +526,7 @@ function endZone(
   data: SessionData,
   streams: RunStreams,
   geometry: SessionGeometry,
+  planning: ZonePlanning,
   events: SessionEvent[],
   session: Session,
 ): SessionStep {
@@ -471,7 +538,7 @@ function endZone(
     return { events, session: ended };
   }
   const fork: CardSource = offerFork(data, streams, run);
-  return continueWalk(data, streams, geometry, events, {
+  return continueWalk(data, streams, geometry, planning, events, {
     ...ended,
     distanceBeforeZone: session.distanceBeforeZone + zoneLength(data),
     needsZonePlan: true,

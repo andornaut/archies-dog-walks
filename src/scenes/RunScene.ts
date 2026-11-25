@@ -41,10 +41,12 @@ import { type CardView, type Choice, outcomeChanges } from "../rules/choices.ts"
 import { currentZone, currentZoneId, previousZone, previousZoneId } from "../rules/route.ts";
 import { screenRoadGeometry } from "../runner/screenGeometry.ts";
 import {
+  awaitsZonePlan,
   chooseShownCard,
   forkPoint,
   headHomeSession,
   jumpToNeighbourhood,
+  planZoneFromSeed,
   resumeSession,
   type RunStreams,
   runStreams,
@@ -54,9 +56,11 @@ import {
   startSession,
   stepSession,
   unplannedStart,
+  withZonePlan,
   zoneStartPoint,
 } from "../runner/session.ts";
 import { startRoad, type Walk } from "../runner/walk.ts";
+import { pageZonePlanner } from "../runner/zonePlanner.ts";
 import { dogsFinishedWith } from "../save/checkpoint.ts";
 import type { ResumeWalk } from "../save/resume.ts";
 import { checkpointOf, runResultOf } from "../save/runSlices.ts";
@@ -148,7 +152,9 @@ interface RunWorld {
 
 // The walk: backdrop, road, walker, pack and everything spawned on the road. The session steps
 // at a fixed rate and stops while walkPaused says so; the scene draws it, feeds it input and
-// plays its events.
+// plays its events. A walk's first zone is planned as the scene starts; a zone that falls due
+// later, after a fork's path or a neighbourhood cheat, is planned by the page's zone planner in its
+// worker while the walk holds.
 export class RunScene extends Scene implements HudRun {
   // The ambient movers' clock: the walk's simulated time less its firings' holds, in which
   // they stand still.
@@ -185,6 +191,8 @@ export class RunScene extends Scene implements HudRun {
     const { resume, setup } = data;
     this.cheats = data.cheats;
     noteWalkStarted(this);
+    // Started now, so its worker is ready by the walk's first fork.
+    pageZonePlanner();
     const recorder = new RunRecorder(data.replay);
     const streams = runStreams(setup.seed, resume?.draws);
     if (resume === undefined) {
@@ -495,10 +503,11 @@ export class RunScene extends Scene implements HudRun {
       return;
     }
     this.world?.recorder.abandon();
-    const { walk } = session;
+    const planned = this.planDueZoneNow(session);
+    const { walk } = planned;
     this.cheats = { ...this.cheats, invincible: !active.invincible };
     const changed = { ...walk, run: withCheats(this.cheats, walk.run) };
-    this.session = { ...session, walk: changed };
+    this.session = { ...planned, walk: changed };
     this.stepBefore = changed;
     this.draw();
   }
@@ -512,6 +521,7 @@ export class RunScene extends Scene implements HudRun {
       gameData,
       world.streams,
       screenRoadGeometry,
+      "deferred",
       LANE_COUNT,
       zone,
       session,
@@ -530,10 +540,10 @@ export class RunScene extends Scene implements HudRun {
   // The walk as This walk's cheat leaves it; it saves like any walk, and its replay recording
   // stops, as for every live run edit.
   cheat(cheat: WalkCheat): void {
-    const session = this.session;
-    if (session === undefined || !this.cheatsApply()) {
+    if (this.session === undefined || !this.cheatsApply()) {
       return;
     }
+    const session = this.planDueZoneNow(this.session);
     this.world?.recorder.abandon();
     const { run } = session.walk;
     const walk = { ...session.walk, run: walkCheat(gameData, cheat, run) };
@@ -543,6 +553,40 @@ export class RunScene extends Scene implements HudRun {
     };
     this.stepBefore = this.session.walk;
     this.draw();
+  }
+
+  // The session with the zone it awaits planned here: a cheat pressed while the planner's plan is
+  // still to come applies to the planned walk, as when the step plans the zone.
+  private planDueZoneNow(session: Session): Session {
+    const streams = this.world?.streams;
+    if (streams === undefined || !awaitsZonePlan(session)) {
+      return session;
+    }
+    const planned = planZoneFromSeed(gameData, screenRoadGeometry, streams.seed, session.walk);
+    return this.takePlan(withZonePlan(session, planned));
+  }
+
+  // A zone that fell due starts at once, as when its step planned it: its banner and music, and the
+  // resume point and checkpoint at its start. The walk holds (runPause) until the planner's plan
+  // for this session comes back; one for a session since replaced is dropped.
+  private planDueZone(): void {
+    const session = this.session;
+    const world = this.world;
+    if (session === undefined || world === undefined || !awaitsZonePlan(session)) {
+      return;
+    }
+    this.zoneStarted(session, session.walk);
+    pageZonePlanner().plan(world.streams.seed, session.walk, (planned) => {
+      if (this.session === session) {
+        this.takePlan(withZonePlan(session, planned));
+      }
+    });
+  }
+
+  private takePlan(session: Session): Session {
+    this.session = session;
+    this.stepBefore = session.walk;
+    return session;
   }
 
   private walking(): boolean {
@@ -611,6 +655,7 @@ export class RunScene extends Scene implements HudRun {
     }
     this.world?.moments.previewAchievements(run);
     if (opened === undefined) {
+      this.planDueZone();
       return;
     }
     const card = opened;
@@ -715,15 +760,21 @@ export class RunScene extends Scene implements HudRun {
         return;
       case "zonePlanned":
         if (this.session !== undefined) {
-          this.startZone(this.session.walk.run);
-          // The zone's start, the fork taken, is where the next launch resumes the walk.
-          this.resumePoint = this.pointAt(
-            world.streams,
-            zoneStartPoint(this.session, event.unplanned),
-          );
-          this.saveCheckpoint(this.session.walk.run);
+          this.zoneStarted(this.session, event.unplanned);
         }
     }
+  }
+
+  // The zone session is about to walk starts. Its start, the fork taken, is where the next launch
+  // resumes the walk, from unplanned, the walk before its plan.
+  private zoneStarted(session: Session, unplanned: Walk): void {
+    const world = this.world;
+    if (world === undefined) {
+      return;
+    }
+    this.startZone(session.walk.run);
+    this.resumePoint = this.pointAt(world.streams, zoneStartPoint(session, unplanned));
+    this.saveCheckpoint(session.walk.run);
   }
 
   // A zone starts with its banner and its own music loop, which plays until the next zone's
@@ -760,13 +811,27 @@ export class RunScene extends Scene implements HudRun {
     if (session === undefined || world === undefined) {
       return;
     }
-    this.apply(chooseShownCard(gameData, world.streams, screenRoadGeometry, view, choice, session));
+    this.apply(
+      chooseShownCard(
+        gameData,
+        world.streams,
+        screenRoadGeometry,
+        "deferred",
+        view,
+        choice,
+        session,
+      ),
+    );
   }
 
-  // What holds the walk still, for the walk's steps, the HUD's top bar, and lane moves.
+  // What holds the walk still, for the walk's steps, the HUD's top bar, and lane moves: an
+  // explanation's detail card or the zone plan the walk awaits holds it.
   runPause(): RunPause {
-    const hitStop = this.session?.walk.road.hitStop != null;
-    const hold = this.world?.input.explanation() !== undefined;
+    const session = this.session;
+    const hitStop = session?.walk.road.hitStop != null;
+    const hold =
+      this.world?.input.explanation() !== undefined ||
+      (session !== undefined && awaitsZonePlan(session));
     return { ...(this.world?.menus.pause() ?? NOTHING_PAUSED), hitStop, hold };
   }
 

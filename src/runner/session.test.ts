@@ -89,6 +89,7 @@ describe("live neighbourhood cheat", () => {
       gameData,
       runStreams(1),
       geometry,
+      "inStep",
       LANE_COUNT,
       "cabbagetown",
       session,
@@ -132,6 +133,7 @@ describe("live neighbourhood cheat", () => {
       gameData,
       runStreams(1),
       geometry,
+      "inStep",
       LANE_COUNT,
       "cabbagetown",
       session,
@@ -783,11 +785,11 @@ describe("chooseShownCard", () => {
       ["no card is open", { ...skunk, card: null }],
       ["the next card is open", shown(STOP)],
     ] as const) {
-      const step = chooseShownCard(gameData, runStreams(1), geometry, view, 0, session);
+      const step = chooseShownCard(gameData, runStreams(1), geometry, "inStep", view, 0, session);
       expect(step).toEqual({ events: [], session });
     }
     const choice = view.options.find((option) => option.availability.enabled)?.index ?? "skip";
-    const step = chooseShownCard(gameData, runStreams(1), geometry, view, choice, skunk);
+    const step = chooseShownCard(gameData, runStreams(1), geometry, "inStep", view, choice, skunk);
     expect(kinds(step.events)[0]).toBe("chosen");
     expect(step.session.card).toBeNull();
   });
