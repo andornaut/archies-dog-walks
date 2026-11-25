@@ -35,7 +35,7 @@ function screen() {
       if (cardOpen) {
         return "dismiss";
       }
-      return containsPoint(END_LAYOUT.button, x, y) ? "home" : undefined;
+      return containsPoint(END_LAYOUT.backToTitle, x, y) ? "home" : undefined;
     },
   });
   const send = (phase: "down" | "up", x: number, y: number, cancelled = false) => {
@@ -60,8 +60,8 @@ function screen() {
   };
 }
 const BUTTON = {
-  x: END_LAYOUT.button.x + END_LAYOUT.button.width / 2,
-  y: END_LAYOUT.button.y + END_LAYOUT.button.height / 2,
+  x: END_LAYOUT.backToTitle.x + END_LAYOUT.backToTitle.width / 2,
+  y: END_LAYOUT.backToTitle.y + END_LAYOUT.backToTitle.height / 2,
 };
 
 describe("explicit advance after first render", () => {

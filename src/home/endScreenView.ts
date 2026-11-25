@@ -104,8 +104,9 @@ export interface EndStrip {
 }
 
 export interface EndScreenView {
-  // Back to title uses ordinary action geometry at the fixed return-button anchor.
-  readonly button: PanelButton;
+  // Back to title, the results screen's main next step: its label's content-sized primary,
+  // centred in Start walk's slot (END_LAYOUT.backToTitle). The pages' Back is a separate role.
+  readonly backToTitle: PanelButton;
   readonly offsetY: number;
   readonly results: EndResults;
   readonly strip: EndStrip | undefined;
@@ -117,7 +118,7 @@ const BREAKDOWN = END_LAYOUT.breakdown;
 const SIDE = END_LAYOUT.side;
 const QUIPS = END_LAYOUT.quips;
 // This anchor retains the vertical results clearance; the action measures its own width.
-const BUTTON = END_LAYOUT.button;
+const BACK_TO_TITLE = END_LAYOUT.backToTitle;
 
 // The bubble's tail, drawn flipped to point right at the face.
 export const QUIP_TAIL_KEY = "ui-quip-tail";
@@ -334,16 +335,20 @@ export function endScreenView(
       }
     : undefined;
 
-  const buttonWidth = modalActionWidth(measure.inkWidth("title", words.headHome));
-  const button = panelButton(
+  const backWidth = modalActionWidth(measure.inkWidth("title", words.headHome));
+  const backToTitle = panelButton(
     measure,
-    { ...BUTTON, width: buttonWidth, x: BUTTON.x + (BUTTON.width - buttonWidth) / 2 },
+    {
+      ...BACK_TO_TITLE,
+      width: backWidth,
+      x: BACK_TO_TITLE.x + (BACK_TO_TITLE.width - backWidth) / 2,
+    },
     true,
     words.headHome,
   );
 
   return {
-    button,
+    backToTitle,
     offsetY: placement.offsetY,
     results: {
       art,

@@ -108,13 +108,13 @@ describe("the HTML End screen", () => {
     const { nodes, scale, shown } = endScreen(393);
     expect(nodes.filter((node) => node.tagName === "button")).toHaveLength(1);
     const button = nodes.find((node) => node.classList.contains("adw-go"));
-    const hit = gridRect(scale, VIEW.button.hit);
+    const hit = gridRect(scale, VIEW.backToTitle.hit);
     expect(button?.style.width).toBe(`${hit.width}px`);
     expect(button?.style.left).toBe(`${hit.left}px`);
     expect(button?.style.top).toBe(`${hit.top}px`);
-    shown.setButton(false, -1);
+    shown.setBackToTitle(false, -1);
     expect(button?.style.transform).toBe(`translateY(${-artPixel(scale)}px)`);
-    shown.setButton(true, 0);
+    shown.setBackToTitle(true, 0);
     expect(button?.attributes.has("data-ui-pressed")).toBe(true);
     expect(button?.style.transform).toBe("");
   });
@@ -385,7 +385,7 @@ it.each(["tap", "hold", "outside"] as const)(
     });
     root.fire("pointerdown", pointer("pointerdown"));
     button.fire("pointerdown", pointer("pointerdown"));
-    current.shown.setButton(false, -1);
+    current.shown.setBackToTitle(false, -1);
     expect(button.style.transform).toBe("");
     vi.advanceTimersByTime(mode === "hold" ? 500 : 499);
     expect(current.home).toHaveBeenCalledTimes(mode === "hold" ? 1 : 0);

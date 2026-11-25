@@ -305,7 +305,10 @@ function endRoles(): TextRoleCase[] {
       "end screen's button",
       "font-title",
       // Inside the face less 12px a side, as Start walk's loading label.
-      { room: END_LAYOUT.button.width - 24, style: { scale: END_LAYOUT.buttonLabel.scale } },
+      {
+        room: END_LAYOUT.backToTitle.width - 24,
+        style: { scale: END_LAYOUT.backToTitleLabel.scale },
+      },
       [words.headHome],
     ),
     ...plainRole(

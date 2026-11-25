@@ -448,6 +448,6 @@ export class EndScene extends Scene {
       begin();
     }
     this.nativeStep?.();
-    this.html?.setButton(false, bobOffset(this.reduced, this.time.now, true));
+    this.html?.setBackToTitle(false, bobOffset(this.reduced, this.time.now, true));
   }
 }

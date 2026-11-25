@@ -38,6 +38,8 @@ const FRAME = placeModalFrame(PAGE_FRAME.context, {
 // A titled page's title row.
 export const PAGE_TITLE_ROW: Rect = FRAME.title;
 
+// The pages' Back: a leave action, content-sized in the slot centred over the page's foot. A
+// separate role from the end screen's Back to title (END_LAYOUT.backToTitle), its main next step.
 const BACK = {
   ...BUTTON_SIZE.compact,
   x: (width - BUTTON_SIZE.compact.width) / 2,

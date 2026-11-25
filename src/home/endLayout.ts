@@ -12,22 +12,24 @@ const END = END_SCREEN;
 const PANEL: Rect = END.panel;
 const RIBBON = END.ribbon;
 
-// The return button: Start walk's, in its place.
-const BUTTON = HOME_LAYOUT.startButton;
+// Back to title: the results screen's main next step, a primary in Start walk's slot, where the
+// hand already knows the next walk starts. It is a separate role from the pages' Back
+// (PAGE_LAYOUT.back), the content-sized leave on the Pet shop, Logbook and Help.
+const BACK_TO_TITLE = HOME_LAYOUT.startButton;
 
 export const END_LAYOUT = {
-  // The badge strip, its bottom results.buttonGap over the return button.
-  badges: { ...END.badges, y: BUTTON.y - END.results.buttonGap - END.badges.height },
+  // Back to title's slot: Start walk's rect.
+  backToTitle: BACK_TO_TITLE,
+  // And Start walk's label, at its size and on its caps.
+  backToTitleLabel: HOME_LAYOUT.startLabel,
+  // The badge strip, its bottom results.buttonGap over Back to title.
+  badges: { ...END.badges, y: BACK_TO_TITLE.y - END.results.buttonGap - END.badges.height },
   breakdown: {
     amountRight: END.breakdown.amountRight,
     label: END.breakdown.label,
     pitch: END.breakdown.pitch,
     top: PANEL.y + END.breakdown.top,
   },
-  // The wide return button stays below the badge strip.
-  button: BUTTON,
-  // And Start walk's label, at its size and on its caps.
-  buttonLabel: HOME_LAYOUT.startLabel,
   logo: END.logo,
   panel: PANEL,
   // An owner's row, mirroring the home screen's bubble: a speech bubble from x with its tail
@@ -323,7 +325,7 @@ export function endPanelLayout(
 }
 
 // The badge strip for rows rows of badges: badges, grown up into the panel's room as tall as
-// its rows need (badgeStripMinHeight), its bottom kept over the button.
+// its rows need (badgeStripMinHeight), its bottom kept over Back to title.
 export function endBadgeStrip(rows: number): Rect {
   const { badges } = END_LAYOUT;
   const height = Math.max(badges.height, badgeStripMinHeight(rows));
@@ -331,11 +333,11 @@ export function endBadgeStrip(rows: number): Rect {
 }
 
 // Bound owner rows between the fixed summary and badges, retaining their full scrollable content.
-// The badge panel centres in the remaining band, retaining the return button's 3px clearance.
+// The badge panel centres in the remaining band, retaining its 3px clearance over Back to title.
 export function endResultsPlacement(badgeRows: number, layout: EndPanelLayout) {
   const { panel, rows } = layout;
   const strip = endBadgeStrip(badgeRows);
-  const bottom = END_LAYOUT.button.y - END_LAYOUT.results.buttonGap;
+  const bottom = END_LAYOUT.backToTitle.y - END_LAYOUT.results.buttonGap;
   const badgeHeight = badgeRows > 0 ? strip.height : 0;
   const height = Math.min(panel.height, bottom - badgeHeight - panel.y);
   const ownerTop = (rows[0]?.top ?? panel.y) - END_LAYOUT.quips.rule.above;

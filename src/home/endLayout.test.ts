@@ -207,7 +207,7 @@ describe("results and badge placement", () => {
       expect(placed.ownerRows.contentHeight).toBeGreaterThanOrEqual(
         placed.ownerRows.viewport.height,
       );
-      const bottom = END_LAYOUT.button.y - END_LAYOUT.results.buttonGap;
+      const bottom = END_LAYOUT.backToTitle.y - END_LAYOUT.results.buttonGap;
       const before = placed.strip.y - placed.panel.y - placed.panel.height;
       const after = bottom - placed.strip.y - placed.strip.height;
       expect(before).toBeGreaterThanOrEqual(0);
@@ -221,7 +221,7 @@ describe("results and badge placement", () => {
           expect(hit.width).toBe(originalHits[i]?.width);
           expect(hit.height).toBe(originalHits[i]?.height);
           expect(rectsOverlap(hit, placed.panel)).toBe(false);
-          expect(rectsOverlap(hit, END_LAYOUT.button)).toBe(false);
+          expect(rectsOverlap(hit, END_LAYOUT.backToTitle)).toBe(false);
         });
       }
     },
@@ -272,7 +272,7 @@ describe("grantedQuipLines", () => {
     "keeps the badge strip's area above the button with %i rows of badges",
     (rows) => {
       const strip = endBadgeStrip(rows);
-      expect(strip.y + strip.height).toBeLessThanOrEqual(END_LAYOUT.button.y);
+      expect(strip.y + strip.height).toBeLessThanOrEqual(END_LAYOUT.backToTitle.y);
     },
   );
 });

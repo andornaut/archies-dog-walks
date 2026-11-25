@@ -59,7 +59,7 @@ export interface DomEndScreenInput extends Pick<
 
 export interface DomEndScreen extends DomQuestionPanel {
   // Back to title pressed, or raised bob game pixels down (whole, as the canvas bobs it).
-  setButton(pressed: boolean, bob: number): void;
+  setBackToTitle(pressed: boolean, bob: number): void;
   setFace(index: number, frame: SheetFrame | undefined, dy: number): void;
   setBadgePop(index: number, scale: number): void;
   burstBadge(index: number): void;
@@ -144,8 +144,9 @@ function linesPart(
   };
 }
 
-// Back to title: the go button's face and its label, pressed or bobbing as the scene says.
-function buttonPart(
+// Back to title: the results screen's main next step, its face and label, pressed or bobbing as
+// the scene says.
+function backToTitlePart(
   doc: Document,
   fonts: DomEndScreenInput["fonts"],
   input: {
@@ -153,7 +154,7 @@ function buttonPart(
     readonly burst: (event: PointerEvent) => void;
     readonly home: () => void;
   },
-  button: EndScreenView["button"],
+  button: EndScreenView["backToTitle"],
 ): DomPart & { dispose(): void; set(pressed: boolean, bob: number): void } {
   const part = createPanelButton(
     doc,
@@ -300,7 +301,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
             { ...ribbonView.fallback, capTop: ribbonView.fallback.capTop + view.offsetY },
           ])
         : artPart(doc, input, { ...ribbonView.art, y: ribbonView.art.y + view.offsetY });
-  const button = buttonPart(
+  const backToTitle = backToTitlePart(
     doc,
     input.fonts,
     {
@@ -308,7 +309,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
       burst: (event) => panel.burst(input.toGame({ x: event.clientX, y: event.clientY })),
       home: input.home,
     },
-    view.button,
+    view.backToTitle,
   );
   const ownerParts: DomPart[] = [
     contentSeparatorPart(doc, "art", results.rule),
@@ -375,7 +376,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
     ...results.texts.map((text) => textPart(doc, input, text)),
     ...(badges?.parts ?? []),
     ...(strip === undefined ? [] : [linesPart(doc, fonts, strip.title), ...badgeNames]),
-    button,
+    backToTitle,
     ...badgeControls,
   ];
   const element = doc.createElement("div");
@@ -414,7 +415,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
         input.gesture.cancel?.();
       },
       down: (event) => {
-        nativeButtonPress = [{ ...button, hit: view.button.hit }, ...badgeControls].find(
+        nativeButtonPress = [{ ...backToTitle, hit: view.backToTitle.hit }, ...badgeControls].find(
           ({ element }) => element.contains(event.target as Node),
         )?.hit;
         if (nativeButtonPress) {
@@ -460,12 +461,12 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
       accepts = () => false;
       underlay();
       badges?.destroy();
-      button.dispose();
+      backToTitle.dispose();
       badgeControls.forEach((control) => control.dispose());
       panel.destroy();
     },
+    setBackToTitle: (pressed, bob) => backToTitle.set(pressed, bob),
     setBadgePop: (index, scale) => badges?.setPop(index, scale),
-    setButton: (pressed, bob) => button.set(pressed, bob),
     setDimmed: (value) => {
       dimmed = value;
       underlay.refresh();

@@ -45,8 +45,8 @@ it("sizes End's ordinary action from its ink and uses the same narrow pointer ta
       zonesFinished: 0,
     } as never,
   });
-  const { button } = view;
-  const anchor = END_LAYOUT.button;
+  const { backToTitle: button } = view;
+  const anchor = END_LAYOUT.backToTitle;
   const ink = measure.inkWidth("title", gameData.menuText.end.headHome);
   expect(button.rect.width).toBe(ink + 2 * MODAL.pad);
   expect(button.rect.width).toBeLessThan(anchor.width);

@@ -1423,6 +1423,16 @@
       }
     },
     "end": {
+      "backToTitle": {
+        "height": 48,
+        "width": 296,
+        "x": 32,
+        "y": 508
+      },
+      "backToTitleLabel": {
+        "readyY": 15,
+        "scale": 3
+      },
       "badges": {
         "height": 92,
         "width": 344,
@@ -1434,16 +1444,6 @@
         "label": 40,
         "pitch": 17,
         "top": 154
-      },
-      "button": {
-        "height": 48,
-        "width": 296,
-        "x": 32,
-        "y": 508
-      },
-      "buttonLabel": {
-        "readyY": 15,
-        "scale": 3
       },
       "logo": {
         "x": 107,
