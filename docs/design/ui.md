@@ -111,3 +111,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0257 | Unify visible label placement, rows and control looks                 | [adw-0257.md](../work/adw-0257.md) |
 | adw-0260 | Centre the Start screen speech bubble's text vertically in its bubble | [adw-0260.md](../work/adw-0260.md) |
 | adw-0261 | Freeze each Help picture on a fixed frame                             | [adw-0261.md](../work/adw-0261.md) |
+| adw-0262 | Show Settings and Cheats as full-screen pages                         | [adw-0262.md](../work/adw-0262.md) |
