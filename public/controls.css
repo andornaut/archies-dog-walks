@@ -65,14 +65,15 @@
   padding-inline: var(--button-inset);
 }
 
-/* A press fills the face forest with a white label as it sinks, as the game's buttons do. */
+/* A press fills the face forest with a white label as it sinks, as the game's buttons do, with
+   no bevel or lip. */
 .app-button:active:not(:disabled),
 .crash .crash-button:active:not(:disabled) {
   --face: var(--palette-forest);
   --face-text: var(--palette-white);
   padding-top: var(--button-press);
   padding-bottom: var(--button-press);
-  box-shadow: inset 0 calc(-1 * var(--button-press)) 0 var(--face-lip);
+  box-shadow: none;
 }
 
 .app-button--display:active:not(:disabled) {

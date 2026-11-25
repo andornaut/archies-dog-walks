@@ -263,6 +263,12 @@ describe("control state cues", () => {
       "--face:var(--palette-forest);--face-text:var(--palette-white)",
     ],
     [
+      "a pressed site button's dip with no lip",
+      "controls",
+      ".crash .crash-button:active:not(:disabled)",
+      "padding-top:var(--button-press);padding-bottom:var(--button-press);box-shadow:none",
+    ],
+    [
       "a focused nav link's press",
       "nav",
       ".art-nav a:focus-visible",
