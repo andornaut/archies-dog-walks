@@ -46,19 +46,29 @@ const LOOKS: Readonly<Record<TileState, Omit<SelectLook, "state">>> = {
 // controls wear in place of normal, with ui-button's secondary tags.
 type ButtonLook = ButtonState | "secondary";
 
-// How ui-button colours each look: its face, the lip under a raised one, and the label, then
-// the face and label while pressed. Primary is the green go button, forest with a white label
-// while pressed; disabled is flat, with no lip.
+// How a standard button colours each look (gameButton.css): its face, the bevel row under its
+// top edge and the lip under a raised face, and the label, then the face and label while
+// pressed. A pressed or disabled face is flat, sunk into the lip, with no bevel or lip: pressed is
+// forest with a white label on every role; disabled is grey with a dark slate label.
 export const BUTTON_COLOURS = {
   disabled: {
+    bevel: null,
     face: GREYED.face,
     label: GREYED.text,
     lip: null,
     pressedFace: GREYED.face,
     pressedLabel: GREYED.text,
   },
-  normal: { face: "cream", label: "plum", lip: "tan", pressedFace: "cream", pressedLabel: "plum" },
+  normal: {
+    bevel: "white",
+    face: "cream",
+    label: "plum",
+    lip: "tan",
+    pressedFace: "forest",
+    pressedLabel: "white",
+  },
   primary: {
+    bevel: "yellow",
     face: "green",
     label: "ink",
     lip: "forest",
@@ -66,15 +76,23 @@ export const BUTTON_COLOURS = {
     pressedLabel: "white",
   },
   secondary: {
+    bevel: "white",
     face: "cream",
     label: "plum",
     lip: "tan",
-    pressedFace: "cream",
-    pressedLabel: "plum",
+    pressedFace: "forest",
+    pressedLabel: "white",
   },
 } as const satisfies Record<
   ButtonLook,
-  { face: string; label: string; lip: string | null; pressedFace: string; pressedLabel: string }
+  {
+    bevel: string | null;
+    face: string;
+    label: string;
+    lip: string | null;
+    pressedFace: string;
+    pressedLabel: string;
+  }
 >;
 
 // The rows of ui-button's lip under a raised face, the bottom of its rect.

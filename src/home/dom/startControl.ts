@@ -1,6 +1,5 @@
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { BUTTON_SIZE } from "../../ui/buttonGeometry.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { createTextLine, placeFrame, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import { artPixel, type DomScale, gridRect } from "../../ui/domScale.ts";
@@ -37,7 +36,7 @@ export function createStartControl(
   const ready = input.unavailable === undefined;
   const rect = HOME_LAYOUT.startButton;
   const text = {
-    capTop: rect.y + HOME_LAYOUT.startLabel.readyY + (ready ? 0 : BUTTON_SIZE.press),
+    capTop: rect.y + HOME_LAYOUT.startLabel.readyY,
     centre: "ink",
     centreX: rect.x + rect.width / 2,
     colour: PALETTE[BUTTON_COLOURS[ready ? "primary" : "disabled"].label],

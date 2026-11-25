@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { gameFont } from "../testing/fontInk.ts";
-import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { shownText } from "../ui/dom/pixelLine.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
@@ -43,10 +42,10 @@ describe("helpView", () => {
     expect(view.dots.map(({ current }) => current).indexOf(true)).toBe(page);
   });
 
-  it("sets a disabled button's label pressed, in its grey", () => {
+  it("lays a disabled button's label out on the raised row, in its grey", () => {
     const [enabled] = helpView(gameData, MEASURE, 1, undefined).buttons;
     const [disabled] = helpView(gameData, MEASURE, 0, undefined).buttons;
-    expect(disabled?.text.capTop).toBe((enabled?.text.capTop ?? 0) + BUTTON_SIZE.press);
+    expect(disabled?.text.capTop).toBe(enabled?.text.capTop);
     expect(disabled?.text.colour).toBe(PALETTE[BUTTON_COLOURS.disabled.label]);
   });
 

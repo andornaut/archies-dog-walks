@@ -2,7 +2,6 @@ import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import type { GameData } from "../data/types.ts";
-import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { modalActionWidth } from "../ui/modal/layout.ts";
 import { type PanelButton, type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
@@ -168,7 +167,8 @@ export function helpView(
     look: { available: boolean; primary: boolean; pressed: boolean },
   ): HelpButton => {
     const base = panelButton(measure, rect, look.primary, label);
-    // A disabled button's label sits pressed, in its grey, and never shows pressed.
+    // A disabled button's label is in its grey and sinks with its face (gameButton.css); it
+    // never shows pressed.
     return {
       ...base,
       available: look.available,
@@ -176,11 +176,7 @@ export function helpView(
       secondary: !look.primary,
       text: look.available
         ? base.text
-        : {
-            ...base.text,
-            capTop: base.text.capTop + BUTTON_SIZE.press,
-            colour: PALETTE[BUTTON_COLOURS.disabled.label],
-          },
+        : { ...base.text, colour: PALETTE[BUTTON_COLOURS.disabled.label] },
     };
   };
   const labels = { next: words[next], previous: words.previous };

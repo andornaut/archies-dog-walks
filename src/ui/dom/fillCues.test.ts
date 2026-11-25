@@ -200,10 +200,22 @@ describe("control state cues", () => {
       "--adw-button-fill:var(--adw-forest)",
     ],
     [
-      "an enabled pressed standard button's dip",
+      "a pressed or disabled standard button's sunk flat face",
       "game",
-      '.adw-standard-button[data-ui-pressed]:not(:disabled, [aria-disabled="true"]) .adw-standard-button-face',
-      "transform:translateY",
+      '.adw-standard-button:is([data-ui-pressed], :disabled, [aria-disabled="true"]) .adw-standard-button-face',
+      "background:linear-gradient(var(--adw-button-fill),var(--adw-button-fill));transform:translateY",
+    ],
+    [
+      "a disabled standard button's label",
+      "game",
+      '.adw-standard-button:is(:disabled, [aria-disabled="true"])',
+      "--adw-button-text:var(--adw-neutralDarkSlate)",
+    ],
+    [
+      "a primary button's bevel",
+      "game",
+      '.adw-standard-button[data-ui-button-role="primary"]',
+      "--adw-button-highlight:var(--adw-yellow)",
     ],
   ] as const)("shows %s as a fill", (_what, sheet, selector, declaration) => {
     expect(rule(CUE_SHEETS[sheet], selector)).toContain(squeeze(declaration));

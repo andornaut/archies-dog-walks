@@ -1,4 +1,6 @@
-/* The frame and bevel stay present in every state; interaction changes fill and text. */
+/* A raised face: ink frame, the role's bevel row, its fill and a 4-row lip. Pressed and disabled
+   faces sink 2 rows into the lip, flat: the frame from row 2 down to the box's bottom row, no
+   bevel or lip, the label sunk with them. */
 .adw-standard-button.ui-standard-button {
   --adw-button-fill: var(--adw-cream);
   --adw-button-highlight: var(--adw-white);
@@ -12,6 +14,7 @@
 }
 .adw-standard-button[data-ui-button-role="primary"] {
   --adw-button-fill: var(--adw-green);
+  --adw-button-highlight: var(--adw-yellow);
   --adw-button-lip: var(--adw-forest);
   --adw-button-text: var(--adw-ink);
 }
@@ -63,15 +66,19 @@
   --adw-button-fill: var(--adw-forest);
   --adw-button-text: var(--adw-white);
 }
-.adw-standard-button[data-ui-pressed]:not(:disabled, [aria-disabled="true"])
-  .adw-standard-button-face {
-  transform: translateY(calc(2 * var(--adw-button-unit)));
-}
 .adw-standard-button:is(:disabled, [aria-disabled="true"]) {
   --adw-button-fill: var(--adw-neutralGrey);
-  --adw-button-highlight: var(--adw-neutralLightGrey);
-  --adw-button-lip: var(--adw-neutralSlate);
-  --adw-button-text: var(--adw-ink);
+  --adw-button-text: var(--adw-neutralDarkSlate);
+}
+/* The sunk face moves down 2 rows; its bottom frame row is 3 deep and the 2 rows below the box are
+   clipped, so its last row is ink on the box's bottom row. Its fill is an image, as the raised
+   face's is, so it covers Kit's focus background colour. */
+.adw-standard-button:is([data-ui-pressed], :disabled, [aria-disabled="true"])
+  .adw-standard-button-face {
+  border-bottom-width: calc(3 * var(--adw-button-unit));
+  background: linear-gradient(var(--adw-button-fill), var(--adw-button-fill));
+  transform: translateY(calc(2 * var(--adw-button-unit)));
+  clip-path: inset(0 0 calc(2 * var(--adw-button-unit)) 0);
 }
 .adw-standard-button[aria-disabled="true"]:is(
     :focus-visible,
