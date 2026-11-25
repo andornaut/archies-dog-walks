@@ -57,6 +57,7 @@ const unforced = (sheet: string) =>
     .reduce((rest, { end, start }) => rest.slice(0, start) + rest.slice(end), sheet);
 const CUE_SHEETS = {
   ...SHEETS,
+  choiceForced: forced(SHEETS.choice),
   choiceNormal: unforced(SHEETS.choice),
   gameForced: forced(SHEETS.game),
   gameNormal: unforced(SHEETS.game),
@@ -83,8 +84,18 @@ const REFUSING_BUTTON =
 const REFUSING_ROW =
   ".adw-row:not(.adw-standard-button):is([data-refusal-red],[data-ui-refusal-red])" +
   ":is(*,:focus-visible,[data-ui-pressed]:not([role=slider]))";
-const REFUSING_CHOICE =
-  ".adw-choice-group[data-refusal-red]:is(*, :has(.adw-choice-option:focus-visible)) .adw-choice-press-band";
+const REFUSING_CHOICE_GROUP =
+  ".adw-choice-group[data-refusal-red]:is(*, :has(.adw-choice-option:focus-visible))";
+const REFUSING_CHOICE = `${REFUSING_CHOICE_GROUP} .adw-choice-press-band`;
+// A refusal's red phase on a Start picker tile and a Pet shop row, focused or pressed alike.
+const TILE_STATES =
+  ":is(*, :focus-visible, .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused])";
+const REFUSING_PICKER = `.adw-selection-tile[data-picker-refusing]${TILE_STATES}`;
+const REFUSING_SHOP_ROW = `.adw-selection-tile[data-refusal-red]${TILE_STATES}`;
+const REFUSING_TILE_INK =
+  `.adw-selection-tile:is([data-picker-refusing], [data-refusal-red])${TILE_STATES}` +
+  " :is(.adw-selection-focus-ink, .adw-selection-press-ink)";
+const TILE_INKS = [".adw-selection-focus-ink", ".adw-selection-press-ink", "-press-ink)"];
 
 // A focused or pressed Pet shop row, by Tab or by the Start picker.
 const PLATE_STATES =
@@ -151,12 +162,11 @@ const rules = (sheet: string) =>
     selectors(list!).map((selector) => ({ body: body!, index, selector })),
   );
 
-// The declarations of the first rule whose selector list ends with selector.
+// The declarations of the first rule whose selector list holds selector.
 function rule(sheet: string, selector: string): string {
-  const at = sheet.indexOf(`${squeeze(selector)}{`);
-  expect(at, selector).toBeGreaterThanOrEqual(0);
-  const start = at + squeeze(selector).length + 1;
-  return sheet.slice(start, sheet.indexOf("}", start));
+  const found = rules(sheet).find((each) => each.selector === squeeze(selector));
+  expect(found, selector).toBeDefined();
+  return found!.body;
 }
 
 describe("control state cues", () => {
@@ -264,6 +274,42 @@ describe("control state cues", () => {
       REFUSING_BUTTON,
       "--adw-button-fill:ButtonText;--adw-button-highlight:ButtonText;--adw-button-lip:ButtonText;" +
         "--adw-button-text:ButtonFace",
+    ],
+    [
+      "a refusing choice card's inverse band in forced colours",
+      "choiceForced",
+      REFUSING_CHOICE,
+      "forced-color-adjust:none;background:ButtonText",
+    ],
+    [
+      "a refusing choice card's label in forced colours",
+      "choiceForced",
+      `${REFUSING_CHOICE_GROUP} .adw-choice-press-label *`,
+      "forced-color-adjust:none;color:ButtonFace!important",
+    ],
+    [
+      "a refusing picker tile's name area in forced colours",
+      "tileForced",
+      `${REFUSING_PICKER} .adw-selection-focus-fill`,
+      "background-color:Highlight!important;forced-color-adjust:none",
+    ],
+    [
+      "a refusing Pet shop row's face in forced colours",
+      "tileForced",
+      `${REFUSING_SHOP_ROW} .adw-selection-face`,
+      "background-color:Highlight!important;forced-color-adjust:none",
+    ],
+    [
+      "a refusing Pet shop row's clear price plate in forced colours",
+      "tileForced",
+      `${REFUSING_SHOP_ROW} .adw-selection-plate`,
+      "background-color:transparent!important;forced-color-adjust:none",
+    ],
+    [
+      "a refusing Pet shop row's price in forced colours",
+      "tileForced",
+      `${REFUSING_SHOP_ROW} .adw-selection-plate-ink`,
+      "color:HighlightText!important;forced-color-adjust:none",
     ],
     [
       "a refusing row's inverse face in forced colours",
@@ -425,9 +471,10 @@ describe("control state cues", () => {
     ).toBeGreaterThan(0);
   });
 
-  // Each other rule, in normal or forced colours alike, that sets the declaration on the part the
-  // selector ends with (a focus, press, selection or disabled state) ranks below the red phase's
-  // rule or precedes it.
+  // Each other rule in the sheet that sets the declaration on a part the selector ends with (a
+  // focus, press, selection or disabled state) ranks below the red phase's rule or precedes it.
+  // A forced-colours red phase on a choice card, picker tile or Pet shop row is its last rule with
+  // that selector, ranked against the sheet's normal-colour rules too, which apply in both.
   it.each([
     ["standard button's face", "gameNormal", REFUSING_BUTTON, "", "--adw-button-fill:"],
     [
@@ -454,15 +501,67 @@ describe("control state cues", () => {
       "background-color:",
     ],
     ["row's forced label", "uiForced", `${REFUSING_ROW} .adw-text`, ".adw-text", ";color:"],
+    [
+      "choice card's forced band",
+      "choice",
+      REFUSING_CHOICE,
+      ".adw-choice-press-band",
+      "background:",
+    ],
+    [
+      "choice card's forced label",
+      "choice",
+      `${REFUSING_CHOICE_GROUP} .adw-choice-press-label *`,
+      ".adw-choice-press-label*",
+      ";color:",
+    ],
+    [
+      "picker tile's name area",
+      "tile",
+      `${REFUSING_PICKER} .adw-selection-focus-fill`,
+      ".adw-selection-focus-fill",
+      "background-color:",
+    ],
+    [
+      "Pet shop row's face",
+      "tile",
+      `${REFUSING_SHOP_ROW} .adw-selection-face`,
+      ".adw-selection-face",
+      "background-color:",
+    ],
+    [
+      "Pet shop row's price plate",
+      "tile",
+      `${REFUSING_SHOP_ROW} .adw-selection-plate`,
+      ".adw-selection-plate",
+      "background-color:",
+    ],
+    [
+      "picker tile's or Pet shop row's label and name",
+      "tile",
+      REFUSING_TILE_INK,
+      TILE_INKS,
+      ";color:",
+    ],
+    [
+      "Pet shop row's price",
+      "tile",
+      `${REFUSING_SHOP_ROW} .adw-selection-plate-ink`,
+      ".adw-selection-plate-ink",
+      ";color:",
+    ],
   ] as const)(
     "keeps a refusing %s over its other states",
     (_what, sheet, refusal, part, declaration) => {
       const all = rules(CUE_SHEETS[sheet]);
-      const own = all.find(({ selector }) => selector === squeeze(refusal));
+      const own = all.findLast(({ selector }) => selector === squeeze(refusal));
       expect(own, refusal).toBeDefined();
+      const parts: readonly string[] = typeof part === "string" ? [part] : part;
       const rivals = all.filter(
         ({ body, selector }) =>
-          selector !== own!.selector && selector.endsWith(part) && `;${body}`.includes(declaration),
+          selector !== own!.selector &&
+          parts.some((end) => selector.endsWith(end)) &&
+          `;${body}`.includes(declaration),
       );
       expect(rivals.length).toBeGreaterThan(0);
       for (const rival of rivals) {

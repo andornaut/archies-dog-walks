@@ -21,7 +21,8 @@ export const REFUSAL_CUE: RefusalCue = {
 // a white silhouette (REFUSAL_STYLE and each control's skin), over any focus or press fill. In
 // forced colours the face fills ButtonText under a ButtonFace label and icon, the inverse of the
 // resting face, so a refusal stays distinct from Highlight focus; a row's icon is masked from its
-// frame (paintSheetArt).
+// frame (paintSheetArt). A picker tile or Shop row, whose focus and press are that inverse, fills
+// Highlight under HighlightText instead (selectionTile.css).
 const SHAKE_KEYFRAMES = refuseShakeSteps()
   .map(
     ({ at, offset }) =>

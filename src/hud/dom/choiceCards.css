@@ -52,4 +52,21 @@
     forced-color-adjust: none;
     color: HighlightText !important;
   }
+
+  /* A refusal's red phases fill the band ButtonText under a ButtonFace label, the inverse of the
+     resting face, over a focused option's Highlight band. */
+  .adw-choice-group[data-refusal-red]:is(*, :has(.adw-choice-option:focus-visible))
+    .adw-choice-press-band {
+    forced-color-adjust: none;
+    background: ButtonText;
+  }
+
+  .adw-choice-group[data-refusal-red]:is(*, :has(.adw-choice-option:focus-visible))
+    .adw-choice-press-label,
+  .adw-choice-group[data-refusal-red]:is(*, :has(.adw-choice-option:focus-visible))
+    .adw-choice-press-label
+    * {
+    forced-color-adjust: none;
+    color: ButtonFace !important;
+  }
 }

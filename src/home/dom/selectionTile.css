@@ -136,6 +136,50 @@
     color: ButtonText !important;
     forced-color-adjust: none;
   }
+  /* A refusal's red phases, focused or pressed alike: a picker tile's name area, or a Shop row's
+     interior, fills Highlight under a HighlightText label, name and price, distinct from the
+     ButtonText focus and press fills. */
+  .adw-selection-tile[data-picker-refusing]:is(
+      *,
+      :focus-visible,
+      .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+    )
+    .adw-selection-focus-fill,
+  .adw-selection-tile[data-refusal-red]:is(
+      *,
+      :focus-visible,
+      .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+    )
+    .adw-selection-face {
+    background-color: Highlight !important;
+    forced-color-adjust: none;
+  }
+  /* The price plate's overlapping fills are clear over that face, since Highlight may be
+     translucent. */
+  .adw-selection-tile[data-refusal-red]:is(
+      *,
+      :focus-visible,
+      .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+    )
+    .adw-selection-plate {
+    background-color: transparent !important;
+    forced-color-adjust: none;
+  }
+  .adw-selection-tile:is([data-picker-refusing], [data-refusal-red]):is(
+      *,
+      :focus-visible,
+      .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+    )
+    :is(.adw-selection-focus-ink, .adw-selection-press-ink),
+  .adw-selection-tile[data-refusal-red]:is(
+      *,
+      :focus-visible,
+      .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+    )
+    .adw-selection-plate-ink {
+    color: HighlightText !important;
+    forced-color-adjust: none;
+  }
 }
 
 .adw-slot-sign-focus {
