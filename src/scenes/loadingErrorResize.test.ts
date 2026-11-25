@@ -6,11 +6,6 @@ import { worldViewBox } from "../ui/worldFit.ts";
 import { pauseLoadingError } from "./loadingErrorPause.ts";
 
 vi.mock("../ui/dom/domCuts.ts", () => ({
-  createSheetButtonSkin: vi.fn(() => ({
-    apply: () => Promise.resolve([]),
-    frames: Promise.resolve(new Map()),
-    ready: Promise.resolve(),
-  })),
   cutDomArt: vi.fn(() => Promise.resolve("blob:cut")),
 }));
 

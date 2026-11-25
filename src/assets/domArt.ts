@@ -78,43 +78,21 @@ function celebrationArtKeys(data: Pick<GameData, "walkerPerks">): string[] {
 }
 
 // The art the HTML interface's stylesheet names (src/ui/dom/uiStyle.ts), each a custom property
-// --adw-<key> on the layer: fx-tap's sheet, and the frames and faces it draws as images.
+// --adw-<key> on the layer: fx-tap's sheet, and the frames it draws as images.
 export const DOM_STYLE_ART: readonly (readonly ["image" | "sheet", string])[] = [
   ["sheet", "fx-tap"],
-  ...[
-    "icon-close",
-    "ui-button-disabled",
-    "ui-button-go",
-    "ui-button-go-disabled",
-    "ui-button-go-pressed",
-    "ui-button-normal",
-    "ui-button-pressed",
-    "ui-button-secondary",
-    "ui-button-secondary-pressed",
-    "ui-detail-card",
-    "ui-icon-button-normal",
-    "ui-icon-button-pressed",
-    "ui-panel",
-    "ui-quip",
-    "ui-scroll-thumb",
-    "ui-scroll-track",
-  ].map((key) => ["image", key] as const),
+  ...["ui-detail-card", "ui-panel", "ui-quip", "ui-scroll-thumb", "ui-scroll-track"].map(
+    (key) => ["image", key] as const,
+  ),
 ];
 
-// The shared skin cuts these existing sheets; tags retain the game's native button states.
-export const DOM_BUTTON_SKIN = {
-  sheets: ["ui-button", "ui-icon-button"],
-  tags: [
-    "normal",
-    "pressed",
-    "disabled",
-    "secondary",
-    "secondary-pressed",
-    "go",
-    "go-pressed",
-    "go-disabled",
-  ],
-} as const;
+// The top bar's button faces (src/ui/dom/nativeTopSection.ts), at rest and pressed.
+const TOP_BAR_FACE_KEYS = ["ui-icon-button-normal", "ui-icon-button-pressed"];
+
+// CLEANUP (added 2026-11-25): native chrome no screen draws, which ships on dom-chrome because
+// usesPhaserArt (src/assets/phaserArt.ts) leaves it off the atlas. Remove this list, and the keys
+// from NATIVE_ONLY_KEYS, once Art has retired their files.
+const UNDRAWN_CHROME_KEYS = ["icon-close", "ui-button", "ui-icon-button"];
 
 // The Logbook's art (src/home/logbookView.ts) and every badge's card (src/home/badgeCardView.ts):
 // each badge's sheet, each dog's face sheet, the earned tick, the scrollbar, and the confetti.
@@ -135,22 +113,22 @@ function logbookArtKeys(data: Pick<GameData, "achievements" | "dogs">): string[]
 const END_ART_KEYS = [ZONE_PIPS_KEY, "ui-new-best", "ui-quip-tail"];
 
 // The shop's page and rows (src/scenes/ShopScene.ts, drawn by the display mirror) beyond the
-// Logbook's and the detail cards': the tiles' faces, the close control's face sheet, the bill and
-// lock badges and the message plate.
-const SHOP_ART_KEYS = ["icon-bill", "icon-lock", "ui-hint", "ui-icon-button", "ui-tile"];
+// Logbook's and the detail cards': the tiles' faces, the bill and lock badges and the message
+// plate.
+const SHOP_ART_KEYS = ["icon-bill", "icon-lock", "ui-hint", "ui-tile"];
 
 // The start screen's art (src/scenes/StartScene.ts, drawn by the display mirror) beyond the
-// shop's: the top bar's icons and the bank's well, the gear badge's icons, the sections' frames
-// and fills, the pack bonus's heart, the bubble's tail, the slot sign and its gold outline, and
-// Start walk's faces.
+// shop's: the top bar's faces and icons and the bank's well, the gear badge's icons, the
+// sections' frames and fills, the pack bonus's heart, the bubble's tail, and the slot sign and
+// its gold outline.
 const START_ART_KEYS = [
   ...keysOf(gameData.shopGear).map(gearSmallIconKey),
+  ...TOP_BAR_FACE_KEYS,
   "icon-exit",
   "icon-help",
   "icon-menu",
   "icon-sound",
   "ui-afford",
-  "ui-button",
   "ui-cork",
   "ui-denim",
   "ui-heart",
@@ -226,6 +204,7 @@ export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
   ...DOM_CHOICE_CARD_ART.images,
   ...DOM_CHOICE_CARD_ART.sheets,
   ...DOM_STYLE_ART.map(([, key]) => key),
+  ...UNDRAWN_CHROME_KEYS,
   ...detailArtKeys(gameData),
   ...SETTINGS_ART_KEYS,
   ...celebrationArtKeys(gameData),
@@ -277,11 +256,12 @@ export type DomSheet = (typeof DOM_SHEETS)[number];
 // The folder under /art/ the sheets are in.
 export const DOM_SHEET_DIR = "dom";
 
-// Art every screen can show: the stylesheet's, the button skin's, the top bar's controls and
-// bank well, the speech tails and the earned tick.
+// Art every screen can show: the stylesheet's, the top bar's controls and bank well, the speech
+// tails and the earned tick.
 const CHROME_ART_KEYS = [
   ...DOM_STYLE_ART.map(([, key]) => key),
-  ...DOM_BUTTON_SKIN.sheets,
+  ...TOP_BAR_FACE_KEYS,
+  ...UNDRAWN_CHROME_KEYS,
   "icon-exit",
   "icon-help",
   "icon-menu",

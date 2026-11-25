@@ -326,7 +326,6 @@ export function fakeLayer(
   doc.body.append(element);
   const layer = {
     assetStatus: () => "ready",
-    buttonSkin: { apply: () => Promise.resolve([]), frames: Promise.resolve(new Map()) },
     dispose: () => undefined,
     element,
     failedAssets: () => [],

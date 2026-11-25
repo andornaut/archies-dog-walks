@@ -2,15 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createPressAdmission } from "../../pressAdmission.ts";
 import { FakeDocument } from "../../testing/fakeDom.ts";
-import { createSheetButtonSkin } from "./domCuts.ts";
+import { cutDomArt } from "./domCuts.ts";
 import { mountUiLayer, UI_LAYER_ID, WEB_FONTS } from "./uiLayer.ts";
 
 vi.mock("./domCuts.ts", () => ({
-  createSheetButtonSkin: vi.fn(() => ({
-    apply: () => Promise.resolve([]),
-    frames: Promise.resolve(new Map()),
-    ready: Promise.resolve(),
-  })),
   cutDomArt: vi.fn(() => Promise.resolve("blob:cut")),
 }));
 
@@ -177,7 +172,7 @@ it("reports a failed required font and retries only that face without late dispo
   expect(layer.ready()).toBe(false);
 });
 
-it("notifies loading immediately and keeps a good skin when retrying unrelated HUD art", async () => {
+it("notifies loading immediately and keeps good cuts when retrying unrelated HUD art", async () => {
   vi.stubGlobal("devicePixelRatio", 1);
   vi.stubGlobal("document", { body: null });
   vi.stubGlobal(
@@ -243,7 +238,6 @@ it("notifies loading immediately and keeps a good skin when retrying unrelated H
     setTimeout(resolve, 0);
   });
   expect(layer.ready()).toBe(true);
-  const skin = layer.buttonSkin;
   const states: string[] = [];
   const off = layer.onReady(() => states.push(layer.assetStatus()));
   layer.requireAssets([{ kind: "image", url: "/hud-required.png" }]);
@@ -252,14 +246,13 @@ it("notifies loading immediately and keeps a good skin when retrying unrelated H
     setTimeout(resolve, 0);
   });
   expect(layer.failedAssets()).toEqual(["/hud-required.png"]);
-  const created = vi.mocked(createSheetButtonSkin).mock.calls.length;
+  const cut = vi.mocked(cutDomArt).mock.calls.length;
   layer.retryAssets();
-  expect(layer.buttonSkin).toBe(skin);
   await new Promise<void>((resolve) => {
     setTimeout(resolve, 0);
   });
   expect(layer.ready()).toBe(true);
-  expect(vi.mocked(createSheetButtonSkin).mock.calls.length).toBe(created);
+  expect(vi.mocked(cutDomArt).mock.calls.length).toBe(cut);
   off();
   layer.dispose();
 });

@@ -86,10 +86,6 @@ export function requiredAssets(
       [...entries.values()]
         .filter(({ status }) => status === "failed")
         .map(({ asset }) => asset.url),
-    failedCuts: () =>
-      [...entries.values()].some(
-        ({ asset, status }) => asset.kind === "cuts" && status === "failed",
-      ),
     retry() {
       if (disposed) {
         return;

@@ -37,7 +37,6 @@ it("keeps required decode failures explicit and retries failed images only", asy
   await settle();
   expect(assets.status()).toBe("failed");
   expect(assets.failed()).toEqual(["/bad.png"]);
-  expect(assets.failedCuts()).toBe(false);
   assets.retry();
   await settle();
   expect(assets.status()).toBe("ready");
@@ -86,7 +85,6 @@ it("reports failed cuts, cuts again on retry and ignores a late completion after
   assets.add([{ kind: "cuts", url: "dom-cuts" }]);
   await settle();
   expect(assets.failed()).toEqual(["dom-cuts"]);
-  expect(assets.failedCuts()).toBe(true);
   assets.retry();
   expect(cut).toHaveBeenCalledTimes(2);
   const calls = changed.mock.calls.length;

@@ -9,7 +9,6 @@ import {
   type ModalInputGate,
 } from "@andornaut/game-kit/runtime/input/modalInput";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
-import type { ButtonSkin } from "@andornaut/game-kit/runtime/web/ui/dom/buttonSkin";
 import {
   createImageCache,
   type ImageCache,
@@ -22,12 +21,12 @@ import {
 } from "@andornaut/game-kit/runtime/web/ui/dom/modalLayer";
 
 import { artUrl } from "../../assets/artFiles.ts";
-import { DOM_BUTTON_SKIN, DOM_STYLE_ART } from "../../assets/domArt.ts";
+import { DOM_STYLE_ART } from "../../assets/domArt.ts";
 import { domArtUrl } from "../../assets/domArtFiles.ts";
 import { createPressAdmission, type PressAdmission } from "../../pressAdmission.ts";
 import { type DomScale, domScale, sliceLengths } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
-import { createSheetButtonSkin, cutDomArt } from "./domCuts.ts";
+import { cutDomArt } from "./domCuts.ts";
 import { type RequiredAsset, requiredAssets, type RequiredAssetStatus } from "./requiredAssets.ts";
 import { loadSheet, onSheetReady } from "./sheetFrames.ts";
 
@@ -54,7 +53,6 @@ export interface UiLayer {
   readonly input: ModalInputGate;
   readonly modal: ModalLayer;
   readonly press: PressAdmission;
-  readonly buttonSkin: ButtonSkin;
   fontStatus(): FontStatus;
   retryFonts(): void;
   assetStatus(): RequiredAssetStatus;
@@ -103,7 +101,7 @@ const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 // The layer's art, from its DOM sheets.
 const SOURCE = { artUrl: domArtUrl, loadSheet };
 
-// The art cut from its sheets for CSS: the stylesheet's art and the button skin's frames.
+// The art cut from its sheets for CSS: the stylesheet's art.
 const CUTS: RequiredAsset = { kind: "cuts", url: "dom-cuts" };
 
 // The layer in doc over canvas, its web fonts loading, or undefined where the page has no #ui.
@@ -131,8 +129,6 @@ export function mountUiLayer(
       }
     }
   };
-  let skin: (ButtonSkin & { readonly ready: Promise<void> }) | undefined;
-  const buttonSkin = () => (skin ??= createSheetButtonSkin(doc, SOURCE, DOM_BUTTON_SKIN));
   // The art the layer's stylesheet names, as custom properties on the layer, each once cut.
   let styleArt: Promise<readonly string[]> | undefined;
   const cutStyleArt = () =>
@@ -148,7 +144,7 @@ export function mountUiLayer(
     }));
   void cutStyleArt().catch(() => undefined);
   const required = requiredAssets(doc, notifyReady, async () => {
-    await Promise.all([cutStyleArt(), buttonSkin().ready]);
+    await cutStyleArt();
   });
   const unsubscribeSheets = onSheetReady(notifyReady);
   const decoded = createImageCache(doc);
@@ -209,9 +205,6 @@ export function mountUiLayer(
   let applied = "";
   const layer: UiLayer = {
     assetStatus: required.status,
-    get buttonSkin() {
-      return buttonSkin();
-    },
     dispose() {
       if (disposed) {
         return;
@@ -248,9 +241,6 @@ export function mountUiLayer(
     },
     retryAssets() {
       if (required.failed().length > 0) {
-        if (required.failedCuts()) {
-          skin = undefined;
-        }
         required.retry();
       }
     },
@@ -273,11 +263,9 @@ export function mountUiLayer(
       if (disposed) {
         return { cancel: () => undefined, revealed: Promise.resolve(false) };
       }
-      const ready = Promise.all([
-        Promise.resolve(urls),
-        layer.buttonSkin.apply(target),
-        cutStyleArt().catch(() => []),
-      ]).then(([art, buttons, style]) => [...art, ...buttons, ...style]);
+      const ready = Promise.all([Promise.resolve(urls), cutStyleArt().catch(() => [])]).then(
+        ([art, style]) => [...art, ...style],
+      );
       const reveal = revealWhenDecoded(cache, ready, target);
       pending.add(reveal);
       void reveal.revealed.then(() => pending.delete(reveal));
