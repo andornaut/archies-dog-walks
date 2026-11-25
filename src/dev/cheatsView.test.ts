@@ -1,16 +1,16 @@
-import { type Rect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
+import { rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { MODAL_WIDTHS, SETTINGS_CARD } from "../data/layout.ts";
+import { SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
-import { overlayRegion } from "../home/homeBar.ts";
-import { SWITCH_STATE_GAP } from "../home/settings.ts";
+import { SWITCH_STATE_GAP, switchRowHeight } from "../home/settings.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { MODAL } from "../ui/modal/layout.ts";
+import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import type { PanelMeasure } from "../ui/modal/types.ts";
+import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
 import { SEPARATOR } from "../ui/separator.ts";
 import { MODAL_TITLE_SCALE, TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
@@ -35,8 +35,7 @@ const WALK: CheatsState = {
   ...HOME,
   walk: { invincible: false, zone: startZones(gameData)[0]! },
 };
-const view = (state: CheatsState, area: Rect = overlayRegion("home")) =>
-  cheatsView(MEASURE, { area, data: gameData, words }, state);
+const view = (state: CheatsState) => cheatsView(MEASURE, { data: gameData, words }, state);
 const buttons = (state: CheatsState) => view(state).rows.flatMap((row) => row.buttons);
 
 describe("Cheats actions", () => {
@@ -133,42 +132,34 @@ describe("Cheats actions", () => {
 describe("Cheats layout", () => {
   const current = view(HOME);
 
-  // The overflowing body fills its caller's protected room, under the top bar's press rows.
-  it.each([
-    ["home", HOME, 544],
-    ["walk", WALK, 466],
-  ] as const)("fills the %s protected room at the Large width", (region, state, bottom) => {
-    const { layout } = view(state, overlayRegion(region));
-    expect(layout.panel).toEqual({ height: bottom - 56, width: MODAL_WIDTHS.large, x: 16, y: 56 });
+  // Art's page geometry (art/layout.md#settings-and-cheats-pages): the body from 24 under the
+  // title row to 8 over Back's face, the rows' column, and the two columns 16 apart.
+  it("scrolls the rows in the page's body, Back fixed under it", () => {
+    const { layout, page } = current;
+    expect(page.back).toMatchObject({ label: words.pageBack, primary: true });
+    expect(page.back.rect.x + page.back.rect.width / 2).toBe(SCREEN_CONFIG.width / 2);
+    expect(layout.viewport).toEqual({ height: 389, width: 330, x: 8, y: 103 });
+    expect(page.back.rect.y - (layout.viewport.y + layout.viewport.height)).toBe(8);
+    expect(page.title.map(({ text }) => text)).toEqual([words.cheats.title]);
     expect(layout.contentHeight).toBeGreaterThan(layout.viewport.height);
+    expect(view(WALK).layout).toEqual(layout);
   });
 
-  it("clamps to safe sides and caps measured height only for overflow", () => {
-    const { layout } = current;
-    const footer = current.card.footer!;
-    expect(footer).toMatchObject({ label: words.pageBack, primary: true });
-    expect(footer.rect.x + footer.rect.width / 2).toBe(SCREEN_CONFIG.width / 2);
-    expect(layout.viewport.y + layout.viewport.height).toBeLessThanOrEqual(footer.rect.y);
-    expect(layout.viewport.y).toBe(layout.panel.y + MODAL.header);
-    expect(current.card.close?.hit.x).toBeGreaterThan(footer.rect.x);
-    expect(view(HOME, { ...overlayRegion("home"), width: 352 }).layout.panel).toMatchObject({
-      width: 352 - 2 * MODAL.margin,
-      x: MODAL.margin,
-    });
-    const tall = view(HOME, { height: 3000, width: SCREEN_CONFIG.width, x: 0, y: 0 }).layout;
-    expect(tall.contentHeight).toBe(tall.viewport.height);
-    expect(tall.panel.height).toBeLessThan(3000 - 2 * MODAL.margin);
-    // Taller than the viewport, it cannot centre on its middle, so it starts at the area's top.
-    expect(tall.panel.y).toBe(MODAL.margin);
+  it("sizes Reset save to its label, centred in its row as Settings' Install is", () => {
+    const reset = buttons(HOME).at(-1)!;
+    expect(reset.rect.width).toBe(
+      modalActionWidth(MEASURE.inkWidth("title", words.cheats.resetSave)),
+    );
+    expect(reset.rect.x + reset.rect.width / 2).toBe(8 + 330 / 2);
   });
 
-  it("lays the invincible switch row out as Settings' switch rows in a 48px target", () => {
+  it("lays the invincible switch row out as Settings' switch rows, as tall as one", () => {
     const switches = current.rows.filter(({ kind }) => kind === "switch");
     expect(switches).toHaveLength(1);
     const [invincible] = switches;
     expect(invincible?.action?.kind).toBe("invincible");
     const { rect } = invincible!;
-    expect(rect.height).toBe(48);
+    expect(rect.height).toBe(switchRowHeight(MEASURE.title));
     const sw = invincible!.switch!;
     const { icon, label, pad, switch: art } = SETTINGS_CARD.row;
     expect([sw.x + art.width, sw.y]).toEqual([rect.x + rect.width - pad, rect.y + icon.dy]);
@@ -223,10 +214,10 @@ describe("Cheats layout", () => {
       for (const [left, right] of pairs) {
         expect(left!.rect.y).toBe(right!.rect.y);
         expect([left!.rect.x, left!.rect.width, right!.rect.x, right!.rect.width]).toEqual([
-          current.layout.panel.x + MODAL.pad,
-          140,
-          current.layout.panel.x + MODAL.pad + 140 + BUTTON_SIZE.gap,
-          140,
+          8,
+          157,
+          8 + 157 + BUTTON_SIZE.gap,
+          157,
         ]);
         expect(rectsOverlap(left!.rect, right!.rect)).toBe(false);
       }
@@ -235,7 +226,7 @@ describe("Cheats layout", () => {
     for (const { hit, label, lines, rect } of all) {
       expect(hit).toEqual(rect);
       expect(lines.map(({ text }) => text).join(" ")).toBe(label);
-      expect(rect.x + rect.width).toBeLessThan(current.layout.scrollbar.x);
+      expect(rect.x + rect.width).toBeLessThan(PAGE_LAYOUT.scrollbar.x);
       for (const line of lines) {
         expect(line.scale).toBe(TEXT_SCALE);
         // A line of words wraps at the label room; a single word may take the button's rows room.

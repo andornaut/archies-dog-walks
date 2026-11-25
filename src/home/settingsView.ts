@@ -16,7 +16,8 @@ import {
   type PanelText,
   type QuestionPanelView,
 } from "../ui/modal/types.ts";
-import { modalCardView, panelButton } from "../ui/modal/view.ts";
+import { modalCardView, panelButton, panelTitle } from "../ui/modal/view.ts";
+import { PAGE_LAYOUT, PAGE_TITLE_ROW, pageBack } from "../ui/pageLayout.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { GREYED, selectLook } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
@@ -36,10 +37,9 @@ import {
   volumeSteps,
 } from "./settings.ts";
 
-// The settings card laid out as it stands (its rows, their settings and the press, drag and
-// keyboard focus on them, and any install steps' card over it) as one view both renderers draw:
-// the canvas's (SettingsScene) and the HTML interface's (src/hud/dom/settings.ts). Every rect and
-// text origin is in game pixels.
+// The Settings page laid out as it stands (its title and Back, its rows, their settings and the
+// press, drag and keyboard focus on them, and any install steps' card over it) as one view the
+// HTML interface draws (src/hud/dom/settings.ts). Every rect and text origin is in game pixels.
 
 export type SwitchKey = "fpsCounter" | "muted" | "reducedMotion";
 export type SettingsWord = Exclude<keyof MenuText["settings"], "installSteps" | "volume">;
@@ -74,12 +74,9 @@ export type SettingsRow =
   | { icon: string; key: VolumeKey; kind: "slider"; label: SettingsWord };
 export type ControlRow = Exclude<SettingsRow, { kind: "slider" }>;
 
-// What a press on the card can land on.
+// What a press on the page can land on.
 export type SettingsTarget =
-  | { kind: "close" }
-  | { kind: "install" }
-  | { kind: "stepsClose" }
-  | { key: SwitchKey; kind: "switch" };
+  { kind: "install" } | { kind: "stepsClose" } | { key: SwitchKey; kind: "switch" };
 
 // Device preferences in display order.
 export const SETTING_ROWS: readonly SettingsRow[] = [
@@ -229,18 +226,23 @@ export interface InstallStepsView {
 
 export interface SettingsView {
   readonly build: PanelText;
-  readonly card: QuestionPanelView;
+  // The page's Back, cream fill and title (PageChrome).
+  readonly page: {
+    readonly back: PanelButton;
+    readonly fill: { readonly colour: number; readonly rect: Rect };
+    readonly title: readonly PanelText[];
+  };
   readonly rows: readonly SettingsRowView[];
   readonly rowsContentHeight: number;
-  readonly rowsScrollbar: SettingsLayout["scrollbar"];
   readonly rowsViewport: Rect;
   readonly separators: readonly Rect[];
   readonly steps: InstallStepsView | undefined;
 }
 
 export interface SettingsState {
+  // The caller's area, which the install steps' card dims.
   readonly dim: Rect;
-  // The focused row's index, the rows' count for the close control, or null for none.
+  // The focused row's index, the rows' count for Back, or null for none.
   readonly focus: number | null;
   readonly pressed: SettingsTarget | undefined;
   readonly settings: Settings;
@@ -475,27 +477,13 @@ function stepsView(
   };
 }
 
-// Settings has one centred primary dismissal.
-function settingsCard(
-  measure: SettingsMeasure,
-  panel: Rect,
-  title: string,
-  footerLabel: string,
-): QuestionPanelView {
-  return {
-    ...modalCardView(measure, panel, title, []),
-    footer: dismissFooter(measure, { label: footerLabel, primary: true }, panel),
-  };
-}
-
-// The settings card as it stands: the modal card, each row, the separators over the rows (a
-// switch row's face covers its top row), the build's label centred across the panel under the
-// rows, and the install steps' card.
+// The Settings page as it stands: its title and Back, each row, the separators over the rows (a
+// switch row's face covers its top row), the build's label ink-centred across the screen under
+// the body, and the install steps' card.
 export function settingsView(
   measure: SettingsMeasure,
   context: {
     readonly art: (key: string) => { readonly height: number; readonly width: number } | undefined;
-    readonly footerLabel?: string;
     readonly layout: SettingsLayout;
     readonly rows: readonly SettingsRow[];
     readonly words: MenuText["settings"];
@@ -503,19 +491,23 @@ export function settingsView(
   state: SettingsState,
 ): SettingsView {
   const { layout, rows, words } = context;
-  const { panel } = layout;
+  const { rect } = PAGE_LAYOUT;
   return {
     build: {
       capTop: layout.buildLabelY,
       centre: "ink",
-      centreX: panel.x + panel.width / 2,
+      centreX: rect.x + rect.width / 2,
       colour: PALETTE[SETTINGS_BUILD_LABEL.colour],
       font: "body",
       line: 0,
       scale: SETTINGS_BUILD_LABEL.style.scale,
       text: BUILD_LABEL,
     },
-    card: settingsCard(measure, panel, words.title, context.footerLabel ?? MENU_TEXT.common.close),
+    page: {
+      back: pageBack(measure, MENU_TEXT.pageBack),
+      fill: { colour: PALETTE.cream, rect },
+      title: panelTitle(measure, rect, PAGE_TITLE_ROW.y, words.title, false),
+    },
     rows: rows.map((row, i) => {
       const at = itemAt(layout.rows, i);
       return row.kind === "slider"
@@ -523,7 +515,6 @@ export function settingsView(
         : controlRow(measure, words, at, row, state);
     }),
     rowsContentHeight: layout.rowsContentHeight,
-    rowsScrollbar: layout.scrollbar,
     rowsViewport: layout.rowsViewport,
     separators: layout.separators,
     steps: stepsView(measure, words, state, context.art),

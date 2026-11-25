@@ -1,19 +1,20 @@
-// The Cheats modal laid out as it stands, free of Phaser and the DOM: its rows in the spec's order
-// (gameplay/cheats.md), each row's place in the scrolling body, and what a press on it does. The
-// HTML interface (src/hud/dom/cheats.ts) draws it. Every rect and text origin is in game pixels.
+// The Cheats page laid out as it stands, free of Phaser and the DOM: its title and Back, its rows
+// in the spec's order (gameplay/cheats.md), each row's place in the page's scrolling body, and
+// what a press on it does. The HTML interface (src/hud/dom/cheats.ts) draws it. Every rect and
+// text origin is in game pixels.
 import { fillLine, wrapWords } from "@andornaut/game-kit/runtime/lines";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { SETTINGS_CARD, SHOP_PAGE } from "../data/layout.ts";
+import { SETTINGS_CARD } from "../data/layout.ts";
 import type { DebuffId, GameData, MenuText, UpgradeId, ZoneId } from "../data/types.ts";
 import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
-import { SWITCH_STATE_GAP } from "../home/settings.ts";
+import { SWITCH_STATE_GAP, switchRowHeight } from "../home/settings.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { BUTTON_SIZE, raisedLabelCapTop } from "../ui/buttonGeometry.ts";
-import { dismissFooter } from "../ui/modal/dismissFooter.ts";
-import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
-import type { PanelButton, PanelMeasure, PanelText, QuestionPanelView } from "../ui/modal/types.ts";
-import { modalCardView, panelButton, titleLabelInk } from "../ui/modal/view.ts";
+import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
+import type { PanelButton, PanelMeasure, PanelText } from "../ui/modal/types.ts";
+import { panelButton, panelTitle, titleLabelInk } from "../ui/modal/view.ts";
+import { PAGE_LAYOUT, PAGE_TITLE_ROW, pageBack, ROWS_PAGE_LAYOUT } from "../ui/pageLayout.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { BUTTON_LIP_PX, GREYED, selectLook } from "../ui/selection.ts";
 import { separatorBetween } from "../ui/separator.ts";
@@ -72,7 +73,7 @@ export type CheatRow =
       }[];
     };
 
-// Where the modal opened and what it shows: the walk's state there, or undefined on the Start
+// Where the page opened and what it shows: the walk's state there, or undefined on the Start
 // screen.
 export interface CheatsState {
   readonly canResetSave: boolean;
@@ -92,10 +93,11 @@ export function cheatRows(
   const { next, walk } = state;
   const fields = MENU_TEXT_FIELDS.cheats;
   const addLabel = (amount: Cents) => fillLine(fields, text, "add", { cash: dollarText(amount) });
+  // An action alone in its row, sized to its label and centred, as Settings' Install is.
   const action = (label: string, enabled: boolean, act: CheatAction): CheatRow => ({
     buttons: [{ action: act, enabled, label }],
     kind: "buttons",
-    layout: "full",
+    layout: "compact",
   });
   const adds = BANK_GRANTS.map((amount) => ({
     action: { amount, kind: "addBank" } as const,
@@ -157,15 +159,12 @@ export function cheatRows(
 const { compact, stackGap } = BUTTON_SIZE;
 const ROW = SETTINGS_CARD.row;
 const HEADING_HEIGHT = 24;
-const TOGGLE_HEIGHT = 48;
 // The pairs and the Unlocks/Money columns are side-by-side standard buttons.
 const COLUMN_GAP = BUTTON_SIZE.gap;
-const SCROLLBAR = SHOP_PAGE.scrollbar;
 
 export interface CheatsLayout {
-  readonly panel: Rect;
   readonly contentHeight: number;
-  readonly scrollbar: Omit<typeof SCROLLBAR, "x"> & { readonly x: number };
+  // The page's body, which the rows scroll in.
   readonly viewport: Rect;
 }
 
@@ -305,38 +304,18 @@ function placeRows(
   return { contentHeight: Math.max(0, y - stackGap - area.y), rows: placed };
 }
 
-// The card placed by the modal rule in its caller's area (overlayRegion), no taller than the
-// area's protected room; rows past it scroll.
+// The rows down the page's body across the rows' column (ROWS_PAGE_LAYOUT), from the body's top
+// to bodyFoot rows over Back's face; rows past it scroll.
 function layoutCheats(
   measure: PanelMeasure,
-  area: Rect,
   rows: readonly CheatRow[],
 ): { layout: CheatsLayout; rows: readonly CheatRowView[] } {
-  const width = modalFamilyWidth(area.width - 2 * MODAL.margin, "large");
-  const rowWidth = width - 2 * MODAL.pad;
-  const maxHeight = area.height - 2 * MODAL.margin;
-  const chrome = MODAL.header + MODAL.gap + compact.height + MODAL.pad;
-  const available = maxHeight - chrome;
-  const natural = placeRows(measure, { width: rowWidth, x: 0, y: 0 }, rows);
-  const scrolls = natural.contentHeight > available;
-  const height = Math.min(maxHeight, chrome + natural.contentHeight);
-  const { x, y } = modalRect(area, undefined, { height, width });
-  const left = x + MODAL.pad;
-  // The scrollbar sits in the right padding, so the rows keep the body's whole room.
-  const trackX = left + rowWidth + MODAL.scrollGap;
-  const top = y + MODAL.header;
-  const placed = placeRows(measure, { width: rowWidth, x: left, y: top }, rows);
+  const { bodyFoot, bodyTop, column } = ROWS_PAGE_LAYOUT;
+  const placed = placeRows(measure, { ...column, y: bodyTop }, rows);
   return {
     layout: {
       contentHeight: placed.contentHeight,
-      panel: { height, width, x, y },
-      scrollbar: { ...SCROLLBAR, x: trackX },
-      viewport: {
-        height: height - chrome,
-        width: scrolls ? trackX + SCROLLBAR.trackWidth - left : rowWidth,
-        x: left,
-        y: top,
-      },
+      viewport: { ...column, height: PAGE_LAYOUT.back.y - bodyFoot - bodyTop, y: bodyTop },
     },
     rows: placed.rows,
   };
@@ -366,7 +345,12 @@ export interface CheatRowView {
 }
 
 export interface CheatsView {
-  readonly card: QuestionPanelView;
+  // The page's Back, cream fill and title (PageChrome).
+  readonly page: {
+    readonly back: PanelButton;
+    readonly fill: { readonly colour: number; readonly rect: Rect };
+    readonly title: readonly PanelText[];
+  };
   readonly layout: CheatsLayout;
   readonly rows: readonly CheatRowView[];
 }
@@ -418,12 +402,10 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
       };
     }
     case "switch": {
-      // Settings' switch-row layout: the label 6 in and its capitals ROW.label.dy down, the
-      // switch at the upper right, 8 in, and the state word under it, its ink ending on the
-      // switch's right edge.
-      const stateHeight = measure.title.capHeight * TEXT_SCALE;
-      const stackHeight = SWITCH.height + SWITCH_STATE_GAP + stateHeight;
-      const hit = { ...rect, height: Math.max(TOGGLE_HEIGHT, stackHeight + 2 * MODAL.rowGap) };
+      // Settings' switch-row layout and height: the label 6 in and its capitals ROW.label.dy
+      // down, the switch at the upper right, 8 in, and the state word under it, its ink ending on
+      // the switch's right edge.
+      const hit = { ...rect, height: switchRowHeight(measure.title) };
       const look = row.enabled ? selectLook("normal") : { ...selectLook("normal"), ...GREYED };
       const colour = PALETTE[look.text];
       const switchX = rect.x + rect.width - ROW.pad - SWITCH.width;
@@ -464,25 +446,25 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
   }
 }
 
-// The modal as it stands: the card with its title, X and centred Back, and each
-// row's view as unscrolled.
+// The page as it stands: its title and Back, and each row's view as unscrolled.
 export function cheatsView(
   measure: PanelMeasure,
   context: {
-    readonly area: Rect;
     readonly data: CheatsData;
     readonly words: Pick<MenuText, "cheats" | "pageBack" | "settings">;
   },
   state: CheatsState,
 ): CheatsView {
-  const { area, data, words } = context;
-  const { layout, rows } = layoutCheats(measure, area, cheatRows(data, words, state));
+  const { data, words } = context;
+  const { layout, rows } = layoutCheats(measure, cheatRows(data, words, state));
+  const { rect } = PAGE_LAYOUT;
   return {
-    card: {
-      ...modalCardView(measure, layout.panel, words.cheats.title, []),
-      footer: dismissFooter(measure, { label: words.pageBack, primary: true }, layout.panel),
-    },
     layout,
+    page: {
+      back: pageBack(measure, words.pageBack),
+      fill: { colour: PALETTE.cream, rect },
+      title: panelTitle(measure, rect, PAGE_TITLE_ROW.y, words.cheats.title, false),
+    },
     rows,
   };
 }

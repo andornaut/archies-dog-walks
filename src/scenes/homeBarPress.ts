@@ -11,16 +11,17 @@ import { openHelp } from "./helpScreen.ts";
 import type { MenuSceneData } from "./MenuScene.ts";
 import { BAR_MUTED_EVENT, onSceneEvent, openOverlay } from "./overlay.ts";
 import { toggleMuted } from "./profileStore.ts";
-import { SCENE_KEYS } from "./sceneKeys.ts";
+import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import type { SettingsData } from "./SettingsScene.ts";
 import { listenTargetPress } from "./targetPress.ts";
 import { requestTitleReturn } from "./titleNavigation.ts";
 import { nativeTopSectionButtons } from "./topSection.ts";
 
-// Emitted on game.events as the top bar opens help, the Logbook or the settings: the settings and
-// the badge celebration close, and the start screen, the Pet shop and the Logbook close any detail
-// card or badge card, so the page opens alone over the page beneath, dimmed once.
-// Help over them stays open: what the bar opens over it opens over help.
+// Emitted on game.events as the top bar opens help, the Logbook, the settings or the Menu: the
+// badge celebration closes, and the start screen, the Pet shop, the Logbook, the settings and
+// Cheats close any detail card, badge card, install steps' card or Reset save question, so the
+// page opens alone over the page beneath, dimmed once. A page under them stays open: what the bar
+// opens over it opens over the page.
 export const HOME_PAGE_OPENING_EVENT = "home-page-opening";
 
 type HomePage = "help" | "logbook" | "menu" | "settings";
@@ -32,18 +33,20 @@ const pageMenus = new WeakMap<Scene, () => MenuSceneData>();
 // Pages launched by Menu return to its retained instance instead of opening it over itself.
 const parentMenus = new WeakMap<Scene, () => void>();
 
-// Opens page from the top bar, tapped on from, at once: over the topmost open page, Help, the
-// Logbook or the Pet shop, else over the start screen, in place of every other overlay and card.
-// The Logbook or Help asked of while it is the page under stays as it is. The overlays it closes
-// and the one it opens change at Phaser's next step, so a second page asked of from before then
-// is dropped (openGuard).
+// Opens page from the top bar, tapped on from, at once: over the topmost open page (from, when it
+// is one, else Help, the Logbook or the Pet shop), else over the start screen, in place of every
+// other overlay and card. The Logbook, Help or the settings asked of while it is the page under
+// stays as it is. The overlays it closes and the one it opens change at Phaser's next step, so a
+// second page asked of from before then is dropped (openGuard).
 export function openHomePage(from: Scene, page: HomePage): void {
   homePageGuard(from.game.events, from, () => {
     const title = from.sys.settings.key === SCENE_KEYS.start;
-    const { help, shop, start, stats } = SCENE_KEYS;
-    const resume =
-      [help, stats, shop].find((key) => from.scene.isActive(key) || from.scene.isPaused(key)) ??
-      start;
+    const { cheats, help, settings, shop, start, stats } = SCENE_KEYS;
+    const pages: readonly SceneKey[] = [cheats, settings, help, stats, shop];
+    const own = from.sys.settings.key as SceneKey;
+    const resume = pages.includes(own)
+      ? own
+      : (pages.find((key) => from.scene.isActive(key) || from.scene.isPaused(key)) ?? start);
     const under = from.scene.get(resume);
     const returnToMenu = page === "menu" ? parentMenus.get(under) : undefined;
     if (returnToMenu !== undefined) {
@@ -53,9 +56,9 @@ export function openHomePage(from: Scene, page: HomePage): void {
     from.game.events.emit(HOME_PAGE_OPENING_EVENT);
     switch (page) {
       case "menu": {
-        const own = pageMenus.get(under);
+        const pageMenu = pageMenus.get(under);
         const data: MenuSceneData =
-          own?.() ??
+          pageMenu?.() ??
           (title
             ? { context: "home", resume }
             : { context: "page", onHeadHome: () => requestTitleReturn(under), resume });
@@ -74,8 +77,10 @@ export function openHomePage(from: Scene, page: HomePage): void {
         }
         return;
       case "settings": {
-        const data: SettingsData = { region: "home", resume };
-        openOverlay(under, SCENE_KEYS.settings, data);
+        if (resume !== settings) {
+          const data: SettingsData = { region: "home", resume };
+          openOverlay(under, SCENE_KEYS.settings, data);
+        }
         return;
       }
       default:

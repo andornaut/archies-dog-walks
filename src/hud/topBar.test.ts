@@ -73,11 +73,12 @@ describe("the walk bar in each pause state", () => {
     player: true,
     presses: "none",
   } as const;
-  // Help is a page under the live bar: a tap mutes or closes help; help takes the keys itself.
-  const help = {
+  // Cheats, Help and the settings are pages under the live bar: a tap mutes or closes the page;
+  // the page takes the keys itself.
+  const page = {
     ...menu,
     mute: undefined,
-    pause: "closeHelp",
+    pause: "closePage",
     pauseKey: undefined,
   } as const;
   // An explanation's detail card is modal too: its dismissal presses nothing on the bar.
@@ -114,12 +115,11 @@ describe("the walk bar in each pause state", () => {
       ["in the menu over the hit stop", { ...HIT_STOP, menu: "open" }, menu],
       ["asking the Home question over a card", { ...CARD, menu: "confirmHome" }, menu],
       ["under an explanation's detail card over the menu", { ...HOLD, menu: "open" }, menu],
-      ["under help, which mutes on M", { ...NOTHING_PAUSED, menu: "help" }, help],
-      [
-        "under settings, which take P and M themselves",
-        { ...NOTHING_PAUSED, menu: "settings" },
-        { ...menu, pauseKey: undefined },
-      ],
+      ...(["cheats", "help", "settings"] as const).map((open): [string, RunPause, Expected] => [
+        `under ${open}, which takes P and M itself`,
+        { ...NOTHING_PAUSED, menu: open },
+        page,
+      ]),
     ];
     for (const [name, pause, expected] of cases) {
       expect(
@@ -155,6 +155,7 @@ describe("walkBackAction", () => {
       { ...CARD, menu: "confirmHome" },
       "resume",
     ],
+    ["under Cheats, which closes itself", false, { ...NOTHING_PAUSED, menu: "cheats" }, "none"],
     ["under help, which closes itself", false, { ...NOTHING_PAUSED, menu: "help" }, "none"],
     ["under the settings, which close themselves", false, { ...CARD, menu: "settings" }, "none"],
     ["after the walk's end, before the end screen", true, NOTHING_PAUSED, "none"],
@@ -202,13 +203,4 @@ describe("topBarButtonAt", () => {
   ])("presses %s (row %i, %i debuff bars): %s", (_name, y, debuffs, expected) => {
     expect(topBarButtonAt(debuffs, x, y)).toBe(expected);
   });
-});
-
-it("leaves Cheats Back and keys with its modal and routes the pause icon one layer", () => {
-  const pause = { ...NOTHING_PAUSED, menu: "cheats" } as const;
-  expect(walkPaused(pause)).toBe(true);
-  expect(walkBackAction(false, pause)).toBe("none");
-  expect(topBarAction(pause, "key", "pause")).toBeUndefined();
-  expect(topBarAction(pause, "tap", "pause")).toBe("resume");
-  expect(topBarAction(pause, "tap", "mute")).toBeUndefined();
 });

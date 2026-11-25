@@ -2,23 +2,16 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { type SliderArt, sliderStepForKey } from "@andornaut/game-kit/runtime/ui/slider";
 
-import {
-  ICON_LABEL_GAP,
-  LABEL_ICON,
-  MIN_PRESS,
-  SETTINGS_CARD,
-  SHOP_PAGE,
-  SLICES,
-} from "../data/layout.ts";
+import { ICON_LABEL_GAP, LABEL_ICON, MIN_PRESS, SETTINGS_CARD, SLICES } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { Settings } from "../save/settings.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
-import { helpCapDy, LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
+import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
-import type { ScrollbarSpec } from "../ui/scrollbar.ts";
-import { SEPARATOR_BAND, separatorBetween } from "../ui/separator.ts";
+import { ROWS_PAGE_LAYOUT } from "../ui/pageLayout.ts";
+import { separatorBetween } from "../ui/separator.ts";
 import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
 import { HOME_LAYOUT } from "./homeLayout.ts";
 
@@ -89,18 +82,14 @@ interface SettingsRowLayout {
 }
 
 export interface SettingsLayout {
-  // The build label's capitals' top; the label is centred across the panel.
+  // The version label's capitals' top; the label is centred across the screen.
   buildLabelY: number;
-  close: CloseControl;
-  panel: Rect;
   // The rows, top to bottom.
   rows: SettingsRowLayout[];
   // The unscrolled row content's logical height, starting at rowsViewport.y.
   rowsContentHeight: number;
-  // Only rows and separators scroll inside this absolute logical rectangle.
+  // Only rows and separators scroll inside this absolute logical rectangle, the page's body.
   rowsViewport: Rect;
-  // The rows' scrollbar in the panel's right padding, shown while the rows overflow.
-  scrollbar: ScrollbarSpec;
   // The separator over every row after the first, across the rows' width (separatorBetween).
   separators: Rect[];
   track: SliderTrack & { dy: number; height: number };
@@ -119,7 +108,8 @@ export interface SettingsFonts {
 // column, wrapped onto up to note.lines lines, and inkFoot rows under the note's lowest ink.
 // A switch sits at the upper right with its state word below. The Install button is its row's
 // sole action, centred in the row. Sliders place the percentage on the label line and the track
-// below it.
+// below it, from the labels' column to the row's right inset. A row spans the page's rows'
+// column (ROWS_PAGE_LAYOUT).
 const ROW = SETTINGS_CARD.row;
 export const SETTINGS_ROW = {
   button: BUTTON_SIZE.compact,
@@ -133,7 +123,7 @@ export const SETTINGS_ROW = {
   slider: ROW.slider,
   switch: ROW.switch,
   track: ROW.track,
-  width: ROW.width,
+  width: ROWS_PAGE_LAYOUT.column.width,
 } as const;
 
 // The Install button's face: its icon's cell, ICON_LABEL_GAP and its label's ink, with a modal
@@ -162,31 +152,23 @@ function noteDy(title: FontMetrics): number {
   return SETTINGS_ROW.label.dy + helpCapDy(title, TEXT_SCALE);
 }
 
-const PANEL = { width: modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, "large") };
-// The leading icon begins at the shared body boundary; row-internal offsets remain fixed.
-const ROWS_TOP = MODAL.header - SETTINGS_ROW.icon.dy;
 export const SWITCH_STATE_GAP = BUTTON_SIZE.stackGap;
 
-// The build label (BUILD_LABEL) uses the standard body role, centred across the
-// panel with no separator over it: its capitals LABEL_HELP_GAP clear rows under the last row's
-// lowest ink, as a note sits under its label, and its lowest ink BUILD_LABEL_FOOT clear rows over
-// the card's inner bottom edge. The last row ends halfway down that gap, so a tap on the label
-// misses the row and the row's focus ring stays clear of it.
+// The version label (BUILD_LABEL) uses the standard body role, ink-centred across the screen
+// under the page's body, fixed as the body scrolls: its lowest ink labelFoot rows over Back's
+// face (ROWS_PAGE_LAYOUT.labelInkBottom).
 export const SETTINGS_BUILD_LABEL = {
   colour: "darkBrown",
   room: SETTINGS_ROW.width,
   style: TEXT_STYLE,
 } as const;
-// ui-detail-card's frame along its bottom: a tan shade, a dark brown line and an ink line.
-const CARD_FRAME_BOTTOM = 3;
-const BUILD_LABEL_FOOT = MODAL.pad - CARD_FRAME_BOTTOM;
 
 // The note's lowest ink, from the row's top.
 function noteInkBottom(fonts: SettingsFonts, noteLines: number): number {
   return noteDy(fonts.title) + inkRowsOfLines(fonts.body, noteLines) * TEXT_SCALE;
 }
 
-function switchStateInkBottom(fonts: SettingsFonts): number {
+function switchStateInkBottom(fonts: Pick<SettingsFonts, "title">): number {
   return (
     SETTINGS_ROW.icon.dy +
     SETTINGS_ROW.switch.height +
@@ -227,56 +209,26 @@ function rowControl(row: Rect, shape: SettingsRowShape): Rect | null {
   };
 }
 
-// Lowest ink from each row's top, including the state word below a switch. A slider counts
-// its whole row to leave room for the knob.
-function rowInkBottom(fonts: SettingsFonts, shape: SettingsRowShape): number {
-  if (shape.kind === "slider") {
-    return SETTINGS_ROW.slider.height;
-  }
-  const control = rowControl({ height: 0, width: 0, x: 0, y: 0 }, shape);
-  return Math.max(
-    shape.noteLines === 0 ? MIN_PRESS : noteInkBottom(fonts, shape.noteLines),
-    shape.kind === "switch"
-      ? switchStateInkBottom(fonts)
-      : (control?.y ?? 0) + (control?.height ?? 0),
-  );
+// A switch row with no note: its press height, from the switch to the state word under it.
+export function switchRowHeight(title: FontMetrics): number {
+  return Math.max(MIN_PRESS, switchStateInkBottom({ title }));
 }
 
-// The rows on a card placed by the modal rule in its caller's area (overlayRegion), under its
-// title row with the close control in it, and the build label under them. The card is no taller
-// than the area's protected room; rows past it scroll.
+// The rows down the page's body, from its top, a separator between each pair (separatorBetween),
+// and the version label fixed under the body. The body is no taller than the room over the label;
+// rows past it scroll.
 export function settingsLayout(
   fonts: SettingsFonts,
-  area: Rect,
   shapes: readonly SettingsRowShape[],
 ): SettingsLayout {
-  const lastShape = shapes.at(-1);
-  const lastInk = lastShape === undefined ? 0 : rowInkBottom(fonts, lastShape);
-  const heights = shapes.map((shape, i) =>
-    i === shapes.length - 1 ? lastInk + Math.floor(LABEL_HELP_GAP / 2) : rowHeight(fonts, shape),
-  );
-  // From the panel's top: the last row's lowest ink (the title row's bottom with no rows), and the
-  // build label's capitals.
-  const rowsInk =
-    ROWS_TOP + heights.slice(0, -1).reduce((sum, rows) => sum + rows + SEPARATOR_BAND, 0) + lastInk;
-  const labelDy = rowsInk + LABEL_HELP_GAP;
+  const { bodyFoot, bodyTop, column, labelInkBottom } = ROWS_PAGE_LAYOUT;
   // The label's digits, hex letters and "v" stand on the baseline, so its ink ends with its
   // capitals.
-  const labelInk = fonts.body.capHeight * SETTINGS_BUILD_LABEL.style.scale;
-  const naturalHeight =
-    labelDy + labelInk + BUILD_LABEL_FOOT + CARD_FRAME_BOTTOM + DISMISS_FOOTER_SPACE;
-  const height = Math.min(naturalHeight, area.height - 2 * MODAL.margin);
-  const clippedHeight = naturalHeight - height;
-  const rowsContentHeight = heights.reduce(
-    (sum, rowHeight, i) => sum + rowHeight + (i > 0 ? SEPARATOR_BAND : 0),
-    0,
-  );
-  const { x, y } = modalRect(area, undefined, { ...PANEL, height });
-  const rowX = x + (PANEL.width - SETTINGS_ROW.width) / 2;
-  let rowY = y + ROWS_TOP;
+  const buildLabelY = labelInkBottom - fonts.body.capHeight * SETTINGS_BUILD_LABEL.style.scale;
+  let rowY = bodyTop;
   const separators: Rect[] = [];
   const rows = shapes.map((shape, i) => {
-    const rect = { height: heights[i] ?? 0, width: SETTINGS_ROW.width, x: rowX, y: rowY };
+    const rect = { height: rowHeight(fonts, shape), width: column.width, x: column.x, y: rowY };
     const { line, next } = separatorBetween(rect, rect.y + rect.height);
     if (i < shapes.length - 1) {
       separators.push(line);
@@ -288,27 +240,24 @@ export function settingsLayout(
       rect,
     };
   });
-  const panel = { ...PANEL, height, x, y };
-  const { pad, track } = SETTINGS_ROW;
+  const last = rows.at(-1)?.rect;
+  const { label, pad, track } = SETTINGS_ROW;
   return {
-    buildLabelY: y + labelDy - clippedHeight,
-    close: closeControl(panel),
-    panel,
+    buildLabelY,
     rows,
-    rowsContentHeight,
+    rowsContentHeight: last === undefined ? 0 : last.y + last.height - bodyTop,
     rowsViewport: {
-      height: Math.max(0, rowsContentHeight - clippedHeight),
-      width: SETTINGS_ROW.width,
-      x: rowX,
-      y: y + ROWS_TOP,
+      height: Math.max(0, buildLabelY - bodyFoot - bodyTop),
+      width: column.width,
+      x: column.x,
+      y: bodyTop,
     },
-    scrollbar: { ...SHOP_PAGE.scrollbar, x: rowX + SETTINGS_ROW.width + MODAL.scrollGap },
     separators,
     track: {
       dy: track.dy,
       height: track.height,
-      width: SETTINGS_ROW.width - 2 * pad,
-      x: rowX + pad,
+      width: column.width - label.dx - pad,
+      x: column.x + label.dx,
     },
   };
 }

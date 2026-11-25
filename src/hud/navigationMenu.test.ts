@@ -39,13 +39,15 @@ const measure: PanelMeasure = {
 it("orders navigation by label with Back to title and the primary action last, and no Quit", () => {
   expect(menuItems("home")).toEqual(["cheats", "help", "logbook", "settings", "close"]);
   expect(menuItems("page")).toEqual(["cheats", "help", "logbook", "settings", "headHome", "close"]);
+  expect(menuItems("cheats")).toEqual(["help", "settings", "headHome", "close"]);
   expect(menuItems("help")).toEqual(["cheats", "settings", "headHome", "close"]);
+  expect(menuItems("settings")).toEqual(["cheats", "help", "headHome", "close"]);
   expect(menuItems("end")).toEqual(["cheats", "settings", "headHome", "close"]);
   expect(PAUSE_MENU_ITEMS).toEqual(["cheats", "help", "settings", "headHome", "resume"]);
   expect(PAUSE_MENU_KEY_ORDER).toEqual(["resume", "help", "settings", "headHome", "cheats"]);
 });
 
-it.each(["end", "help", "home", "page"] as const)(
+it.each(["cheats", "end", "help", "home", "page", "settings"] as const)(
   "lists the %s Menu's navigation after Cheats alphabetically by label",
   (context) => {
     const others = menuItems(context)

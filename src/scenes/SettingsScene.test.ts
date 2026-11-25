@@ -39,7 +39,6 @@ function fixture(install = false, width = 360, dpr = 1) {
   };
   const layout = settingsLayout(
     fonts,
-    overlayRegion("home"),
     configuredRows.map((row) =>
       row.kind === "slider"
         ? { kind: "slider" }
@@ -113,6 +112,7 @@ it("returns manual install instructions to the live Install row without leaving 
     pressed: { kind: "install" },
     rows: settingsRows(true),
     steps: f.view(true).steps,
+    stepsShade: [{ destroy: vi.fn() }],
     view: () => f.view(scene.steps !== undefined),
   });
   f.shown.update(f.view(true), null);

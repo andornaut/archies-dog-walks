@@ -47,10 +47,9 @@ function footer(panel: Rect, action: PanelButton | undefined, primary: boolean):
   return action!;
 }
 
-it("keeps settings rows, build text and install steps above their centred dismiss controls", () => {
+it("keeps the install steps above their centred dismiss control", () => {
   const layout = settingsLayout(
     fonts,
-    overlayRegion("home"),
     SETTING_ROWS.map((row) =>
       row.kind === "slider" ? { kind: "slider" } : { kind: row.kind, noteLines: 1 },
     ),
@@ -72,11 +71,6 @@ it("keeps settings rows, build text and install steps above their centred dismis
       steps: { ...steps, kind: "ios" },
     },
   );
-  const action = footer(view.card.panel, view.card.footer, true);
-  expect(view.build.capTop + fonts.body.capHeight).toBeLessThanOrEqual(action.rect.y - MODAL.gap);
-  // Rows past the viewport scroll inside it.
-  const { rowsViewport } = layout;
-  expect(rowsViewport.y + rowsViewport.height).toBeLessThanOrEqual(action.rect.y - MODAL.gap);
   const step = view.steps!;
   const close = footer(step.card.panel, step.card.footer, true);
   expect(

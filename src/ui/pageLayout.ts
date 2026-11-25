@@ -5,7 +5,7 @@ import {
   placeModalFrame,
 } from "@andornaut/game-kit/runtime/ui/modalFrame";
 
-import { PAGE, SHOP_PAGE, TOP_BAR_HEIGHT } from "../data/layout.ts";
+import { PAGE, ROWS_PAGE, SHOP_PAGE, TOP_BAR_HEIGHT } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { BUTTON_SIZE } from "./buttonGeometry.ts";
 import { arrangePanelActions } from "./modal/actionGroup.ts";
@@ -56,6 +56,20 @@ export const PAGE_LAYOUT = {
   inset: PAGE.inset,
   rect: RECT,
   scrollbar: { ...SHOP_PAGE.scrollbar, x: width - PAGE.inset - SHOP_PAGE.scrollbar.trackWidth },
+} as const;
+
+// The Settings and Cheats pages: their rows' column, from the page's inset to trackGap short of
+// the scrollbar's track, whether or not the rows scroll; the body's top, titleGap rows under the
+// title row; and the rows' foot over what stays fixed under the body (bodyFoot) and the version
+// label's lowest ink over Back's face (labelFoot).
+export const ROWS_PAGE_LAYOUT = {
+  bodyFoot: ROWS_PAGE.bodyFoot,
+  bodyTop: PAGE_TITLE_ROW.y + PAGE_TITLE_ROW.height + ROWS_PAGE.titleGap,
+  column: {
+    width: PAGE_LAYOUT.scrollbar.x - ROWS_PAGE.trackGap - PAGE.inset,
+    x: PAGE.inset,
+  },
+  labelInkBottom: BACK.y - ROWS_PAGE.labelFoot,
 } as const;
 
 // A page's Back: its label's button centred across the page in the Back slot.

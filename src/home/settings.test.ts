@@ -6,10 +6,9 @@ import { buildLabel } from "@andornaut/game-kit/runtime/web/buildLabel";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { MIN_PRESS } from "../data/layout.ts";
+import { MIN_PRESS, ROWS_PAGE } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
-import { defined } from "../testing/defined.ts";
 import {
   fitInFont,
   fontFileMetrics,
@@ -24,11 +23,10 @@ import { barTitleRoom } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeFace } from "../ui/closeControl.ts";
 import { iconBesideLabel } from "../ui/iconLabel.ts";
-import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
-import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
-import { MODAL, modalTitleLayout } from "../ui/modal/layout.ts";
+import { modalTitleLayout } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
+import { PAGE_LAYOUT, ROWS_PAGE_LAYOUT } from "../ui/pageLayout.ts";
 import { SEPARATOR } from "../ui/separator.ts";
 import { overlayRegion } from "./homeBar.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
@@ -44,7 +42,6 @@ import {
   settingsLayout,
   type SettingsRowShape,
   setVolumeSteps,
-  SWITCH_STATE_GAP,
   volumeStepForKey,
   volumeSteps,
 } from "./settings.ts";
@@ -117,11 +114,9 @@ const shapes: SettingsRowShape[] = SHIPPED_ROWS.map((row) =>
 );
 const bodyFont = fontFileMetrics("font-body");
 const titleFont = fontFileMetrics("font-title");
-const layout = settingsLayout({ body: bodyFont, title: titleFont }, overlayRegion("home"), shapes);
+const layout = settingsLayout({ body: bodyFont, title: titleFont }, shapes);
 const screen: Rect = { ...SCREEN_CONFIG, x: 0, y: 0 };
 const TWO_X = { scale: 2 };
-// art: ui-detail-card's frame columns along its right edge.
-const CARD_FRAME = 3;
 const KNOB_RISE = 3;
 const KNOB_HEIGHT = 16;
 
@@ -209,9 +204,8 @@ function rowParts(i: number): [string, Rect][] {
   ];
 }
 
-describe("the settings card", () => {
-  const { close, panel, rows } = layout;
-  const titleRow = cardTitleRow(panel);
+describe("the Settings page", () => {
+  const { rows } = layout;
   const rowContent = { ...layout.rowsViewport, height: layout.rowsContentHeight };
 
   it("exports the rows the shipped notes wrap to", () => {
@@ -219,16 +213,32 @@ describe("the settings card", () => {
   });
 
   it.each<[string, Rect, Rect]>([
-    ["the card with every row", panel, screen],
-    ["the title row", titleRow, panel],
-    ["the close control's face", closeFace(close), panel],
-    ["the close control's hit area", close.hit, panel],
+    ["the body", layout.rowsViewport, PAGE_LAYOUT.rect],
     ...rows.map(({ rect }, i): [string, Rect, Rect] => [`row ${i + 1}`, rect, rowContent]),
     ...rows.flatMap(({ rect }, i) =>
       rowParts(i).map(([part, ink]): [string, Rect, Rect] => [`row ${i + 1}'s ${part}`, ink, rect]),
     ),
   ])("keeps %s inside its frame", (_, inner, outer) => {
     expect(inside(inner, outer)).toBe(true);
+  });
+
+  // Art's page geometry (art/layout.md#settings-and-cheats-pages).
+  const install = rows[SHIPPED_ROWS.findIndex((row) => row.kind === "button")]!.control!;
+  const firstSwitch = rows[SHIPPED_ROWS.findIndex((row) => row.kind === "switch")]!;
+  const switchFace = firstSwitch.control!;
+  it.each<[string, readonly number[], readonly number[]]>([
+    ["the rows' column", [rows[0]!.rect.x, rows[0]!.rect.x + rows[0]!.rect.width], [8, 338]],
+    ["the body's top", [layout.rowsViewport.y], [103]],
+    [
+      "a switch's columns and top",
+      [switchFace.x, switchFace.x + switchFace.width, switchFace.y - firstSwitch.rect.y],
+      [298, 330, 9],
+    ],
+    ["a slider's track", [layout.track.x, layout.track.x + layout.track.width], [34, 330]],
+    ["Install's centre", [install.x + install.width / 2], [173]],
+    ["the version label's lowest ink", [layout.buildLabelY + bodyFont.capHeight * 2], [492]],
+  ])("places %s as Art's guide states", (_, placed, art) => {
+    expect(placed).toEqual(art);
   });
 
   // Every switch row's state words, each as drawn: right-aligned under the switch, at the gap
@@ -255,11 +265,10 @@ describe("the settings card", () => {
     }
   });
 
-  // The first row clears the full close target; each later row sits under the one separator,
-  // the stacked gap clear of it on both sides, across the rows' full width.
-  it("starts rows below the close target or under the separator after the row before", () => {
-    expect(rows[0]!.rect.y + SETTINGS_ROW.icon.dy).toBe(panel.y + MODAL.header);
-    expect(rows[0]!.rect.y).toBeGreaterThanOrEqual(close.hit.y + close.hit.height);
+  // The first row starts at the body's top; each later row sits under the one separator, the
+  // stacked gap clear of it on both sides, across the rows' full width.
+  it("starts rows at the body's top or under the separator after the row before", () => {
+    expect(rows[0]!.rect.y).toBe(ROWS_PAGE_LAYOUT.bodyTop);
     expect(rows[0]!.rect.x).toBe(rows.at(-1)!.rect.x);
     expect(rows[0]!.rect.x + rows[0]!.rect.width).toBe(rows[1]!.rect.x + rows[1]!.rect.width);
     expect(layout.separators).toHaveLength(rows.length - 1);
@@ -308,7 +317,7 @@ describe("the settings card", () => {
   });
 });
 
-// The build label under the last row, with the Install row and without it: the widest label a
+// The build label fixed under the body, with the Install row and without it: the widest label a
 // build shows, its glyph rows at the standard body scale from the capitals' top.
 const WIDEST_LABEL = buildLabel("99.99.99", "89abcdef");
 const labelGlyphs = [...WIDEST_LABEL].flatMap((char) => {
@@ -323,49 +332,15 @@ describe.each([
   ["with the Install row", shapes],
   ["without the Install row", shapes.filter((_, i) => SHIPPED_ROWS[i]?.kind !== "button")],
 ])("the build label %s", (_, rowShapes) => {
-  const placed = settingsLayout(
-    { body: bodyFont, title: titleFont },
-    overlayRegion("home"),
-    rowShapes,
-  );
-  const { buildLabelY, panel } = placed;
-  const last = defined(placed.rows.at(-1));
-  const lastShape = defined(rowShapes.at(-1));
-  const noteLines = lastShape.kind === "slider" ? 1 : lastShape.noteLines;
-  // Reserve the last row's note/control/state ink and the minimum target when it has no note.
-  const lastInk = Math.max(
-    noteLines === 0 ? last.rect.y + MIN_PRESS : 0,
-    lastShape.kind === "switch"
-      ? (last.control?.y ?? 0) +
-          (last.control?.height ?? 0) +
-          SWITCH_STATE_GAP +
-          titleFont.capHeight * 2
-      : 0,
-    (last.noteY ?? 0) +
-      ((noteLines - 1) * bodyFont.lineHeight + bodyFont.inkBottom - bodyFont.capTop) * 2,
-    (last.control?.y ?? 0) + (last.control?.height ?? 0),
-  );
+  const placed = settingsLayout({ body: bodyFont, title: titleFont }, rowShapes);
+  const { buildLabelY, rowsViewport } = placed;
 
-  it("keeps the build label under the last row and clear of the dismiss footer", () => {
+  it("sits labelFoot over Back's face, the body bodyFoot over it, whatever the rows", () => {
     expect(inkWidth("font-body", SETTINGS_BUILD_LABEL.style, WIDEST_LABEL)).toBeLessThanOrEqual(
       SETTINGS_BUILD_LABEL.room,
     );
-    const scroll = placed.rowsContentHeight - placed.rowsViewport.height;
-    expect(buildLabelY - (lastInk - scroll)).toBe(LABEL_HELP_GAP);
-    expect(panel.y + panel.height - (buildLabelY + labelInkBottom)).toBe(
-      MODAL.pad + DISMISS_FOOTER_SPACE,
-    );
-  });
-
-  // A tap on the label lands on the card outside every row, so it neither acts nor closes it.
-  it("lies under the last row, which stays a tap target at least MIN_PRESS tall", () => {
-    const labelTop =
-      buildLabelY +
-      (Math.min(...labelGlyphs.map((glyph) => glyph.yOffset)) - bodyFont.capTop) *
-        SETTINGS_BUILD_LABEL.style.scale;
-    const scroll = placed.rowsContentHeight - placed.rowsViewport.height;
-    expect(labelTop).toBeGreaterThanOrEqual(last.rect.y + last.rect.height - scroll);
-    expect(last.rect.height).toBeGreaterThanOrEqual(MIN_PRESS);
+    expect(PAGE_LAYOUT.back.y - (buildLabelY + labelInkBottom)).toBe(ROWS_PAGE.labelFoot);
+    expect(buildLabelY - (rowsViewport.y + rowsViewport.height)).toBe(ROWS_PAGE.bodyFoot);
   });
 });
 
@@ -439,42 +414,16 @@ describe.each(keysOf(gameData.menuText.settings.installSteps))(
   },
 );
 
-// The overflowing rows fill the caller's protected room, under the top bar's press rows.
-it.each([
-  ["home", 544],
-  ["walk", 466],
-] as const)("fills the %s protected room and scrolls only its full-size rows", (region, bottom) => {
-  const placed = settingsLayout(
-    { body: bodyFont, title: titleFont },
-    overlayRegion(region),
-    SETTINGS_EXPORT_ROWS,
-  );
-  expect(placed.panel.y).toBe(56);
-  expect(placed.panel.y + placed.panel.height).toBe(bottom);
+// The rows scroll in the page's body at full size, the body the same whatever the rows.
+it("scrolls only the full-size rows, in a body the rows do not size", () => {
+  const fonts = { body: bodyFont, title: titleFont };
+  const placed = settingsLayout(fonts, SETTINGS_EXPORT_ROWS);
   const first = placed.rows[0]!.rect;
   const last = placed.rows.at(-1)!.rect;
   expect(placed.rowsViewport).toMatchObject({ width: SETTINGS_ROW.width, x: last.x, y: first.y });
-  expect(inside(placed.rowsViewport, placed.panel)).toBe(true);
   expect(placed.rowsContentHeight).toBe(last.y + last.height - first.y);
   expect(placed.rows.every(({ rect }) => rect.height >= MIN_PRESS)).toBe(true);
-  const scroll = placed.rowsContentHeight - placed.rowsViewport.height;
-  expect(scroll).toBeGreaterThan(0);
-  expect(last.y + last.height - scroll).toBe(placed.rowsViewport.y + placed.rowsViewport.height);
-  expect(placed.buildLabelY - (placed.rowsViewport.y + placed.rowsViewport.height)).toBe(
-    LABEL_HELP_GAP - Math.floor(LABEL_HELP_GAP / 2),
-  );
-  // The overflow's scrollbar stands in the right padding, clear of the rows and the card's frame.
-  const { trackWidth, x } = placed.scrollbar;
-  expect(x - (last.x + last.width)).toBe(MODAL.scrollGap);
-  expect(x + trackWidth).toBeLessThan(placed.panel.x + placed.panel.width - CARD_FRAME);
-});
-
-it("keeps shorter Settings rows unscrolled and honours a tighter caller capacity", () => {
-  const fonts = { body: bodyFont, title: titleFont };
-  const shorter = settingsLayout(fonts, overlayRegion("home"), SETTINGS_EXPORT_ROWS.slice(0, -3));
-  expect(shorter.rowsViewport.height).toBe(shorter.rowsContentHeight);
-  const area = { ...overlayRegion("home"), height: shorter.panel.height };
-  const bounded = settingsLayout(fonts, area, SETTINGS_EXPORT_ROWS);
-  expect(bounded.panel.height).toBeLessThanOrEqual(area.height - 2 * MODAL.margin);
-  expect(inside(bounded.panel, area)).toBe(true);
+  const shorter = settingsLayout(fonts, SETTINGS_EXPORT_ROWS.slice(0, 2));
+  expect(shorter.rowsViewport).toEqual(placed.rowsViewport);
+  expect(shorter.buildLabelY).toBe(placed.buildLabelY);
 });

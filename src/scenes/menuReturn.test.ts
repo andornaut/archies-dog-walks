@@ -3,15 +3,13 @@ import { EventEmitter } from "node:events";
 import { beforeEach, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { FakeDocument } from "../testing/fakeDom.ts";
 import { HOME_PAGE_OPENING_EVENT } from "./homeBarPress.ts";
 import { MenuScene, type MenuSceneData } from "./MenuScene.ts";
-import { closeOverlay, listenOutsideTap, onBackPressed, openOverlay } from "./overlay.ts";
+import { closeOverlay, listenOutsideTap, openOverlay } from "./overlay.ts";
 import type { QuestionPanel } from "./questionPanel.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 
-const fake = vi.hoisted(() => ({ openCheats: vi.fn(), question: vi.fn() }));
-vi.mock("./cheatsModal.ts", () => ({ openCheatsModal: fake.openCheats }));
+const fake = vi.hoisted(() => ({ question: vi.fn() }));
 vi.mock("phaser", () => ({
   Core: { Events: {} },
   Scene: class {},
@@ -55,7 +53,9 @@ function menu(data: MenuSceneData) {
 }
 
 it.each([
+  ["cheats", gameData.menuText.cheats.open],
   ["help", gameData.menuText.pause.help],
+  ["settings", gameData.menuText.pause.settings],
   ["stats", gameData.menuText.stats.title],
 ] as const)("opens %s over the invoking Menu without replacing it", (key, label) => {
   const { press, scene } = menu({ context: "home", resume: SCENE_KEYS.start });
@@ -90,6 +90,17 @@ it("closes only the Menu over Help through its visible, corner, backdrop and Esc
   }
 });
 
+it.each([
+  ["cheats", gameData.menuText.cheats.open],
+  ["help", gameData.menuText.pause.help],
+  ["settings", gameData.menuText.pause.settings],
+] as const)("leaves its own entry out of the %s page's Menu", (context, own) => {
+  const { panel } = menu({ context, onHeadHome: vi.fn(), resume: SCENE_KEYS[context] });
+  const labels = panel.entries.map((entry) => entry.label);
+  expect(labels).not.toContain(own);
+  expect(labels).toHaveLength(4);
+});
+
 it("returns to the existing Logbook rather than launching the same page over its Menu", () => {
   const { press, scene } = menu({
     context: "page",
@@ -100,67 +111,3 @@ it("returns to the existing Logbook rather than launching the same page over its
   expect(closeOverlay).toHaveBeenCalledExactlyOnceWith(SCENE_KEYS.stats, scene);
   expect(openOverlay).not.toHaveBeenCalled();
 });
-
-it("opens Cheats directly and returns one layer before closing Menu", () => {
-  let closeCheats: () => void;
-  const modal = { back: vi.fn(() => false), destroy: vi.fn(), panel: vi.fn() };
-  fake.openCheats.mockImplementation((_scene, _walk, close) => {
-    closeCheats = close;
-    return modal;
-  });
-  const { keyboard, panel, press, scene } = menu({ context: "home", resume: SCENE_KEYS.start });
-  expect(panel.entries.filter((entry) => entry.onInvoke)).toEqual([
-    expect.objectContaining({
-      label: gameData.menuText.cheats.open,
-      onInvoke: expect.any(Function),
-    }),
-  ]);
-  press(gameData.menuText.cheats.open);
-  expect(fake.openCheats).toHaveBeenCalledWith(scene, false, expect.any(Function));
-  expect(openOverlay).not.toHaveBeenCalled();
-  keyboard.emit("keydown", { code: "Escape", repeat: false });
-  expect(modal.destroy).toHaveBeenCalledOnce();
-  expect(closeOverlay).not.toHaveBeenCalled();
-  press(gameData.menuText.cheats.open);
-  modal.back.mockReturnValueOnce(true);
-  vi.mocked(onBackPressed).mock.calls[0]![1]();
-  expect(modal.destroy).toHaveBeenCalledOnce();
-  closeCheats!();
-  expect(closeOverlay).not.toHaveBeenCalled();
-  press(gameData.menuText.common.close);
-  expect(closeOverlay).toHaveBeenCalledExactlyOnceWith(SCENE_KEYS.start, scene);
-});
-
-it.each(["Back", "X", "shutdown"] as const)(
-  "restores the admitted Menu Cheats item after %s except shutdown",
-  (route) => {
-    const doc = new FakeDocument();
-    const invoker = doc.createElement("button");
-    invoker.setAttribute("aria-label", gameData.menuText.cheats.open);
-    const fallback = doc.createElement("div");
-    doc.body.append(invoker, fallback);
-    let closeCheats: () => void;
-    const modal = {
-      back: vi.fn(() => false),
-      destroy: vi.fn(() => fallback.focus()),
-      panel: vi.fn(),
-    };
-    fake.openCheats.mockImplementation((_scene, _walk, close) => {
-      closeCheats = close;
-      return modal;
-    });
-    const { panel, scene } = menu({ context: "home", resume: SCENE_KEYS.start });
-    const entry = panel.entries.find(({ label }) => label === gameData.menuText.cheats.open)!;
-    doc.body.focus();
-    entry.onInvoke!(invoker as unknown as HTMLElement);
-    entry.press();
-    if (route === "shutdown") {
-      scene.events.emit("shutdown");
-    } else {
-      closeCheats!();
-    }
-    expect(modal.destroy).toHaveBeenCalledOnce();
-    expect(doc.activeElement).toBe(route === "shutdown" ? fallback : invoker);
-    expect(closeOverlay).not.toHaveBeenCalled();
-  },
-);

@@ -4,7 +4,7 @@ import type { HomeNoteLine } from "../../hud/homeQuestion.ts";
 import { playerPaused, type RunPause } from "../../hud/topBar.ts";
 import type { CardView, Choice } from "../../rules/choices.ts";
 import type { CardSceneData } from "../CardScene.ts";
-import type { PauseOverlay, PauseScene, PauseSceneData } from "../PauseScene.ts";
+import type { PauseOverlay, PauseSceneData } from "../PauseScene.ts";
 import { SCENE_KEYS, type SceneKey } from "../sceneKeys.ts";
 import type { SettingsScene } from "../SettingsScene.ts";
 import { soundboardOf } from "../soundboard.ts";
@@ -126,7 +126,7 @@ export class MenuFlow {
     this.blurred = blurred;
   }
 
-  // Help or the settings count while an explanation's detail card covers them, paused.
+  // Cheats, Help or the settings count while an explanation's detail card covers them, paused.
   private menuState(): RunPause["menu"] {
     if (!this.pauseOpen) {
       return "closed";
@@ -139,7 +139,7 @@ export class MenuFlow {
     if (shown(SCENE_KEYS.settings)) {
       return "settings";
     }
-    if ((scene.get(SCENE_KEYS.pause) as PauseScene).cheatsOpen()) {
+    if (shown(SCENE_KEYS.cheats)) {
       return "cheats";
     }
     return this.pauseMode === "homeQuestion" ? "confirmHome" : "open";
@@ -212,17 +212,14 @@ export class MenuFlow {
     }
   }
 
-  // Resumes the walk from the menu, the question or a page over them; the settings, over the walk
-  // bar that resumed, close with them. Over help the bar's Pause closes help back to the menu, so
+  // Resumes the walk from the menu or the question; the settings and Cheats close with them. Over a
+  // page (Cheats, Help or the settings) the bar's Pause closes the page back to the menu, so
   // nothing resumes from under it.
   closePause(): void {
     if (!this.pauseOpen) {
       return;
     }
     const { scene } = this;
-    if ((scene.scene.get(SCENE_KEYS.pause) as PauseScene).backCheats()) {
-      return;
-    }
     this.stopSettings();
     scene.scene.stop(SCENE_KEYS.pause);
     this.pauseOpen = false;
@@ -255,13 +252,17 @@ export class MenuFlow {
     scene.time.paused = held;
   }
 
-  // Stops the settings, if they are open, without their close: nothing hears them close.
-  // Returns whether they were open.
+  // Stops the settings and Cheats, if they are open, without their close: nothing hears them
+  // close. Returns whether the settings were open.
   private stopSettings(): boolean {
     const { scene } = this.scene;
-    const open = scene.isActive(SCENE_KEYS.settings) || scene.isPaused(SCENE_KEYS.settings);
+    const shown = (key: SceneKey) => scene.isActive(key) || scene.isPaused(key);
+    const open = shown(SCENE_KEYS.settings);
     if (open) {
       scene.stop(SCENE_KEYS.settings);
+    }
+    if (shown(SCENE_KEYS.cheats)) {
+      scene.stop(SCENE_KEYS.cheats);
     }
     return open;
   }

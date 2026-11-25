@@ -30,7 +30,7 @@ import { detailCardView, type DetailMeasure } from "./detailCardView.ts";
 import { overlayRegion } from "./homeBar.ts";
 import { updateModalLayout } from "./homeLayout.ts";
 import { logbookView } from "./logbookView.ts";
-import { installStepsLayout, settingsLayout } from "./settings.ts";
+import { installStepsLayout } from "./settings.ts";
 import {
   SHOP_LAYOUT,
   SHOP_MESSAGE_FIT,
@@ -75,9 +75,8 @@ it("uses the selected client family without changing title exclusion or safe are
   expect(modalFamilyWidth(240, "large")).toBe(240);
 });
 
-it("selects Medium navigation and confirmations, Large settings and steps", () => {
+it("selects Medium navigation and confirmations, and Large install steps", () => {
   expect(navigationMenuWidth(gameData, measure, 328)).toBe(264);
-  expect(settingsLayout(fonts, overlayRegion("home"), []).panel.width).toBe(328);
   expect(installStepsLayout(overlayRegion("home"), 3).card.width).toBe(328);
 });
 

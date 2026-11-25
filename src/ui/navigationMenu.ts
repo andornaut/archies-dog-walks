@@ -11,7 +11,7 @@ export const PAUSE_MENU_ITEMS = [
   "resume",
 ] as const;
 
-export type MenuContext = "end" | "help" | "home" | "page";
+export type MenuContext = "cheats" | "end" | "help" | "home" | "page" | "settings";
 export type MenuItem = "cheats" | "close" | "headHome" | "help" | "logbook" | "settings";
 
 // Only the navigation applicable to the screen joins its primary Close action: the other entries
@@ -23,8 +23,12 @@ export function menuItems(context: MenuContext): readonly MenuItem[] {
       return ["cheats", "help", "logbook", "settings", "close"];
     case "page":
       return ["cheats", "help", "logbook", "settings", "headHome", "close"];
+    case "cheats":
+      return ["help", "settings", "headHome", "close"];
     case "help":
       return ["cheats", "settings", "headHome", "close"];
+    case "settings":
+      return ["cheats", "help", "headHome", "close"];
     case "end":
       return ["cheats", "settings", "headHome", "close"];
     default:

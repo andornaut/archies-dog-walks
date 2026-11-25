@@ -2,6 +2,7 @@ export const SCENE_KEYS = {
   boot: "boot",
   card: "card",
   celebration: "celebration",
+  cheats: "cheats",
   end: "end",
   help: "help",
   // The help pages' pictures: the walk, and the HUD and a card over it.

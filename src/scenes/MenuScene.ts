@@ -1,4 +1,3 @@
-import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 import { Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
@@ -16,7 +15,7 @@ import {
 } from "../ui/navigationMenu.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { whenArtReady } from "./artReady.ts";
-import { type CheatsModal, openCheatsModal } from "./cheatsModal.ts";
+import type { CheatsData } from "./CheatsScene.ts";
 import { openHelp } from "./helpScreen.ts";
 import { clearOnHomePageOpening } from "./homeBarPress.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
@@ -54,79 +53,40 @@ export class MenuScene extends Scene {
 
   private mount({ context, onHeadHome, resume }: MenuSceneData): boolean {
     const area = overlayRegion("home");
-    let cheats: CheatsModal | undefined;
-    let cheatsInvoker: HTMLElement | undefined;
-    const closeCheats = (restore = true) => {
-      const open = cheats !== undefined;
-      const invoker = cheatsInvoker;
-      cheats?.destroy();
-      cheats = undefined;
-      cheatsInvoker = undefined;
-      if (
-        restore &&
-        open &&
-        nativeSceneAccepts(this) &&
-        invoker?.isConnected &&
-        !invoker.hidden &&
-        invoker.closest("[hidden], [inert]") === null &&
-        invoker.ownerDocument.activeElement !== invoker
-      ) {
-        focusTarget(invoker);
-      }
-    };
-    const back = () => {
-      if (cheats !== undefined) {
-        if (!cheats.back()) {
-          closeCheats();
-        }
+    const close = () => closeOverlay(resume, this);
+    // A page asked of from its own Menu returns to it.
+    const page = (key: SceneKey, open: () => void) => () => {
+      if (resume === key) {
+        close();
       } else {
-        closeOverlay(resume, this);
+        open();
       }
-    };
-    const close = back;
-    this.events.once(Scenes.Events.SHUTDOWN, () => closeCheats(false));
-    const settings = () => {
-      const data: SettingsData = { region: "home", resume: SCENE_KEYS.menu };
-      openOverlay(this, SCENE_KEYS.settings, data);
     };
     const actions: Readonly<Record<MenuItem, () => void>> = {
-      cheats: () => {
-        if (cheats === undefined) {
-          cheats = openCheatsModal(this, false, closeCheats);
-        }
-      },
+      cheats: page(SCENE_KEYS.cheats, () => {
+        const data: CheatsData = { region: "home", resume: SCENE_KEYS.menu };
+        openOverlay(this, SCENE_KEYS.cheats, data);
+      }),
       close,
       headHome: () => {
         close();
         onHeadHome?.();
       },
-      help: () => {
-        if (resume === SCENE_KEYS.help) {
-          close();
-        } else {
-          whenArtReady(this, () => openHelp(this, { region: "home", resume: SCENE_KEYS.menu }));
-        }
-      },
-      logbook: () => {
-        if (resume === SCENE_KEYS.stats) {
-          close();
-        } else {
-          openOverlay(this, SCENE_KEYS.stats, { resume: SCENE_KEYS.menu });
-        }
-      },
-      settings,
+      help: page(SCENE_KEYS.help, () =>
+        whenArtReady(this, () => openHelp(this, { region: "home", resume: SCENE_KEYS.menu })),
+      ),
+      logbook: page(SCENE_KEYS.stats, () =>
+        openOverlay(this, SCENE_KEYS.stats, { resume: SCENE_KEYS.menu }),
+      ),
+      settings: page(SCENE_KEYS.settings, () => {
+        const data: SettingsData = { region: "home", resume: SCENE_KEYS.menu };
+        openOverlay(this, SCENE_KEYS.settings, data);
+      }),
     };
     const panel: QuestionPanel = {
       backgroundCancel: close,
       close,
       entries: menuItems(context).map((item) => ({
-        ...(item === "cheats"
-          ? {
-              onInvoke: (control: HTMLElement) => {
-                cheatsInvoker = control;
-              },
-            }
-          : {}),
         label: menuItemLabel(gameData, item),
         press: actions[item],
       })),
@@ -149,12 +109,8 @@ export class MenuScene extends Scene {
     addRampDim(this);
     this.events.on(Scenes.Events.PAUSE, () => this.scene.setVisible(false));
     this.events.on(Scenes.Events.RESUME, () => this.scene.setVisible(true));
-    onBackPressed(this, back);
-    listenOutsideTap(
-      this,
-      () => (cheats === undefined ? screenArea(covered) : screenArea([cheats.panel()])),
-      back,
-    );
+    onBackPressed(this, close);
+    listenOutsideTap(this, () => screenArea(covered), close);
     clearOnHomePageOpening(this, close);
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
       if (!nativeSceneAccepts(this)) {

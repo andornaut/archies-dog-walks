@@ -2,14 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import { DOM_ART_KEYS } from "../assets/domArt.ts";
 import { gameData } from "../data/index.ts";
-import { ICON_LABEL_GAP, LABEL_ICON, SETTINGS_CARD } from "../data/layout.ts";
+import { ICON_LABEL_GAP, LABEL_ICON, ROWS_PAGE, SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
 import { fontFileMetrics, fontInkRows, gameFont } from "../testing/fontInk.ts";
 import { blockPlace, inkEnd, shownText } from "../ui/dom/pixelLine.ts";
 import { deviceX, domScale, fontPixel } from "../ui/domScale.ts";
-import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
+import { PAGE_LAYOUT, pageBack } from "../ui/pageLayout.ts";
+import { PALETTE } from "../ui/palette.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { FEEDBACK } from "./feedback.ts";
 import { overlayRegion } from "./homeBar.ts";
@@ -40,7 +41,6 @@ const MEASURE: SettingsMeasure = {
 const rows = settingsRows(true);
 const layout = settingsLayout(
   fonts,
-  overlayRegion("home"),
   rows.map((row) =>
     row.kind === "slider"
       ? { kind: "slider" }
@@ -62,12 +62,11 @@ const STATE: SettingsState = {
   settings: DEFAULT_SETTINGS,
   steps: undefined,
 };
-const view = (state: Partial<SettingsState>, footerLabel?: string) =>
+const view = (state: Partial<SettingsState>) =>
   settingsView(
     MEASURE,
     {
       art: () => ({ height: 16, width: 16 }),
-      ...(footerLabel === undefined ? {} : { footerLabel }),
       layout,
       rows,
       words: gameData.menuText.settings,
@@ -76,28 +75,26 @@ const view = (state: Partial<SettingsState>, footerLabel?: string) =>
   );
 
 describe("settingsView", () => {
-  it.each([
-    ["navigation return", gameData.menuText.pageBack, gameData.menuText.pageBack],
-    ["standalone dismissal", undefined, gameData.menuText.common.close],
-  ])(
-    "labels its primary footer for %s without changing the close icon",
-    (_case, label, expected) => {
-      const current = view({}, label);
-      expect(current.card.footer).toMatchObject({ label: expected, primary: true });
-      expect(current.card.close).toEqual(view({}).card.close);
-    },
-  );
+  it("leaves by the page's Back under its page title, on a cream page", () => {
+    const { page } = view({});
+    expect(page.back).toEqual(pageBack(MEASURE, gameData.menuText.pageBack));
+    expect(page.fill).toEqual({ colour: PALETTE.cream, rect: PAGE_LAYOUT.rect });
+    expect(page.title.map(({ text }) => text)).toEqual([gameData.menuText.settings.title]);
+    expect(page.title[0]?.centreX).toBe(PAGE_LAYOUT.rect.width / 2);
+  });
 
-  it("uses readable body text for the centred build label and retains footer clearance", () => {
+  it("uses readable body text for the centred build label, labelFoot over Back", () => {
     const current = view({});
     expect(current.rowsViewport).toEqual(layout.rowsViewport);
     expect(current.rowsContentHeight).toBe(layout.rowsContentHeight);
     expect(current.build.font).toBe("body");
     expect(current.build.scale).toBe(TEXT_SCALE);
     expect(current.build.centre).toBe("ink");
-    expect(current.build.centreX).toBe(current.card.panel.x + current.card.panel.width / 2);
+    expect(current.build.centreX).toBe(SCREEN_CONFIG.width / 2);
     const visibleInk = fontInkRows("font-body", { scale: current.build.scale }, current.build.text);
-    expect(current.card.footer!.rect.y - current.build.capTop - visibleInk.bottom).toBe(MODAL.gap);
+    expect(current.page.back.rect.y - current.build.capTop - visibleInk.bottom).toBe(
+      ROWS_PAGE.labelFoot,
+    );
   });
 
   it.each([false, true])("shows current switch states with mute %s and stable help", (muted) => {
@@ -158,7 +155,7 @@ describe("settingsView", () => {
       const end =
         place.runs[0]!.left +
         inkEnd(font, shownText("title", state.lines[0]!)) * fontPixel(scale, state.scale);
-      expect(art.x + SETTINGS_CARD.row.switch.width - 1).toBe(319);
+      expect(art.x + SETTINGS_CARD.row.switch.width - 1).toBe(329);
       expect(end).toBe(deviceX(scale, art.x + SETTINGS_CARD.row.switch.width));
     }
   });
@@ -239,12 +236,4 @@ describe("settingsView", () => {
   it("draws only art the HTML interface ships", () => {
     expect(SETTINGS_ART_KEYS.filter((key) => !DOM_ART_KEYS.has(key))).toEqual([]);
   });
-});
-
-it("keeps Settings dismissal centred without a Cheats entry", () => {
-  const card = view({}).card;
-  expect(card.buttons).toEqual([]);
-  const close = card.footer!;
-  expect(close.primary).toBe(true);
-  expect(close.rect.x + close.rect.width / 2).toBe(layout.panel.x + layout.panel.width / 2);
 });

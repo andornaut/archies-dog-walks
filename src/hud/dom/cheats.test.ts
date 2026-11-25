@@ -3,7 +3,6 @@ import { expect, it, vi } from "vitest";
 import { gameData } from "../../data/index.ts";
 import { NEXT_WALK_OFF, startZones } from "../../dev/cheats.ts";
 import { cheatsView } from "../../dev/cheatsView.ts";
-import { overlayRegion } from "../../home/homeBar.ts";
 import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
@@ -28,7 +27,7 @@ async function cheatsScreen(inWalk = false, canResetSave = false) {
       titleInk: (line) => modalTitleInk(gameFont("font-title"), line),
       wrapNote: (_width, text) => [text],
     },
-    { area: overlayRegion(inWalk ? "walk" : "home"), data: gameData, words: gameData.menuText },
+    { data: gameData, words: gameData.menuText },
     {
       canResetSave,
       next: NEXT_WALK_OFF,

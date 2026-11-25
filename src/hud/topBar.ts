@@ -62,8 +62,8 @@ export function topBarKey(repeat: boolean, code: string): TopBarKey | undefined 
 
 // What holds the walk still. card: a card or the zone celebration, which can sit under the pause
 // menu or the Home question, as the hit stop can. hold: a press on the HUD opened the detail card
-// that explains it. menu: the pause menu, the Home question, or help or the settings opened with
-// or over the menu. page: the tab is hidden or the window has lost focus.
+// that explains it. menu: the pause menu, the Home question, or Cheats, Help or the settings opened
+// with or over the menu. page: the tab is hidden or the window has lost focus.
 export interface RunPause {
   card: boolean;
   hitStop: boolean;
@@ -108,31 +108,24 @@ export function gameplayAllowed(pause: RunPause): boolean {
   return !walkPaused(pause) && !pause.hitStop;
 }
 
-export type TopBarAction = "closeHelp" | "mute" | "openMenu" | "resume";
+export type TopBarAction = "closePage" | "mute" | "openMenu" | "resume";
 
 // What a walk-bar button does, pressed by a tap or by its key (the pause button's P and Escape,
 // and M, which mutes or unmutes): Mute toggles sound, and Pause opens the menu. Under a card,
 // an overlay or an explanation's detail card the bar is dimmed and inactive, so neither a tap
 // nor M presses it; P and Escape stay the open menu's and question's back keys and resume.
-// Help is a page under this bar, which stays live over it: a tap mutes, or on Pause closes help
-// back to the menu, as P and Escape do; help takes the keys itself. The settings take P, Escape
-// and M themselves.
+// Cheats, Help and the settings are pages under this bar, which stays live over them: a tap mutes,
+// or on Pause closes the page back to the menu, as P and Escape do; the page takes the keys itself.
 export function topBarAction(
   pause: RunPause,
   via: "key" | "tap",
   button: WalkBarButtonId,
 ): TopBarAction | undefined {
-  if (pause.menu === "help") {
+  if (pause.menu === "cheats" || pause.menu === "help" || pause.menu === "settings") {
     if (via === "key" || pause.hold) {
       return undefined;
     }
-    return button === "mute" ? "mute" : "closeHelp";
-  }
-  if (pause.menu === "cheats") {
-    return via === "tap" && button === "pause" && !pause.hold ? "resume" : undefined;
-  }
-  if (pause.menu === "settings" && via === "key") {
-    return undefined;
+    return button === "mute" ? "mute" : "closePage";
   }
   const covered = pause.card || pause.hold || pause.menu !== "closed";
   if (covered && (via === "tap" || button === "mute")) {
@@ -151,7 +144,7 @@ export function topBarAction(
 export type WalkBackAction = "closeExplanation" | "menu" | "none" | "resume";
 
 // What back does during a walk, innermost first: nothing once the walk is over, before the end
-// screen; an explanation's detail card closes; help and the settings close themselves; the Home
+// screen; an explanation's detail card closes; Cheats, Help and the settings close themselves; the Home
 // question, which only the fork card's End walk asks, closes back to the fork card; the pause
 // menu resumes; else, over the walk, a card or the zone celebration, the pause menu opens.
 export function walkBackAction(over: boolean, pause: RunPause): WalkBackAction {

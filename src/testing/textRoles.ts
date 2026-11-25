@@ -40,7 +40,6 @@ import {
   noteRoom,
   SETTINGS_BUILD_LABEL,
   SETTINGS_NOTE_STYLE,
-  settingsLayout,
 } from "../home/settings.ts";
 import { dogRows, gearRows, type ShopRow, slotRows } from "../home/shop.ts";
 import { SHOP_LAYOUT, SHOP_MESSAGE_FIT, shopRowTextRoom } from "../home/shopLayout.ts";
@@ -538,7 +537,7 @@ interface CardTitles {
 export function cardTitles(): CardTitles[] {
   const screen = SCREEN_LAYOUT.screen;
   const home = overlayRegion("home");
-  const { installSteps, title } = gameData.menuText.settings;
+  const { installSteps } = gameData.menuText.settings;
   const questions = pauseMenuLayout(BODY, screen, {
     buttonCount: PAUSE_MENU_ITEMS.length,
     noteLines: 0,
@@ -596,11 +595,6 @@ export function cardTitles(): CardTitles[] {
       };
     }),
     {
-      card: settingsLayout({ body: BODY, title: TITLE }, home, []).panel,
-      role: "settings title",
-      titles: [title],
-    },
-    {
       card: updateNotice().panel,
       role: "update notice's title",
       titles: [gameData.homeText.update.title, gameData.homeText.update.failure],
@@ -609,7 +603,8 @@ export function cardTitles(): CardTitles[] {
 }
 
 // Each card's titles in the room its title row leaves them beside its close control, and the
-// Pet shop's and the Logbook's page titles across their title row, which has none.
+// pages' titles (the Pet shop's, the Logbook's, Settings' and Cheats') across their title row,
+// which has none.
 function cardTitleRoles(): TextRoleCase[] {
   const rooms = [
     ...cardTitles().map(({ card, close = closeControl(card), role, titles }) => ({
@@ -618,9 +613,14 @@ function cardTitleRoles(): TextRoleCase[] {
       titles,
     })),
     {
-      role: "shop and Logbook page title",
+      role: "page title",
       room: barTitleRoom(SHOP_LAYOUT.title.row, undefined),
-      titles: [gameData.homeText.shop.title, gameData.menuText.stats.title],
+      titles: [
+        gameData.homeText.shop.title,
+        gameData.menuText.stats.title,
+        gameData.menuText.settings.title,
+        gameData.menuText.cheats.title,
+      ],
     },
   ];
   return rooms.flatMap(({ role, room, titles }) =>

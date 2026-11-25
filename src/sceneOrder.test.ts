@@ -16,10 +16,14 @@ const HELP = [
   "new CardScene(SCENE_KEYS.helpCard)",
 ];
 
-// A modal over help dims all of it once, its canvas page and pictures included: the modal's
+// A modal over help, or over a page its Menu opens, dims all of it once, its canvas page and
+// pictures included: the modal's
 // canvas dim draws after help and the picture scenes.
-it.each(["MenuScene", "SettingsScene"])("lists %s after help and its pictures", (modal) => {
-  const at = (entry: string) => LISTED.indexOf(entry);
-  expect(HELP.map(at)).not.toContain(-1);
-  expect(HELP.filter((entry) => at(entry) > at(modal))).toEqual([]);
-});
+it.each(["CheatsScene", "MenuScene", "SettingsScene"])(
+  "lists %s after help and its pictures",
+  (modal) => {
+    const at = (entry: string) => LISTED.indexOf(entry);
+    expect(HELP.map(at)).not.toContain(-1);
+    expect(HELP.filter((entry) => at(entry) > at(modal))).toEqual([]);
+  },
+);

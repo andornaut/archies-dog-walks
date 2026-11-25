@@ -21,8 +21,8 @@ import {
 
 // Every button on a top bar acts as it does with nothing open, under every card and overlay
 // that leaves the bar lit, and nothing else on the walk acts under them: a well or a dog card
-// explains nothing, and a tap there closes what can close (regionOutside) or does nothing. Help
-// alone covers the walk bar.
+// explains nothing, and a tap there closes what can close (regionOutside) or does nothing. The
+// pages (Cheats, Help and the settings) cover the walk under the live walk bar.
 
 const centre = (rect: Rect): Point => ({ x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 });
 
@@ -74,10 +74,12 @@ const WALK_MODALS: readonly (readonly [string, RunPause])[] = [
   ["the pause menu", { ...NOTHING_PAUSED, menu: "open" }],
   ["the pause menu over a card", { ...NOTHING_PAUSED, card: true, menu: "open" }],
   ["the Home question over a card", { ...NOTHING_PAUSED, card: true, menu: "confirmHome" }],
+  ["Cheats", { ...NOTHING_PAUSED, menu: "cheats" }],
+  ["help", { ...NOTHING_PAUSED, menu: "help" }],
   ["the settings", { ...NOTHING_PAUSED, menu: "settings" }],
   ["the settings over a card", { ...NOTHING_PAUSED, card: true, menu: "settings" }],
-  ["help", { ...NOTHING_PAUSED, menu: "help" }],
 ];
+const PAGES = new Set(["Cheats", "help", "the settings", "the settings over a card"]);
 
 // Each target's action with nothing open; the rows below list only what differs.
 const WALK_BASE: Readonly<Record<WalkTarget, string | undefined>> = {
@@ -101,12 +103,12 @@ const INACTIVE: Readonly<Record<WalkTarget, undefined>> = {
   upgradeIcon: undefined,
 };
 
-// Help is a page: its live bar's Mute mutes and its Pause closes help; the rest stays inactive.
+// A page's live bar's Mute mutes and its Pause closes the page; the rest stays inactive.
 const WALK_CHANGES: Readonly<Record<string, Partial<Record<WalkTarget, string | undefined>>>> =
   Object.fromEntries(
     WALK_MODALS.map(([modal]) => {
-      if (modal === "help") {
-        return [modal, { ...INACTIVE, mute: "mute", pause: "closeHelp" }] as const;
+      if (PAGES.has(modal)) {
+        return [modal, { ...INACTIVE, mute: "mute", pause: "closePage" }] as const;
       }
       return [modal, modal === "nothing" ? {} : INACTIVE] as const;
     }),

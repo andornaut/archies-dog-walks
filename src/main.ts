@@ -25,6 +25,7 @@ import { pageDeviceSettings } from "./save/settings.ts";
 import { BootScene } from "./scenes/BootScene.ts";
 import { CardScene } from "./scenes/CardScene.ts";
 import { CelebrationScene } from "./scenes/CelebrationScene.ts";
+import { CheatsScene } from "./scenes/CheatsScene.ts";
 import { EndScene } from "./scenes/EndScene.ts";
 import { HelpPictureScene } from "./scenes/HelpPictureScene.ts";
 import { HelpScene } from "./scenes/HelpScene.ts";
@@ -103,6 +104,7 @@ function bootGame(context: GameStartup): Game {
       new CardScene(SCENE_KEYS.helpCard),
       MenuScene,
       SettingsScene,
+      CheatsScene,
       UpdateScene,
       TapBurstScene,
     ],

@@ -9,22 +9,19 @@ import { createTextLine, placeBox, placeFrame, placeText } from "../../ui/dom/pi
 import { refuse } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { type DomScale, gridY } from "../../ui/domScale.ts";
-import { bodyScrollbarPart } from "./bodyScrollbar.ts";
+import { type DomPage, showPage } from "./page.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
-import {
-  type DomQuestionPanel,
-  type DomQuestionPanelInput,
-  showQuestionPanel,
-} from "./questionPanel.ts";
+import type { DomQuestionPanel, DomQuestionPanelInput } from "./questionPanel.ts";
 
-// The Cheats modal in HTML over the canvas: a Large card drawn as a modal card is
-// (showQuestionPanel), its title, X and Back fixed, and between them a body
-// that scrolls with the house scrollbar beside it. Switches and action buttons send intent to
-// the scene, which keeps the cheats; a disabled control refuses it.
+// The Cheats page in HTML over the canvas, on the page template (showPage): its title and Back
+// fixed, and between them its rows in the page's body, which scrolls with the pages' scrollbar
+// beside it. Switches and action buttons send intent to the scene, which keeps the cheats; a
+// disabled control refuses it.
 
 export interface DomCheatsInput
   extends Pick<DomQuestionPanelInput, "closeLabel" | "fonts" | "toGame">, DomArtSource {
   readonly act: (action: CheatAction) => void;
+  // What Back does.
   readonly close: () => void;
   readonly reducedMotion: () => boolean;
   // The scene retains the seed callback for its separate developer tools.
@@ -243,7 +240,7 @@ function settingRowPart(
   };
 }
 
-// The Cheats modal in layer, shown and its dialog focused.
+// The Cheats page in layer, shown and its dialog focused.
 export function showCheats(layer: UiLayer, input: DomCheatsInput): DomCheats {
   const doc = layer.element.ownerDocument;
   let current = input.view;
@@ -252,15 +249,15 @@ export function showCheats(layer: UiLayer, input: DomCheatsInput): DomCheats {
   const clip = doc.createElement("div");
   clip.className = "adw-scroll-viewport adw-framed";
   clip.setAttribute("role", "region");
-  clip.setAttribute("aria-label", input.view.card.title.map(({ text }) => text).join(" "));
+  clip.setAttribute("aria-label", input.view.page.title.map(({ text }) => text).join(" "));
   Object.assign(clip.style, { scrollbarWidth: "none" });
   const content = doc.createElement("div");
   content.className = "adw-framed";
   clip.append(content);
   const press = {
-    accepts: () => panel.accepts(),
+    accepts: () => page.accepts(),
     burst: (event: PointerEvent) =>
-      panel.burst(input.toGame({ x: event.clientX, y: event.clientY })),
+      page.burst(input.toGame({ x: event.clientX, y: event.clientY })),
   };
   const rows = input.view.rows.map((first, i): RowPart => {
     const view = () => current.rows[i] ?? first;
@@ -290,7 +287,6 @@ export function showCheats(layer: UiLayer, input: DomCheatsInput): DomCheats {
       }
     });
   };
-  const scrollbar = bodyScrollbarPart(doc, clip, () => current.layout);
   const controls = rows.flatMap((row) => row.controls);
   const resetRow = current.rows.findIndex((row) =>
     row.buttons.some(({ action }) => action.kind === "resetSave"),
@@ -300,47 +296,46 @@ export function showCheats(layer: UiLayer, input: DomCheatsInput): DomCheats {
   );
   const resetControl =
     resetButton === undefined ? undefined : rows[resetRow]?.controls[resetButton];
-  const parts: DomPart[] = [
-    {
-      controls,
-      element: clip,
-      place: placeRows,
-      ready: Promise.all(rows.map(({ ready }) => ready)).then((urls) => urls.flat()),
-    },
-    scrollbar,
-  ];
-  const panel = showQuestionPanel(layer, {
-    backgroundCancel: input.close,
-    close: input.close,
-    closeLabel: input.closeLabel,
+  const list: DomPart = {
+    controls,
+    element: clip,
+    place: placeRows,
+    ready: Promise.all(rows.map(({ ready }) => ready)).then((urls) => urls.flat()),
+  };
+  const page: DomPage = showPage(layer, {
+    back: input.close,
+    chrome: input.view.page,
     fonts: input.fonts,
-    numberKeys: false,
-    parts,
-    presses: [],
+    list: {
+      clip,
+      part: list,
+      scroll: () => ({
+        contentHeight: current.layout.contentHeight,
+        viewport: current.layout.viewport,
+      }),
+    },
     toGame: input.toGame,
-    view: input.view.card,
   });
   return {
-    accepts: () => panel.accepts(),
-    capture: () => panel.capture(),
+    accepts: () => page.accepts(),
+    capture: () => page.capture(),
     destroy() {
       rows.forEach((row) => row.dispose?.());
-      panel.destroy();
+      page.destroy();
     },
     focusReset() {
       if (resetControl !== undefined) {
-        panel.focusControl(controls.indexOf(resetControl));
+        page.focusControl(controls.indexOf(resetControl));
       }
     },
-    setDimmed: (dimmed) => panel.setDimmed(dimmed),
-    setEnabled: (enabled) => panel.setEnabled(enabled),
-    setInert: (inert) => panel.setInert(inert),
-    setShown: (shown) => panel.setShown(shown),
+    setDimmed: (dimmed) => page.setDimmed(dimmed),
+    setEnabled: (enabled) => page.setEnabled(enabled),
+    setInert: (inert) => page.setInert(inert),
+    setShown: (shown) => page.setShown(shown),
     update(view) {
       current = view;
-      const scale = layer.scale();
-      placeRows(scale);
-      scrollbar.place(scale);
+      placeRows(layer.scale());
+      page.follow();
     },
   };
 }

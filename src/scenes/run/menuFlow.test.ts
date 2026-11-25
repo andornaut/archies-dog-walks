@@ -10,23 +10,22 @@ vi.mock("../soundboard.ts", () => ({ soundboardOf: () => ({ setPaused: vi.fn() }
 function fixture() {
   let current: PauseSceneData | undefined;
   const headHome = vi.fn();
-  const pause = { backCheats: vi.fn(() => false), cheatsOpen: vi.fn(() => false) };
+  const shown = new Set<string>();
   const scene = {
     scene: {
       get: () => ({
-        ...pause,
         scene: {
           restart: (data: PauseSceneData) => {
             current = data;
           },
         },
       }),
-      isActive: () => false,
+      isActive: (key: string) => shown.has(key),
       isPaused: () => false,
       launch: (_key: string, data: PauseSceneData) => {
         current = data;
       },
-      stop: vi.fn(),
+      stop: vi.fn((key: string) => shown.delete(key)),
     },
     time: { paused: false },
     tweens: { pauseAll: vi.fn(), resumeAll: vi.fn() },
@@ -38,7 +37,7 @@ function fixture() {
     over: () => false,
     pauseNote: () => "",
   });
-  return { current: () => current!, flow, headHome, pause, scene };
+  return { current: () => current!, flow, headHome, scene, shown };
 }
 
 it("confirms navigation before requesting a title destination and retains fork settlement", () => {
@@ -73,18 +72,13 @@ it("a cancelled title confirmation does not alter subsequent fork or automatic r
   expect(endSceneFor("title", { kind: "ended", reason: "wentHome" })).toBe("start");
 });
 
-it("keeps Pause while closing the direct Cheats layer before resuming", () => {
-  const { flow, pause, scene } = fixture();
+it("counts the Cheats page as the menu's and stops it with Pause when the walk resumes", () => {
+  const { flow, scene, shown } = fixture();
   flow.openPause("menu");
-  pause.cheatsOpen.mockReturnValue(true);
-  pause.backCheats.mockReturnValueOnce(true);
+  shown.add("cheats");
   expect(flow.pause().menu).toBe("cheats");
   flow.closePause();
-  expect(scene.scene.stop).not.toHaveBeenCalled();
-  expect(scene.time.paused).toBe(true);
-  pause.cheatsOpen.mockReturnValue(false);
-  expect(flow.pause().menu).toBe("open");
-  flow.closePause();
+  expect(scene.scene.stop).toHaveBeenCalledWith("cheats");
   expect(scene.scene.stop).toHaveBeenCalledWith("pause");
   expect(flow.pause().menu).toBe("closed");
 });

@@ -385,7 +385,7 @@ export function layoutExport(
           ),
         }),
       },
-      settings: settingsLayout({ body, title }, overlayRegion("home"), SETTINGS_EXPORT_ROWS),
+      settings: settingsLayout({ body, title }, SETTINGS_EXPORT_ROWS),
       shop: { ...SHOP_LAYOUT, tabRects: shopTabRects(SHOP_TABS.length) },
       stats: { ...STATS_LAYOUT, tabRects: statsTabRects() },
     },

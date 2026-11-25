@@ -34,9 +34,9 @@ import {
   settingsView,
   type SwitchKey,
 } from "../home/settingsView.ts";
+import { coverHelpUnderlay } from "../hud/dom/helpUnderlay.ts";
 import type { DomSettings } from "../hud/dom/settings.ts";
 import { isConfirmKey, isMuteKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
-import { screenArea } from "../input/outsideTap.ts";
 import {
   installApp,
   installState,
@@ -56,24 +56,27 @@ import {
   withProbe,
 } from "../ui/phaser/pixelText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
-import { clearOnHomePageOpening } from "./homeBarPress.ts";
+import { listenHomeBar } from "./homeBarPress.ts";
+import type { MenuSceneData } from "./MenuScene.ts";
 import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import {
   BAR_MUTED_EVENT,
   closeOverlay,
-  listenOutsideTap,
   nativeSceneAccepts,
   onBackPressed,
   onSceneEvent,
   type OverlayData,
 } from "./overlay.ts";
 import { currentSettings, setSettings } from "./profileStore.ts";
+import { htmlPanelPlace } from "./questionPanel.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { addHtmlSettings } from "./settingsHtml.ts";
 import { canvasSettingsMeasure } from "./settingsMeasure.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { listenTargetPress, sameByValue } from "./targetPress.ts";
+import { requestTitleReturn } from "./titleNavigation.ts";
+import { shownTopSectionRoots } from "./topSection.ts";
 import { BODY_TEXT } from "./uiKit.ts";
 
 // Emitted on game.events when settings close.
@@ -138,31 +141,38 @@ function settingsFonts(scene: Scene): SettingsFonts {
 }
 
 // What the settings are launched with: the scene under them, which they resume on close, and
-// where they open, which sets the safe region their card sits in (overlayRegion): a home page
-// under its top bar, or the walk view. The whole game frame dims under them, the top bar included.
+// where they open, which sets whose top bar stays live over them and the safe region the install
+// steps' card sits in (overlayRegion): a home page's, or on a walk the walk bar.
 export interface SettingsData extends OverlayData {
   readonly region: OverlayRegion;
 }
 
 // Sound on or off, music and effects volume, reduced motion and, until the game is installed,
-// Install, reachable from the home screen and the pause menu. The card draws over the screen it
-// opens from, its dim part ramp-dimmed as under the pause menu. Every change is saved and applied
-// at once. The build's label sits under the rows. A switch row is normal and shows its setting in
-// its switch; it dips while held and flips as the tap lifts. A tap anywhere on the Install row,
-// its Get button included, opens the browser's install prompt or, where the browser holds none, a
-// card with that browser's own install steps over the settings. Up and Down move the keyboard's
-// focus through the rows and the close control; Enter or Space presses the focused row, and on a
-// slider the left and right keys, Home and End (the kit slider's) and A/D and H/L set the volume.
+// Install, reachable from the home screen and the pause menu. A page, not a modal, as Help is: it
+// covers the screen under the top bar, which stays live over it, the home bar routed through it
+// (listenHomeBar), its Menu opening the page's own Menu over it or returning to the Menu it opened
+// from, and on a walk the walk bar, whose Pause closes it back to the pause menu (topBarAction).
+// Back, Escape and the system back return to the screen it opened over; it has no outside. Every
+// change is saved and applied at once. The build's label sits under the rows. A switch row is
+// normal and shows its setting in its switch; it dips while held and flips as the tap lifts. A tap
+// anywhere on the Install row, its Get button included, opens the browser's install prompt or,
+// where the browser holds none, a modal card with that browser's own install steps over the page.
+// Up and Down move the keyboard's focus through the rows and Back; Enter or Space presses the
+// focused row, and on a slider the left and right keys, Home and End (the kit slider's) and A/D
+// and H/L set the volume.
 export class SettingsScene extends Scene {
+  // The caller's safe region, where the install steps' card sits.
   private dim: Rect = SCREEN_LAYOUT.screen;
   private focus: Focus | null = null;
   // No rows until create measures their notes, so no font is read.
-  private layout: SettingsLayout = settingsLayout(NO_FONTS, SCREEN_LAYOUT.screen, []);
+  private layout: SettingsLayout = settingsLayout(NO_FONTS, []);
   private pressed: Target | undefined;
   private resumeKey: SceneKey | undefined;
   private rows: readonly Row[] = SETTING_ROWS;
-  // The install steps' card and the kind of steps it shows, while it is open.
+  // The install steps' card and the kind of steps it shows, and its shade over the canvas, while
+  // it is open.
   private steps: OpenSteps | undefined;
+  private stepsShade: readonly { destroy(): void }[] = [];
   // The scene owns settings and gestures; the native view owns their rendering.
   private html: DomSettings | undefined;
 
@@ -178,10 +188,21 @@ export class SettingsScene extends Scene {
     this.resumeKey = data.resume;
     this.dim = overlayRegion(data.region);
     this.rows = settingsRows(offersInstall(installState()));
-    this.layout = settingsLayout(settingsFonts(this), this.dim, rowShapes(this, this.rows));
+    this.layout = settingsLayout(settingsFonts(this), rowShapes(this, this.rows));
     this.focus = null;
     this.pressed = undefined;
     this.steps = undefined;
+    this.stepsShade = [];
+    const place = htmlPanelPlace(this);
+    // The page hides the screen roots under it but the live top bar's, as Help does; restored
+    // before the page is disposed.
+    const uncover =
+      place === undefined
+        ? undefined
+        : coverHelpUnderlay(shownTopSectionRoots(this), place.layer.element);
+    if (uncover !== undefined) {
+      this.events.once(Scenes.Events.SHUTDOWN, uncover);
+    }
     this.html = addHtmlSettings(this, {
       close: () => this.close(),
       closeSteps: () => this.closeSteps(),
@@ -203,18 +224,17 @@ export class SettingsScene extends Scene {
       view: this.view(),
     });
     if (this.html === undefined) {
+      uncover?.();
       return false;
     }
-    addRampDim(this);
     this.render();
 
     // The install row comes and goes as the game becomes installable or installed.
     const stopWatching = onInstallStateChange(() => this.scene.restart(data));
     this.events.once(Scenes.Events.SHUTDOWN, stopWatching);
 
-    // The close control, the switch rows, which dip before they act, the install row, which
-    // dips as it opens the browser's prompt or the steps' card, and the steps' card's close
-    // control.
+    // The switch rows, which dip before they act, the install row, which dips as it opens the
+    // browser's prompt or the steps' card, and the steps' card's close control.
     listenTargetPress<Target>(this, {
       dipMs: (target) =>
         target.kind === "switch" || target.kind === "install" ? FEEDBACK.pressDipMs : 0,
@@ -227,19 +247,24 @@ export class SettingsScene extends Scene {
       same: sameByValue,
       targetAt: (x, y) => this.targetAt(x, y),
     });
-    // The back button and a tap anywhere around the card close it, as the close control in its
-    // band does: the card's backdrop takes the whole game frame, the dimmed top bar and, over the
-    // walk, the dog cards included, and this takes the page beside the game. While the steps'
-    // card is open, the back button and a tap around that card close it, the settings card
-    // included. As listenDismiss, with the area read as each press lands.
+    // The system back closes the install steps' card first, then the page. A tap outside the
+    // steps' card closes it (its backdrop); the page itself has no outside.
     onBackPressed(this, () => this.back());
-    listenOutsideTap(
-      this,
-      () => screenArea([this.steps === undefined ? this.layout.panel : this.steps.card]),
-      () => this.back(),
-    );
     if (data.region === "home") {
-      clearOnHomePageOpening(this, () => this.close());
+      // The bar's Menu returns to the Menu the page opened from, else opens the page's own Menu.
+      listenHomeBar(
+        this,
+        () => this.closeSteps(),
+        (): MenuSceneData => ({
+          context: "settings",
+          onHeadHome: () => {
+            this.close();
+            requestTitleReturn(this);
+          },
+          resume: SCENE_KEYS.settings,
+        }),
+        data.resume === SCENE_KEYS.menu ? () => this.close() : undefined,
+      );
     }
     // Sound on the top bar flips the sound switch here too.
     onSceneEvent(this, this.game.events, BAR_MUTED_EVENT, () => this.render());
@@ -279,7 +304,7 @@ export class SettingsScene extends Scene {
     }
     const direction = focusDirectionForKey(code);
     if (direction !== undefined) {
-      // The rows, then the close control, one per focus row.
+      // The rows, then Back, one per focus row.
       this.focus = moveFocus([...this.rows.map(() => 1), 1], direction, this.focus);
       this.render();
     } else if (isPauseKey(code)) {
@@ -291,8 +316,8 @@ export class SettingsScene extends Scene {
     }
   }
 
-  // Enter or Space flips a focused switch, presses Install, and closes from the close
-  // control or with nothing focused.
+  // Enter or Space flips a focused switch, presses Install, and closes from Back or with nothing
+  // focused.
   private confirm(focusedRow: Row | undefined): void {
     if (focusedRow?.kind === "switch") {
       this.flipAfterDip(focusedRow.key);
@@ -312,9 +337,6 @@ export class SettingsScene extends Scene {
 
   private tap(target: Target): void {
     switch (target.kind) {
-      case "close":
-        this.close();
-        return;
       case "install":
         this.install();
         return;
@@ -356,6 +378,7 @@ export class SettingsScene extends Scene {
       }),
       kind,
     };
+    this.stepsShade = addRampDim(this);
     this.render();
   }
 
@@ -365,12 +388,14 @@ export class SettingsScene extends Scene {
     }
     const row = this.rowIndex("install");
     this.steps = undefined;
+    this.stepsShade.forEach((shade) => shade.destroy());
+    this.stepsShade = [];
     this.pressed = undefined;
     this.focus = row < 0 ? null : { column: 0, row };
     this.render();
   }
 
-  // Back and outside taps close install steps first, then Settings.
+  // Back closes the install steps first, then Settings.
   private back(): void {
     if (this.steps === undefined) {
       this.close();
@@ -393,9 +418,6 @@ export class SettingsScene extends Scene {
     }
     if (this.steps !== undefined) {
       return containsPoint(this.steps.close.hit, x, y) ? { kind: "stepsClose" } : undefined;
-    }
-    if (containsPoint(this.layout.close.hit, x, y)) {
-      return { kind: "close" };
     }
     const row = this.rows.find((_, i) => containsPoint(this.rowRect(i), x, y));
     if (row?.kind === "switch") {
@@ -430,14 +452,13 @@ export class SettingsScene extends Scene {
     this.render();
   }
 
-  // Closes the settings, as their close control does, and as the walk bar's Settings button
-  // does over them (MenuFlow.closeSettings).
+  // Closes the settings, as Back does, and as the walk bar's Pause does over them.
   close(): void {
     closeOverlay(this.resumeKey, this);
     this.game.events.emit(SETTINGS_CLOSED_EVENT);
   }
 
-  // The card as it stands, measured on the scene's fonts.
+  // The page as it stands, measured on the scene's fonts.
   private view(): SettingsView {
     return settingsView(
       canvasSettingsMeasure(this),
@@ -449,10 +470,6 @@ export class SettingsScene extends Scene {
           const frame = this.textures.getFrame(key);
           return { height: frame.realHeight, width: frame.realWidth };
         },
-        footerLabel:
-          this.resumeKey === SCENE_KEYS.menu || this.resumeKey === SCENE_KEYS.pause
-            ? gameData.menuText.pageBack
-            : gameData.menuText.common.close,
         layout: this.layout,
         rows: this.rows,
         words: gameData.menuText.settings,

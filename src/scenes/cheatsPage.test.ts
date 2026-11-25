@@ -10,7 +10,7 @@ import type { CheatsState } from "../dev/cheatsView.ts";
 import type { DomCheatsInput } from "../hud/dom/cheats.ts";
 import type { DomQuestionPanelInput } from "../hud/dom/questionPanel.ts";
 import { cents } from "../units.ts";
-import { openCheatsModal } from "./cheatsModal.ts";
+import { openCheatsPage } from "./cheatsPage.ts";
 
 const fake = vi.hoisted(() => ({
   canResetSave: vi.fn(() => true),
@@ -34,7 +34,7 @@ vi.mock("../dev/devTools.ts", () => ({ devToolsOn: () => false }));
 vi.mock("../dev/cheatsView.ts", () => ({
   cheatsView: (_measure: unknown, _input: unknown, state: CheatsState) => {
     fake.projection(state);
-    return { layout: { panel: { height: 400, width: 300, x: 30, y: 40 } } };
+    return { layout: {} };
   },
 }));
 vi.mock("../hud/dom/cheats.ts", () => ({
@@ -56,6 +56,9 @@ vi.mock("../hud/dom/questionPanel.ts", () => ({
   },
 }));
 vi.mock("./modalMeasure.ts", () => ({ canvasPanelMeasure: () => ({}) }));
+vi.mock("./nativeModalShade.ts", () => ({
+  nativeModalShade: (_scene: unknown, panel: unknown) => panel,
+}));
 vi.mock("./questionPanel.ts", () => ({
   followScene: (_scene: unknown, panel: unknown) => panel,
   htmlPanelInput: () => ({}),
@@ -100,7 +103,7 @@ function open(inWalk: boolean) {
     scene: { get: () => fake.run, isActive: () => true, isPaused: () => false },
   } as unknown as Scene;
   const close = vi.fn();
-  const modal = openCheatsModal(scene, inWalk, close)!;
+  const modal = openCheatsPage(scene, inWalk, close)!;
   return { close, input: fake.input!, modal, scene };
 }
 

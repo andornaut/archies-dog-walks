@@ -37,7 +37,7 @@ import { REFUSAL_CUE } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { type DomScale, gridX, gridY } from "../../ui/domScale.ts";
 import { cssHex } from "../../ui/palette.ts";
-import { bodyScrollbarPart } from "./bodyScrollbar.ts";
+import { type DomPage, showPage } from "./page.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
 import {
   addTapBurst,
@@ -46,22 +46,22 @@ import {
   showQuestionPanel,
 } from "./questionPanel.ts";
 
-// The settings card in HTML over the canvas: the ui-detail-card, its title and close control
-// drawn as a modal card is (showQuestionPanel), and each row as its view (settingsView) lays it
-// out at the places the canvas draws it. A switch row is Game Kit's form row, the install row a
-// button and a volume row Game Kit's slider; the kit owns their roles, activation, slider keys
-// (the arrows, Home and End) and drags, and the game places their parts on its art-pixel grid
-// and draws their art. Activations, volumes and a held switch's dip go to the scene, which keeps
-// the settings and the keyboard's focus; every other key goes through to it, which moves its
-// focus and the page's with it. The install steps' card opens over the card in a dialog of its
-// own.
+// The Settings page in HTML over the canvas, on the page template (showPage): its title, its
+// rows scrolling in the page's body with the pages' scrollbar, the version label fixed under the
+// body and Back, each row as its view (settingsView) lays it out. A switch row is Game Kit's form
+// row, the install row a button and a volume row Game Kit's slider; the kit owns their roles,
+// activation, slider keys (the arrows, Home and End) and drags, and the game places their parts
+// on its art-pixel grid and draws their art. Activations, volumes and a held switch's dip go to
+// the scene, which keeps the settings and the keyboard's focus; every other key goes through to
+// it, which moves its focus and the page's with it. The install steps' card opens over the page
+// as a modal.
 
 export interface DomSettingsInput
   extends Pick<DomQuestionPanelInput, "closeLabel" | "fonts" | "toGame">, DomArtSource {
-  // What the close control and the steps' close control do.
+  // What Back and the steps' close control do.
   readonly close: () => void;
   readonly closeSteps: () => void;
-  // Told the row (by index) or close control (the rows' count) focus moves to, or null.
+  // Told the row (by index) or Back (the rows' count) focus moves to, or null.
   readonly onFocus: (index: number | null) => void;
   // A switch or install row's activation, and the switch row a pointer holds, shown pressed
   // until it lifts (undefined).
@@ -138,7 +138,7 @@ function hideKitText(...parts: readonly HTMLElement[]): void {
 function installPart(
   layer: UiLayer,
   input: DomSettingsInput,
-  panel: () => DomQuestionPanel,
+  panel: () => Pick<DomQuestionPanel, "accepts" | "capture">,
   origin: () => Point,
   burst: (event: PointerEvent) => void,
   row: SettingsRowView,
@@ -224,7 +224,7 @@ function switchPart(
   layer: UiLayer,
   input: DomSettingsInput,
   view: () => SettingsRowView,
-  panel: () => DomQuestionPanel,
+  panel: () => Pick<DomQuestionPanel, "accepts" | "capture">,
   origin: () => Point,
   burst: (event: PointerEvent) => void,
 ) {
@@ -301,7 +301,7 @@ function sliderPart(
   layer: UiLayer,
   input: DomSettingsInput,
   view: () => SettingsRowView,
-  panel: () => DomQuestionPanel,
+  panel: () => Pick<DomQuestionPanel, "accepts" | "capture">,
   origin: () => Point,
   burst: (event: PointerEvent) => void,
 ) {
@@ -437,7 +437,7 @@ function rowPart(
   layer: UiLayer,
   input: DomSettingsInput,
   current: () => SettingsView,
-  panel: () => DomQuestionPanel,
+  panel: () => Pick<DomQuestionPanel, "accepts" | "capture">,
   index: number,
   origin: () => Point,
   burst: (event: PointerEvent) => void,
@@ -455,8 +455,7 @@ function rowPart(
 }
 
 // The install steps' card: its title and close control, the glyph of the button the steps start
-// from, and the steps. The canvas draws the settings card under it, in its shade, while it
-// shows, so the shade blends as it does there.
+// from, and the steps, a modal over the page.
 function showSteps(
   layer: UiLayer,
   input: DomSettingsInput,
@@ -494,7 +493,7 @@ function showSteps(
   });
 }
 
-// The settings card in layer, shown and its dialog focused.
+// The Settings page in layer, shown and its dialog focused.
 export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettings {
   const doc = layer.element.ownerDocument;
   let current = input.view;
@@ -502,6 +501,8 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
     addTapBurst(layer, input.toGame({ x: event.clientX, y: event.clientY }));
   const viewport = doc.createElement("div");
   viewport.className = "adw-settings-rows adw-framed";
+  viewport.setAttribute("role", "region");
+  viewport.setAttribute("aria-label", input.view.page.title.map(({ text }) => text).join(" "));
   Object.assign(viewport.style, { scrollbarWidth: "none" });
   const content = doc.createElement("div");
   content.className = "adw-framed";
@@ -511,7 +512,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
       layer,
       input,
       () => current,
-      () => panel,
+      () => page,
       i,
       () => current.rowsViewport,
       burst,
@@ -519,11 +520,6 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
   );
   const separators = current.separators.map(() => createContentSeparator(doc));
   const build = createTextLine(doc, current.build);
-  const scrollbar = bodyScrollbarPart(doc, viewport, () => ({
-    contentHeight: current.rowsContentHeight,
-    scrollbar: current.rowsScrollbar,
-    viewport: current.rowsViewport,
-  }));
   content.append(...rows.map((row) => row.element), ...separators);
   const revealRow = (index: number | undefined) => {
     const row = index === undefined ? undefined : current.rows[index];
@@ -540,103 +536,102 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
     const scroll = viewport.scrollTop || 0;
     viewport.scrollTop = top < scroll ? top : bottom > scroll + height ? bottom - height : scroll;
   };
-  const parts: DomPart[] = [
-    {
-      controls: rows.map((row) => row.element),
-      element: viewport,
-      place: (scale) => {
-        placeBox(scale, ORIGIN, viewport, current.rowsViewport);
-        content.style.height = `${
-          gridY(scale, current.rowsViewport.y + current.rowsContentHeight) -
-          gridY(scale, current.rowsViewport.y)
-        }px`;
-        content.style.width = "100%";
-        for (const row of rows) {
-          row.place(scale);
+  const list: DomPart = {
+    controls: rows.map((row) => row.element),
+    element: viewport,
+    place: (scale) => {
+      placeBox(scale, ORIGIN, viewport, current.rowsViewport);
+      content.style.height = `${
+        gridY(scale, current.rowsViewport.y + current.rowsContentHeight) -
+        gridY(scale, current.rowsViewport.y)
+      }px`;
+      content.style.width = "100%";
+      for (const row of rows) {
+        row.place(scale);
+      }
+      separators.forEach((element, index) => {
+        const rect = current.separators[index];
+        if (rect !== undefined) {
+          placeContentSeparator(
+            scale,
+            { origin: current.rowsViewport, projection: "art" },
+            element,
+            rect,
+          );
         }
-        separators.forEach((element, index) => {
-          const rect = current.separators[index];
-          if (rect !== undefined) {
-            placeContentSeparator(
-              scale,
-              { origin: current.rowsViewport, projection: "art" },
-              element,
-              rect,
-            );
-          }
-        });
-      },
-      ready: Promise.all(rows.map((row) => row.ready)).then((urls) => urls.flat()),
+      });
     },
-    scrollbar,
-    {
-      element: build,
-      place: (scale) =>
-        placeText(input.fonts[current.build.font], scale, ORIGIN, build, current.build),
-    },
-  ];
-  const panel = showQuestionPanel(layer, {
-    backgroundCancel: input.close,
-    close: input.close,
-    closeLabel: input.closeLabel,
+    ready: Promise.all(rows.map((row) => row.ready)).then((urls) => urls.flat()),
+  };
+  const label: DomPart = {
+    element: build,
+    place: (scale) =>
+      placeText(input.fonts[current.build.font], scale, ORIGIN, build, current.build),
+  };
+  const page: DomPage = showPage(layer, {
+    back: input.close,
+    chrome: current.page,
     fonts: input.fonts,
-    numberKeys: false,
+    list: {
+      clip: viewport,
+      part: list,
+      scroll: () => ({
+        contentHeight: current.rowsContentHeight,
+        viewport: current.rowsViewport,
+      }),
+    },
     onFocus: (index) => {
       revealRow(index);
       input.onFocus(index ?? null);
     },
-    parts,
-    presses: [],
+    parts: [label],
     toGame: input.toGame,
-    view: current.card,
   });
   let steps: DomQuestionPanel | undefined;
   let shown = true;
   let enabled = true;
   let inert = false;
   let dimmed = false;
-  const placeAll = (scale: DomScale) => {
-    for (const part of parts) {
-      part.place(scale);
-    }
-  };
   return {
-    accepts: () => (steps ?? panel).accepts(),
-    capture: () => (steps ?? panel).capture(),
+    accepts: () => (steps ?? page).accepts(),
+    capture: () => (steps ?? page).capture(),
     destroy() {
       for (const row of rows) {
         row.destroy();
       }
       steps?.destroy();
-      panel.destroy();
+      page.destroy();
     },
     refuse(index, reducedMotion) {
       rows[index]?.refuse(reducedMotion);
     },
     setDimmed(value) {
       dimmed = value;
-      panel.setDimmed(value || steps !== undefined);
+      page.setDimmed(value || steps !== undefined);
       steps?.setDimmed(value);
     },
     setEnabled(value) {
       enabled = value;
-      panel.setEnabled(value);
+      page.setEnabled(value);
       steps?.setEnabled(value);
     },
     setInert(value) {
       inert = value;
-      panel.setInert(value);
+      page.setInert(value);
       steps?.setInert(value);
     },
     setShown(show) {
       shown = show;
-      panel.setShown(show);
+      page.setShown(show);
       steps?.setShown(show);
     },
     update(view, focus) {
       current = view;
-      placeAll(layer.scale());
-      panel.setDimmed(dimmed || view.steps !== undefined);
+      const scale = layer.scale();
+      list.place(scale);
+      label.place(scale);
+      page.follow();
+      page.setDimmed(dimmed || view.steps !== undefined);
       if (view.steps !== undefined && steps === undefined) {
         steps = showSteps(layer, input, view.steps);
         steps.setEnabled(enabled);
@@ -646,12 +641,12 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
       } else if (view.steps === undefined && steps !== undefined) {
         steps.destroy();
         steps = undefined;
-        panel.setShown(shown);
-        panel.setDimmed(dimmed);
+        page.setShown(shown);
+        page.setDimmed(dimmed);
       }
       if (steps === undefined) {
         revealRow(focus ?? undefined);
-        panel.focusControl(focus ?? undefined);
+        page.focusControl(focus ?? undefined);
       }
     },
   };

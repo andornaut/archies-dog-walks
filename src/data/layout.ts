@@ -761,6 +761,12 @@ export const LABEL_VALUE_GAP = 8;
 // the content's side inset, which the scrollbar's track keeps from the screen's right edge too.
 export const PAGE = { backFoot: 12, inset: 8 } as const;
 
+// The Settings and Cheats pages: their body's top titleGap rows under the page title row, its foot
+// bodyFoot rows over what stays fixed under it (Settings' version label, else Back's face), the
+// rows' gap from the scrollbar's track, and the version label's lowest ink labelFoot rows over
+// Back's face.
+export const ROWS_PAGE = { bodyFoot: 8, labelFoot: 8, titleGap: 24, trackGap: 6 } as const;
+
 // The Pet shop page, which the Logbook wears too.
 export const SHOP_PAGE = {
   // The Gear tab's rows' height.
@@ -844,7 +850,7 @@ export const LOGBOOK_PAGE = {
   wallText: { lineHeight: BODY_PITCH, lines: 3, pad: 4, x: 40, y: 4 },
 } as const;
 
-// The settings card.
+// The Settings page's rows and the install steps' card.
 export const SETTINGS_CARD = {
   // art: icon-install-panel's first ink column in its 16px cell.
   installIconInk: 2,
@@ -876,8 +882,6 @@ export const SETTINGS_CARD = {
     switch: { height: 16, width: 32 },
     // The slider's track: its top and height, and art: the knob's size.
     track: { dy: 30, height: 10, knobHeight: 16, knobWidth: 10 },
-    // The row's width.
-    width: 296,
   },
 } as const;
 

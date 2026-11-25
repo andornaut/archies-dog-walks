@@ -1,5 +1,4 @@
 import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
-import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { Scene } from "phaser";
 
 import { domArtUrl } from "../assets/domArtFiles.ts";
@@ -30,6 +29,7 @@ import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { CHEATS_CHANGED_EVENT, nextWalk, setNextWalk } from "./cheatChoices.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
+import { nativeModalShade } from "./nativeModalShade.ts";
 import {
   canResetSave,
   currentSettings,
@@ -42,21 +42,19 @@ import { followScene, htmlPanelInput, htmlPanelPlace, questionView } from "./que
 import type { RunScene } from "./RunScene.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 
-// The Cheats modal opened directly from Menu or Pause (gameplay/cheats.md): the view of the cheats where it
+// The Cheats page (gameplay/cheats.md), which CheatsScene shows: the view of the cheats where it
 // opened, over a walk or on the Start screen, and what each press does. It owns its HTML and
-// Reset save's question over it.
-export interface CheatsModal {
+// Reset save's question, a modal over it.
+export interface CheatsPage {
   // Closes Reset save's question, if open: false when there was none to close.
   back(): boolean;
   destroy(): void;
-  // The card's rect, which a tap outside closes.
-  panel(): Rect;
 }
 
-// Reset save's question is as wide as the Cheats modal under it.
+// Reset save's question is a Large modal.
 const RESET_WIDTH = modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, "large");
 
-// The walk the modal opened over, while it is on.
+// The walk the page opened over, while it is on.
 function runOf(scene: Scene, inWalk: boolean): RunScene | undefined {
   const { scene: plugin } = scene;
   if (!inWalk || !(plugin.isActive(SCENE_KEYS.run) || plugin.isPaused(SCENE_KEYS.run))) {
@@ -102,11 +100,11 @@ function afterPaint(work: () => void): () => void {
   };
 }
 
-export function openCheatsModal(
+export function openCheatsPage(
   scene: Scene,
   inWalk: boolean,
   close: () => void,
-): CheatsModal | undefined {
+): CheatsPage | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
     return undefined;
@@ -126,11 +124,7 @@ export function openCheatsModal(
   };
   const area = overlayRegion(inWalk ? "walk" : "home");
   const view = () =>
-    cheatsView(
-      canvasPanelMeasure(scene),
-      { area, data: gameData, words: gameData.menuText },
-      state(),
-    );
+    cheatsView(canvasPanelMeasure(scene), { data: gameData, words: gameData.menuText }, state());
   const render = () => dom.update(view());
   const changed = () => {
     scene.game.events.emit(CHEATS_CHANGED_EVENT);
@@ -191,19 +185,22 @@ export function openCheatsModal(
     });
     question = followScene(
       scene,
-      showQuestionPanel(place.layer, {
-        ...htmlPanelInput(place),
-        backgroundCancel: closeQuestion,
-        close: closeQuestion,
-        numberKeys: true,
-        presses: [closeQuestion, reset],
-        view: panel,
-      }),
+      nativeModalShade(
+        scene,
+        showQuestionPanel(place.layer, {
+          ...htmlPanelInput(place),
+          backgroundCancel: closeQuestion,
+          close: closeQuestion,
+          numberKeys: true,
+          presses: [closeQuestion, reset],
+          view: panel,
+        }),
+      ),
     );
     dom.setDimmed(true);
     dom.setInert(true);
   };
-  // The pending switch, if any, applied now: before any other cheat, and as the modal closes.
+  // The pending switch, if any, applied now: before any other cheat, and as the page closes.
   const finishSwitch = () => {
     if (switching === undefined) {
       return;
@@ -316,6 +313,5 @@ export function openCheatsModal(
       question = undefined;
       dom.destroy();
     },
-    panel: () => view().layout.panel,
   };
 }

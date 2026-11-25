@@ -74,10 +74,11 @@ describe("the shared menu entry under a home overlay", () => {
     overlay.up(up);
     expect(openOverlay).toHaveBeenCalledTimes(calls);
     if (calls > 0) {
+      // The Menu opens over the page the bar was pressed on.
       expect(openOverlay).toHaveBeenCalledWith(overlay.scene, "menu", {
         context: "page",
         onHeadHome: expect.any(Function),
-        resume: "start",
+        resume: "settings",
       });
     }
   });

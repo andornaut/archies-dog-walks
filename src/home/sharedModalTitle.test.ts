@@ -20,7 +20,7 @@ import { BADGE_STRIP, celebrationTitle, stripUnderClose } from "./badgesView.ts"
 import { detailCardView, type DetailMeasure } from "./detailCardView.ts";
 import { overlayRegion } from "./homeBar.ts";
 import { updateModalLayout } from "./homeLayout.ts";
-import { installStepsLayout, SETTINGS_ROW, settingsLayout } from "./settings.ts";
+import { installStepsLayout } from "./settings.ts";
 import { shopPageView } from "./shopPageView.ts";
 
 const measure: PanelMeasure = {
@@ -70,11 +70,6 @@ it.each([gameData.homeText.shop.title, gameData.menuText.stats.title])(
     balanced(page.panel.y, page.title, Math.min(...page.tabs.map((tab) => tab.face.y + tab.dy)));
   },
 );
-it("compensates the Settings first visible icon inset without changing row contents", () => {
-  const layout = settingsLayout(measure, overlayRegion("home"), [{ kind: "slider" }]);
-  const view = modalCardView(measure, layout.panel, gameData.menuText.settings.title, []);
-  balanced(layout.panel.y, view.title, layout.rows[0]!.rect.y + SETTINGS_ROW.icon.dy);
-});
 it.each([gameData.homeText.update.title, gameData.homeText.update.failure])(
   "grows Update content below the actual wrapped heading: %s",
   (title) => {

@@ -84,6 +84,7 @@ import { arcFlight } from "./arcFlight.ts";
 import { BumpBorder } from "./bumpBorder.ts";
 import { CardScene } from "./CardScene.ts";
 import { changeLabelColour } from "./changeLabelColours.ts";
+import type { CheatsScene } from "./CheatsScene.ts";
 import { DEBUFF_COLOURS } from "./debuffColours.ts";
 import { pillColours } from "./effectNameColours.ts";
 import { HudFeedback } from "./feedbackMoments.ts";
@@ -118,6 +119,7 @@ import {
 } from "./run/runMoments.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { type ScenePicture } from "./scenePicture.ts";
+import type { SettingsScene } from "./SettingsScene.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { TimedGroup } from "./timedGroup.ts";
 import { addNativeTopSection, joinTopSection } from "./topSection.ts";
@@ -395,12 +397,13 @@ export class HudScene extends Scene {
       }
     });
   }
-  // The topmost overlay over the walk that leaves the walk bar in view (the settings, the pause
-  // menu, the card or the zone celebration), else the HUD itself. A picture of the HUD has none.
+  // The topmost overlay over the walk that leaves the walk bar in view (Cheats, the settings, the
+  // pause menu, the card or the zone celebration), else the HUD itself. A picture of the HUD has none.
   // Each counts while paused, under an explanation or an overlay over it.
   private overlayScene(): Scene {
     const shown = (key: SceneKey) => this.scene.isActive(key) || this.scene.isPaused(key);
     const overlays = [
+      SCENE_KEYS.cheats,
       SCENE_KEYS.settings,
       SCENE_KEYS.pause,
       SCENE_KEYS.card,
@@ -423,11 +426,15 @@ export class HudScene extends Scene {
       return;
     }
     switch (topBarAction(run.runPause(), via, button)) {
-      case "closeHelp":
-        if (this.scene.isActive(SCENE_KEYS.help)) {
-          (this.scene.get(SCENE_KEYS.help) as HelpScene).close();
+      case "closePage": {
+        const page = [SCENE_KEYS.cheats, SCENE_KEYS.help, SCENE_KEYS.settings].find((key) =>
+          this.scene.isActive(key),
+        );
+        if (page !== undefined) {
+          (this.scene.get(page) as CheatsScene | HelpScene | SettingsScene).close();
         }
         break;
+      }
       case "mute":
         this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
         break;

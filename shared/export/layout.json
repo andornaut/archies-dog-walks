@@ -2487,37 +2487,21 @@
       "titleY": 89
     },
     "settings": {
-      "buildLabelY": 460,
-      "close": {
-        "hit": {
-          "height": 48,
-          "width": 48,
-          "x": 296,
-          "y": 56
-        },
-        "x": 318,
-        "y": 62
-      },
-      "panel": {
-        "width": 328,
-        "height": 488,
-        "x": 16,
-        "y": 56
-      },
+      "buildLabelY": 480,
       "rows": [
         {
           "control": {
             "height": 16,
             "width": 32,
-            "x": 288,
-            "y": 119
+            "x": 298,
+            "y": 112
           },
-          "noteY": 144,
+          "noteY": 137,
           "rect": {
             "height": 82,
-            "width": 296,
-            "x": 32,
-            "y": 110
+            "width": 330,
+            "x": 8,
+            "y": 103
           }
         },
         {
@@ -2525,9 +2509,9 @@
           "noteY": null,
           "rect": {
             "height": 56,
-            "width": 296,
-            "x": 32,
-            "y": 209
+            "width": 330,
+            "x": 8,
+            "y": 202
           }
         },
         {
@@ -2535,108 +2519,101 @@
           "noteY": null,
           "rect": {
             "height": 56,
-            "width": 296,
-            "x": 32,
-            "y": 282
+            "width": 330,
+            "x": 8,
+            "y": 275
           }
         },
         {
           "control": {
             "height": 16,
             "width": 32,
-            "x": 288,
-            "y": 364
+            "x": 298,
+            "y": 357
           },
-          "noteY": 389,
+          "noteY": 382,
           "rect": {
             "height": 82,
-            "width": 296,
-            "x": 32,
-            "y": 355
+            "width": 330,
+            "x": 8,
+            "y": 348
           }
         },
         {
           "control": {
             "height": 48,
             "width": 122,
-            "x": 119,
-            "y": 454
+            "x": 112,
+            "y": 447
           },
           "noteY": null,
           "rect": {
             "height": 48,
-            "width": 296,
-            "x": 32,
-            "y": 454
+            "width": 330,
+            "x": 8,
+            "y": 447
           }
         },
         {
           "control": {
             "height": 16,
             "width": 32,
-            "x": 288,
-            "y": 528
+            "x": 298,
+            "y": 521
           },
           "noteY": null,
           "rect": {
-            "height": 53,
-            "width": 296,
-            "x": 32,
-            "y": 519
+            "height": 48,
+            "width": 330,
+            "x": 8,
+            "y": 512
           }
         }
       ],
-      "rowsContentHeight": 462,
+      "rowsContentHeight": 457,
       "rowsViewport": {
-        "height": 345,
-        "width": 296,
-        "x": 32,
-        "y": 110
-      },
-      "scrollbar": {
-        "thumbInset": 1,
-        "thumbMin": 16,
-        "thumbWidth": 6,
-        "trackWidth": 8,
-        "x": 332
+        "height": 369,
+        "width": 330,
+        "x": 8,
+        "y": 103
       },
       "separators": [
         {
           "height": 1,
-          "width": 296,
-          "x": 32,
-          "y": 200
+          "width": 330,
+          "x": 8,
+          "y": 193
         },
         {
           "height": 1,
-          "width": 296,
-          "x": 32,
-          "y": 273
+          "width": 330,
+          "x": 8,
+          "y": 266
         },
         {
           "height": 1,
-          "width": 296,
-          "x": 32,
-          "y": 346
+          "width": 330,
+          "x": 8,
+          "y": 339
         },
         {
           "height": 1,
-          "width": 296,
-          "x": 32,
-          "y": 445
+          "width": 330,
+          "x": 8,
+          "y": 438
         },
         {
           "height": 1,
-          "width": 296,
-          "x": 32,
-          "y": 510
+          "width": 330,
+          "x": 8,
+          "y": 503
         }
       ],
       "track": {
         "dy": 30,
         "height": 10,
-        "width": 280,
-        "x": 40
+        "width": 296,
+        "x": 34
       }
     },
     "shop": {

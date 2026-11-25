@@ -25,7 +25,6 @@ function fixture(install = false, width = 360, dpr = 1) {
   };
   const layout = settingsLayout(
     fonts,
-    overlayRegion("home"),
     configuredRows.map((row) =>
       row.kind === "slider"
         ? { kind: "slider" }
@@ -176,10 +175,10 @@ it("holds a Settings switch through a touch lost to hiding and flips it once by 
     .all()
     .filter(
       (part) =>
-        part.tagName === "button" &&
-        part.getAttribute("aria-label") === gameData.menuText.common.close,
+        part.tagName === "button" && part.getAttribute("aria-label") === gameData.menuText.pageBack,
     );
-  expect(controls).toHaveLength(2);
+  // Back is the page's one leave: no X.
+  expect(controls).toHaveLength(1);
   controls.forEach((control, index) => {
     root.fire("pointerdown", pointer(control, 40 + index, 10, 10, "pointerdown"));
     doc.fire("pointerup", pointer(control, 40 + index, 10, 10, "pointerup"));
@@ -193,7 +192,7 @@ it("holds a Settings switch through a touch lost to hiding and flips it once by 
   expect(layer.press.canvasAllowed()).toBe(true);
 });
 
-it("keeps the card chrome fixed while revealing whole focused rows inside its native viewport", () => {
+it("keeps the page's chrome fixed while revealing whole focused rows in its native body", () => {
   const { element, shown, view } = fixture(true);
   const current = view();
   const viewport = element.all().find((part) => part.className.includes("adw-settings-rows"))!;
@@ -206,7 +205,7 @@ it("keeps the card chrome fixed while revealing whole focused rows inside its na
     .find(
       (part) =>
         part.className.includes("adw-button") &&
-        part.getAttribute("aria-label") === gameData.menuText.common.close,
+        part.getAttribute("aria-label") === gameData.menuText.pageBack,
     )!;
   const footerTop = footer.style.top;
   shown.update(small, last);
@@ -215,7 +214,7 @@ it("keeps the card chrome fixed while revealing whole focused rows inside its na
     current.rows[last]!.rect.y + current.rows[last]!.rect.height - rect.y - rect.height,
   );
   expect(viewport.style.height).toBe(`${rect.height}px`);
-  // The overflowing rows show Cheats' scrollbar beside the viewport, in the panel's padding.
+  // The overflowing rows show the pages' scrollbar beside the body, in the scrollbar's room.
   const track = element.all().find((part) => part.className === "adw-scroll-track")!;
   const bar = element.all().find((part) => part.children.includes(track))!;
   expect(bar.hidden).toBe(false);
@@ -233,41 +232,16 @@ it.each([
   [575, 1],
   [390, 2.625],
   [360, 1],
-])(
-  "centres the version's projected visible ink over Close at width %i and DPR %f",
-  (width, dpr) => {
-    const { element, scale, shown, view } = fixture(false, width, dpr);
-    const current = view();
-    const label = element.all().find((node) => node.textContent === current.build.text)!;
-    const ink = fontInk("font-body", { scale: 1 }, current.build.text);
-    const pixel = Number.parseFloat(label.style.fontSize!) / 8;
-    const centre = Number.parseFloat(label.style.left!) + ((ink.left + ink.right) * pixel) / 2;
-    const footer = gridRect(scale, current.card.footer!.rect);
-    expect(Math.abs(centre - footer.left - footer.width / 2)).toBeLessThanOrEqual(
-      artPixel(scale) / 2 + 0.5,
-    );
-    shown.destroy();
-  },
-);
-
-it.each([
-  { dpr: 1, inset: 6, width: 360 },
-  { dpr: 2.625, inset: 24, width: 575 },
-])(
-  "keeps Settings X equally inset from its painted card at $width DPR $dpr",
-  ({ dpr, inset, width }) => {
-    const current = fixture(false, width, dpr);
-    const dialog = layerViews(current.element)[0]!;
-    const card = dialog.all().find((part) => part.classList.contains("adw-card"))!;
-    const close = dialog
-      .all()
-      .find((part) => part.tagName === "button" && part.classList.contains("adw-close"))!;
-    const face = close.all().find((part) => part.classList.contains("adw-close-face"))!;
-    const n = (part: typeof card, key: string) => Number.parseFloat(part.style[key]!);
-    expect(n(close, "top") + n(face, "top") - n(card, "top")).toBe(inset);
-    expect(
-      n(card, "left") + n(card, "width") - n(close, "left") - n(face, "left") - n(face, "width"),
-    ).toBe(inset);
-    current.shown.destroy();
-  },
-);
+])("centres the version's projected visible ink over Back at width %i and DPR %f", (width, dpr) => {
+  const { element, scale, shown, view } = fixture(false, width, dpr);
+  const current = view();
+  const label = element.all().find((node) => node.textContent === current.build.text)!;
+  const ink = fontInk("font-body", { scale: 1 }, current.build.text);
+  const pixel = Number.parseFloat(label.style.fontSize!) / 8;
+  const centre = Number.parseFloat(label.style.left!) + ((ink.left + ink.right) * pixel) / 2;
+  const footer = gridRect(scale, current.page.back.rect);
+  expect(Math.abs(centre - footer.left - footer.width / 2)).toBeLessThanOrEqual(
+    artPixel(scale) / 2 + 0.5,
+  );
+  shown.destroy();
+});
