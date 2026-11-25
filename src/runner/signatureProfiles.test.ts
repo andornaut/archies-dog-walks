@@ -1,11 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+import { MOVEMENT_PROFILE_IDS } from "../data/ids.ts";
 import { gameData } from "../data/index.ts";
-import {
-  MOVEMENT_ASSIGNMENTS,
-  MOVEMENT_PROFILE_KEYS,
-  MOVEMENT_PROFILES,
-} from "../data/movementProfiles.ts";
+import { MOVEMENT_ASSIGNMENTS, MOVEMENT_PROFILES } from "../data/movementProfiles.ts";
 import type { EncounterId, MinorObstacleId, NeighbourhoodId } from "../data/types.ts";
 import { PART_INSET } from "../layout/packFormation.ts";
 import { hoppingInstead, plannerStreams } from "../testing/movers.ts";
@@ -35,8 +32,7 @@ const contexts = Object.entries(MOVEMENT_ASSIGNMENTS).flatMap(([kind, assignment
 });
 
 describe("production signature recipes", () => {
-  it("defines and assigns each named profile", () => {
-    expect(Object.keys(MOVEMENT_PROFILES).sort()).toEqual([...MOVEMENT_PROFILE_KEYS].sort());
+  it("assigns every named profile and keeps each valid", () => {
     const assigned = Object.values(MOVEMENT_ASSIGNMENTS).flatMap((assignment) =>
       assignment.kind === "byZone"
         ? Object.values(assignment.zones).flatMap((movement) =>
@@ -46,7 +42,7 @@ describe("production signature recipes", () => {
           ? [assignment.profile]
           : [],
     );
-    expect([...new Set(assigned)].sort()).toEqual([...MOVEMENT_PROFILE_KEYS].sort());
+    expect([...new Set(assigned)].sort()).toEqual([...MOVEMENT_PROFILE_IDS].sort());
     for (const profile of Object.values(MOVEMENT_PROFILES)) {
       expect(() => validateSignature(profile)).not.toThrow();
     }

@@ -7,15 +7,6 @@ import type {
   SignatureProfile,
 } from "./types.ts";
 
-export const MOVEMENT_PROFILE_KEYS = [
-  "cartTurnExit",
-  "ducklingTrail",
-  "gardenRectangle",
-  "reflectingRoll",
-  "skatingArcs",
-  "twoMerges",
-] as const;
-
 // Finish margins are actual seconds until contact after the defining path completes;
 // the planner accounts for each component's continuing velocity and footprint.
 export const MOVEMENT_PROFILES: Readonly<Partial<Record<MovementProfileId, SignatureProfile>>> = {

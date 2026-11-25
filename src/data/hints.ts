@@ -1,4 +1,4 @@
-import type { Hint } from "./types.ts";
+import type { Hint, HintId } from "./types.ts";
 
 // First-time hints: one line each, shown the first time its trigger happens and never again.
 // A line may use {bumpHearts}, the hearts a bump costs, and {treatHearts}, the hearts a treat
@@ -69,4 +69,4 @@ export const HINTS = {
     text: "A treat gives its dog's owner +{treatHearts}♥.",
     trigger: { kind: "treat" },
   },
-} as const satisfies Record<string, Hint>;
+} as const satisfies Record<HintId, Hint>;

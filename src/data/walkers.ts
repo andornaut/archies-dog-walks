@@ -1,4 +1,4 @@
-import type { Walker, WalkerPerk } from "./types.ts";
+import type { Walker, WalkerId, WalkerPerk, WalkerPerkId } from "./types.ts";
 
 // Each walker's one perk: its name, its effect in one line for the walker's detail card and
 // the top bar's icon, and its effects, which last every walk the walker walks, as gear's do.
@@ -41,7 +41,7 @@ export const WALKER_PERKS = {
     ],
     name: "Second chance",
   },
-} as const satisfies Record<string, WalkerPerk>;
+} as const satisfies Record<WalkerPerkId, WalkerPerk>;
 
 // The walkers the player picks from, never sold: each walks from the start or unlocks the
 // first time any walk finishes with at least its dogs still walking at the end. agility
@@ -87,7 +87,7 @@ export const WALKERS = {
     spriteKey: "walker-trista",
     unlock: "finishWalk",
   },
-} as const satisfies Record<string, Walker>;
+} as const satisfies Record<WalkerId, Walker>;
 
 // The walker a new player starts with.
-export const DEFAULT_WALKER = "casey" satisfies keyof typeof WALKERS;
+export const DEFAULT_WALKER = "casey" satisfies WalkerId;

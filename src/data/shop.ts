@@ -1,4 +1,4 @@
-import type { Gear } from "./types.ts";
+import type { Gear, GearId } from "./types.ts";
 
 // Permanent gear, bought once at the Pet shop and kept. Up to counts.loadoutMax goes in the
 // Pocket for a walk.
@@ -35,4 +35,4 @@ export const SHOP_GEAR = {
     price: "whistle",
     short: "Every dog dodges",
   },
-} as const satisfies Record<string, Gear>;
+} as const satisfies Record<GearId, Gear>;

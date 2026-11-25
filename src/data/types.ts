@@ -1,35 +1,45 @@
 import type { AchievementDef, Threshold } from "@andornaut/game-kit/runtime/achievements";
 import type { InstallStepsKind } from "@andornaut/game-kit/runtime/web/pwa/installState";
 
-import type { ACHIEVEMENTS } from "./achievements.ts";
-import type { DEBUFFS } from "./debuffs.ts";
-import type { DOGS } from "./dogs.ts";
-import type { ENCOUNTERS } from "./encounters.ts";
-import type { HINTS } from "./hints.ts";
-import type { MINOR_OBSTACLES } from "./minorObstacles.ts";
-import type { MOVEMENT_PROFILE_KEYS } from "./movementProfiles.ts";
-import type { SHOP_GEAR } from "./shop.ts";
+import type {
+  AchievementId,
+  CardOptionIdOf,
+  DebuffId,
+  DogId,
+  EncounterId,
+  GearId,
+  HintId,
+  LuckyEncounterId,
+  MinorObstacleId,
+  MovementProfileId,
+  ObstacleEncounterId,
+  SkinId,
+  SkinnedObstacleId,
+  UpgradeId,
+  WalkerId,
+  WalkerPerkId,
+  ZoneId,
+} from "./ids.ts";
 import type { TUNING } from "./tuning.ts";
-import type { UPGRADES } from "./upgrades.ts";
-import type { WALKER_PERKS, WALKERS } from "./walkers.ts";
-import type { WORLD } from "./world.ts";
 
-// The rule vocabulary: adding a value means new rules code, not only data.
-export type EncounterId =
-  | "cheeseCrates"
-  | "droppedIceCream"
-  | "greenBinSpill"
-  | "lostWallet"
-  | "otherDog"
-  | "friendlyNeighbour"
-  | "porchCat"
-  | "pothole"
-  | "bigScreenPromo"
-  | "puddle"
-  | "skunk"
-  | "squirrel"
-  | "thief"
-  | "weddingPhotoShoot";
+export type {
+  AchievementId,
+  DebuffId,
+  DogId,
+  EncounterId,
+  GearId,
+  HintId,
+  LuckyEncounterId,
+  MinorObstacleId,
+  MovementProfileId,
+  ObstacleEncounterId,
+  SkinId,
+  UpgradeId,
+  WalkerId,
+  WalkerPerkId,
+  ZoneId,
+};
+
 // How many dogs a walk sets out with.
 export type PackSize = 1 | 2 | 3;
 export type Size = "large" | "medium" | "small";
@@ -39,31 +49,10 @@ export type Size = "large" | "medium" | "small";
 export type TallyId =
   "dodges" | "neighboursMet" | "squirrelPulls" | "tips" | "treats" | "walletsFound";
 
-// Ids come from the data, so adding an entry to a value file is a data-only change.
-export type AchievementId = (typeof ACHIEVEMENTS)[number]["id"];
-export type DebuffId = keyof typeof DEBUFFS;
-export type DogId = keyof typeof DOGS;
-export type GearId = keyof typeof SHOP_GEAR;
-export type HintId = keyof typeof HINTS;
-export type MinorObstacleId = keyof typeof MINOR_OBSTACLES;
-// A minor obstacle that comes in skins (MinorObstacle), and each skin's id.
-type SkinnedObstacleId = {
-  [Id in MinorObstacleId]: (typeof MINOR_OBSTACLES)[Id] extends { readonly skins: object }
-    ? Id
-    : never;
-}[MinorObstacleId];
-export type SkinId = {
-  [Id in SkinnedObstacleId]: keyof (typeof MINOR_OBSTACLES)[Id]["skins"] & string;
-}[SkinnedObstacleId];
 // What a minor obstacle on the road looks like: its skin, or the obstacle itself when it has one
 // look. Art, names and bump flash colours are keyed by it.
 export type MinorLookId = Exclude<MinorObstacleId, SkinnedObstacleId> | SkinId;
-export type UpgradeId = keyof typeof UPGRADES;
-export type WalkerId = keyof typeof WALKERS;
-export type WalkerPerkId = keyof typeof WALKER_PERKS;
-export type ZoneId = (typeof WORLD)["zones"][number]["id"];
 export type NeighbourhoodId = ZoneId;
-export type MovementProfileId = (typeof MOVEMENT_PROFILE_KEYS)[number];
 
 // What opened a card: an obstacle the pack hit, with the dogs it affected, or a fork, whose
 // paths are the zones it leads to, left to right, each carrying the upgrade at its index, or
@@ -79,21 +68,6 @@ export type CardSource =
       readonly paths: readonly ZoneId[];
       readonly upgrades: readonly (UpgradeId | null)[];
     };
-
-type EncounterOfKind<Kind extends Encounter["kind"]> = {
-  [Id in EncounterId]: (typeof ENCOUNTERS)[Id]["kind"] extends Kind ? Id : never;
-}[EncounterId];
-export type LuckyEncounterId = EncounterOfKind<"lucky">;
-export type ObstacleEncounterId = EncounterOfKind<"obstacle">;
-
-// The option ids of an encounter's card; never for an encounter that opens no card.
-type CardOptionIdOf<Id extends EncounterId> = (typeof ENCOUNTERS)[Id]["resolution"] extends {
-  readonly options: readonly (infer Option)[];
-}
-  ? Option extends { readonly id: infer OptionId extends string }
-    ? OptionId
-    : never
-  : never;
 
 // An option on an encounter's card, by its encounter and its id.
 type OptionPick = {
@@ -624,8 +598,7 @@ interface MinorContact {
 // One look of a minor obstacle with skins: its name and the zones it appears in.
 interface ObstacleSkin {
   readonly name: string;
-  // Zone ids, at least one, typed as strings since ZoneId comes from the world, which names this
-  // type.
+  // Zone ids, at least one.
   readonly zones: readonly [string, ...string[]];
 }
 
@@ -743,7 +716,7 @@ export interface Zone {
   readonly difficulty: Difficulty;
   // The difficulty in words, as a path card shows it.
   readonly difficultyName: string;
-  readonly id: string;
+  readonly id: ZoneId;
   // Hex colours from the art palette. The leash stands out against the zone's road.
   readonly leashColour: string;
   // The chance that an obstacle or lucky encounter with an authored movement comes as a mover.
@@ -760,12 +733,12 @@ export interface Zone {
 
 export interface World {
   // The id of the zone every walk starts in, and of the zone every walk ends in.
-  readonly firstZone: string;
-  readonly lastZone: string;
+  readonly firstZone: ZoneId;
+  readonly lastZone: ZoneId;
   readonly name: string;
   // The zones every walk took before forks, in order: a dev start at a later zone with no
   // route walks them.
-  readonly preForkRoute: readonly string[];
+  readonly preForkRoute: readonly ZoneId[];
   // How many zones a walk visits, none twice.
   readonly walkLength: number;
   // From easiest to hardest: a fork's paths keep this order, left to right.
@@ -1374,7 +1347,11 @@ export type AchievementCondition =
 // changes nothing in play. The badge art is badge-<id in kebab case>.
 export type AchievementTier = "easy" | "medium" | "hard";
 
-export interface Achievement extends AchievementDef<string, AchievementCondition, AchievementTier> {
+export interface Achievement extends AchievementDef<
+  AchievementId,
+  AchievementCondition,
+  AchievementTier
+> {
   readonly badgeLine: string;
   // The goal and short goal name what the first condition needs as {count}, or for a money
   // condition as {amount}, "all" resolved to its whole.
@@ -1383,8 +1360,6 @@ export interface Achievement extends AchievementDef<string, AchievementCondition
   // The goal on the badge wall when the full goal does not fit beside the name.
   readonly shortGoal?: string;
 }
-
-type GameAchievement = Achievement & { readonly id: AchievementId };
 
 // Where an ambient mover goes. Ambient movers are scenery: they never touch the road, collide,
 // or change anything in play.
@@ -1421,7 +1396,7 @@ export interface AmbientMover {
 
 export interface GameData {
   // In tier order, easy first, keeping authored order within each tier.
-  readonly achievements: readonly [GameAchievement, ...GameAchievement[]];
+  readonly achievements: readonly [Achievement, ...Achievement[]];
   // Each zone's ambient movers.
   readonly ambient: Readonly<Record<ZoneId, readonly AmbientMover[]>>;
   readonly debuffs: Readonly<Record<DebuffId, Debuff>>;

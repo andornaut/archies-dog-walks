@@ -1,4 +1,4 @@
-import type { Debuff } from "./types.ts";
+import type { Debuff, DebuffId } from "./types.ts";
 
 // Applying a debuff the pack already has restarts its time; debuffs never stack. Nothing
 // cures one: it runs out. Zoomies follows active manual steering, or draws a random
@@ -36,4 +36,4 @@ export const DEBUFFS = {
     seconds: "zoomiesSeconds",
     stake: "drifts for {seconds}s",
   },
-} as const satisfies Record<string, Debuff>;
+} as const satisfies Record<DebuffId, Debuff>;

@@ -1,4 +1,4 @@
-import type { Upgrade } from "./types.ts";
+import type { Upgrade, UpgradeId } from "./types.ts";
 
 // Run-only boosts offered between zones. A picked card leaves the pool for the rest of the run.
 // Its effects share one duration, which its plaque shows: now (an effect without one), the next
@@ -105,7 +105,7 @@ export const UPGRADES = {
     kind: "tradeOff",
     name: "Rush hour",
   },
-} as const satisfies Record<string, Upgrade>;
+} as const satisfies Record<UpgradeId, Upgrade>;
 
 // The pool the forks draw upgrades from, in order: a seed's draws pick by position here, so
 // reordering it changes which upgrades every seed offers. It lists every upgrade once, and the
@@ -117,4 +117,4 @@ export const UPGRADE_DRAW_ORDER = [
   "raincoats",
   "rushHour",
   "charmer",
-] as const satisfies readonly (keyof typeof UPGRADES)[];
+] as const satisfies readonly UpgradeId[];

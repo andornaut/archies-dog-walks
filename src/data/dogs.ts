@@ -1,4 +1,4 @@
-import type { Dog } from "./types.ts";
+import type { Dog, DogId } from "./types.ts";
 
 // The roster: three dogs of each size. A dog's size sets its owner's hearts.
 export const DOGS = {
@@ -118,4 +118,4 @@ export const DOGS = {
     size: "large",
     unlock: "shop",
   },
-} as const satisfies Record<string, Dog>;
+} as const satisfies Record<DogId, Dog>;

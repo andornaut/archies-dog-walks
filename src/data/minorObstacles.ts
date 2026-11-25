@@ -1,4 +1,4 @@
-import type { MinorObstacle } from "./types.ts";
+import type { MinorObstacle, MinorObstacleId } from "./types.ts";
 
 // Obstacles that open no card. Shapes are lanes across by rows along the road; each zone
 // weighs how often they appear there, in world.ts, and one appears only where weighed above 0.
@@ -428,4 +428,4 @@ export const MINOR_OBSTACLES = {
     onFoot: true,
     shape: { lanes: 1, rows: 1 },
   },
-} as const satisfies Record<string, MinorObstacle>;
+} as const satisfies Record<MinorObstacleId, MinorObstacle>;
