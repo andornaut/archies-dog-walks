@@ -2,7 +2,6 @@ import "@andornaut/game-kit/runtime/web/ui/dom/pager.css";
 
 import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import { createPager } from "@andornaut/game-kit/runtime/web/ui/dom/pager";
-import { refuse } from "@andornaut/game-kit/runtime/web/ui/dom/refusalCue";
 
 import { gameData } from "../../data/index.ts";
 import { HELP_LAYOUT } from "../../help/helpLayout.ts";
@@ -18,7 +17,7 @@ import {
   placeText,
   setBox,
 } from "../../ui/dom/pixelLine.ts";
-import { REFUSAL_CUE } from "../../ui/dom/refusal.ts";
+import { refuse } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
 import { type PanelText } from "../../ui/modal/types.ts";
@@ -89,7 +88,7 @@ function dotLook(element: HTMLElement, current: boolean): (box: DomBox, pixel: n
 
 // The kit pager (Previous, the page dots and Next) at the places the view lays out: each button
 // its press area round its face with its label drawn as a panel button's, and the dots in the
-// count between them.
+// count between them. A refused step plays the panel buttons' refusal cue (refuse).
 function pagerPart(
   input: DomHelpInput,
   doc: Document,
@@ -97,7 +96,7 @@ function pagerPart(
     readonly accepts: () => boolean;
     readonly burst: (event: PointerEvent) => void;
   },
-): DomPart & { dispose(): void; previous: HTMLElement } {
+): DomPart & { dispose(): void; refuse(direction: -1 | 1): void } {
   const { view } = input;
   const [previous, next] = view.buttons as readonly [HelpButton, HelpButton];
   const pager = createPager(doc, {
@@ -115,7 +114,7 @@ function pagerPart(
       }),
     dots: true,
     labels: { next: next.label, previous: previous.label },
-    refusal: { cue: REFUSAL_CUE, reducedMotion: input.reducedMotion },
+    refusal: { reducedMotion: input.reducedMotion, refuse },
     rule: holdRule(gameData.tuning, TILE_SLOP_PX),
     // Next is always available: on the last page it is the completion action.
     state: () => ({
@@ -126,8 +125,6 @@ function pagerPart(
     }),
     step: (direction) => input.presses[direction < 0 ? 0 : 1]?.(),
   });
-  // The kit cue's red phases fill Previous's face dark red under a white label (gameButton.css).
-  pager.element.style.setProperty("--ui-refusal-colour", "var(--adw-white)");
   Object.assign(pager.element.style, {
     height: "0",
     left: "0",
@@ -144,7 +141,6 @@ function pagerPart(
     content.className = "adw-lines";
     const label = createTextLine(doc, button.text);
     label.setAttribute("aria-hidden", "true");
-    label.setAttribute("data-ui-refusal-label", "");
     content.append(label);
     control.face.append(content);
     if (button.pressed) {
@@ -183,7 +179,7 @@ function pagerPart(
         dots[i]?.({ ...box, left: box.left - count.left, top: box.top - count.top }, pixel),
       );
     },
-    previous: pager.previous.element,
+    refuse: (direction) => pager.refuse(direction),
   };
 }
 
@@ -384,9 +380,9 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
       pager.dispose();
       shown.destroy();
     },
-    refuse: (index, reducedMotion) => {
+    refuse: (index) => {
       if (index === 0) {
-        refuse(REFUSAL_CUE, reducedMotion, pager.previous);
+        pager.refuse(-1);
       }
     },
   };

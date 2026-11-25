@@ -10,6 +10,7 @@ import { bodyTextWidth } from "../../testing/bodyFont.ts";
 import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import type { NativeGesture } from "../../ui/dom/modalLifecycle.ts";
+import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { showHelpScreen } from "./helpScreen.ts";
@@ -77,15 +78,25 @@ describe("the HTML help screen", () => {
     expect(controls[0]!.getAttribute("aria-description")).toBeNull();
     controls[0]?.fire("click", { detail: 0 });
     expect(presses[0]).not.toHaveBeenCalled();
-    // Previous on the first page refuses a press with the refusal cue.
+    // Previous on the first page refuses a press with the panel buttons' cue, not the kit's.
     controls[0]?.fire("click", { detail: 1 });
     expect(presses[0]).not.toHaveBeenCalled();
-    expect(controls[0]?.hasAttribute("data-ui-refusal-red")).toBe(true);
+    expect(controls[0]?.hasAttribute(REFUSAL_RED)).toBe(true);
+    expect(controls[0]?.hasAttribute("data-ui-refusal-red")).toBe(false);
     controls[1]?.fire("click", { detail: 0 });
     expect(presses[1]).toHaveBeenCalledOnce();
     const page = nodes.find((node) => node.id === dialog?.getAttribute("aria-describedby"));
     const spoken = page?.all().filter((node) => node.className === "visually-hidden");
     expect(spoken?.map(({ textContent }) => textContent)[0]).toBe(gameData.help[0]?.title);
+  });
+
+  it("refuses Previous on the first page from a key with the panel buttons' cue", async () => {
+    const { nodes, shown } = helpScreen(0, undefined);
+    await vi.waitFor(() => expect(shown.accepts()).toBe(true));
+    shown.refuse(0, true);
+    const [previous] = nodes.filter((node) => node.tagName === "button");
+    expect(previous?.hasAttribute(REFUSAL_RED)).toBe(true);
+    expect(previous?.hasAttribute("data-ui-refusal-red")).toBe(false);
   });
 
   it.each([
