@@ -1,5 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 
 import { PAUSE_PANEL } from "../data/layout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
@@ -53,6 +54,8 @@ interface QuestionParts {
   avoid?: Rect | undefined;
   buttonCount: number;
   buttonWidths?: readonly number[];
+  // The primary button's index, placed last (arrangeActions).
+  primary?: number;
   noteLines: number;
   noteWidth?: number;
   panelWidth?: number;
@@ -69,9 +72,10 @@ interface PauseMenuLayout {
 }
 
 // The panel centred on the logical viewport and clamped to area, as wide as parts.panelWidth or
-// the Medium family, sized to its parts: the title, then the
-// buttons stacked down it with the note plate under them, or the note plate first when it is
-// the question. With no note lines there is no plate, and the buttons follow the title.
+// the Medium family, sized to its parts: the title, then the buttons with the note plate under
+// them, or the note plate first when it is the question. With no note lines there is no plate,
+// and the buttons follow the title. Two buttons sit in a row when both fit inside the panel's
+// padding at the row gap, otherwise every button stacks, the primary last (arrangeActions).
 function panelLayout(
   body: FontMetrics,
   area: Rect,
@@ -88,25 +92,40 @@ function panelLayout(
 
   const noted = parts.noteLines > 0;
   const noteHeight = noted ? notePlateHeight(body, parts.noteLines) : 0;
-  const buttonsHeight = buttonCount * (BUTTON.height + BUTTON.gap) - BUTTON.gap;
+  const widths = Array.from(
+    { length: buttonCount },
+    (_, i) => parts.buttonWidths?.[i] ?? Math.min(BUTTON.width, width - 2 * MODAL.pad),
+  );
+  const arrangement = arrangeActions(
+    {
+      axis: buttonCount === 2 ? "auto" : "stack",
+      pressOverlap: "nearest",
+      width: width - 2 * MODAL.pad,
+    },
+    widths.map((actionWidth, i) => ({
+      key: i,
+      role: i === parts.primary ? ("primary" as const) : ("secondary" as const),
+      size: { height: BUTTON.height, width: actionWidth },
+    })),
+  );
+  const buttonsHeight = arrangement.group.height;
   // Offsets down the panel: a note first sits where the buttons would start, less its gap.
   const header = BUTTON.y + (parts.titleExtraHeight ?? 0);
   const noteFirstY = header;
   const buttonsY = noteFirst && noted ? noteFirstY + noteHeight + MODAL.gap : header;
   const noteY = noteFirst ? noteFirstY : header + buttonsHeight + NOTE_PLATE.gap;
   const height = Math.max(buttonsY + buttonsHeight, noted ? noteY + noteHeight : 0) + BOTTOM;
-  const widths = Array.from(
-    { length: buttonCount },
-    (_, i) => parts.buttonWidths?.[i] ?? Math.min(BUTTON.width, width - 2 * MODAL.pad),
-  );
-  const actionWidth = Math.max(0, ...widths);
   const panel = modalRect(area, parts.avoid, { height, width });
-  const buttons = widths.map((_, i) => ({
-    height: BUTTON.height,
-    width: actionWidth,
-    x: panel.x + (panel.width - actionWidth) / 2,
-    y: panel.y + buttonsY + i * (BUTTON.height + BUTTON.gap),
-  }));
+  const buttons = arrangement.actions.map((action) => {
+    if (action.hidden) {
+      throw new Error("A question's buttons are all shown");
+    }
+    return {
+      ...action.face,
+      x: panel.x + MODAL.pad + action.face.x,
+      y: panel.y + buttonsY + action.face.y,
+    };
+  });
   return {
     buttons,
     hits: buttons.map((button) => ({

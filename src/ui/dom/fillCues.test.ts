@@ -95,9 +95,21 @@ describe("control state cues", () => {
     [
       "a focused or pressed Logbook row's content",
       "logbook",
-      ".adw-logbook-badge.ui-standard-button:is(:focus-visible, [data-ui-pressed])" +
+      ":is(.adw-logbook-badge, .adw-end-badge-control).ui-standard-button:is(:focus-visible, [data-ui-pressed])" +
         ' > .ui-button-face > [aria-hidden="true"]',
       "opacity:1",
+    ],
+    [
+      "a pressed Logbook row's or end-screen badge's face",
+      "logbook",
+      ":is(.adw-logbook-badge, .adw-end-badge-control)[data-ui-pressed] > .ui-button-face",
+      "background-color:var(--ui-button-focus-fill)",
+    ],
+    [
+      "a Logbook row's and end-screen badge's 35% focus fill",
+      "logbook",
+      ":is(.adw-logbook-badge, .adw-end-badge-control)",
+      "--ui-button-focus-fill:color-mix(in srgb,var(--adw-cyan) 35%,transparent)",
     ],
     [
       "a focused or pressed locked badge's goal",

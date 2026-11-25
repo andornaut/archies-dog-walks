@@ -5,7 +5,6 @@ import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { withKeyNumber } from "../input/keyNumbers.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";
-import { arrangePanelActions } from "../ui/modal/actionGroup.ts";
 import { modalActionWidth, modalTitleLayout } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import type {
@@ -51,6 +50,7 @@ export function questionPanelView(
     avoid: question.avoid,
     buttonCount: shown.length,
     buttonWidths: shown.map((label) => modalActionWidth(widest("title", [label]))),
+    primary: question.primary === "last" ? shown.length - 1 : 0,
     ...(question.panelWidth === undefined ? {} : { panelWidth: question.panelWidth }),
     noteWidth: widest(
       "body",
@@ -87,12 +87,7 @@ export function questionPanelView(
 
   const title = panelTitle(measure, panel, layout.titleY, question.title);
   const buttons = shown.map((text, i): PanelButton => ({
-    ...panelButton(
-      measure,
-      itemAt(layout.buttons, i),
-      i === (question.primary === "last" ? shown.length - 1 : 0),
-      text,
-    ),
+    ...panelButton(measure, itemAt(layout.buttons, i), i === parts.primary, text),
     hit: itemAt(layout.hits, i),
     label: itemAt(question.labels, i),
   }));
@@ -121,7 +116,11 @@ export function questionPanelView(
     })),
   );
 
-  const actions = arrangePanelActions(measure, panel, "column", buttons);
+  // The layout places each button, the primary last (arrangeActions); the buttons run in that
+  // order, their source indices keeping the callbacks and key numbers.
+  const actions = buttons
+    .map((button, actionIndex) => ({ ...button, actionIndex }))
+    .sort((a, b) => Number(a.primary) - Number(b.primary));
   return {
     buttons: actions,
     close,

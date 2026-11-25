@@ -1,6 +1,7 @@
 import { wrapWords } from "@andornaut/game-kit/runtime/lines";
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 
 import { DETAIL_WELL_KEY, ownerFaceKey } from "../assets/spriteKeys.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
@@ -284,7 +285,18 @@ export function detailCardView(
         : [detail.purchase.cancel, detail.purchase.buy].map((label) =>
             modalActionWidth(measure.inkWidth("title", label)),
           );
-    const stacked = widths.reduce((a, b) => a + b, 0) + BUTTON_SIZE.gap > rooms.full;
+    // Cancel and Buy sit in a row when both fit the card's room, else stack (arrangeActions).
+    const room = Math.floor(rooms.full);
+    const stacked =
+      widths.some((width) => width > room) ||
+      arrangeActions(
+        { pressOverlap: "nearest", width: room },
+        widths.map((width, i) => ({
+          key: i,
+          role: i === 1 ? ("primary" as const) : ("secondary" as const),
+          size: { height: BUTTON_SIZE.compact.height, width },
+        })),
+      ).axis === "stack";
     bodyFits &&= widths.every((actionWidth) => actionWidth <= rooms.full);
     const footerHeight =
       BUTTON_SIZE.compact.height +

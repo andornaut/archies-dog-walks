@@ -424,10 +424,12 @@ it.each(["tap", "hold", "outside"] as const)(
     )!;
     expect(button.classList.contains("ui-standard-button")).toBe(true);
     expect(button.classList.contains("adw-standard-button")).toBe(false);
+    // Its face is a box of its own over the whole control, which the badge controls' stylesheet
+    // (logbook.css) fills on focus and press.
+    expect(button.classList.contains("adw-end-badge-control")).toBe(true);
     const face = button.all().find((node) => node.classList.contains("ui-button-face"));
-    expect(face?.style.getPropertyValue("--ui-button-focus-fill")).toBe(
-      `#${PALETTE.cyan.toString(16)}66`,
-    );
+    expect(face).not.toBe(button);
+    expect(face?.style.width).not.toBe("");
     const pointer = (type: string) => ({
       button: 0,
       buttons: type === "pointerdown" ? 1 : 0,

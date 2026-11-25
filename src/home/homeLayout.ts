@@ -4,6 +4,7 @@ import {
   inkRowsFromCapTop,
   inkRowsOfLines,
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 import { HIT_RULE } from "@andornaut/game-kit/runtime/ui/hitAreas";
 
 import { HOME_SCREEN, MIN_PRESS } from "../data/layout.ts";
@@ -684,34 +685,32 @@ export function updateModalLayout(
   area: Rect,
   ink: { action: number; cancel: number; title: number; titleExtraHeight?: number },
 ) {
-  const actionWidth = modalActionWidth(ink.action);
-  const cancelWidth = modalActionWidth(ink.cancel);
-  const actionsWidth = actionWidth + cancelWidth + BUTTON_SIZE.gap;
   const width = modalFamilyWidth(area.width - 2 * MODAL.margin, "medium");
-  const stacked = actionsWidth > width - 2 * MODAL.pad;
-  const groupWidth = stacked ? Math.max(actionWidth, cancelWidth) : actionsWidth;
   const height = BUTTON_SIZE.compact.height;
+  // Cancel then Update now in a row when both fit inside the padding, else stacked, Update now
+  // last (arrangeActions).
+  const { actions, group } = arrangeActions(
+    { pressOverlap: "nearest", width: width - 2 * MODAL.pad },
+    [
+      { key: "cancel", role: "secondary", size: { height, width: modalActionWidth(ink.cancel) } },
+      { key: "button", role: "primary", size: { height, width: modalActionWidth(ink.action) } },
+    ] as const,
+  );
   const header = MODAL.header + (ink.titleExtraHeight ?? 0);
   const panel = modalRect(
     area,
     { ...GATE, width: area.width, x: area.x },
-    {
-      height: header + height + (stacked ? height + BUTTON_SIZE.stackGap : 0) + MODAL.pad,
-      width,
-    },
+    { height: header + group.height + MODAL.pad, width },
   );
-  const left = panel.x + (panel.width - groupWidth) / 2;
-  const cancel = {
-    height,
-    width: stacked ? groupWidth : cancelWidth,
-    x: left,
-    y: panel.y + header,
-  };
-  const button = {
-    height,
-    width: stacked ? groupWidth : actionWidth,
-    x: left + (stacked ? 0 : cancelWidth + BUTTON_SIZE.gap),
-    y: panel.y + header + (stacked ? height + BUTTON_SIZE.stackGap : 0),
-  };
-  return { button, cancel, hit: button, panel };
+  const [cancel, button] = actions.map((action) => {
+    if (action.hidden) {
+      throw new Error("The update notice shows both actions");
+    }
+    return {
+      ...action.face,
+      x: panel.x + MODAL.pad + action.face.x,
+      y: panel.y + header + action.face.y,
+    };
+  });
+  return { button: button!, cancel: cancel!, hit: button!, panel };
 }

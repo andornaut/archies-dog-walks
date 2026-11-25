@@ -1,3 +1,5 @@
+import "./logbook.css";
+
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
@@ -21,7 +23,7 @@ import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridX, gridY } from "../../ui/domScale.ts";
 import { type PanelText } from "../../ui/modal/types.ts";
-import { cssHex, PALETTE } from "../../ui/palette.ts";
+import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import type { DomBadgeCardInput } from "./badgeCard.ts";
 import { badgeStripParts } from "./celebration.ts";
@@ -256,7 +258,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
     strip === undefined ? [] : badgeStripHits(strip.panel, strip.rows, input.badges.length)
   ).map((rect, index): DomPart & { readonly hit: Rect; dispose(): void } => {
     const control = createGameButton(doc, {
-      appearance: { className: "adw-end-badge-control" },
+      appearance: { className: "adw-end-badge-control", face: {} },
       content: {
         icon: doc.createElement("span"),
         kind: "icon",
@@ -270,8 +272,6 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
       accepts: () => accepts(),
       burst: (event) => panel.burst(input.toGame({ x: event.clientX, y: event.clientY })),
     });
-    Object.assign(element.style, { pointerEvents: "auto", position: "absolute" });
-    face.style.setProperty("--ui-button-focus-fill", `${cssHex(PALETTE.cyan)}66`);
     return {
       controls: [element],
       dispose: () => {
@@ -350,6 +350,13 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
     ),
   };
   const colours = END_LAYOUT.side.band;
+  const badgeNames =
+    strip === undefined ? [] : strip.names.map((name) => textPart(doc, input, name));
+  // The badges' pictures, confetti and names sit over their controls, whose focus and press fill
+  // the whole control under them.
+  for (const part of [...(badges?.parts.slice(1) ?? []), ...badgeNames]) {
+    part.element.style.setProperty("z-index", "1");
+  }
   const parts: DomPart[] = [
     panelFramePart(doc, "plate", results.panel),
     fillPart(doc, { colour: PALETTE[colours.outline], rect: results.band.outline }),
@@ -362,17 +369,14 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
     linesPart(doc, fonts, [title], false),
     ...results.texts.map((text) => textPart(doc, input, text)),
     ...(badges?.parts ?? []),
-    ...(strip === undefined
-      ? []
-      : [
-          linesPart(doc, fonts, strip.title),
-          ...strip.names.map((name) => textPart(doc, input, name)),
-        ]),
+    ...(strip === undefined ? [] : [linesPart(doc, fonts, strip.title), ...badgeNames]),
     button,
     ...badgeControls,
   ];
   const element = doc.createElement("div");
   element.className = "adw-framed";
+  // The raised badge parts stay inside the screen's own stacking.
+  element.style.isolation = "isolate";
   element.append(...parts.map(({ element }) => element));
   let dimmed = false;
   const underlay = followModalUnderlay(

@@ -114,7 +114,7 @@ export function modalCardView(
   const placed = arrangePanelActions(
     measure,
     card,
-    actions.some(({ rect }) => rect.y !== actions[0]?.rect.y) ? "column" : "row",
+    actions.some(({ rect }) => rect.y !== actions[0]?.rect.y) ? "stack" : "row",
     buttons,
   );
   return {

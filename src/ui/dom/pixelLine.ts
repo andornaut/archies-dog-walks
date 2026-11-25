@@ -71,6 +71,10 @@ export function capRows(bitmap: BitmapFont, font: DomTextLine["font"]): number {
 // art: the display letters' ink ring round their fill, in font pixels.
 const DISPLAY_RING = 1;
 
+// art: how far the display font's drop shadow reaches past the ring, right and down, in font
+// pixels. A display line centres its glyph body, the fill and ring, without it.
+const DISPLAY_DROP = 2;
+
 // The display letters' heart, red in both of the display font's colours.
 const DISPLAY_HEART = { char: "♥", colour: PALETTE.red } as const;
 
@@ -103,7 +107,9 @@ export function textPlace(
   // start and its last advance.
   const ink = line.centre === "ink" && inked.length > 0;
   const first = ink ? Math.min(...inked.map(({ left }) => left)) : 0;
-  const last = ink ? Math.max(...inked.map(({ right }) => right)) : advanceWidth(bitmap, 1, text);
+  const last = ink
+    ? Math.max(...inked.map(({ right }) => right)) - (line.font === "display" ? DISPLAY_DROP : 0)
+    : advanceWidth(bitmap, 1, text);
   const bearing = line.font === "title" ? leftBearing((char) => bitmap.glyphs.get(char), text) : 0;
   // A centred line's ink or advance starts on the art pixel nearest where its middle on centreX
   // puts it, a half rounded up, as the canvas rounds a centred label's start to whole pixels.
@@ -254,9 +260,11 @@ export function backedTextPlaces(
     const pixel = textPixel(scale, line);
     const left = Math.min(...columns.map(({ left }) => left));
     const top = Math.min(...glyphs.map(({ yOffset }) => yOffset));
+    const drop = line.font === "display" ? DISPLAY_DROP : 0;
     return {
-      height: (Math.max(...glyphs.map((glyph) => glyph.yOffset + glyph.height)) - top) * pixel,
-      width: (Math.max(...columns.map(({ right }) => right)) - left) * pixel,
+      height:
+        (Math.max(...glyphs.map((glyph) => glyph.yOffset + glyph.height)) - top - drop) * pixel,
+      width: (Math.max(...columns.map(({ right }) => right)) - left - drop) * pixel,
       x: place.left + left * pixel,
       y: place.top + top * pixel,
     };

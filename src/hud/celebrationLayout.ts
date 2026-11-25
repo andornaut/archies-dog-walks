@@ -5,6 +5,7 @@ import {
   inkRowsOfLines,
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { type FittedText } from "@andornaut/game-kit/runtime/text/textFit";
+import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 
 import { ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
 import { CELEBRATIONS } from "../data/layout.ts";
@@ -278,12 +279,19 @@ export function ordinaryBadgeModalLayout(
     height: body.height + MODAL.gap + BUTTON_SIZE.compact.height,
     width: body.width,
   });
+  // The sole action centred in the padding (arrangeActions).
+  const height = BUTTON_SIZE.compact.height;
+  const [action] = arrangeActions({ pressOverlap: "nearest", width: panel.width - 2 * MODAL.pad }, [
+    { key: "close", role: "primary", size: { height, width: body.buttonWidth } },
+  ]).actions;
+  if (action === undefined || action.hidden) {
+    throw new Error("A badge modal shows its action");
+  }
   return {
     button: {
-      height: BUTTON_SIZE.compact.height,
-      width: body.buttonWidth,
-      x: panel.x + (panel.width - body.buttonWidth) / 2,
-      y: panel.y + panel.height - MODAL.pad - BUTTON_SIZE.compact.height,
+      ...action.face,
+      x: panel.x + MODAL.pad + action.face.x,
+      y: panel.y + panel.height - MODAL.pad - height,
     },
     panel,
   };

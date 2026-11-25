@@ -1,19 +1,23 @@
-/* Illustrated rows retain their authored colours; Kit supplies the native focus fill, and the
-   row's content stays opaque over it so its text keeps its contrast. */
-.adw-logbook-badge {
+/* Illustrated badge controls (Logbook rows and the end screen's badges) retain their authored
+   colours; Kit supplies the native focus fill, a press takes the same fill, and the content stays
+   opaque over it so its text keeps its contrast. */
+:is(.adw-logbook-badge, .adw-end-badge-control) {
   --ui-button-focus-fill: color-mix(in srgb, var(--adw-cyan) 35%, transparent);
   position: absolute;
   box-sizing: border-box;
   pointer-events: auto;
 }
-.adw-logbook-badge > .ui-button-face {
+:is(.adw-logbook-badge, .adw-end-badge-control) > .ui-button-face {
   position: absolute;
   pointer-events: none;
 }
-.adw-logbook-badge[data-ui-pressed] > .ui-button-face {
+:is(.adw-logbook-badge, .adw-end-badge-control)[data-ui-pressed] > .ui-button-face {
   background-color: var(--ui-button-focus-fill);
 }
-.adw-logbook-badge.ui-standard-button:is(:focus-visible, [data-ui-pressed])
+:is(.adw-logbook-badge, .adw-end-badge-control).ui-standard-button:is(
+    :focus-visible,
+    [data-ui-pressed]
+  )
   > .ui-button-face
   > [aria-hidden="true"] {
   opacity: 1;
@@ -26,10 +30,10 @@
   }
 }
 @media (forced-colors: active) {
-  .adw-logbook-badge {
+  :is(.adw-logbook-badge, .adw-end-badge-control) {
     --ui-button-focus-fill: Highlight;
   }
-  .adw-logbook-badge[data-ui-pressed] > .ui-button-face {
+  :is(.adw-logbook-badge, .adw-end-badge-control)[data-ui-pressed] > .ui-button-face {
     forced-color-adjust: none;
   }
   .adw-logbook-badge:is(:focus-visible, [data-ui-pressed]) .adw-text {

@@ -30,8 +30,8 @@ const buttons = labels.map((label, index) =>
   ),
 );
 
-it("places the existing safe primary last with equal widths, hits and original action identities", () => {
-  const result = arrangePanelActions(measure, panel, "column", buttons);
+it("stacks the safe primary last with equal widths, hits and original action identities", () => {
+  const result = arrangePanelActions(measure, panel, "stack", buttons);
   expect(result.map(({ label }) => label)).toEqual([labels[1], labels[0]]);
   expect(result.map(({ primary }) => primary)).toEqual([false, true]);
   expect(result.map(({ actionIndex }) => actionIndex)).toEqual([1, 0]);
@@ -39,12 +39,14 @@ it("places the existing safe primary last with equal widths, hits and original a
     ...labels.map((label) => modalActionWidth(measure.inkWidth("title", label))),
   );
   expect(result.map(({ rect }) => rect.width)).toEqual([width, width]);
-  expect(result.map(({ rect }) => rect.y)).toEqual(buttons.map(({ rect }) => rect.y));
+  // A stack starts at the first button's row, the stack gap apart (arrangeActions).
+  const top = buttons[0]!.rect.y;
+  expect(result.map(({ rect }) => rect.y)).toEqual([top, top + 48 + BUTTON_SIZE.stackGap]);
   for (const button of result) {
     expect(button.hit).toEqual(button.rect);
     expect(button.text.centreX).toBe(panel.x + panel.width / 2);
   }
-  const only = arrangePanelActions(measure, panel, "column", [buttons[1]!]);
+  const only = arrangePanelActions(measure, panel, "stack", [buttons[1]!]);
   expect(only[0]!.rect.width).toBe(modalActionWidth(measure.inkWidth("title", labels[1]!)));
 });
 
@@ -53,7 +55,7 @@ it("does not reserve the widest action after it leaves the visible group", () =>
     (a, b) => measure.inkWidth("title", b.text.text) - measure.inkWidth("title", a.text.text),
   );
   const visible = widestFirst.slice(1);
-  const result = arrangePanelActions(measure, panel, "column", visible);
+  const result = arrangePanelActions(measure, panel, "stack", visible);
   expect(result[0]!.rect.width).toBe(
     modalActionWidth(measure.inkWidth("title", visible[0]!.text.text)),
   );
