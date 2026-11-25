@@ -68,7 +68,7 @@ it("fails the build for crash text the font has no glyph for", async () => {
   const page = await fixture();
   try {
     await expect(buildCrashCss(page.root, [...CRASH_FONT_TEXT, "\u72ac"])).rejects.toThrow(
-      /no glyph for U\+72AC/,
+      /must have a glyph for U\+72AC/,
     );
   } finally {
     await page.destroy();
