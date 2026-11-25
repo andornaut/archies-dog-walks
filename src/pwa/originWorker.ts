@@ -1,8 +1,8 @@
-import { validateBuildManifest } from "@andornaut/game-kit/build/buildManifest";
 import {
-  BUILD_POINTER_URL,
-  type BuildPointer,
-} from "@andornaut/game-kit/runtime/web/pwa/buildContract";
+  validateBuildManifest,
+  validateBuildPointer,
+} from "@andornaut/game-kit/build/buildManifest";
+import { BUILD_POINTER_URL } from "@andornaut/game-kit/runtime/web/pwa/buildContract";
 import {
   createGroupArchiveMemberReader,
   type GroupArchiveMemberReader,
@@ -99,8 +99,9 @@ async function openOrigin(assets: AssetBinding, requestUrl: string): Promise<Ori
     }
     return response.json() as Promise<unknown>;
   };
-  const pointer = await json(BUILD_POINTER_URL);
-  // The reader validates the pointer, groups included, before the manifest it names is read.
+  const pointer = validateBuildPointer(await json(BUILD_POINTER_URL));
+  // The reader requests each group's compressed file (/.game-kit/group-<sha256>.bin) and decodes
+  // and verifies it before it serves a member.
   const reader = createGroupArchiveMemberReader(
     {
       async readArchive(path) {
@@ -110,7 +111,7 @@ async function openOrigin(assets: AssetBinding, requestUrl: string): Promise<Ori
     },
     pointer,
   );
-  const manifest = validateBuildManifest(await json((pointer as BuildPointer).manifest));
+  const manifest = validateBuildManifest(await json(pointer.manifest));
   return { digests: new Map(manifest.files.map(({ sha256, url }) => [url, sha256])), reader };
 }
 
