@@ -4,6 +4,7 @@ import { decodePng } from "@andornaut/art-kit/build/png";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
+import { FLY_REACH_ICON_GAP } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { CHARM } from "../layout/buffLayout.ts";
 import { fontFileMetrics } from "../testing/fontInk.ts";
@@ -176,11 +177,11 @@ describe("the small heart a reached treat flies", () => {
   it.each([
     { x: 40, y: 300 },
     { x: 180.5, y: 412.25 },
-  ])("carries the reach icon gap columns left of the heart at %o, centred on it", (heart) => {
-    const { gap, size } = REACH_ICON;
+  ])("carries the reach icon its gap columns left of the heart at %o, centred on it", (heart) => {
+    const { size } = REACH_ICON;
     const icon = reachIconBeside(heart);
     const heartInkLeft = heart.x - FLY_HEART.frame / 2 + FLY_HEART.inkLeft;
-    expect(heartInkLeft - (icon.x + size)).toBe(gap);
+    expect(heartInkLeft - (icon.x + size)).toBe(FLY_REACH_ICON_GAP);
     expect(icon.y + size / 2).toBe(heart.y);
   });
 });

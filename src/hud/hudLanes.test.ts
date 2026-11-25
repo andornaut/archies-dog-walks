@@ -7,7 +7,6 @@ import { describe, expect, it } from "vitest";
 import { ICON_LABEL_GAP } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { fontFileMetrics } from "../testing/fontInk.ts";
-import { iconBesideLabel } from "../ui/iconLabel.ts";
 import { perkIconKey } from "./effectIcons.ts";
 import {
   CHANGE_CHIP,
@@ -100,27 +99,42 @@ describe("a reached pickup's chip", () => {
   });
 
   it.each(places)(
-    "widens %s chip for the icon, held at its left on the text's capitals, and keeps it when not reached",
+    "widens %s chip for the icon, held at its left before the text, and keeps it when not reached",
     (_name, place) => {
       const plain = place(text);
-      expect(reachChipPlace(BODY, place, false, text)).toEqual({ ...plain, icon: null });
-      const { chip, icon, text: ink } = reachChipPlace(BODY, place, true, text);
+      expect(reachChipPlace(place, false, text)).toEqual({ ...plain, icon: null });
+      const { chip, icon, text: ink } = reachChipPlace(place, true, text);
       expect(REACH_ICON.gap).toBe(ICON_LABEL_GAP);
       expect(chip.width).toBe(plain.chip.width + REACH_ICON.span);
       expect(chip.height).toBe(plain.chip.height);
       expect(ink).toEqual({ x: chip.x + CHANGE_CHIP.padX + REACH_ICON.span, y: plain.text.y });
-      const capHeight = BODY.capHeight * text.scale;
-      expect(icon).toEqual(iconBesideLabel({ capHeight, capTop: ink.y, inkLeft: ink.x }));
-      expect(icon!.x).toBe(chip.x + CHANGE_CHIP.padX);
-      expect(icon!.y).toBeGreaterThan(chip.y);
-      expect(icon!.y + REACH_ICON.size).toBeLessThan(chip.y + chip.height);
+      expect(icon!.x + REACH_ICON.span).toBe(ink.x);
+    },
+  );
+
+  // The icon's cell and the text's ink are one group centred on the chip's flat fill, inside its
+  // 1-row frame: a clear row or more over and under it, any odd row under.
+  it.each(places.flatMap(([name, place]) => [1, 2].map((lines) => [name, lines, place] as const)))(
+    "centres %s chip's icon and %i-line text as one group on its fill",
+    (_name, lines, place) => {
+      const shown = { ...text, lines };
+      const { chip, icon, text: caps } = reachChipPlace(place, true, shown);
+      const top = Math.min(icon!.y, caps.y);
+      const bottom = Math.max(
+        icon!.y + REACH_ICON.size,
+        caps.y + inkRowsOfLines(BODY, lines) * shown.scale,
+      );
+      const above = top - (chip.y + 1);
+      const below = chip.y + chip.height - 1 - bottom;
+      expect(Math.min(above, below)).toBeGreaterThanOrEqual(1);
+      expect([0, 1]).toContain(below - above);
     },
   );
 
   it("stays centred where the cash places it", () => {
     const place = (shown: ChipText) => cashChipPlace(BODY, 0, shown);
     const centre = ({ width, x }: Rect) => x + width / 2;
-    const reached = reachChipPlace(BODY, place, true, text).chip;
+    const reached = reachChipPlace(place, true, text).chip;
     expect(Math.abs(centre(reached) - centre(place(text).chip))).toBeLessThanOrEqual(0.5);
   });
 });

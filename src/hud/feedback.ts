@@ -1,5 +1,6 @@
 import { type Point, type Rect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 
+import { FLY_REACH_ICON_GAP } from "../data/layout.ts";
 import { type Cents, cents } from "../units.ts";
 import { REACH_ICON } from "./hudLanes.ts";
 
@@ -55,12 +56,12 @@ export function chipLeft(screenWidth: number, centreX: number, width: number): n
 export const FLY_HEART = { frame: 32, inkLeft: 9 } as const;
 
 // A reached treat's reach icon rides beside its small heart as it flies into the card: its
-// top-left for the heart's frame centred on heart, REACH_ICON.gap columns left of the heart's
+// top-left for the heart's frame centred on heart, FLY_REACH_ICON_GAP columns left of the heart's
 // ink and vertically centred on the frame.
 export function reachIconBeside(heart: Point): Point {
-  const { gap, size } = REACH_ICON;
+  const { size } = REACH_ICON;
   const inkLeft = heart.x - FLY_HEART.frame / 2 + FLY_HEART.inkLeft;
-  return { x: inkLeft - gap - size, y: heart.y - size / 2 };
+  return { x: inkLeft - FLY_REACH_ICON_GAP - size, y: heart.y - size / 2 };
 }
 
 // The 32x32 heart pop's top-left: its centre column on the dog's, its bottom row 4px below

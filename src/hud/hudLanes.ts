@@ -3,7 +3,7 @@ import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/te
 
 import { CHANGE_CHIP, HUD_LANES, LABEL_ICON } from "../data/layout.ts";
 import type { ScreenLayout } from "../layout/screenLayout.ts";
-import { iconBesideLabel } from "../ui/iconLabel.ts";
+import { centredInkOffsets } from "../ui/centredInkBlock.ts";
 import { TEXT_STYLE } from "../ui/textFit.ts";
 import { OWNER_TAB } from "./walkHud.ts";
 
@@ -84,8 +84,7 @@ export interface ChipText {
 }
 
 // A reached pickup's change label shows the reaching buff's icon, size square, inside its chip at
-// its left, centred down its text's capitals, gap columns left of its text; the chip widens by span
-// to hold it.
+// its left, gap columns left of its text; the chip widens by span to hold it.
 const REACH_ICON_SIZE = LABEL_ICON;
 const REACH_ICON_GAP = HUD_LANES.reachIconGap;
 export const REACH_ICON = {
@@ -95,11 +94,12 @@ export const REACH_ICON = {
 } as const;
 
 // A change label's chip as place puts it, and where its ink's left edge and capitals' top go,
-// for text in body; with reached, its chip widened by REACH_ICON.span and placed as place places a
-// chip that wide, the text's ink past the icon and the icon beside it (iconBesideLabel). icon is
-// null without reached.
+// for text; with reached, its chip widened by REACH_ICON.span and placed as place places a chip
+// that wide, the icon's top-left at its left and the text's ink past the icon. The icon and the
+// text's ink are one group on the chip's flat fill inside its 1-row frame: place centres the
+// text's ink down the fill and the icon is centred down it too (centredInkOffsets), so the group
+// is, any odd row under. icon is null without reached.
 export function reachChipPlace(
-  body: FontMetrics,
   place: (text: ChipText) => { chip: Rect; text: Point },
   reached: boolean,
   text: ChipText,
@@ -107,16 +107,14 @@ export function reachChipPlace(
   if (!reached) {
     return { ...place(text), icon: null };
   }
-  const placed = place({ ...text, width: text.width + REACH_ICON.span });
-  const ink = { x: placed.text.x + REACH_ICON.span, y: placed.text.y };
+  const { size, span } = REACH_ICON;
+  const { chip, text: ink } = place({ ...text, width: text.width + span });
+  const fill = { height: chip.height - 2, width: chip.width - 2, x: chip.x + 1, y: chip.y + 1 };
+  const [offset] = centredInkOffsets(fill, [{ height: size, width: size, x: 0, y: 0 }]);
   return {
-    chip: placed.chip,
-    icon: iconBesideLabel({
-      capHeight: body.capHeight * text.scale,
-      capTop: ink.y,
-      inkLeft: ink.x,
-    }),
-    text: ink,
+    chip,
+    icon: { x: ink.x, y: offset!.y },
+    text: { x: ink.x + span, y: ink.y },
   };
 }
 

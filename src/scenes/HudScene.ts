@@ -816,11 +816,7 @@ export class HudScene extends Scene {
     const width = Math.max(
       ...fitted.lines.map((line) => inkWidth(painter.fonts.body, scale, line)),
     );
-    const placed = reachChipPlace(pixelFontMetrics(this, "body"), place, reached, {
-      lines: fitted.lines.length,
-      scale,
-      width,
-    });
+    const placed = reachChipPlace(place, reached, { lines: fitted.lines.length, scale, width });
     const chip = painter.group(depth);
     chip.panel(placed.chip);
     chip.text({
