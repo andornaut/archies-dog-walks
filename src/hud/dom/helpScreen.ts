@@ -135,7 +135,8 @@ function pagerPart(
     }),
     step: (direction) => input.presses[direction < 0 ? 0 : 1]?.(),
   });
-  pager.element.style.setProperty("--ui-refusal-colour", "var(--adw-red)");
+  // The kit cue's red phases fill Previous's face dark red under a white label (gameButton.css).
+  pager.element.style.setProperty("--ui-refusal-colour", "var(--adw-white)");
   Object.assign(pager.element.style, {
     height: "0",
     left: "0",

@@ -19,6 +19,7 @@ import { type DomArtSource, imageArt, imageNineSlice } from "../../ui/dom/artEle
 import { type NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import { type DomPart, framelessView, gridBoxPart } from "../../ui/dom/parts.ts";
 import { createTextLine, placeBox, placeText, setBox } from "../../ui/dom/pixelLine.ts";
+import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
 import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridRect } from "../../ui/domScale.ts";
@@ -279,24 +280,7 @@ function surfaceParts(
       );
     }
   }
-  const plaque = surface.plaqueText === undefined ? undefined : labels[surface.plaqueText]?.element;
-  const saved = new Map<HTMLElement, string>();
-  const flash = (red: boolean) => {
-    if (plaque === undefined) {
-      return;
-    }
-    const walk = (node: HTMLElement) => {
-      if (!saved.has(node)) {
-        saved.set(node, node.style.color);
-      }
-      node.style.color = red ? cssHex(PALETTE.red) : saved.get(node)!;
-      for (const child of node.children) {
-        walk(child as HTMLElement);
-      }
-    };
-    walk(plaque);
-  };
-  return { all, destroy: () => sprites.forEach((sprite) => sprite.destroy()), flash };
+  return { all, destroy: () => sprites.forEach((sprite) => sprite.destroy()) };
 }
 
 export function showChoiceCards(
@@ -431,10 +415,11 @@ export function showChoiceCards(
     return {
       ...rendered,
       element: group,
+      // A refusal's red phases fill the label band dark red under a white label.
       motion: (value: number, red: boolean) => {
         offset = value;
         motion();
-        rendered.flash(red);
+        group.toggleAttribute(REFUSAL_RED, red);
       },
     };
   });

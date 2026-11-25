@@ -77,6 +77,7 @@ import { uiLayer } from "../ui/dom/uiLayer.ts";
 import type { PanelMeasure, PanelText } from "../ui/modal/types.ts";
 import { stackRows } from "../ui/pageLayout.ts";
 import { PALETTE } from "../ui/palette.ts";
+import { refusalRed } from "../ui/refuse.ts";
 import { GREYED, pictureBox, selectLook } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
@@ -372,6 +373,10 @@ export class ShopScene extends Scene {
 
   private placeNative(): void {
     const reduced = currentSettings(this).reducedMotion;
+    const refused = (id: string) => {
+      const at = this.shakes.get(id);
+      return at !== undefined && refusalRed(reduced, this.time.now - at);
+    };
     this.native?.place({
       ...(this.pressed?.kind === "row" ? { pressed: this.pressed.id } : {}),
       rows: new Map(
@@ -380,6 +385,7 @@ export class ShopScene extends Scene {
             row.id,
             {
               focused: this.focusId === row.id,
+              refusing: refused(row.id),
               x: shakeOffset(reduced, this.time.now, this.shakes.get(row.id)),
             },
           ];

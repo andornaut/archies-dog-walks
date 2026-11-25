@@ -49,6 +49,30 @@
   :is(.adw-selection-focus-ink, .adw-selection-press-ink) {
   color: var(--adw-selection-focus-ink) !important;
 }
+/* A refusal's red phases, focused or pressed alike: a picker tile's name area, or a Shop row's
+   interior, fills dark red under a white label (7.34:1). */
+.adw-selection-tile[data-picker-refusing]:is(
+    *,
+    :focus-visible,
+    .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+  )
+  .adw-selection-focus-fill,
+.adw-selection-tile[data-refusal-red]:is(
+    *,
+    :focus-visible,
+    .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+  )
+  .adw-selection-face {
+  background-color: var(--adw-darkRed) !important;
+}
+.adw-selection-tile:is([data-picker-refusing], [data-refusal-red]):is(
+    *,
+    :focus-visible,
+    .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+  )
+  :is(.adw-selection-focus-ink, .adw-selection-press-ink) {
+  color: var(--adw-white) !important;
+}
 @media (forced-colors: active) {
   .adw-selection-tile {
     --adw-selection-edge: ButtonText !important;

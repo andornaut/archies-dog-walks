@@ -413,7 +413,11 @@ function rowPart(
       ...(slider === undefined ? [] : [slider.empty.ready, slider.filled.ready, slider.knob.ready]),
     ]).then((urls) => urls.flat()),
     refuse: (reducedMotion: boolean) =>
-      texts.forEach(({ element: text }) => refuse(reducedMotion, text)),
+      refuse(
+        reducedMotion,
+        element,
+        texts.map(({ element: text }) => text),
+      ),
   };
 }
 

@@ -1,13 +1,17 @@
 import { describe, expect, it } from "vitest";
 
+import { REFUSE, REFUSE_SHAKES } from "../ui/refuse.ts";
 import { FEEDBACK, loopFrame, settleDelay, shakeOffset } from "./feedback.ts";
 
 describe("shakeOffset", () => {
-  it("swings within the shake width, settles once it is over and is still with reduced motion or no shake", () => {
-    const offsets = Array.from({ length: 32 }, (_, i) => shakeOffset(false, 1000 + i * 10, 1000));
-    expect(offsets.some((offset) => offset !== 0)).toBe(true);
-    expect(offsets.every((offset) => Math.abs(offset) <= FEEDBACK.shakePx)).toBe(true);
-    expect(shakeOffset(false, 1000 + FEEDBACK.shakeMs, 1000)).toBe(0);
+  it("steps the refusal's shake, then settles; still under reduced motion or with no shake", () => {
+    const period = 2 * REFUSE.shakeMs;
+    const total = period * REFUSE_SHAKES;
+    const offsets = Array.from({ length: total }, (_, i) => shakeOffset(false, 1000 + i, 1000));
+    expect(Math.min(...offsets)).toBe(0);
+    expect(Math.max(...offsets)).toBe(REFUSE.shake);
+    expect(offsets.slice(period, 2 * period)).toEqual(offsets.slice(0, period));
+    expect(shakeOffset(false, 1000 + total, 1000)).toBe(0);
     expect(shakeOffset(true, 1100, 1000)).toBe(0);
     expect(shakeOffset(false, 1100, undefined)).toBe(0);
   });

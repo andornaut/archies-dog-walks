@@ -24,6 +24,7 @@ import {
   setBox,
   shownText,
 } from "../../ui/dom/pixelLine.ts";
+import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { fontPixel, gridRect, gridX } from "../../ui/domScale.ts";
 import type { TileState } from "../../ui/interaction.ts";
@@ -81,6 +82,8 @@ export interface ShopScreenMotion {
     {
       readonly x: number;
       readonly focused: boolean;
+      // Whether the row's refusal is in a red phase (refusalRed).
+      readonly refusing?: boolean;
     }
   >;
 }
@@ -221,6 +224,7 @@ export function showShopScreen(
     headingParts.forEach((part) => part.place(scrolling.scale));
     for (const [id, row] of rows) {
       const state = motion?.rows.get(id);
+      row.tile.element.toggleAttribute(REFUSAL_RED, state?.refusing === true);
       row.tile.place(scrolling.scale, {
         focused: state?.focused ?? false,
         markY: 0,

@@ -11,7 +11,7 @@ import { createTextLine, placeBackedText, placeText, setBox } from "../../ui/dom
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
 import { type DomScale, frameRect, gridX, gridY } from "../../ui/domScale.ts";
 import { itemTileLook } from "../../ui/interaction.ts";
-import { cssHex, PALETTE } from "../../ui/palette.ts";
+import { cssHex } from "../../ui/palette.ts";
 import { plainMarks } from "../../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { plateStripView, pricePlateView } from "../pricePlateView.ts";
@@ -109,13 +109,8 @@ export function createHomeSelection(
       const { line, picture: backing } = picture.fallback;
       const label = createTextLine(doc, line);
       paint.append(label);
-      parts.push((scale, motion) =>
-        placeBackedText(fonts[line.font], scale, origin, backing, [
-          {
-            element: label,
-            line: { ...line, colour: motion.refusing ? PALETTE.red : line.colour },
-          },
-        ]),
+      parts.push((scale) =>
+        placeBackedText(fonts[line.font], scale, origin, backing, [{ element: label, line }]),
       );
     } else if (source.isSheet(picture.key)) {
       const art = sheetArt(doc, source, picture.key, key);
@@ -169,12 +164,11 @@ export function createHomeSelection(
     };
     fill(nameArea).classList.add("adw-selection-focus-fill", "adw-selection-name-cue");
     paint.append(label);
-    parts.push((scale, motion) => {
-      const shown = { ...line, colour: motion.refusing ? PALETTE.red : line.colour };
+    parts.push((scale) => {
       if (name.centreIn === undefined) {
-        placeText(body, scale, origin, label, shown);
+        placeText(body, scale, origin, label, line);
       } else {
-        placeBackedText(body, scale, origin, name.centreIn, [{ element: label, line: shown }]);
+        placeBackedText(body, scale, origin, name.centreIn, [{ element: label, line }]);
       }
     });
   }
@@ -205,13 +199,8 @@ export function createHomeSelection(
       label.classList.add("adw-selection-focus-ink");
     }
     paint.append(label);
-    parts.push((scale, motion) =>
-      placeBackedText(body, scale, origin, plate.rect, [
-        {
-          element: label,
-          line: { ...plate.label, colour: motion.refusing ? PALETTE.red : plate.label.colour },
-        },
-      ]),
+    parts.push((scale) =>
+      placeBackedText(body, scale, origin, plate.rect, [{ element: label, line: plate.label }]),
     );
   }
   if (view.badge !== undefined) {

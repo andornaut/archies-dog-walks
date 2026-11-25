@@ -27,6 +27,7 @@ import { MARK_OFFSET } from "../ui/mark.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
+import { REFUSE } from "../ui/refuse.ts";
 import { AFFORD_OUTSET } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { topSectionCurrency, topSectionCurrencyText, topSectionLayout } from "../ui/topSection.ts";
@@ -170,8 +171,8 @@ describe("home layout", () => {
           y: tile.y + offset.y + dy,
         });
         const visible = [
-          at({ ...tile, x: 0, y: 0 }, -FEEDBACK.shakePx, FEEDBACK.pressDipPx),
-          at({ ...tile, x: 0, y: 0 }, FEEDBACK.shakePx, FEEDBACK.pressDipPx),
+          at({ ...tile, x: 0, y: 0 }, 0, FEEDBACK.pressDipPx),
+          at({ ...tile, x: 0, y: 0 }, REFUSE.shake, FEEDBACK.pressDipPx),
           at({ ...tile, x: 0, y: 0 }, 0, -FEEDBACK.liftPx),
         ];
         for (const ink of visible) {
@@ -179,7 +180,8 @@ describe("home layout", () => {
         }
         const overhang = [
           at(tick, MARK_OFFSET.x, MARK_OFFSET.y - FEEDBACK.liftPx - FEEDBACK.badgePopPx),
-          ...badges.map((badge) => at(badge, -2 - FEEDBACK.shakePx, -3)),
+          ...badges.map((badge) => at(badge, -2, -3)),
+          ...badges.map((badge) => at(badge, -2 + REFUSE.shake, -3)),
         ];
         for (const ink of overhang) {
           expect(inside(ink, gutter), `${id}: ${JSON.stringify(ink)}`).toBe(true);

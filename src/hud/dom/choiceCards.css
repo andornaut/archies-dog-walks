@@ -18,6 +18,16 @@
   background: var(--adw-green);
 }
 
+/* A refusal's red phases (refusal.ts): the label band fills dark red under a white label. */
+.adw-choice-group[data-refusal-red] .adw-choice-press-band {
+  display: block;
+  background: var(--adw-darkRed);
+}
+
+.adw-choice-group[data-refusal-red] :is(.adw-choice-press-label, .adw-choice-press-label *) {
+  color: var(--adw-white) !important;
+}
+
 @media (forced-colors: active) {
   .adw-choice-group:has(.adw-choice-option:focus-visible) .adw-choice-press-band,
   .adw-choice-pressed:has(.adw-choice-option[aria-disabled="false"]) .adw-choice-press-band {

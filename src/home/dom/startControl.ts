@@ -2,8 +2,9 @@ import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { createTextLine, placeFrame, placeText, setBox } from "../../ui/dom/pixelLine.ts";
+import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
 import { artPixel, type DomScale, gridRect } from "../../ui/domScale.ts";
-import { cssHex, PALETTE } from "../../ui/palette.ts";
+import { PALETTE } from "../../ui/palette.ts";
 import { BUTTON_COLOURS } from "../../ui/selection.ts";
 import { HOME_LAYOUT } from "../homeLayout.ts";
 export interface NativeStartControl {
@@ -90,7 +91,7 @@ export function createStartControl(
       }
       button.setPressed(state.down && ready);
       element.style.opacity = String(state.waiting ? input.waitingAlpha : 1);
-      element.style.setProperty("--adw-button-text", state.refusing ? cssHex(PALETTE.red) : "");
+      element.toggleAttribute(REFUSAL_RED, state.refusing);
       const box = gridRect(scale, rect);
       const pixel = artPixel(scale);
       setBox(element, box);

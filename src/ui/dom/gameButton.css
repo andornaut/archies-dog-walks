@@ -92,6 +92,14 @@
   --adw-button-fill: var(--adw-navy);
   --adw-button-text: var(--adw-cream);
 }
+/* A refusal's red phases (refusal.ts, or the kit's refusal cue on the Help pager): a dark red
+   face, red bevel and plum lip under a white label (7.34:1), whatever its state. */
+.adw-standard-button.ui-standard-button:is([data-refusal-red], [data-ui-refusal-red]) {
+  --adw-button-fill: var(--adw-darkRed);
+  --adw-button-highlight: var(--adw-red);
+  --adw-button-lip: var(--adw-plum);
+  --adw-button-text: var(--adw-white);
+}
 /* Suppress inherited game focus decorations; this control's face supplies its focus cue. */
 .adw-standard-button.ui-standard-button:focus-visible .adw-standard-button-face::after {
   content: none;

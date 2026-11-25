@@ -1,3 +1,5 @@
+import { refuseOffset } from "../ui/refuse.ts";
+
 // The home screen's tap feedback, from the art style guide: offsets in pixels and animation frames,
 // each a function of how long ago its effect started. With reduced motion every movement is 0 and
 // the pulse holds its first frame; the press dip, the picked lift and the tap sparkle stay, since
@@ -18,8 +20,6 @@ export const FEEDBACK = {
   liftPx: 2,
   pressDipMs: 140,
   pressDipPx: 2,
-  shakeMs: 320,
-  shakePx: 3,
 } as const;
 
 // How long ago an effect started, or Infinity for one that never did.
@@ -27,17 +27,13 @@ function age(nowMs: number, startedMs: number | undefined): number {
   return startedMs === undefined ? Number.POSITIVE_INFINITY : nowMs - startedMs;
 }
 
-// A refused tap: the tile swings side to side.
+// A refused tap: the control shakes right and back, the refusal's step shake (refuseOffset).
 export function shakeOffset(
   reducedMotion: boolean,
   nowMs: number,
   startedMs: number | undefined,
 ): number {
-  const elapsed = age(nowMs, startedMs);
-  if (reducedMotion || elapsed >= FEEDBACK.shakeMs) {
-    return 0;
-  }
-  return Math.round(Math.sin(elapsed / 25) * FEEDBACK.shakePx) || 0;
+  return refuseOffset(reducedMotion, age(nowMs, startedMs));
 }
 
 // A picked face, or a dog at the gate, hops twice: negative is up.

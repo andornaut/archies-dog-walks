@@ -31,3 +31,19 @@ export function refusalRed(reducedMotion: boolean, elapsedMs: number): boolean {
     (reducedMotion || Math.floor(elapsedMs / flashMs) % 2 === 1)
   );
 }
+
+// The whole pixels a refused control sits right of its place elapsedMs into its refusal, on the
+// presenting scene's clock: the step shake (refuseShakeSteps) REFUSE_SHAKES times, or none under
+// reduced motion.
+export function refuseOffset(reducedMotion: boolean, elapsedMs: number): number {
+  const period = 2 * REFUSE.shakeMs;
+  if (reducedMotion || !(elapsedMs >= 0) || elapsedMs >= period * REFUSE_SHAKES) {
+    return 0;
+  }
+  const at = (elapsedMs % period) / period;
+  return (
+    refuseShakeSteps()
+      .filter((step) => step.at <= at)
+      .at(-1)?.offset ?? 0
+  );
+}
