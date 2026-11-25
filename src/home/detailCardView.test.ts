@@ -16,6 +16,7 @@ import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
+import { SEPARATOR } from "../ui/separator.ts";
 import { cents } from "../units.ts";
 import { dogDetail, gearDetail, walkerDetail } from "./detail.ts";
 import { detailCardView, type DetailMeasure, type DetailText } from "./detailCardView.ts";
@@ -61,10 +62,10 @@ it("places the owner below the portrait row, photo aligned to the dog-art column
   expect(owner.every((text) => text.x > photo!.rect.x + photo!.rect.width)).toBe(true);
   const divider = view.separators![0]!;
   expect(divider.y - Math.max(well!.rect.y + well!.rect.height, ...details.map(bottom))).toBe(
-    MODAL.gap + MODAL.rowGap,
+    SEPARATOR.clear,
   );
   expect(Math.min(photo!.rect.y, ...owner.map((text) => text.capTop)) - divider.y - 1).toBe(
-    MODAL.gap + MODAL.rowGap,
+    SEPARATOR.clear,
   );
   expect(view.separators).toHaveLength(1);
 });
@@ -94,8 +95,8 @@ it.each([false, true])(
     expect(price.colour).toBe(locked ? PALETTE.darkRed : PALETTE.plum);
     expect(saving.colour).toBe(locked ? PALETTE.darkRed : PALETTE.forest);
     expect(saving.capTop - bottom(price)).toBe(MODAL.pad);
-    expect(price.capTop - (view.separators!.at(-1)!.y + 1)).toBe(MODAL.gap + MODAL.rowGap);
-    expect(view.card.footer!.rect.y - bottom(saving)).toBe(MODAL.pad);
+    expect(price.capTop - (view.separators!.at(-1)!.y + 1)).toBe(SEPARATOR.clear);
+    expect(view.card.footer!.rect.y - bottom(saving)).toBe(MODAL.gap);
   },
 );
 
@@ -111,7 +112,7 @@ it("keeps the wrapped walker unlock sentence in one centred text block", () => {
   const status = view.texts.find((text) => text.lines.join(" ") === info.status)!;
   expect(status.lines).toEqual(expected);
   expect(status.align).toBe("inkCentre");
-  expect(view.card.footer!.rect.y - bottom(status)).toBe(MODAL.pad);
+  expect(view.card.footer!.rect.y - bottom(status)).toBe(MODAL.gap);
 });
 
 it("shows only the price below an affordable card with Cancel and primary Buy", () => {
@@ -155,7 +156,7 @@ it("fits all authored dog details at full font size with separate price and savi
       SCREEN_LAYOUT.screen.height - 2 * MODAL.margin,
     );
     expect(view.card.footer!.rect.y, dog).toBeGreaterThanOrEqual(
-      Math.max(...view.texts.map(bottom)) + MODAL.pad,
+      Math.max(...view.texts.map(bottom)) + MODAL.gap,
     );
   }
 });
@@ -263,9 +264,9 @@ it.each(["gear", "dogSlot"] as const)(
     const details = view.texts.filter((text) => text.lines.join(" ") === slot.line);
     const price = view.texts.find((text) => text.font === "title")!;
     expect(divider.y - Math.max(well.y + well.height, ...details.map(bottom))).toBe(
-      MODAL.gap + MODAL.rowGap,
+      SEPARATOR.clear,
     );
-    expect(price.capTop - divider.y - divider.height).toBe(MODAL.gap + MODAL.rowGap);
+    expect(price.capTop - divider.y - divider.height).toBe(SEPARATOR.clear);
     expect(view.card.panel.height).toBeLessThanOrEqual(
       SCREEN_LAYOUT.screen.height - 2 * MODAL.margin,
     );

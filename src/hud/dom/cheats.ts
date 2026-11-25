@@ -88,16 +88,8 @@ function dividerPart(doc: Document, origin: Point): RowPart {
   return {
     controls: [],
     element,
-    place: (scale, row) => {
-      const { rect } = row;
-      const line = {
-        height: 1,
-        width: rect.width,
-        x: rect.x,
-        y: rect.y + Math.floor(rect.height / 2),
-      };
-      placeContentSeparator(scale, { origin, projection: "art" }, element, line);
-    },
+    place: (scale, row) =>
+      placeContentSeparator(scale, { origin, projection: "art" }, element, row.rect),
     ready: Promise.resolve([]),
   };
 }

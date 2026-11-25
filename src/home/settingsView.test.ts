@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { DOM_ART_KEYS } from "../assets/domArt.ts";
 import { gameData } from "../data/index.ts";
-import { SETTINGS_CARD } from "../data/layout.ts";
+import { ICON_LABEL_GAP, LABEL_ICON, SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
 import { fontFileMetrics, fontInkRows, gameFont } from "../testing/fontInk.ts";
@@ -12,7 +12,12 @@ import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { FEEDBACK } from "./feedback.ts";
-import { installStepsLayout, settingsLayout } from "./settings.ts";
+import {
+  installStepsLayout,
+  SETTINGS_ROW,
+  settingsInstallWidth,
+  settingsLayout,
+} from "./settings.ts";
 import {
   SETTINGS_ART_KEYS,
   type SettingsMeasure,
@@ -38,7 +43,15 @@ const layout = settingsLayout(
   rows.map((row) =>
     row.kind === "slider"
       ? { kind: "slider" }
-      : { kind: row.kind, noteLines: row.kind === "button" || row.note === undefined ? 0 : 1 },
+      : row.kind === "button"
+        ? {
+            controlWidth: settingsInstallWidth(
+              MEASURE.inkWidth("title", gameData.menuText.settings.install),
+            ),
+            kind: row.kind,
+            noteLines: 0,
+          }
+        : { kind: row.kind, noteLines: row.note === undefined ? 0 : 1 },
   ),
 );
 const STATE: SettingsState = {
@@ -157,16 +170,35 @@ describe("settingsView", () => {
       expect(configured.at(-2)?.key).toBe(installable ? "install" : "reducedMotion");
       const fps = view({}).rows.at(-1)!;
       const sound = view({}).rows[0]!;
+      const caps = MEASURE.title.capHeight * TEXT_SCALE;
       expect(fps.icon).toMatchObject({
         key: "icon-fps-counter-panel",
         x: sound.icon?.x,
-        y: fps.texts[0]!.capTop - (SETTINGS_CARD.row.label.dy - SETTINGS_CARD.row.icon.dy),
+        y: fps.texts[0]!.capTop - Math.floor((LABEL_ICON - caps) / 2),
       });
-      expect(fps.texts[0]!.x - fps.rect.x).toBe(SETTINGS_CARD.row.label.dx);
+      expect(fps.texts[0]!.x - fps.icon!.x).toBe(LABEL_ICON + ICON_LABEL_GAP);
+      expect(fps.texts[0]!.x - fps.rect.x).toBe(SETTINGS_ROW.label.dx);
       expect(fps.texts[0]!.x).toBe(sound.texts[0]!.x);
       expect(fps.switch!.art.x).toBe(sound.switch!.art.x);
     },
   );
+
+  it("centres the Install button in its row and its icon and label ink as one group on it", () => {
+    const install = view({}).rows.find(({ key }) => key === "install")!;
+    const { button, icon, rect } = install;
+    const face = button!.rect;
+    const ink = MEASURE.inkWidth("title", gameData.menuText.settings.install);
+    expect(face.x - rect.x).toBe(rect.x + rect.width - face.x - face.width);
+    expect(face.width).toBe(settingsInstallWidth(ink));
+    const inkLeft = button!.text.centreX - ink / 2;
+    expect(inkLeft - icon!.x).toBe(LABEL_ICON + ICON_LABEL_GAP);
+    const start = icon!.x + SETTINGS_CARD.installIconInk;
+    const [left, right] = [start - face.x, face.x + face.width - inkLeft - ink];
+    expect(left - right).toBeGreaterThanOrEqual(0);
+    expect(left - right).toBeLessThanOrEqual(1);
+    const caps = MEASURE.title.capHeight * TEXT_SCALE;
+    expect(icon!.y).toBe(button!.text.capTop - Math.floor((LABEL_ICON - caps) / 2));
+  });
 
   it("dips a pressed row's face, icon, text and switch together", () => {
     const up = view({}).rows.find(({ key }) => key === "muted");

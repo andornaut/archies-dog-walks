@@ -2512,7 +2512,7 @@
             "height": 56,
             "width": 296,
             "x": 32,
-            "y": 192
+            "y": 201
           }
         },
         {
@@ -2522,7 +2522,7 @@
             "height": 56,
             "width": 296,
             "x": 32,
-            "y": 256
+            "y": 274
           }
         },
         {
@@ -2530,29 +2530,29 @@
             "height": 16,
             "width": 32,
             "x": 288,
-            "y": 329
+            "y": 356
           },
-          "noteY": 354,
+          "noteY": 381,
           "rect": {
             "height": 82,
             "width": 296,
             "x": 32,
-            "y": 320
+            "y": 347
           }
         },
         {
           "control": {
             "height": 48,
-            "width": 126,
-            "x": 194,
-            "y": 410
+            "width": 122,
+            "x": 119,
+            "y": 446
           },
           "noteY": null,
           "rect": {
             "height": 48,
             "width": 296,
             "x": 32,
-            "y": 410
+            "y": 446
           }
         },
         {
@@ -2560,18 +2560,18 @@
             "height": 16,
             "width": 32,
             "x": 288,
-            "y": 475
+            "y": 520
           },
           "noteY": null,
           "rect": {
             "height": 53,
             "width": 296,
             "x": 32,
-            "y": 466
+            "y": 511
           }
         }
       ],
-      "rowsContentHeight": 417,
+      "rowsContentHeight": 462,
       "rowsViewport": {
         "height": 321,
         "width": 296,
@@ -2588,39 +2588,38 @@
       "separators": [
         {
           "height": 1,
-          "width": 288,
-          "x": 36,
-          "y": 187
+          "width": 296,
+          "x": 32,
+          "y": 192
         },
         {
           "height": 1,
-          "width": 288,
-          "x": 36,
-          "y": 251
+          "width": 296,
+          "x": 32,
+          "y": 265
         },
         {
           "height": 1,
-          "width": 288,
-          "x": 36,
-          "y": 315
+          "width": 296,
+          "x": 32,
+          "y": 338
         },
         {
           "height": 1,
-          "width": 288,
-          "x": 36,
-          "y": 405
+          "width": 296,
+          "x": 32,
+          "y": 437
         },
         {
           "height": 1,
-          "width": 288,
-          "x": 36,
-          "y": 461
+          "width": 296,
+          "x": 32,
+          "y": 502
         }
       ],
       "track": {
         "dy": 30,
         "height": 10,
-        "knobWidth": 10,
         "width": 280,
         "x": 40
       }

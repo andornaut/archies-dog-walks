@@ -4,9 +4,11 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { InstallStepsKind } from "@andornaut/game-kit/runtime/web/pwa/installState";
 
 import { BUILD_LABEL } from "../buildLabel.ts";
+import { ICON_LABEL_GAP, LABEL_ICON, SETTINGS_CARD } from "../data/layout.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
 import type { MenuText } from "../data/types.ts";
 import type { Settings } from "../save/settings.ts";
+import { iconBesideLabel } from "../ui/iconLabel.ts";
 import { dismissFooter } from "../ui/modal/dismissFooter.ts";
 import {
   type PanelButton,
@@ -21,8 +23,6 @@ import { TEXT_SCALE } from "../ui/textFit.ts";
 import { FEEDBACK } from "./feedback.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import {
-  INSTALL_ICON_GAP,
-  INSTALL_ICON_SIZE,
   INSTALL_STEPS_FIT,
   type InstallStepsLayout,
   noteRoomForControl,
@@ -141,7 +141,7 @@ export const SETTINGS_ART_KEYS: readonly string[] = [
   ...new Set(Object.values(STEPS_ICONS)),
 ];
 
-const { icon: ICON, label: LABEL, note: NOTE } = SETTINGS_ROW;
+const { label: LABEL, note: NOTE } = SETTINGS_ROW;
 
 // A switch is on when its setting is: sound is on while not muted.
 export function switchOn(key: SwitchKey, settings: Settings): boolean {
@@ -259,19 +259,26 @@ function controlRow(
 ): SettingsRowView {
   const { control, noteY, rect } = layout;
   if (row.kind === "button" && control !== null) {
+    // The icon's ink, ICON_LABEL_GAP and the label's ink are one group centred on the face, a
+    // half pixel rounding right, the icon on the label's capitals.
     const button = panelButton(measure, control, false, words.install);
-    const prefix = INSTALL_ICON_SIZE + INSTALL_ICON_GAP;
     const ink = measure.inkWidth("title", words.install);
+    const iconInk = LABEL_ICON - SETTINGS_CARD.installIconInk;
+    const start = Math.round(button.text.centreX - (iconInk + ICON_LABEL_GAP + ink) / 2);
+    const inkLeft = start + iconInk + ICON_LABEL_GAP;
     return {
-      button: { ...button, text: { ...button.text, centreX: button.text.centreX + prefix / 2 } },
+      button: { ...button, text: { ...button.text, centreX: inkLeft + ink / 2 } },
       description: "",
       dip: 0,
       face: undefined,
       icon: {
         key: row.icon,
         tag: "idle",
-        x: control.x + (control.width - prefix - ink) / 2,
-        y: control.y + (control.height - INSTALL_ICON_SIZE) / 2,
+        ...iconBesideLabel({
+          capHeight: measure.title.capHeight * TEXT_SCALE,
+          capTop: button.text.capTop,
+          inkLeft,
+        }),
       },
       key: row.key,
       kind: row.kind,
@@ -301,12 +308,15 @@ function controlRow(
     ...(row.icon === undefined
       ? {}
       : {
-          // The icon keeps its rise over its label's capitals on every row, inline or noted.
+          // The icon centres on its label's capitals on every row, inline or noted.
           icon: {
             key: row.icon,
             tag: "idle",
-            x: x + ICON.dx,
-            y: labelTop + ICON.dy - LABEL.dy + dip,
+            ...iconBesideLabel({
+              capHeight: measure.title.capHeight * TEXT_SCALE,
+              capTop: labelTop + dip,
+              inkLeft: x + LABEL.dx,
+            }),
           },
         }),
     key: row.key,
@@ -365,6 +375,7 @@ function controlRow(
 
 // A volume slider: drag along the row to set it. Muted, it is disabled and reads "Muted".
 function sliderRow(
+  measure: SettingsMeasure,
   words: MenuText["settings"],
   layout: SettingsLayout,
   rect: Rect,
@@ -389,8 +400,11 @@ function sliderRow(
     icon: {
       key: row.icon,
       tag: "idle",
-      x: x + ICON.dx,
-      y: y + ICON.dy,
+      ...iconBesideLabel({
+        capHeight: measure.title.capHeight * TEXT_SCALE,
+        capTop: title.capTop,
+        inkLeft: x + LABEL.dx,
+      }),
     },
     key: row.key,
     kind: "slider",
@@ -447,7 +461,7 @@ function stepsView(
     dim: state.dim,
     icon: iconView(icon === undefined ? undefined : art(icon), icon, steps.icon),
     steps: {
-      anchor: "pen",
+      anchor: "ink",
       capTop: steps.steps.y,
       colour: PALETTE.plum,
       font: "body",
@@ -507,7 +521,7 @@ export function settingsView(
     rows: rows.map((row, i) => {
       const at = itemAt(layout.rows, i);
       return row.kind === "slider"
-        ? sliderRow(words, layout, at.rect, row, state)
+        ? sliderRow(measure, words, layout, at.rect, row, state)
         : controlRow(measure, words, at, row, state);
     }),
     rowsContentHeight: layout.rowsContentHeight,

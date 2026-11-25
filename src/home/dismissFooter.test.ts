@@ -73,9 +73,9 @@ it("keeps settings rows, build text and install steps above their centred dismis
   );
   const action = footer(view.card.panel, view.card.footer, true);
   expect(view.build.capTop + fonts.body.capHeight).toBeLessThanOrEqual(action.rect.y - MODAL.gap);
-  for (const row of view.rows) {
-    expect(row.rect.y + row.rect.height).toBeLessThanOrEqual(action.rect.y - MODAL.gap);
-  }
+  // Rows past the viewport scroll inside it.
+  const { rowsViewport } = layout;
+  expect(rowsViewport.y + rowsViewport.height).toBeLessThanOrEqual(action.rect.y - MODAL.gap);
   const step = view.steps!;
   const close = footer(step.card.panel, step.card.footer, true);
   expect(

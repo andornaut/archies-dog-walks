@@ -16,6 +16,7 @@ import type { PanelButton, PanelMeasure, PanelText, QuestionPanelView } from "..
 import { modalCardView, panelButton, titleLabelInk } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { BUTTON_LIP_PX, GREYED, selectLook } from "../ui/selection.ts";
+import { separatorBetween } from "../ui/separator.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import type { Cents } from "../units.ts";
 import { BANK_GRANTS, type NextWalk, type OwnGrant, startZones } from "./cheats.ts";
@@ -45,7 +46,7 @@ interface CheatButton {
 }
 
 type CheatLine =
-  | { readonly kind: "divider"; readonly section?: boolean }
+  | { readonly kind: "divider" }
   | { readonly kind: "heading"; readonly text: string }
   | {
       readonly action: CheatAction;
@@ -133,7 +134,7 @@ export function cheatRows(
     { kind: "divider" },
     { kind: "heading", text: text.startAt },
     ...zoneRows,
-    { kind: "divider", section: true },
+    { kind: "divider" },
     {
       groups: [
         {
@@ -158,8 +159,6 @@ const ROW = SETTINGS_CARD.row;
 const HEADING_HEIGHT = 24;
 const TOGGLE_HEIGHT = 48;
 const COLUMN_GAP = MODAL.gap;
-const SECTION_GAP = 16;
-const DIVIDER_HEIGHT = 8;
 const SCROLLBAR = SHOP_PAGE.scrollbar;
 
 export interface CheatsLayout {
@@ -290,6 +289,11 @@ function placeRows(
       y =
         stackTop +
         Math.max(...columnRows.map(({ buttons }) => buttons.length)) * (height + stackGap);
+    } else if (row.kind === "divider") {
+      // The one separator: the stacked gap under the row above it (y - stackGap).
+      const { line, next } = separatorBetween(area, y - stackGap);
+      placed.push(rowView(measure, row, line));
+      y = next;
     } else {
       const view = rowView(measure, row, rect);
       placed.push(view);
@@ -390,10 +394,8 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
     value: "",
   };
   switch (row.kind) {
-    case "divider": {
-      const height = row.section ? 2 * (SECTION_GAP - stackGap) + 1 : DIVIDER_HEIGHT;
-      return { ...plain, label: "", rect: { ...rect, height }, texts: [] };
-    }
+    case "divider":
+      return { ...plain, label: "", rect, texts: [] };
     case "heading": {
       const heading = { ...rect, height: HEADING_HEIGHT };
       return {
@@ -414,13 +416,17 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
       };
     }
     case "switch": {
+      // Settings' switch-row layout: the label 6 in and its capitals ROW.label.dy down, the
+      // switch at the upper right, 8 in, and the state word under it, its ink ending on the
+      // switch's right edge.
       const stateHeight = measure.title.capHeight * TEXT_SCALE;
       const stackHeight = SWITCH.height + SWITCH_STATE_GAP + stateHeight;
       const hit = { ...rect, height: Math.max(TOGGLE_HEIGHT, stackHeight + 2 * MODAL.rowGap) };
       const look = row.enabled ? selectLook("normal") : { ...selectLook("normal"), ...GREYED };
       const colour = PALETTE[look.text];
-      const switchX = rect.x + rect.width - SWITCH.width;
-      const switchY = hit.y + Math.floor((hit.height - stackHeight) / 2);
+      const switchX = rect.x + rect.width - ROW.pad - SWITCH.width;
+      const switchY = hit.y + ROW.icon.dy;
+      const line = { colour, font: "title", line: 0, scale: TEXT_SCALE } as const;
       return {
         ...plain,
         action: row.action,
@@ -433,15 +439,18 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
           y: switchY,
         },
         texts: [
-          rowText(measure, colour, hit, row.label),
           {
+            ...line,
+            capTop: hit.y + ROW.label.dy,
+            centre: "left",
+            centreX: hit.x + ROW.icon.dx,
+            text: row.label,
+          },
+          {
+            ...line,
             capTop: switchY + SWITCH.height + SWITCH_STATE_GAP,
             centre: "ink",
-            centreX: switchX + SWITCH.width / 2,
-            colour,
-            font: "title",
-            line: 0,
-            scale: TEXT_SCALE,
+            centreX: switchX + SWITCH.width - measure.inkWidth("title", row.value) / 2,
             text: row.value,
           },
         ],

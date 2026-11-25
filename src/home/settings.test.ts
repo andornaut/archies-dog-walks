@@ -23,11 +23,13 @@ import { SETTINGS_EXPORT_ROWS } from "../tools/layoutExport.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeFace } from "../ui/closeControl.ts";
+import { iconBesideLabel } from "../ui/iconLabel.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalTitleLayout } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
+import { SEPARATOR } from "../ui/separator.ts";
 import { topSectionButtonBacking, topSectionLayout } from "../ui/topSection.ts";
 import { HOME_BAR_BUTTONS } from "./homeLayout.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
@@ -254,19 +256,24 @@ describe("the settings card", () => {
     }
   });
 
-  // The first row clears the full close target; later rows begin at their separators.
-  // Each later row the stacked button gap under the one before, its separator centred down the
-  // gap, an odd row under it.
-  it("starts rows below the close target or the stacked button gap under the row before", () => {
+  // The first row clears the full close target; each later row sits under the one separator,
+  // the stacked gap clear of it on both sides, across the rows' full width.
+  it("starts rows below the close target or under the separator after the row before", () => {
     expect(rows[0]!.rect.y + SETTINGS_ROW.icon.dy).toBe(panel.y + MODAL.header);
     expect(rows[0]!.rect.y).toBeGreaterThanOrEqual(close.hit.y + close.hit.height);
     expect(rows[0]!.rect.x).toBe(rows.at(-1)!.rect.x);
     expect(rows[0]!.rect.x + rows[0]!.rect.width).toBe(rows[1]!.rect.x + rows[1]!.rect.width);
+    expect(layout.separators).toHaveLength(rows.length - 1);
     rows.slice(1).forEach(({ rect }, i) => {
-      const above = rows[i]?.rect;
-      const gap = BUTTON_SIZE.stackGap;
-      expect(rect.y - (above?.y ?? 0) - (above?.height ?? 0)).toBe(gap);
-      expect(layout.separators[i]?.y).toBe(rect.y - gap + Math.floor((gap - 1) / 2));
+      const above = rows[i]!.rect;
+      const line = layout.separators[i]!;
+      expect(line).toEqual({
+        height: SEPARATOR.height,
+        width: rect.width,
+        x: rect.x,
+        y: above.y + above.height + SEPARATOR.clear,
+      });
+      expect(rect.y - line.y - line.height).toBe(SEPARATOR.clear);
     });
   });
 
@@ -417,8 +424,9 @@ describe.each(keysOf(gameData.menuText.settings.installSteps))(
 
     it("starts the steps under the title row, the button glyph on their first line's capitals", () => {
       expect(steps.y).toBeGreaterThan(belowTitleRow(card));
-      expect(2 * (icon.y - steps.y) + size).toBe(body.capHeight * 2);
-      expect(icon.x + size).toBeLessThan(steps.x);
+      expect(icon).toEqual(
+        iconBesideLabel({ capHeight: body.capHeight * 2, capTop: steps.y, inkLeft: steps.x }),
+      );
       expect(glyph.y).toBeGreaterThan(belowTitleRow(card));
     });
   },

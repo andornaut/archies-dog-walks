@@ -22,6 +22,7 @@ import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { type PanelMeasure, type QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
+import { separatorBetween } from "../ui/separator.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { type DetailCard, type DetailPart, detailParts, type DetailPicture } from "./detail.ts";
 import {
@@ -224,8 +225,8 @@ export function detailCardView(
   const { description, identity } = detailParts(kind, card);
   const besideParts = [...identity, ...description];
   const statusLines = detail.statusLines ?? [{ kind: "status" as const, text: card.status }];
-  const dividerGap = MODAL.gap + MODAL.rowGap;
-  const footerGap = MODAL.pad;
+  // Every dismissal footer's gap over its actions.
+  const footerGap = MODAL.gap;
   // Each row of text's value: each effect's name a line leads with, as a perk's "Second
   // chance: …", in its pill.
   const valueOf = (part: DetailPart) =>
@@ -255,13 +256,15 @@ export function detailCardView(
       const room = width - CARD.pad - (x + photo.width + CARD.owner.gap);
       const nameLines = linesIn(room, card.owner.name);
       const roleLines = linesIn(room, card.owner.role);
-      separators.push({ height: 1, width: rooms.full, x: CARD.pad, y: bottom + dividerGap });
-      owner = { room, x, y: bottom + 2 * dividerGap + 1 };
+      const { line, next } = separatorBetween({ width: rooms.full, x: CARD.pad }, bottom);
+      separators.push(line);
+      owner = { room, x, y: next };
       bottom = owner.y + detailOwnerHeight(measure.body, roleLines, nameLines);
     }
     if (statusLines.some((row) => row.kind === "price")) {
-      separators.push({ height: 1, width: rooms.full, x: CARD.pad, y: bottom + dividerGap });
-      bottom += 2 * dividerGap + 1;
+      const { line, next } = separatorBetween({ width: rooms.full, x: CARD.pad }, bottom);
+      separators.push(line);
+      bottom = next;
     } else {
       bottom += MODAL.pad;
     }

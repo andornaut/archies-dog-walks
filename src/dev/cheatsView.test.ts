@@ -9,6 +9,7 @@ import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import type { PanelMeasure } from "../ui/modal/types.ts";
+import { SEPARATOR } from "../ui/separator.ts";
 import { MODAL_TITLE_SCALE, TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
 import { BANK_GRANTS, NEXT_WALK_OFF, startZones } from "./cheats.ts";
@@ -154,21 +155,26 @@ describe("Cheats layout", () => {
     expect(tall.panel.y + tall.panel.height / 2).toBeCloseTo(1500, 0);
   });
 
-  it("gives the invincible switch a 48px target around its visible control", () => {
+  it("lays the invincible switch row out as Settings' switch rows in a 48px target", () => {
     const switches = current.rows.filter(({ kind }) => kind === "switch");
     expect(switches).toHaveLength(1);
     const [invincible] = switches;
     expect(invincible?.action?.kind).toBe("invincible");
-    expect(invincible?.rect.height).toBe(48);
-    expect(invincible?.switch?.y).toBeGreaterThan(invincible!.rect.y);
+    const { rect } = invincible!;
+    expect(rect.height).toBe(48);
     const sw = invincible!.switch!;
-    const { height, width } = SETTINGS_CARD.row.switch;
-    expect(sw.x + width).toBe(invincible!.rect.x + invincible!.rect.width);
-    expect(invincible!.texts[0]?.centreX).toBe(invincible!.rect.x);
+    const { icon, label, pad, switch: art } = SETTINGS_CARD.row;
+    expect([sw.x + art.width, sw.y]).toEqual([rect.x + rect.width - pad, rect.y + icon.dy]);
+    expect(invincible!.texts[0]).toMatchObject({
+      capTop: rect.y + label.dy,
+      centre: "left",
+      centreX: rect.x + icon.dx,
+    });
+    // The state word's ink ends on the switch's right edge.
     expect(invincible!.texts[1]).toMatchObject({
-      capTop: sw.y + height + SWITCH_STATE_GAP,
+      capTop: sw.y + art.height + SWITCH_STATE_GAP,
       centre: "ink",
-      centreX: sw.x + width / 2,
+      centreX: sw.x + art.width - MEASURE.inkWidth("title", words.settings.off) / 2,
       text: words.settings.off,
     });
     const on = view({ ...HOME, next: { ...HOME.next, invincible: true } }).rows.find(
@@ -182,16 +188,20 @@ describe("Cheats layout", () => {
     ]);
   });
 
-  it("sets the neighbourhood divider 16px from the last button and Unlocks/Money headings", () => {
-    const unlocks = current.rows.findIndex((row) => row.label === words.cheats.groups.unlocks);
-    const index = unlocks - 1;
-    expect(current.rows[index]?.kind).toBe("divider");
-    const [before, divider, after] = current.rows
-      .slice(index - 1, index + 2)
-      .map(({ rect }) => rect);
-    const line = divider!.y + Math.floor(divider!.height / 2);
-    expect(line - (before!.y + before!.height)).toBe(16);
-    expect(after!.y - (line + 1)).toBe(16);
+  it("sets every divider as the one separator, the stacked gap clear of its neighbours", () => {
+    const dividers = current.rows.flatMap((row, i) => (row.kind === "divider" ? [i] : []));
+    expect(dividers).toHaveLength(3);
+    for (const i of dividers) {
+      const [before, line] = [current.rows[i - 1]!.rect, current.rows[i]!.rect];
+      const after = current.rows.slice(i + 1).find(({ rect }) => rect.x === line.x)!.rect;
+      expect([line.height, line.width]).toEqual([SEPARATOR.height, current.rows[0]!.rect.width]);
+      const above = current.rows
+        .slice(0, i)
+        .reduce((bottom, { rect }) => Math.max(bottom, rect.y + rect.height), 0);
+      expect(line.y - above).toBe(SEPARATOR.clear);
+      expect(above).toBeGreaterThanOrEqual(before.y + before.height);
+      expect(after.y - (line.y + line.height)).toBe(SEPARATOR.clear);
+    }
   });
 
   it("lays out the neighbourhood pairs and Unlocks/Money columns in the body room with full ink", () => {

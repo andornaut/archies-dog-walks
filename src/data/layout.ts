@@ -46,6 +46,13 @@ export const WIDE_BUTTON_X = 32;
 // art: a button's lip under its face.
 export const BUTTON_LIP_PX = 4;
 
+// The gap from a 16px icon's art cell to its label's first ink column, wherever an icon sits
+// beside a label.
+export const ICON_LABEL_GAP = 4;
+
+// art: the side of an icon beside a label.
+export const LABEL_ICON = 16;
+
 // art: a raised button's rows outside its flat face and lip: its ink outline and lit row over the
 // face, and its ink outline under the lip.
 export const BUTTON_FACE_EDGE = { bottom: 1, top: 2 } as const;
@@ -826,10 +833,12 @@ export const LOGBOOK_PAGE = {
 
 // The settings card.
 export const SETTINGS_CARD = {
-  // The install steps card: the glyph's drop, gap and side, the steps' line pitch and most lines,
+  // art: icon-install-panel's first ink column in its 16px cell.
+  installIconInk: 2,
+  // The install steps card: the glyph's drop and side, the steps' line pitch and most lines,
   // and the steps' top under the title row.
   installSteps: {
-    icon: { dy: -2, gap: 6, size: 16 },
+    icon: { dy: -2, size: 16 },
     linePitch: 20,
     lines: 3,
     stepsDy: 4,
@@ -842,8 +851,8 @@ export const SETTINGS_CARD = {
     icon: { dx: 6, dy: 9 },
     // The rows under the note's lowest ink.
     inkFoot: 14,
-    // The label's left edge and capitals' top.
-    label: { dx: 26, dy: 12 },
+    // The label's capitals' top.
+    label: { dy: 12 },
     // The note's left edge and most lines.
     note: { dx: 6, lines: 3 },
     // The control's and the track's inset from the row's sides.
@@ -857,8 +866,6 @@ export const SETTINGS_CARD = {
     // The row's width.
     width: 296,
   },
-  // The separators' inset from the rows' sides.
-  separatorInset: 4,
 } as const;
 
 // The help screen; rows up from the screen's bottom where stated.

@@ -2,7 +2,14 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { type SliderArt, sliderStepForKey } from "@andornaut/game-kit/runtime/ui/slider";
 
-import { MIN_PRESS, SETTINGS_CARD, SHOP_PAGE, SLICES } from "../data/layout.ts";
+import {
+  ICON_LABEL_GAP,
+  LABEL_ICON,
+  MIN_PRESS,
+  SETTINGS_CARD,
+  SHOP_PAGE,
+  SLICES,
+} from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { Settings } from "../save/settings.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
@@ -11,6 +18,7 @@ import { helpCapDy, LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 import type { ScrollbarSpec } from "../ui/scrollbar.ts";
+import { SEPARATOR_BAND, separatorBetween } from "../ui/separator.ts";
 import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
 import { topSectionButtonBacking, topSectionLayout } from "../ui/topSection.ts";
 import { HOME_BAR_BUTTONS, HOME_LAYOUT } from "./homeLayout.ts";
@@ -94,8 +102,7 @@ export interface SettingsLayout {
   rowsViewport: Rect;
   // The rows' scrollbar in the panel's right padding, shown while the rows overflow.
   scrollbar: ScrollbarSpec;
-  // A tan rule in the gap over every row after the first, centred down it (an odd row under it),
-  // SEPARATOR_INSET in from the row's sides.
+  // The separator over every row after the first, across the rows' width (separatorBetween).
   separators: Rect[];
   track: SliderTrack & { dy: number; height: number };
 }
@@ -106,12 +113,14 @@ export interface SettingsFonts {
   title: FontMetrics;
 }
 
-// Offsets from a row's top-left corner, every text at 2x. Each row has its 16x16 icon 3px above
-// its title-font label's capitals. A switch or button row has its note under them in body text,
+// Offsets from a row's top-left corner, every text at 2x. Each row has its 16x16 icon centred on
+// its title-font label's capitals, ICON_LABEL_GAP before the label's first ink column
+// (iconBesideLabel). A switch or button row has its note under them in body text,
 // LABEL_HELP_GAP clear rows under the label font's lowest ink (helpCapDy), from the icon's
 // column, wrapped onto up to note.lines lines, and inkFoot rows under the note's lowest ink.
-// A switch sits at the upper right with its state word below. A button centres beside its
-// label and note. Sliders place the percentage on the label line and the track below it.
+// A switch sits at the upper right with its state word below. The Install button is its row's
+// sole action, centred in the row. Sliders place the percentage on the label line and the track
+// below it.
 const ROW = SETTINGS_CARD.row;
 export const SETTINGS_ROW = {
   button: BUTTON_SIZE.compact,
@@ -119,7 +128,7 @@ export const SETTINGS_ROW = {
   controlGap: ROW.controlGap,
   icon: ROW.icon,
   inkFoot: ROW.inkFoot,
-  label: ROW.label,
+  label: { dx: ROW.icon.dx + LABEL_ICON + ICON_LABEL_GAP, dy: ROW.label.dy },
   note: ROW.note,
   pad: ROW.pad,
   slider: ROW.slider,
@@ -128,15 +137,14 @@ export const SETTINGS_ROW = {
   width: ROW.width,
 } as const;
 
-// The room a switch or button row's note wraps in: from the icon's column to controlGap short
-// of its control.
-export const INSTALL_ICON_SIZE = 16;
-export const INSTALL_ICON_GAP = BUTTON_SIZE.stackGap;
-
+// The Install button's face: its icon's cell, ICON_LABEL_GAP and its label's ink, with a modal
+// action's padding.
 export function settingsInstallWidth(ink: number): number {
-  return modalActionWidth(INSTALL_ICON_SIZE + INSTALL_ICON_GAP + ink);
+  return modalActionWidth(LABEL_ICON + ICON_LABEL_GAP + ink);
 }
 
+// The room a switch or button row's note wraps in: from the icon's column to controlGap short
+// of its control.
 export function noteRoom(kind: "button" | "switch"): number {
   return noteRoomForControl(SETTINGS_ROW[kind].width);
 }
@@ -158,9 +166,6 @@ function noteDy(title: FontMetrics): number {
 const PANEL = { width: modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, "large") };
 // The leading icon begins at the shared body boundary; row-internal offsets remain fixed.
 const ROWS_TOP = MODAL.header - SETTINGS_ROW.icon.dy;
-const SEPARATOR_INSET = SETTINGS_CARD.separatorInset;
-// The rows press as a list's rows do, the stacked button gap apart.
-const ROW_GAP = BUTTON_SIZE.stackGap;
 export const SWITCH_STATE_GAP = BUTTON_SIZE.stackGap;
 const TOP_SECTION = topSectionLayout(HOME_BAR_BUTTONS, { currency: true });
 const TOP_SECTION_BOTTOM = Math.max(
@@ -210,7 +215,8 @@ function rowHeight(fonts: SettingsFonts, shape: SettingsRowShape): number {
   return Math.max(MIN_PRESS, noteBottom, stateBottom);
 }
 
-// Switches align with the row's upper icon edge. Buttons centre beside their label and note.
+// Switches align with the row's upper icon edge, 8 in from its right. The Install button, the
+// row's sole action, centres in the row.
 function rowControl(row: Rect, shape: SettingsRowShape): Rect | null {
   if (shape.kind === "slider") {
     return null;
@@ -223,7 +229,10 @@ function rowControl(row: Rect, shape: SettingsRowShape): Rect | null {
     shape.kind === "switch" ? SETTINGS_ROW.icon.dy : Math.floor((row.height - size.height) / 2);
   return {
     ...size,
-    x: row.x + row.width - SETTINGS_ROW.pad - size.width,
+    x:
+      shape.kind === "switch"
+        ? row.x + row.width - SETTINGS_ROW.pad - size.width
+        : row.x + (row.width - size.width) / 2,
     y: row.y + top,
   };
 }
@@ -258,7 +267,7 @@ export function settingsLayout(
   // From the panel's top: the last row's lowest ink (the title row's bottom with no rows), and the
   // build label's capitals.
   const rowsInk =
-    ROWS_TOP + heights.slice(0, -1).reduce((sum, rows) => sum + rows + ROW_GAP, 0) + lastInk;
+    ROWS_TOP + heights.slice(0, -1).reduce((sum, rows) => sum + rows + SEPARATOR_BAND, 0) + lastInk;
   const labelDy = rowsInk + LABEL_HELP_GAP;
   // The label's digits, hex letters and "v" stand on the baseline, so its ink ends with its
   // capitals.
@@ -273,15 +282,20 @@ export function settingsLayout(
   );
   const clippedHeight = naturalHeight - height;
   const rowsContentHeight = heights.reduce(
-    (sum, rowHeight, i) => sum + rowHeight + (i > 0 ? ROW_GAP : 0),
+    (sum, rowHeight, i) => sum + rowHeight + (i > 0 ? SEPARATOR_BAND : 0),
     0,
   );
   const { x, y } = modalRect({ ...screen, x: 0, y: 0 }, undefined, { ...PANEL, height });
   const rowX = x + (PANEL.width - SETTINGS_ROW.width) / 2;
   let rowY = y + ROWS_TOP;
+  const separators: Rect[] = [];
   const rows = shapes.map((shape, i) => {
     const rect = { height: heights[i] ?? 0, width: SETTINGS_ROW.width, x: rowX, y: rowY };
-    rowY += rect.height + ROW_GAP;
+    const { line, next } = separatorBetween(rect, rect.y + rect.height);
+    if (i < shapes.length - 1) {
+      separators.push(line);
+    }
+    rowY = next;
     return {
       control: rowControl(rect, shape),
       noteY: shape.kind === "slider" || shape.noteLines === 0 ? null : rect.y + noteDy(fonts.title),
@@ -303,12 +317,7 @@ export function settingsLayout(
       y: y + ROWS_TOP,
     },
     scrollbar: { ...SHOP_PAGE.scrollbar, x: rowX + SETTINGS_ROW.width + MODAL.scrollGap },
-    separators: rows.slice(1).map(({ rect }) => ({
-      height: 1,
-      width: rect.width - 2 * SEPARATOR_INSET,
-      x: rect.x + SEPARATOR_INSET,
-      y: rect.y - ROW_GAP + Math.floor((ROW_GAP - 1) / 2),
-    })),
+    separators,
     track: {
       dy: track.dy,
       height: track.height,
@@ -321,7 +330,8 @@ export function settingsLayout(
 // The browser's own install steps: a detail card, wide enough for its title clear of the close
 // control, centred on the screen, with its title and close control, and under the title row the
 // 16x16 glyph of the button the steps start from, centred on the first line's capitals (icon.dy
-// from their top), then the steps in body text, wrapped to up to lines lines a linePitch apart.
+// from their top), then, ICON_LABEL_GAP after its cell, the steps' first ink column, in body
+// text wrapped to up to lines lines a linePitch apart.
 const STEPS = SETTINGS_CARD.installSteps;
 export const INSTALL_STEPS = {
   foot: MODAL.pad,
@@ -335,8 +345,7 @@ export const INSTALL_STEPS = {
 } as const;
 
 export const INSTALL_STEPS_FIT = {
-  room:
-    INSTALL_STEPS.width - 2 * INSTALL_STEPS.pad - INSTALL_STEPS.icon.size - INSTALL_STEPS.icon.gap,
+  room: INSTALL_STEPS.width - 2 * INSTALL_STEPS.pad - INSTALL_STEPS.icon.size - ICON_LABEL_GAP,
   style: textOnLines(INSTALL_STEPS.lines),
 };
 
@@ -370,6 +379,6 @@ export function installStepsLayout(
     card,
     close: closeControl(card),
     icon: { x: card.x + pad, y: stepsY + icon.dy },
-    steps: { x: card.x + pad + icon.size + icon.gap, y: stepsY },
+    steps: { x: card.x + pad + icon.size + ICON_LABEL_GAP, y: stepsY },
   };
 }

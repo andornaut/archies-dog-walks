@@ -138,7 +138,7 @@ it("keeps Fanny pack on one full-size title line and uses shared content and foo
     text.capTop + inkRowsOfLines(fonts.body, text.lines.length) * 2;
   expect(status!.lines.join(" ")).toBe(card.status);
   expect(status!.capTop - Math.max(well.y + well.height, bottom(effect!))).toBe(MODAL.pad);
-  expect(view.card.footer!.rect.y - bottom(status!)).toBe(MODAL.pad);
+  expect(view.card.footer!.rect.y - bottom(status!)).toBe(MODAL.gap);
 });
 
 it("keeps full dog details and the separate owner row, and omits walker type text", () => {
