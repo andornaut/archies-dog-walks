@@ -2,7 +2,7 @@ import "@andornaut/game-kit/runtime/web/ui/dom/pager.css";
 
 import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import { createPager } from "@andornaut/game-kit/runtime/web/ui/dom/pager";
-import { type RefusalCue, refuse } from "@andornaut/game-kit/runtime/web/ui/dom/refusalCue";
+import { refuse } from "@andornaut/game-kit/runtime/web/ui/dom/refusalCue";
 
 import { gameData } from "../../data/index.ts";
 import { HELP_LAYOUT } from "../../help/helpLayout.ts";
@@ -18,11 +18,11 @@ import {
   placeText,
   setBox,
 } from "../../ui/dom/pixelLine.ts";
+import { REFUSAL_CUE } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
 import { type PanelText } from "../../ui/modal/types.ts";
 import { cssHex, PALETTE } from "../../ui/palette.ts";
-import { REFUSE } from "../../ui/refuse.ts";
 import { BODY_ASCENT_ROWS } from "../../ui/textFit.ts";
 import { showPage } from "./page.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
@@ -41,15 +41,6 @@ export type DomHelpInput = Pick<
   // Whether a refusal plays without its shake.
   readonly reducedMotion: () => boolean;
   readonly view: HelpView;
-};
-
-// The refusal cue on Previous, in REFUSE's times and shake.
-const REFUSAL_CUE: RefusalCue = {
-  shake: REFUSE.shake,
-  shakeMs: REFUSE.shakeMs,
-  shakeShape: "yoyo",
-  stepMs: REFUSE.flashMs,
-  steps: REFUSE.flashes,
 };
 
 // Ids that tie each screen's dialog to its page.
