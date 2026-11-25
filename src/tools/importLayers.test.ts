@@ -106,8 +106,6 @@ const KNOWN: Readonly<Record<Kind, readonly string[]>> = {
     "src/home/homeLayout.ts -> src/hud/walkHud.ts",
     "src/home/selectionView.ts -> src/hud/effectIcons.ts",
     "src/home/speechView.ts -> src/hud/effectNames.ts",
-    "src/pack/phaser/packFigures.ts -> src/scenes/run/stage.ts",
-    "src/pack/phaser/packFigures.ts -> src/scenes/sprites.ts",
     "src/tools/atlas/atlasPlugin.ts -> src/tools/artManifest.ts",
     "src/tools/atlas/atlasPlugin.ts -> src/tools/concurrency.ts",
     "src/tools/atlas/atlasPlugin.ts -> src/tools/files.ts",

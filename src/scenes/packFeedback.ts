@@ -2,6 +2,7 @@ import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
+import { playTagOnce } from "../assets/phaser/sprites.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { chipLeft, FEEDBACK, type LabelAnchor, stackOverPop } from "../hud/feedback.ts";
@@ -19,7 +20,6 @@ import {
 } from "../ui/phaser/pixelText.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { letterEffect } from "./comicWord.ts";
-import { playTagOnce } from "./sprites.ts";
 import { fadeAway } from "./uiKit.ts";
 
 // A sidestep puff, 48x48, laid on the dog's frame and lettered with the dodge word.

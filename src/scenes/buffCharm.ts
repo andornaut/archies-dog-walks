@@ -1,6 +1,7 @@
 import { insetRect, type Point } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
+import { playEffect } from "../assets/phaser/sprites.ts";
 import { gameData } from "../data/index.ts";
 import { effectIconFallback, type EffectItem, walkBarIconKey } from "../hud/effectIcons.ts";
 import type { LabelAnchor } from "../hud/feedback.ts";
@@ -9,7 +10,6 @@ import { PALETTE } from "../ui/palette.ts";
 import { addFilledRect, drawRing } from "../ui/phaser/draw.ts";
 import { addPixelText } from "../ui/phaser/pixelText.ts";
 import { floatLabel } from "./packFeedback.ts";
-import { playEffect } from "./sprites.ts";
 import { fadeAway } from "./uiKit.ts";
 
 // A buff's charm and the value it made, as the road draws them.

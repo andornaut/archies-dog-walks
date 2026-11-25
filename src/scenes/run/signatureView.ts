@@ -1,12 +1,12 @@
 import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 
+import { playTag, showAtDepth, spriteMetrics } from "../../assets/phaser/sprites.ts";
 import { moverBodyTag } from "../../assets/spriteKeys.ts";
 import { animationPhaseAt } from "../../layout/animationPhase.ts";
 import { project } from "../../layout/projection.ts";
 import { facesLeft, inMotion, type MoverOnRoad } from "../../runner/movers.ts";
 import { signatureComponentProgress, signaturePlace } from "../../runner/signaturePaths.ts";
 import type { WalkItem } from "../../runner/walkItems.ts";
-import { playTag, showAtDepth, spriteMetrics } from "../sprites.ts";
 import type { ItemView } from "./itemViews.ts";
 import { DEPTH, laneX, PROJECTION, showOnRoad } from "./stage.ts";
 import type { StandFrame } from "./standPart.ts";

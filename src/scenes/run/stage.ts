@@ -79,9 +79,6 @@ export function showOnRoad(groundY: number, alpha: number, sprite: GameObjects.S
   }
 }
 
-// A shadow under a sprite drawn from key's art steps at depth, its drawn size over its 1x.
-export type Shadow = (key: string, depth: number, x: number, footY: number) => void;
-
 // The pack's centre at the leading dog's feet, in screen pixels.
 export function packPoint(walk: Walk | undefined): Point {
   const x =

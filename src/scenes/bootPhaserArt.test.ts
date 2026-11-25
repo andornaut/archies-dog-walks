@@ -4,9 +4,9 @@ import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import { beforeEach, expect, it, vi } from "vitest";
 
 import { parseManifest, type SpriteAsset } from "../assets/manifest.ts";
+import { ensurePlaceholder, measureSprite } from "../assets/phaser/sprites.ts";
 import { usesPhaserArt } from "../assets/phaserArt.ts";
 import { BootScene } from "./BootScene.ts";
-import { ensurePlaceholder, measureSprite } from "./sprites.ts";
 
 const native = vi.hoisted(() => ({ requireAssets: vi.fn() }));
 vi.mock("phaser", () => ({
@@ -22,8 +22,8 @@ vi.mock("../assets/phaser/manifestArt.ts", async (original) => ({
   addAtlasTextures: vi.fn(),
   smoothDepthArt: vi.fn(),
 }));
-vi.mock("./sprites.ts", async (original) => ({
-  ...(await original<typeof import("./sprites.ts")>()),
+vi.mock("../assets/phaser/sprites.ts", async (original) => ({
+  ...(await original<typeof import("../assets/phaser/sprites.ts")>()),
   ensurePlaceholder: vi.fn(),
   measureSprite: vi.fn(),
 }));

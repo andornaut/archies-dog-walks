@@ -3,6 +3,7 @@ import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import type { Random } from "@andornaut/game-kit/runtime/random";
 import type { GameObjects, Scene } from "phaser";
 
+import { firstTag, playTag, showAtDepth } from "../../assets/phaser/sprites.ts";
 import { AMBIENT_VARIANTS, IDLE_TAG } from "../../assets/spriteKeys.ts";
 import type { AmbientMover, ZoneId } from "../../data/types.ts";
 import {
@@ -14,7 +15,6 @@ import {
   startAmbient,
   stepAmbient,
 } from "../../road/ambient.ts";
-import { firstTag, playTag, showAtDepth } from "../sprites.ts";
 import { DEPTH, LAYOUT, PROJECTION, showOnRoad } from "./stage.ts";
 
 // The art of a slot with no mover: none.

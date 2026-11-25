@@ -1,6 +1,7 @@
 import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import { BlendModes, GameObjects, type Scene } from "phaser";
 
+import { spriteMetrics } from "../../assets/phaser/sprites.ts";
 import { gameData } from "../../data/index.ts";
 import type { ZoneId } from "../../data/types.ts";
 import { distanceAtY } from "../../layout/projection.ts";
@@ -25,7 +26,6 @@ import {
   lightTextureKey,
 } from "../../road/lights.ts";
 import { zoneLength } from "../../runner/walkMotion.ts";
-import { spriteMetrics } from "../sprites.ts";
 import { DEPTH, JUNCTURE_Y, LAYOUT, PROJECTION, sceneryFade, showOnRoad } from "./stage.ts";
 
 // The lights' sprites: each light def baked once into a texture of its stepped rings, drawn

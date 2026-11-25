@@ -1,6 +1,7 @@
 import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import type { GameObjects, Scene } from "phaser";
 
+import { firstTag, playTag, showAtDepth } from "../../assets/phaser/sprites.ts";
 import {
   IDLE_TAG,
   moverBodyTag,
@@ -29,7 +30,6 @@ import {
   moverTell,
 } from "../../runner/movers.ts";
 import { itemCategory, type WalkItem } from "../../runner/walkItems.ts";
-import { firstTag, playTag, showAtDepth } from "../sprites.ts";
 import type { ItemPart, ItemView } from "./itemViews.ts";
 import { riderCuePosition } from "./riderCuePosition.ts";
 import { drawSignatureTrail } from "./signatureView.ts";

@@ -2,10 +2,10 @@ import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene, Time } from "phaser";
 
+import { playTagOnce } from "../../assets/phaser/sprites.ts";
 import type { DogId } from "../../data/types.ts";
 import { DEBUFF_GROUND, type DebuffHitEffect, HIT_ART } from "../../layout/hitEffects.ts";
 import { formationOrder } from "../../layout/packFormation.ts";
-import { playTagOnce } from "../sprites.ts";
 import { tagFrame } from "../uiKit.ts";
 
 // One ground animation follows the dog selected as formation lead when the cue begins.

@@ -1,12 +1,17 @@
 import type { GameObjects, Scene } from "phaser";
 
+import {
+  addStandingSprite,
+  playTag,
+  type Shadow,
+  showAtDepth,
+  spriteMetrics,
+} from "../../assets/phaser/sprites.ts";
 import { dogSpriteKey } from "../../assets/spriteKeys.ts";
 import { gameData } from "../../data/index.ts";
 import type { DogId } from "../../data/types.ts";
 import type { DepthDraw } from "../../layout/depthScale.ts";
 import { PACK_DEPTH, tautLeashLine } from "../../layout/packFormation.ts";
-import type { Shadow } from "../../scenes/run/stage.ts";
-import { addStandingSprite, playTag, showAtDepth, spriteMetrics } from "../../scenes/sprites.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { drawPixelLine, drawShadow } from "../../ui/phaser/draw.ts";
 import { type Feet, type LeashLine, leashLine, packLayers, type StandingDog } from "../packDraw.ts";

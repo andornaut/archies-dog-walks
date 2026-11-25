@@ -4,6 +4,7 @@ import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import type { Random } from "@andornaut/game-kit/runtime/random";
 import type { GameObjects, Scene } from "phaser";
 
+import { firstTag, playTag, showAtDepth, spriteMetrics } from "../../assets/phaser/sprites.ts";
 import { IDLE_TAG } from "../../assets/spriteKeys.ts";
 import { gameData } from "../../data/index.ts";
 import { project } from "../../layout/projection.ts";
@@ -20,7 +21,6 @@ import { currentZone, previousZone } from "../../rules/route.ts";
 import { screenRoadGeometry } from "../../runner/screenGeometry.ts";
 import type { Walk } from "../../runner/walk.ts";
 import type { WalkItem } from "../../runner/walkItems.ts";
-import { firstTag, playTag, showAtDepth, spriteMetrics } from "../sprites.ts";
 import { DEPTH, LANE_XS, laneX, PROJECTION, ROW_DEPTH, showOnRoad } from "./stage.ts";
 
 // The tags a distraction moves in, the first its art has: it walks, or hops.

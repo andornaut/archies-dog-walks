@@ -3,6 +3,7 @@ import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import type { GameObjects, Scene, Tweens, Types } from "phaser";
 
+import { playTag } from "../assets/phaser/sprites.ts";
 import { ownerFaceKey, WARNING_KEY, WARNING_TAG } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { SLICES } from "../data/layout.ts";
@@ -54,7 +55,6 @@ import { arcFlight } from "./arcFlight.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";
 import type { HudWalk } from "./hudWalk.ts";
 import { onSceneEvent } from "./overlay.ts";
-import { playTag } from "./sprites.ts";
 import { TimedGroup } from "./timedGroup.ts";
 const LAYOUT = SCREEN_LAYOUT;
 const FACE = { scale: 2, size: 32 };

@@ -17,6 +17,7 @@ import {
   queueManifestArt,
   smoothDepthArt,
 } from "../assets/phaser/manifestArt.ts";
+import { ensurePlaceholder, measureSprite, playTag } from "../assets/phaser/sprites.ts";
 import { usesPhaserArt } from "../assets/phaserArt.ts";
 import {
   DOG_FRAME_SIDES,
@@ -72,7 +73,6 @@ import { REQUIRED_UI, type RequiredUiController } from "./requiredUi.ts";
 import { nextRunStart } from "./run/runRecorder.ts";
 import { resumedRunSceneData, runSceneData } from "./run/runStart.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
-import { ensurePlaceholder, measureSprite, playTag } from "./sprites.ts";
 
 // Processing yields to the next frame once a batch has run this long.
 const FRAME_BUDGET_MS = 8;

@@ -2,6 +2,7 @@ import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import { guardSceneInput } from "@andornaut/game-kit/runtime/input/phaser/guardSceneInput";
 import { Math as PhaserMath, Scene } from "phaser";
 
+import { playFirstTag } from "../assets/phaser/sprites.ts";
 import { ZONE_CELEBRATION_ART as ART } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { MENU_BUTTON_KEY_GAP } from "../data/layout.ts";
@@ -26,7 +27,6 @@ import { currentSettings, walkerSpriteKey } from "./profileStore.ts";
 import { followScene, htmlArtInput, htmlPanelPlace } from "./questionPanel.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
-import { playFirstTag } from "./sprites.ts";
 
 export interface ZoneCelebrationSceneData extends OverlayData {
   celebration: ZoneCelebration;

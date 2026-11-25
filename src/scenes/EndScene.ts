@@ -2,6 +2,7 @@ import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { guardSceneInput } from "@andornaut/game-kit/runtime/input/phaser/guardSceneInput";
 import { type GameObjects, Scene } from "phaser";
 
+import { firstTag, playTag } from "../assets/phaser/sprites.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { BADGE_CHEER, BADGE_POP, type BadgeView, earnedBadges } from "../home/badgesView.ts";
@@ -54,7 +55,6 @@ import {
 } from "./questionPanel.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
-import { firstTag, playTag } from "./sprites.ts";
 import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress.ts";
 import { addNativeTopSection } from "./topSection.ts";
 import { addScreenBackdrop } from "./uiKit.ts";

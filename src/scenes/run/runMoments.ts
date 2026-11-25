@@ -7,6 +7,7 @@ import type { Random } from "@andornaut/game-kit/runtime/random";
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import type { Scene } from "phaser";
 
+import { playEffect, tagTopY } from "../../assets/phaser/sprites.ts";
 import { debuffSoundCue } from "../../audio/sound.ts";
 import { choiceCues, contactCues, pullCues, stepCues } from "../../audio/stepCues.ts";
 import { minorLook, minorObstacleName } from "../../content/obstacleLooks.ts";
@@ -104,7 +105,6 @@ import { earnedIfBanked, shownHints } from "../profileStore.ts";
 import { dogTop } from "../pullSignals.ts";
 import { SCENE_KEYS } from "../sceneKeys.ts";
 import { soundboardOf } from "../soundboard.ts";
-import { playEffect, tagTopY } from "../sprites.ts";
 import { playContactDebuff } from "./contactDebuffFx.ts";
 import { flashWhite, moveObstacle, playHitEffects, shakeRoad } from "./hitFx.ts";
 import type { ItemViews } from "./itemViews.ts";

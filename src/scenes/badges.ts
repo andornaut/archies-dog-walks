@@ -1,6 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
+import { playTagOnce } from "../assets/phaser/sprites.ts";
 import { gameData } from "../data/index.ts";
 import type { AchievementId } from "../data/types.ts";
 import {
@@ -23,7 +24,6 @@ import { PALETTE } from "../ui/palette.ts";
 import { labelInkWidth, type PixelTextStyle, withProbe } from "../ui/phaser/pixelText.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { canvasDetailMeasure } from "./modalMeasure.ts";
-import { playTagOnce } from "./sprites.ts";
 import { tagFrame } from "./uiKit.ts";
 
 const BURST_TAG = "play";

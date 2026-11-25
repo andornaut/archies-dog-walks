@@ -3,6 +3,7 @@ import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import type { GameObjects, Scene } from "phaser";
 
+import { addStandingSprite, ensurePlaceholder, type Shadow } from "../../assets/phaser/sprites.ts";
 import {
   encounterSpriteKey,
   gearDropSpriteKey,
@@ -31,10 +32,9 @@ import { type Walk, type WalkStep } from "../../runner/walk.ts";
 import { type RoadGeometry, walkGeometry } from "../../runner/walkGeometry.ts";
 import { itemCategory, type WalkItem, type WalkItemKind } from "../../runner/walkItems.ts";
 import { PALETTE } from "../../ui/palette.ts";
-import { addStandingSprite, ensurePlaceholder } from "../sprites.ts";
 import { applyItemCue } from "./itemCueViews.ts";
 import { drawMover, MOVER_CUE_PARTS, moverBodyKey } from "./moverView.ts";
-import { DEPTH, LANE_XS, LAYOUT, PROJECTION, ROW_DEPTH, type Shadow } from "./stage.ts";
+import { DEPTH, LANE_XS, LAYOUT, PROJECTION, ROW_DEPTH } from "./stage.ts";
 import { type StandFrame, standPart } from "./standPart.ts";
 
 // Road art that may be missing is drawn as a box this tall, as wide as its art: its lanes

@@ -2,6 +2,13 @@ import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import type { GameObjects, Scene, Tweens } from "phaser";
 
 import { SQUIRREL_ICON_KEY } from "../../assets/iconKeys.ts";
+import {
+  playEffect,
+  playTag,
+  playTagOnce,
+  type Shadow,
+  spriteMetrics,
+} from "../../assets/phaser/sprites.ts";
 import { dogSpriteKey } from "../../assets/spriteKeys.ts";
 import { gameData } from "../../data/index.ts";
 import type { DogId } from "../../data/types.ts";
@@ -20,8 +27,7 @@ import { colourFromHex } from "../../ui/palette.ts";
 import { playBarkWord } from "../comicWord.ts";
 import { trotOffRoad } from "../feedbackMoments.ts";
 import { type DogSignal, dogTop, iconArt, playPullFail, PullSignals } from "../pullSignals.ts";
-import { playEffect, playTag, playTagOnce, spriteMetrics } from "../sprites.ts";
-import { DEPTH, LANE_XS, LAYOUT, PROJECTION, type Shadow } from "./stage.ts";
+import { DEPTH, LANE_XS, LAYOUT, PROJECTION } from "./stage.ts";
 import { TipSparkle } from "./tipSparkle.ts";
 
 // What the pack is drawn with each frame besides the walk.

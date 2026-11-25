@@ -3,11 +3,14 @@ import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import { opaqueBoundsOfRgba, type PixelBounds } from "@andornaut/game-kit/runtime/opaqueBounds";
 import type { GameObjects, Scene } from "phaser";
 
-import type { SpriteAnchor } from "../assets/manifest.ts";
-import { spriteAnchor } from "../assets/spriteAnchor.ts";
-import { depthVariantKey, ROAD_SPRITE_SIZE, standsOnGround } from "../assets/spriteKeys.ts";
-import { type DepthArt, type DepthDraw, depthDraw } from "../layout/depthScale.ts";
-import { SCALE_STEPS } from "../layout/projection.ts";
+import { type DepthArt, type DepthDraw, depthDraw } from "../../layout/depthScale.ts";
+import { SCALE_STEPS } from "../../layout/projection.ts";
+import type { SpriteAnchor } from "../manifest.ts";
+import { spriteAnchor } from "../spriteAnchor.ts";
+import { depthVariantKey, ROAD_SPRITE_SIZE, standsOnGround } from "../spriteKeys.ts";
+
+// A shadow under a sprite drawn from key's art steps at depth, its drawn size over its 1x.
+export type Shadow = (key: string, depth: number, x: number, footY: number) => void;
 
 // feetY is the line the sprite stands on, measured from the top of its frame, and
 // opaqueWidth how wide its drawn pixels are; both from its first frame.

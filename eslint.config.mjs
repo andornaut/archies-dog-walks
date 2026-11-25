@@ -52,7 +52,7 @@ const BOUNDARIES = [
 // by moving the module into a context or the importer out of one. The boundaries above govern
 // src/testing/.
 const CONTEXTS = {
-  assets: ["data"],
+  assets: ["data", "layout/depthScale.ts", "layout/projection.ts"],
   content: ["data"],
   road: [
     "assets",

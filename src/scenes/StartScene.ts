@@ -7,6 +7,7 @@ import { Core, type GameObjects, Scene, Scenes, type Time } from "phaser";
 import { domArtUrl } from "../assets/domArtFiles.ts";
 import { gearSmallIconKey } from "../assets/iconKeys.ts";
 import { MANIFEST_CACHE_KEY } from "../assets/phaser/manifestArt.ts";
+import { playEffect, spriteMetrics } from "../assets/phaser/sprites.ts";
 import { dogSpriteKey, gearIconKey, walkerPortraitKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { PLATE_PAD } from "../data/layout.ts";
@@ -172,7 +173,6 @@ import {
   type ShopClosed,
   type ShopSceneData,
 } from "./ShopScene.ts";
-import { playEffect, spriteMetrics } from "./sprites.ts";
 import { addNativeTopSection } from "./topSection.ts";
 import { addGraphicsIn, addTagImage, addTapBurst, type IconButton } from "./uiKit.ts";
 const SCREEN = SCREEN_LAYOUT.screen;

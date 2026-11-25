@@ -1,11 +1,11 @@
 import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import type { GameObjects, Scene } from "phaser";
 
+import { playEffect, playTag, playTagOnce, spriteTopY } from "../assets/phaser/sprites.ts";
 import { PULL_ART } from "../assets/spriteKeys.ts";
 import type { DogId } from "../data/types.ts";
 import { arrowheadPixels } from "../ui/arrowhead.ts";
 import { cssHex, PALETTE } from "../ui/palette.ts";
-import { playEffect, playTag, playTagOnce, spriteTopY } from "./sprites.ts";
 
 // A frame of a texture: its first frame when frame is absent.
 interface IconArt {
