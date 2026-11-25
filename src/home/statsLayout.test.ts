@@ -11,6 +11,7 @@ import { read } from "../rules/units.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, fontInk, gameFont, inkWidth, placedInk } from "../testing/fontInk.ts";
 import { veteranSave } from "../testing/saves.ts";
+import { lineInk } from "../ui/lineInk.ts";
 import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
@@ -166,6 +167,7 @@ const fullestSave = {
 const measure: LogbookMeasure = {
   art: () => undefined,
   body: BODY,
+  bodyInk: (line) => lineInk(gameFont("font-body"), line),
   hasTag: () => false,
   inkWidth: (font, line) =>
     inkWidth(`font-${font}`, STYLE, font === "title" ? line.toUpperCase() : line),
@@ -310,4 +312,22 @@ describe("an earned row", () => {
       }
     },
   );
+});
+
+// Art's row rule (art/layout.md, page rows): each wall row's text block is centred on the row by
+// its lines' visible ink, an odd spare row under it.
+it("centres each badge wall row's text by its visible ink", () => {
+  const { content, wallRows } = actualTab("badges");
+  for (const row of wallRows) {
+    const inks = content.texts
+      .filter((text) => text.x > row.x && text.capTop >= row.y && text.capTop < row.y + row.height)
+      .flatMap((text) =>
+        text.lines.map((line) => ({ ink: lineInk(gameFont("font-body"), line), text })),
+      )
+      .map(({ ink, text }) => ({ bottom: text.capTop + ink.bottom, top: text.capTop + ink.top }));
+    const above = Math.min(...inks.map(({ top }) => top)) - row.y;
+    const below = row.y + row.height - Math.max(...inks.map(({ bottom }) => bottom));
+    expect(below - above).toBeGreaterThanOrEqual(0);
+    expect(below - above).toBeLessThanOrEqual(1);
+  }
 });

@@ -33,7 +33,9 @@ import {
   stepScroll,
   wheelScroll,
 } from "../input/listScroll.ts";
+import { shownText } from "../ui/dom/pixelLine.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
+import { lineInk } from "../ui/lineInk.ts";
 import { badgeCard } from "./badges.ts";
 import { pillColours } from "./effectNameColours.ts";
 import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
@@ -253,7 +255,11 @@ export class StatsScene extends Scene {
     }
     const badges = this.badges();
     const save = profileSave(this);
-    const view = logbookView(canvasDetailMeasure(this), gameData, {
+    const measure = {
+      ...canvasDetailMeasure(this),
+      bodyInk: (line: string) => lineInk(place.fonts.body, shownText("body", line)),
+    };
+    const view = logbookView(measure, gameData, {
       badges,
       pressedTab:
         typeof this.pressed === "object" && "tab" in this.pressed ? this.pressed.tab : undefined,

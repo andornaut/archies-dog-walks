@@ -800,7 +800,7 @@ export const LOGBOOK_PAGE = {
   },
   // The Dogs tab's block: the face's side, the name's left edge and capitals' top, the rows' top,
   // and the rule's rows over the block and reach past the rows.
-  dogs: { faceSize: 32, nameDx: 40, nameY: 14, rowsY: 38, ruleAbove: 6, ruleDx: 2 },
+  dogs: { faceSize: 32, nameDx: 40, nameY: 12, rowsY: 38, ruleAbove: 6, ruleDx: 2 },
   // The pitch between label and value rows.
   pitch: BODY_PITCH,
   // A Walks tab section's rows under its heading.

@@ -1,5 +1,4 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
-import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { dogFaceKey } from "../assets/spriteKeys.ts";
 import type { GameData } from "../data/types.ts";
@@ -55,10 +54,14 @@ export interface LogbookView {
   readonly wallRows: readonly Rect[];
 }
 
+// Beyond the detail card's measures: a 2x body line's visible ink, its top and bottom rows from
+// the line's capitals' top.
 export type LogbookMeasure = Pick<
   DetailMeasure,
   "art" | "body" | "hasTag" | "inkWidth" | "title" | "titleInk" | "wrapNote"
->;
+> & {
+  readonly bodyInk: (line: string) => { readonly bottom: number; readonly top: number };
+};
 
 const LEFT = STATS_LAYOUT.rows.left;
 const PITCH = STATS_LAYOUT.rows.pitch;
@@ -245,9 +248,15 @@ function badgesTab(
     // The badge and the text block each centred on the row's height.
     const half = BADGE_SIZE / 2;
     const centre = { x: Math.round(rect.x + half), y: Math.round(rect.y + rect.height / 2) };
+    // The text block is its lines' visible ink; an odd spare row goes under it.
     const lineTops = tops[i] ?? [];
-    const inkTop = lineTops[0] ?? 0;
-    const inkBottom = (lineTops.at(-1) ?? 0) + inkRowsFromCapTop(measure.body) * TEXT_SCALE;
+    const lineTexts = [...cell.name, ...cell.goal, ...cell.progress];
+    const inks = lineTexts.map((line, n) => {
+      const ink = measure.bodyInk(line);
+      return { bottom: (lineTops[n] ?? 0) + ink.bottom, top: (lineTops[n] ?? 0) + ink.top };
+    });
+    const inkTop = Math.min(...inks.map(({ top }) => top));
+    const inkBottom = Math.max(...inks.map(({ bottom }) => bottom));
     const textDy = Math.floor((rect.height - (inkBottom - inkTop)) / 2) - inkTop;
     const tag = badge.earned ? "earned" : "locked";
     const size = measure.art(badge.art);

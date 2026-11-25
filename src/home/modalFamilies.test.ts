@@ -211,7 +211,7 @@ it("fits all authored item details at their selected widths without shrinking te
 
 it("reflows narrow Logbook stat labels and grows content before the following section", () => {
   const save = veteranSave();
-  const view = logbookView(measure, gameData, {
+  const view = logbookView({ ...measure, bodyInk: () => ({ bottom: 0, top: 0 }) }, gameData, {
     badges: [],
     pressedTab: undefined,
     save: {
