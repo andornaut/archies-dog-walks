@@ -30,11 +30,9 @@
 // `empty`, then heart-loss: 4 frames, 60, 60, 80 and 80ms, an overlay drawn over the card and under
 // the game's faces, hearts and text), ui-dog-card-warn (120x70, the low-hearts rim drawn over
 // ui-dog-card; tags pulse, static), ui-debuff-bar (360x16, one active debuff's bar under the walk
-// bar; tags muddy, stinky, zoomies, spotlight), ui-select (24x24 nine-slice, 8px corners; tag pulse),
-// ui-shop-focus (32x32 nine-slice, 13px corners; tag pulse, two 180ms phases), ui-afford (24x24
-// nine-slice, 8px corners; tag glint), ui-check (16x16; tags 1, 2, 3, tick), ui-section (24x32
-// nine-slice, 3px sides and bottom, 24px top; tags complete, neutral, neutral-walker, neutral-dogs,
-// neutral-pocket), fx-tap and fx-dust (16x16; tag play), ui-heart (8x7; tags full, empty, and
+// bar; tags muddy, stinky, zoomies, spotlight), ui-afford (24x24 nine-slice, 8px corners; tag
+// glint), ui-check (16x16; tags 1, 2, 3, tick), ui-section (24x32 nine-slice, 3px sides and bottom,
+// 24px top; tags complete, neutral, neutral-walker, neutral-dogs, neutral-pocket), fx-tap and fx-dust (16x16; tag play), ui-heart (8x7; tags full, empty, and
 // full-dark and empty-dark for the navy ui-dog-card), ui-button (24x24 nine-slice, 3px corners and a
 // 5px bottom; tags normal, pressed, disabled, secondary, secondary-pressed, go, go-pressed,
 // go-disabled), ui-icon-button (20x20, the face under a 16x16 icon such as pause, help or sound; tags
@@ -545,55 +543,6 @@ function selectionGlints<G extends Drawable>(g: G, phase: number | boolean): G {
   return g;
 }
 
-// 24x24 nine-slice (8px corners): the frame around a selected tile or active control. An ink edge on
-// both sides of a 2px amber band, so it stands out on any background (ink on tan or cream is 9:1 or
-// more); a cream accent alternates between the top/left and bottom/right gold edges.
-function selectFrame(glow: boolean): Grid {
-  const g = new Grid(24, 24);
-  g.rect(1, 0, 22, 24, "ink");
-  g.rect(0, 1, 24, 22, "ink");
-  g.rect(1, 1, 22, 22, "amber");
-  g.rect(3, 3, 18, 18, "ink");
-  g.rect(4, 4, 16, 16, null);
-  for (const [x, y] of [
-    [1, 1],
-    [22, 1],
-    [1, 22],
-    [22, 22],
-  ] as const) {
-    g.p(x, y, "ink");
-  }
-  return selectionGlints(g, glow);
-}
-
-// 32x32 nine-slice (13px corners), drawn 3px outside the active shop row. A 3px cyan band sits between
-// 1px ink keylines; diagonal pairs of cream corner marks exchange 12px and 7px lengths without moving
-// the row or changing its availability. Reduced motion holds the first phase. The 5px ring covers only
-// the row's first two border pixels inside its edge.
-function shopFocusFrame(short: boolean): Grid {
-  const g = new Grid(32, 32);
-  g.rect(0, 0, 32, 32, "ink");
-  g.rect(1, 1, 30, 30, "cyan");
-  g.rect(4, 4, 24, 24, "ink");
-  g.rect(5, 5, 22, 22, null);
-  for (const right of [false, true]) {
-    for (const bottom of [false, true]) {
-      const length = (right === bottom) !== short ? 12 : 7;
-      g.rect(right ? 31 - length : 1, bottom ? 28 : 1, length, 3, "cream");
-      g.rect(right ? 28 : 1, bottom ? 31 - length : 1, 3, length, "cream");
-    }
-  }
-  for (const [x, y] of [
-    [0, 0],
-    [31, 0],
-    [0, 31],
-    [31, 31],
-  ] as const) {
-    g.p(x, y, null);
-  }
-  return g;
-}
-
 const CHECK_DIGITS: Readonly<Record<string, string>> = {
   "1": "010110010010111",
   "2": "110001010100111",
@@ -720,13 +669,11 @@ const GLINTS: ReadonlyMap<number, readonly [studs: Points, rays: Points]> = new 
 ]);
 
 // 24x24 nine-slice (8px corners), drawn 2px outside the Pet shop building or a shop row the player can
-// afford: a plum keyline outside a 1px amber line, with a gold coin stud on each corner. It differs
-// from ui-select (ink, a 2px gold band with moving cream edges, ink, 1px out) by its thin line, its
-// round studs and its deeper gold, and it does not pulse. Amber holds 4.57:1 on the dark wood, the plum
-// keyline 6.37:1 on the yard's grass and the studs' plum rims 6.49:1 on tan tiles. glint runs a flash
-// along the line over two frames: 1 lights the top-left stud with rays heading right and down the
-// line, 2 lights the top-right and bottom-left studs as the rays arrive, all inside the corner slices
-// so the stretched edges stay plain.
+// afford: a plum keyline outside a 1px amber line, with a gold coin stud on each corner. It does not
+// pulse. Amber holds 4.57:1 on the dark wood, the plum keyline 6.37:1 on the yard's grass and the
+// studs' plum rims 6.49:1 on tan tiles. glint runs a flash along the line over two frames: 1 lights
+// the top-left stud with rays heading right and down the line, 2 lights the top-right and bottom-left
+// studs as the rays arrive, all inside the corner slices so the stretched edges stay plain.
 function affordFrame(glint: number): Grid {
   const g = new Grid(24, 24);
   g.rect(1, 0, 22, 24, "plum");
@@ -1625,14 +1572,6 @@ function* sprites(): Generator<Sprite> {
     ],
   ];
   yield ["ui-debuff-bar", [...DEBUFF_LOOKS.keys()].map((d) => still(d, debuffBar(d)))];
-  yield [
-    "ui-select",
-    [["pulse", [selectFrame(false).outlined(false), selectFrame(true).outlined(false)], 180]],
-  ];
-  yield [
-    "ui-shop-focus",
-    [["pulse", [shopFocusFrame(false).outlined(false), shopFocusFrame(true).outlined(false)], 180]],
-  ];
   yield ["ui-check", ["1", "2", "3", "tick"].map((lb) => still(lb, checkBadge(lb), true))];
   yield ["ui-afford", [["glint", [0, 0, 1, 2].map((i) => affordFrame(i).outlined(false)), 400]]];
   yield ["ui-section", [...SECTION_FACES.keys()].map((s) => still(s, section(s)))];

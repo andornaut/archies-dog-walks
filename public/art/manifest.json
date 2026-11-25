@@ -13200,16 +13200,6 @@
       "json": "sprites/ui-section.json"
     },
     {
-      "key": "ui-select",
-      "png": "sprites/ui-select.png",
-      "json": "sprites/ui-select.json"
-    },
-    {
-      "key": "ui-shop-focus",
-      "png": "sprites/ui-shop-focus.png",
-      "json": "sprites/ui-shop-focus.json"
-    },
-    {
       "key": "ui-slider",
       "png": "sprites/ui-slider.png",
       "json": "sprites/ui-slider.json"
