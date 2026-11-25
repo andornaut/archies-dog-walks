@@ -18,7 +18,9 @@ export const REFUSAL_CUE: RefusalCue = {
 // (refuseShakeSteps), so it never passes through a blended sub-pixel place; adw-refusing-still
 // holds it still under reduced motion. Through the red phases (refusalRed) the control holds
 // data-refusal-red, which fills its face dark red under a white label and, on a row, its icon as
-// a white silhouette (REFUSAL_STYLE and each control's skin).
+// a white silhouette (REFUSAL_STYLE and each control's skin). In forced colours the face fills
+// ButtonText under a ButtonFace label and icon, the inverse of the resting face, so a refusal
+// stays distinct from Highlight focus; a row's icon is masked from its frame (paintSheetArt).
 const SHAKE_KEYFRAMES = refuseShakeSteps()
   .map(
     ({ at, offset }) =>
@@ -29,6 +31,11 @@ const SHAKE_KEYFRAMES = refuseShakeSteps()
 const MOVING = "adw-refusing";
 const STILL = "adw-refusing-still";
 export const REFUSAL_RED = "data-refusal-red";
+// A row in a red phase, focused or pressed alike: outranks the forced-colours focus and press
+// fills (SETTINGS_STYLE).
+const ROW_RED_STATES =
+  `.adw-row:not(.adw-standard-button):is([${REFUSAL_RED}],[data-ui-refusal-red])` +
+  ":is(*,:focus-visible,[data-ui-pressed]:not([role=slider]))";
 
 export const REFUSAL_STYLE = `
 .${MOVING}{animation:adw-shake ${2 * REFUSE.shakeMs}ms step-end ${REFUSE_SHAKES}}
@@ -39,6 +46,15 @@ export const REFUSAL_STYLE = `
 .adw-row:is([${REFUSAL_RED}],[data-ui-refusal-red]) .ui-form-row-icon>*{filter:brightness(0) invert(1)}
 .adw-row[data-ui-refusal-shake]{translate:none;transition:none;
   animation:adw-shake ${2 * REFUSE.shakeMs}ms step-end ${REFUSE_SHAKES}}
+@media (forced-colors:active){
+  .adw-row:is([${REFUSAL_RED}],[data-ui-refusal-red]),.adw-row:is([${REFUSAL_RED}],[data-ui-refusal-red]) *{
+    forced-color-adjust:none}
+  ${ROW_RED_STATES}>.adw-row-face{background-color:ButtonText!important}
+  ${ROW_RED_STATES} .adw-text{color:ButtonFace!important}
+  .adw-row:is([${REFUSAL_RED}],[data-ui-refusal-red]) .ui-form-row-icon>*{filter:none;
+    background:ButtonFace!important;
+    mask:var(--adw-art-image) var(--adw-art-position)/var(--adw-art-size) no-repeat}
+}
 `;
 
 // Controls whose refusal is under way.

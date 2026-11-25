@@ -33,9 +33,26 @@ const SHEETS = {
   top: squeeze(css("./nativeTopSection.css")),
   ui: squeeze(UI_STYLE),
 } as const;
-// A sheet's rules from its forced-colours block on.
-const forced = (sheet: string) => sheet.slice(sheet.indexOf("@media(forced-colors:active)"));
-const CUE_SHEETS = { ...SHEETS, tileForced: forced(SHEETS.tile), topForced: forced(SHEETS.top) };
+// The rules inside a sheet's forced-colours blocks, in order.
+function forced(sheet: string): string {
+  const head = "@media(forced-colors:active){";
+  const blocks: string[] = [];
+  for (let at = sheet.indexOf(head); at >= 0; at = sheet.indexOf(head, at + 1)) {
+    let end = at + head.length;
+    for (let depth = 1; depth > 0; end += 1) {
+      depth += sheet[end] === "{" ? 1 : sheet[end] === "}" ? -1 : 0;
+    }
+    blocks.push(sheet.slice(at + head.length, end - 1));
+  }
+  return blocks.join("");
+}
+const CUE_SHEETS = {
+  ...SHEETS,
+  gameForced: forced(SHEETS.game),
+  tileForced: forced(SHEETS.tile),
+  topForced: forced(SHEETS.top),
+  uiForced: forced(SHEETS.ui),
+};
 
 const FORCED_TOP_ARTWORK =
   "button.adw-top-section-button.ui-standard-button:is(:focus-visible, [data-ui-pressed])" +
@@ -47,31 +64,77 @@ const STANDARD_FOCUSED_LABEL =
 const KIT_FOCUSED_ARTWORK =
   'button.ui-standard-button:focus-visible > .ui-button-face > [aria-hidden="true"]';
 
+// A refusal's red phase on a standard button and on a Settings or Cheats row, whatever its state.
+const REFUSING_BUTTON =
+  '.adw-standard-button.ui-standard-button[data-refusal-red]:is(*, :focus-visible, [aria-disabled="true"])';
+const REFUSING_ROW =
+  ".adw-row:not(.adw-standard-button):is([data-refusal-red],[data-ui-refusal-red])" +
+  ":is(*,:focus-visible,[data-ui-pressed]:not([role=slider]))";
+
 // A focused or pressed Pet shop row, by Tab or by the Start picker.
 const PLATE_STATES =
   ".adw-selection-tile:is(:focus-visible, [data-ui-pressed]," +
   " .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused])";
 
 type Specificity = readonly [number, number, number];
-const count = (text: string, pattern: RegExp) => (text.match(pattern) ?? []).length;
 const ranks = (a: Specificity, b: Specificity) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
-// A complex selector's specificity: ids; classes, attributes and pseudo-classes; types. :is()
-// counts its most specific argument.
-function specificity(selector: string): Specificity {
-  const inner: Specificity[] = [];
-  const rest = selector.replace(/:is\(([^()]*)\)/g, (_, args: string) => {
-    inner.push(args.split(",").map(specificity).sort(ranks).at(-1)!);
-    return "";
-  });
-  return inner.reduce<Specificity>(
-    (sum, [a, b, c]) => [sum[0] + a, sum[1] + b, sum[2] + c],
-    [
-      count(rest, /#[\w-]+/g),
-      count(rest, /\.[\w-]+|\[[^\]]*\]|:(?!:)[\w-]+/g),
-      count(rest, /(?:^|[\s>+~])[a-z][\w-]*/gi),
-    ],
-  );
+// A selector list's selectors, split at its top-level commas.
+function selectors(list: string): string[] {
+  const parts = [""];
+  let depth = 0;
+  for (const char of list) {
+    depth += char === "(" ? 1 : char === ")" ? -1 : 0;
+    if (char === "," && depth === 0) {
+      parts.push("");
+    } else {
+      parts[parts.length - 1] += char;
+    }
+  }
+  return parts;
 }
+// A complex selector's specificity: ids; classes, attributes and pseudo-classes; types and
+// pseudo-elements. :is(), :not() and :has() count their most specific argument, :where() none.
+function specificity(selector: string): Specificity {
+  let sum: Specificity = [0, 0, 0];
+  const add = ([a, b, c]: Specificity) => {
+    sum = [sum[0] + a, sum[1] + b, sum[2] + c];
+  };
+  for (let at = 0; at < selector.length;) {
+    const rest = selector.slice(at);
+    const call = /^:(is|not|has|where)\(/.exec(rest);
+    if (call !== null) {
+      let end = call[0].length;
+      for (let depth = 1; depth > 0; end += 1) {
+        depth += rest[end] === "(" ? 1 : rest[end] === ")" ? -1 : 0;
+      }
+      if (call[1] !== "where") {
+        add(
+          selectors(rest.slice(call[0].length, end - 1))
+            .map(specificity)
+            .sort(ranks)
+            .at(-1)!,
+        );
+      }
+      at += end;
+      continue;
+    }
+    const token = /^(?:#[\w-]+|\.[\w-]+|\[[^\]]*\]|::?[\w-]+|[a-z][\w-]*|.)/i.exec(rest)![0];
+    if (token.startsWith("#")) {
+      add([1, 0, 0]);
+    } else if (/^(?:\.|\[|:(?!:))/.test(token)) {
+      add([0, 1, 0]);
+    } else if (/^(?:::|[a-z])/i.test(token)) {
+      add([0, 0, 1]);
+    }
+    at += token.length;
+  }
+  return sum;
+}
+// Each rule in sheet as its selectors and declarations, in order.
+const rules = (sheet: string) =>
+  [...sheet.matchAll(/([^{}]+)\{([^{}]*)\}/g)].flatMap(({ 1: list, 2: body, index }) =>
+    selectors(list!).map((selector) => ({ body: body!, index, selector })),
+  );
 
 // The declarations of the first rule whose selector list ends with selector.
 function rule(sheet: string, selector: string): string {
@@ -161,6 +224,38 @@ describe("control state cues", () => {
       "ui",
       ".adw-row:not(.adw-standard-button):is(:focus-visible,[data-ui-pressed]:not([role=slider]))>.adw-row-face",
       "background-color:Highlight!important",
+    ],
+    [
+      "a refusing standard button's inverse face in forced colours",
+      "gameForced",
+      REFUSING_BUTTON,
+      "--adw-button-fill:ButtonText;--adw-button-highlight:ButtonText;--adw-button-lip:ButtonText;" +
+        "--adw-button-text:ButtonFace",
+    ],
+    [
+      "a refusing row's inverse face in forced colours",
+      "uiForced",
+      `${REFUSING_ROW}>.adw-row-face`,
+      "background-color:ButtonText!important",
+    ],
+    [
+      "a refusing row's label in forced colours",
+      "uiForced",
+      `${REFUSING_ROW} .adw-text`,
+      "color:ButtonFace!important",
+    ],
+    [
+      "a refusing row's icon, a ButtonFace silhouette masked from its frame, in forced colours",
+      "uiForced",
+      ".adw-row:is([data-refusal-red],[data-ui-refusal-red]) .ui-form-row-icon>*",
+      "filter:none;background:ButtonFace!important;" +
+        "mask:var(--adw-art-image)var(--adw-art-position)/var(--adw-art-size)",
+    ],
+    [
+      "a content separator in forced colours",
+      "uiForced",
+      ".adw-separator",
+      "forced-color-adjust:none;background-color:CanvasText!important",
     ],
     [
       "a pressed top-bar face",
@@ -296,6 +391,36 @@ describe("control state cues", () => {
       ranks(specificity(STANDARD_FOCUSED_LABEL), specificity(KIT_FOCUSED_ARTWORK)),
     ).toBeGreaterThan(0);
   });
+
+  // Each other forced-colours rule that sets the declaration on the part the selector ends with
+  // (a focus, press, selection or disabled state) ranks below the red phase's rule or precedes it.
+  it.each([
+    ["standard button's face", "gameForced", REFUSING_BUTTON, "", "--adw-button-fill:"],
+    [
+      "row's face",
+      "uiForced",
+      `${REFUSING_ROW}>.adw-row-face`,
+      ".adw-row-face",
+      "background-color:",
+    ],
+    ["row's label", "uiForced", `${REFUSING_ROW} .adw-text`, ".adw-text", ";color:"],
+  ] as const)(
+    "keeps a refusing %s inverse over its other forced-colours states",
+    (_what, sheet, refusal, part, declaration) => {
+      const all = rules(CUE_SHEETS[sheet]);
+      const own = all.find(({ selector }) => selector === squeeze(refusal));
+      expect(own, refusal).toBeDefined();
+      const rivals = all.filter(
+        ({ body, selector }) =>
+          selector !== own!.selector && selector.endsWith(part) && `;${body}`.includes(declaration),
+      );
+      expect(rivals.length).toBeGreaterThan(0);
+      for (const rival of rivals) {
+        const rank = ranks(specificity(own!.selector), specificity(rival.selector));
+        expect(rank > 0 || (rank === 0 && own!.index! > rival.index!), rival.selector).toBe(true);
+      }
+    },
+  );
 
   it("outranks Kit's focused artwork opacity with the forced-colours top-bar artwork", () => {
     expect(squeeze(KIT_CONTROLS)).toContain(`${squeeze(KIT_FOCUSED_ARTWORK)}{`);

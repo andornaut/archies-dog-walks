@@ -131,7 +131,8 @@ export function sheetArt(
 
 // A sheet's frame drawn on element, which another part (a Game Kit control) made: as sheetArt
 // places its own. With art.alternate, the property holds a second frame's background position,
-// for a state CSS shows in its place.
+// for a state CSS shows in its place. The frame's image, size and position are also held in
+// --adw-art-image, --adw-art-size and --adw-art-position, for CSS that masks a silhouette of it.
 export function paintSheetArt(
   source: DomArtSource,
   key: string,
@@ -149,7 +150,9 @@ export function paintSheetArt(
   ) => void;
 } {
   element.classList.add("adw-art");
-  element.style.backgroundImage = backgroundOf(source, imageKey);
+  const image = backgroundOf(source, imageKey);
+  element.style.backgroundImage = image;
+  element.style.setProperty("--adw-art-image", image);
 
   const loaded = sheetOf(source, key, element, imageKey);
   return {
@@ -182,8 +185,12 @@ export function paintSheetArt(
         });
         const across = art.projection === "layout" ? box.width / crop.width : pixel;
         const down = art.projection === "layout" ? box.height / crop.height : pixel;
-        element.style.backgroundSize = `${frame.sheet.width * across}px ${frame.sheet.height * down}px`;
-        element.style.backgroundPosition = `${-(frame.x + crop.x) * across}px ${-(frame.y + crop.y) * down}px`;
+        const size = `${frame.sheet.width * across}px ${frame.sheet.height * down}px`;
+        const position = `${-(frame.x + crop.x) * across}px ${-(frame.y + crop.y) * down}px`;
+        element.style.backgroundSize = size;
+        element.style.backgroundPosition = position;
+        element.style.setProperty("--adw-art-size", size);
+        element.style.setProperty("--adw-art-position", position);
         if (art.alternate !== undefined) {
           const other = sheetFrame(json, art.alternate.tag);
           element.style.setProperty(

@@ -1,9 +1,10 @@
 // The settings card's own rules in the HTML interface's stylesheet (uiStyle.ts): its rows, each
 // a control that shows focus and press as its face's fill, as a Pet shop row does (cyan focused,
-// green with ink text pressed, Highlight in forced colours); its separators; and the install
-// row's secondary button face. Settings' and Cheats' switch rows are Game Kit form rows (kit
-// buttons, whose own focus fill the face replaces) and Settings' volume rows Game Kit sliders,
-// which fill only on focus and show a held knob pressed.
+// green with ink text pressed, Highlight in forced colours); every content separator's colour
+// (tan, CanvasText in forced colours); and the install row's secondary button face. Settings'
+// and Cheats' switch rows are Game Kit form rows (kit buttons, whose own focus fill the face
+// replaces) and Settings' volume rows Game Kit sliders, which fill only on focus and show a held
+// knob pressed.
 export const SETTINGS_STYLE = `
 .adw-row{position:absolute;box-sizing:border-box;pointer-events:auto;outline:none;cursor:pointer;
   touch-action:pan-y;-webkit-tap-highlight-color:transparent}
@@ -30,4 +31,7 @@ export const SETTINGS_STYLE = `
     color:HighlightText!important}
 }
 .adw-separator{background:var(--adw-tan)}
+@media (forced-colors:active){
+  .adw-separator{forced-color-adjust:none;background-color:CanvasText!important}
+}
 `;
