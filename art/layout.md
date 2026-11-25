@@ -32,7 +32,7 @@ Use 4/8/16 for the ordinary row/group/panel spacing roles, and the button gaps f
 | MODAL.gap                         | 8                                 | px         | Present groups; the gap above every modal footer            | [modal tokens](../src/ui/modalGeometry.ts)                                              |
 | MODAL.pad / MODAL.margin          | 16                                | px         | Panel content / caller's protected area                     | [modal tokens](../src/ui/modalGeometry.ts)                                              |
 | MODAL.rowGap                      | 4                                 | px         | Text rows                                                   | [modal tokens](../src/ui/modalGeometry.ts)                                              |
-| separator                         | 1px line, 8 clear above and below | px         | Every content separator, full content width                 | [content separator](../src/ui/dom/contentSeparator.ts)                                  |
+| separator                         | 1px line, 8 clear above and below | px         | Every content separator, full content width                 | [separator](../src/ui/separator.ts)                                                     |
 
 **Separators.** Every content separator (Settings rows, the Cheats dividers, the Cheats section divider included, and the detail card) is one 1px line across the full content width with 8 clear rows to the boxes above and below, a 17-row band. A section break that must read stronger needs its own named pattern, not a second spacing. Its colour is in the [style guide](style-guide.md#ui).
 
@@ -120,7 +120,7 @@ HUD effect geometry follows the [walk-bar exception](controls.md#sizing-and-spac
 
 - **Gap:** a 16px icon beside its label leaves `ICON_LABEL_GAP` (4) from its 16px art cell to the label's first ink column: Settings rows (whose labels share one column, x = 58), the message strip, the new-walker info line, the iOS install steps, the Settings Install button and the reach chip.
 - **Vertical:** the icon centres on its label's capitals, with equal rows above and below them; an odd remainder puts the extra row below.
-- **Install:** the Settings Install button places its icon box, `ICON_LABEL_GAP` and label as one ink group (the icon contributes ink columns 3 to 15 of its cell) and centres the union of the icon and label ink on its face. The button is its row's sole action, centred in the row; its width and position follow the build.
+- **Install:** the Settings Install button places its icon box, `ICON_LABEL_GAP` and label as one ink group (the icon contributes its cell from ink column 2, its ink filling columns 2 to 13) and centres the union of the icon and label ink on its face. The button is its row's sole action, centred in the row; its width and position follow the build.
 
 ### Backed labels
 
@@ -184,7 +184,7 @@ Cheats uses the Large panel: 328px wide, centred, with 16px margins, placed by t
 
 ### Switch rows
 
-Settings and Cheats switch rows share one layout. The row's leading icon or label starts 6 in from the row's left, and the 32×16 switch sits at the row's upper right, 8 in from its right edge. The state word sits 8 below the switch, with its ink's right edge on the switch's right edge. The whole row is the target, and row heights follow their content (Cheats 48, Settings Sound 82).
+Settings and Cheats switch rows share one layout. The row's leading icon or label starts 6 in from the row's left, and the 32×16 switch sits at the row's upper right, 8 in from its right edge. The switch's top is 9 below the row's top, and the label's capitals start 12 below it on every switch row, with or without a note, so the label and the 16px icon cell share the switch's rows. The state word sits 8 below the switch, with its ink's right edge on the switch's right edge. The whole row is the target, and row heights follow their content (Cheats 48, Settings Sound 82).
 
 ## HUD/overlays
 
