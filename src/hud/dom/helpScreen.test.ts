@@ -1,10 +1,11 @@
-import { wrapWords } from "@andornaut/game-kit/runtime/lines";
+import { fillLine, wrapWords } from "@andornaut/game-kit/runtime/lines";
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
 import { HELP_LAYOUT } from "../../help/helpLayout.ts";
 import { helpView } from "../../help/helpView.ts";
+import { MENU_TEXT_FIELDS } from "../../home/menuText.ts";
 import { bodyTextWidth } from "../../testing/bodyFont.ts";
 import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
@@ -107,6 +108,24 @@ describe("the HTML help screen", () => {
     expect(previous).toBeDefined();
     expect(previous.getAttribute("aria-disabled") === "true").toBe(page === 0);
   });
+
+  it.each([0, gameData.help.length - 1])(
+    "announces page %d's count in words, shown as dots",
+    (page) => {
+      const { nodes } = helpScreen(page, undefined);
+      const count = nodes.find((node) => node.classList.contains("ui-pager-count"))!;
+      expect(count.getAttribute("aria-live")).toBe("polite");
+      expect(count.querySelector(".ui-pager-count-text")?.textContent).toBe(
+        fillLine(MENU_TEXT_FIELDS.help, gameData.menuText.help, "pageCount", {
+          n: String(page + 1),
+          total: String(gameData.help.length),
+        }),
+      );
+      const dots = nodes.filter((node) => node.classList.contains("ui-pager-dot"));
+      expect(dots).toHaveLength(gameData.help.length);
+      expect(dots.findIndex((dot) => dot.hasAttribute("data-ui-current"))).toBe(page);
+    },
+  );
 });
 
 it("shows every Help body whole without page gestures and binds every page's Back independently", async () => {

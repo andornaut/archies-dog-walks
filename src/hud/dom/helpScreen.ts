@@ -1,5 +1,6 @@
 import "@andornaut/game-kit/runtime/web/ui/dom/pager.css";
 
+import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import { createPager } from "@andornaut/game-kit/runtime/web/ui/dom/pager";
 import { type RefusalCue, refuse } from "@andornaut/game-kit/runtime/web/ui/dom/refusalCue";
 
@@ -7,6 +8,7 @@ import { gameData } from "../../data/index.ts";
 import { HELP_LAYOUT } from "../../help/helpLayout.ts";
 import { HELP_DOTS, type HelpButton, type HelpView } from "../../help/helpView.ts";
 import { holdRule, TILE_SLOP_PX } from "../../holdRule.ts";
+import { MENU_TEXT_FIELDS } from "../../home/menuText.ts";
 import { colourBox, type DomBox, type DomPart } from "../../ui/dom/parts.ts";
 import {
   createTextLine,
@@ -115,7 +117,11 @@ function pagerPart(
       face: { className: "adw-standard-button-face adw-face" },
       layout: "caller",
     },
-    countText: ({ page: shown, pages }) => `${shown + 1} / ${pages}`,
+    countText: ({ page: shown, pages }) =>
+      fillLine(MENU_TEXT_FIELDS.help, gameData.menuText.help, "pageCount", {
+        n: String(shown + 1),
+        total: String(pages),
+      }),
     dots: true,
     labels: { next: next.label, previous: previous.label },
     refusal: { cue: REFUSAL_CUE, reducedMotion: input.reducedMotion },

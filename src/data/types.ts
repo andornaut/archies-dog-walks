@@ -1197,11 +1197,13 @@ export interface MenuText {
     readonly total: string;
     readonly zonesWalked: string;
   };
-  // Help's heading, and its paging buttons: Next reads gotIt on the last page.
+  // Help's heading, and its paging buttons: Next reads gotIt on the last page. The pager's
+  // count, read and not shown, is pageCount.
   readonly help: {
     readonly gotIt: string;
     readonly heading: string;
     readonly next: string;
+    readonly pageCount: string;
     readonly previous: string;
   };
   readonly menu: { readonly title: string };

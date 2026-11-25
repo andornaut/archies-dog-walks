@@ -6,6 +6,7 @@ export const MENU_TEXT_FIELDS = {
   celebration: { titleMany: ["count"] },
   cheats: { add: ["cash"], applyDebuff: ["debuff"], grantUpgrade: ["upgrade"] },
   end: { firedYou: ["owner"] },
+  help: { pageCount: ["n", "total"] },
   pause: { note: ["cash", "kept"], noteAll: ["cash"] },
   settings: { volume: ["percent"] },
   stats: {

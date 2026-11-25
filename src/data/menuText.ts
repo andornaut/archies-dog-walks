@@ -81,6 +81,7 @@ export const MENU_TEXT = {
     gotIt: "Got it",
     heading: "How to walk",
     next: "Next",
+    pageCount: "Page {n} of {total}",
     previous: "Previous",
   },
   menu: { title: "Menu" },
