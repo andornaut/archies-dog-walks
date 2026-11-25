@@ -257,7 +257,7 @@ export function addHtmlDetailCard(
       return panel.element;
     },
     focusControl: (index) => panel.focusControl(index),
-    refuse: (index, refusal) => panel.refuse(index, refusal),
+    refuse: (index, reducedMotion) => panel.refuse(index, reducedMotion),
     setActionShown: (index, shown) => panel.setActionShown(index, shown),
     setDimmed: (dimmed) => panel.setDimmed(dimmed),
     setEnabled(enabled) {

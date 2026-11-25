@@ -104,24 +104,6 @@ describe("the HTML help screen", () => {
     expect(previous.classList.contains("adw-disabled")).toBe(page === 0);
     expect(previous.getAttribute("aria-disabled") === "true").toBe(page === 0);
   });
-
-  it("refuses a button once at a time: a shake, or a still red label under reduced motion", () => {
-    const refusal = { flashMs: 80, flashes: 4, shake: 3, shakeMs: 40 };
-    for (const reducedMotion of [false, true]) {
-      const { nodes, shown } = helpScreen(0, undefined);
-      const previous = nodes.find(
-        (node) =>
-          node.tagName === "button" &&
-          node.getAttribute("aria-label") === gameData.menuText.help.previous,
-      )!;
-      shown.refuse(0, { ...refusal, reducedMotion });
-      shown.refuse(0, { ...refusal, reducedMotion: !reducedMotion });
-      expect(previous?.className).toContain(reducedMotion ? "adw-refusing-still" : "adw-refusing");
-      expect(
-        previous?.classList.contains(reducedMotion ? "adw-refusing" : "adw-refusing-still"),
-      ).toBe(false);
-    }
-  });
 });
 
 it("keeps all Help copy scrollable without page gestures and binds every page's Back independently", async () => {

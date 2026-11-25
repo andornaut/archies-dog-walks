@@ -846,7 +846,7 @@ it("keeps action identity while DOM order follows the button and footer position
   expect(close).toHaveBeenCalledOnce();
   shown.setActionShown(0, false);
   expect(buttons.map((button) => button.hidden)).toEqual([false, false, true]);
-  shown.refuse(1, { flashMs: 50, flashes: 4, reducedMotion: true });
+  shown.refuse(1, true);
   expect(buttons[0]!.classList.contains("adw-refusing-still")).toBe(true);
   expect(buttons[2]!.classList.contains("adw-refusing-still")).toBe(false);
   shown.destroy();

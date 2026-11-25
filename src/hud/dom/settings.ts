@@ -28,10 +28,9 @@ import {
   placeFrame,
   placeText,
 } from "../../ui/dom/pixelLine.ts";
+import { refuse } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridX, gridY, wholeArtPixels } from "../../ui/domScale.ts";
-import { PALETTE } from "../../ui/palette.ts";
-import { REFUSE } from "../../ui/refuse.ts";
 import { bodyScrollbarPart } from "./bodyScrollbar.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
 import {
@@ -414,40 +413,9 @@ function rowPart(
       ...(control === undefined ? [] : [control.ready]),
       ...(slider === undefined ? [] : [slider.empty.ready, slider.filled.ready, slider.knob.ready]),
     ]).then((urls) => urls.flat()),
-    refuse: (reducedMotion: boolean) => {
-      const labels = texts.map(({ element: text }) => text);
-      refuseAnimation(labels, reducedMotion);
-    },
+    refuse: (reducedMotion: boolean) =>
+      texts.forEach(({ element: text }) => refuse(reducedMotion, text)),
   };
-}
-
-// The canvas's refusal: the labels shake right and back in whole art pixels (adw-shaking), and
-// flash red, or, with reduced motion, hold red.
-function refuseAnimation(labels: readonly HTMLElement[], reducedMotion: boolean) {
-  const { flashMs, flashes } = REFUSE;
-  const red = hex(PALETTE.red);
-  const runs = labels.flatMap((label) => [...label.children] as HTMLElement[]);
-  const colours = runs.map((run) => run.style.color);
-  const tint = (on: boolean) =>
-    runs.forEach((run, i) => {
-      run.style.color = on ? red : (colours[i] ?? "");
-    });
-  if (reducedMotion) {
-    tint(true);
-    setTimeout(() => tint(false), flashMs * flashes);
-    return;
-  }
-  for (const label of labels) {
-    label.classList.add("adw-shaking");
-  }
-  setTimeout(() => {
-    for (const label of labels) {
-      label.classList.remove("adw-shaking");
-    }
-  }, flashMs * flashes);
-  for (let flash = 1; flash <= flashes; flash += 1) {
-    setTimeout(() => tint(flash % 2 === 1), flash * flashMs);
-  }
 }
 
 // The install steps' card: its title and close control, the glyph of the button the steps start

@@ -20,3 +20,14 @@ export function refuseShakeSteps(): { at: number; offset: number }[] {
 
 // How many times a refused control shakes right and back: as long as its labels flash.
 export const REFUSE_SHAKES = (REFUSE.flashMs * REFUSE.flashes) / (2 * REFUSE.shakeMs);
+
+// Whether a refused control's labels are red elapsedMs into its refusal: on its odd flashes, or
+// throughout under reduced motion, as refuseMotion and the DOM cue (refusal.ts) paint them.
+export function refusalRed(reducedMotion: boolean, elapsedMs: number): boolean {
+  const { flashMs, flashes } = REFUSE;
+  return (
+    elapsedMs >= 0 &&
+    elapsedMs < flashMs * flashes &&
+    (reducedMotion || Math.floor(elapsedMs / flashMs) % 2 === 1)
+  );
+}

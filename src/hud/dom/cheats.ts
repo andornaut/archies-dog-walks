@@ -5,9 +5,9 @@ import { type DomArtSource, sheetArt } from "../../ui/dom/artElements.ts";
 import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { createTextLine, placeBox, placeFrame, placeText } from "../../ui/dom/pixelLine.ts";
+import { refuse } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { type DomScale, gridY } from "../../ui/domScale.ts";
-import { REFUSE } from "../../ui/refuse.ts";
 import { bodyScrollbarPart } from "./bodyScrollbar.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
 import {
@@ -42,22 +42,6 @@ export interface DomCheats extends Pick<
 }
 
 const ORIGIN = { x: 0, y: 0 } as const;
-
-// The canvas's refusal on a control: a shake and a red flash, or, with reduced motion, steady
-// red, as the panel's own buttons refuse (showQuestionPanel's refuse).
-function refuse(element: HTMLElement, reducedMotion: boolean): void {
-  const { flashMs, flashes } = REFUSE;
-  if (["adw-refusing", "adw-refusing-still"].some((name) => element.classList.contains(name))) {
-    return;
-  }
-  const total = flashMs * flashes;
-  element.style.setProperty("--adw-flash-ms", `${2 * flashMs}ms`);
-  element.style.setProperty("--adw-flashes", String(flashes / 2));
-  element.style.setProperty("--adw-refuse-ms", `${total}ms`);
-  const refusing = reducedMotion ? "adw-refusing-still" : "adw-refusing";
-  element.classList.add(refusing);
-  element.ownerDocument.defaultView?.setTimeout(() => element.classList.remove(refusing), total);
-}
 
 // A row's element and its parts, drawn again from the row's view as it changes.
 interface RowPart {
@@ -150,7 +134,7 @@ function buttonsPart(
       }),
       onPointerRefusal: () => {
         if (press.accepts()) {
-          refuse(view.element, input.reducedMotion());
+          refuse(input.reducedMotion(), view.element);
         }
       },
     });
@@ -230,7 +214,7 @@ function settingRowPart(
     }),
     onPointerRefusal: () => {
       if (press.accepts()) {
-        refuse(texts, input.reducedMotion());
+        refuse(input.reducedMotion(), texts);
       }
     },
     skin: "authored",

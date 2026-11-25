@@ -19,6 +19,7 @@ import {
   setBox,
 } from "../../ui/dom/pixelLine.ts";
 import { setRampDimmed } from "../../ui/dom/rampDim.ts";
+import { refuse } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
   artPixel,
@@ -108,9 +109,8 @@ export interface DomQuestionPanel {
   // Focuses the parts' controls, then the buttons, then the close control, by index, or the
   // dialog itself for undefined, as the scene's own focus moves.
   focusControl(index: number | undefined): void;
-  // Shakes the index-th button and flashes its label, as the canvas refuses a disabled
-  // control (refuseControl): still, its label red, under reduced motion.
-  refuse(index: number, refusal: DomRefusal): void;
+  // Plays the refusal cue (refusal.ts) on the index-th button.
+  refuse(index: number, reducedMotion: boolean): void;
   // Darkens this covered panel once while preserving its original colours and assets.
   setDimmed(dimmed: boolean): void;
   // Lets the panel take no presses and no focus while another's dim covers it (a celebration
@@ -118,14 +118,6 @@ export interface DomQuestionPanel {
   setInert(inert: boolean): void;
   // Hides the panel while a canvas page covers it (help, the settings), and shows it again.
   setShown(shown: boolean): void;
-}
-
-// How a refusal's label flashes, as refuseControl's REFUSE says, and whether motion is reduced;
-// its shake is the stylesheet's (controlStateStyle.ts).
-export interface DomRefusal {
-  readonly flashMs: number;
-  readonly flashes: number;
-  readonly reducedMotion: boolean;
 }
 
 const ORIGIN = { x: 0, y: 0 } as const;
@@ -562,23 +554,11 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
         focusTarget(control ?? dialog);
       }
     },
-    refuse(index, refusal) {
+    refuse(index, reducedMotion) {
       const button = sourceButtons.get(index);
-      // A refusal under way plays on.
-      if (
-        button === undefined ||
-        ["adw-refusing", "adw-refusing-still"].some((name) => button.classList.contains(name))
-      ) {
-        return;
+      if (button !== undefined) {
+        refuse(reducedMotion, button);
       }
-      const style = button.style;
-      const total = refusal.flashMs * refusal.flashes;
-      style.setProperty("--adw-flash-ms", `${2 * refusal.flashMs}ms`);
-      style.setProperty("--adw-flashes", String(refusal.flashes / 2));
-      style.setProperty("--adw-refuse-ms", `${total}ms`);
-      const refusing = refusal.reducedMotion ? "adw-refusing-still" : "adw-refusing";
-      button.classList.add(refusing);
-      doc.defaultView?.setTimeout(() => button.classList.remove(refusing), total);
     },
     setActionShown(index, shown) {
       const button = sourceButtons.get(index);

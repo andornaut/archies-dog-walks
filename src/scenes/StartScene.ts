@@ -116,7 +116,7 @@ import { uiLayer } from "../ui/dom/uiLayer.ts";
 import { gridRects, rectIndexAt } from "../ui/grid.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { drawShadow } from "../ui/phaser/draw.ts";
-import { REFUSE } from "../ui/refuse.ts";
+import { refusalRed, REFUSE } from "../ui/refuse.ts";
 import type { Cents } from "../units.ts";
 import { artReady, waitForWalkArt, whenArtReady } from "./artReady.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
@@ -1180,12 +1180,7 @@ export class StartScene extends Scene {
     const reduced = currentSettings(this).reducedMotion;
     const refusing = (id: string) => {
       const at = this.refusals.get(id);
-      const elapsed = at === undefined ? Infinity : now - at;
-      return (
-        elapsed >= 0 &&
-        elapsed < REFUSE.flashMs * REFUSE.flashes &&
-        (reduced || Math.floor(elapsed / REFUSE.flashMs) % 2 === 1)
-      );
+      return at !== undefined && refusalRed(reduced, now - at);
     };
     const pressed = this.press;
     const dip = (id: string) =>

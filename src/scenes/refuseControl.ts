@@ -40,30 +40,3 @@ export function refuseControl(
     ...(parts.length === 0 ? {} : { motion: { targets: [...parts], x: `+=${REFUSE.shake}` } }),
   });
 }
-
-function controlLabels(container: GameObjects.Container): GameObjects.BitmapText[] {
-  return container.list.flatMap((part) =>
-    part.type === "BitmapText"
-      ? [part as GameObjects.BitmapText]
-      : part.type === "Container"
-        ? controlLabels(part as GameObjects.Container)
-        : [],
-  );
-}
-
-const refusingContainers = new WeakSet<GameObjects.Container>();
-
-// Home controls already receive their shared shake offset in the scene update.
-export function emphasiseRefusedControl(
-  scene: Scene,
-  reducedMotion: boolean,
-  container: GameObjects.Container,
-): void {
-  if (refusingContainers.has(container)) {
-    return;
-  }
-  refusingContainers.add(container);
-  refuseControl(scene, reducedMotion, [], controlLabels(container), () =>
-    refusingContainers.delete(container),
-  );
-}

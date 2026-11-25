@@ -29,7 +29,6 @@ import { listenOnePress } from "./onePress.ts";
 import { BAR_MUTED_EVENT, closeOverlay, listenDismiss } from "./overlay.ts";
 import { currentSettings, onSettingsChanged, toggleMuted, updateProfile } from "./profileStore.ts";
 import { addHtmlHelpScreen, htmlPanelInput, htmlPanelPlace } from "./questionPanel.ts";
-import { REFUSE } from "./refuseControl.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { requestTitleReturn } from "./titleNavigation.ts";
 import { shownTopSectionRoots } from "./topSection.ts";
@@ -191,7 +190,7 @@ export class HelpScene extends Scene {
 
   private act(action: HelpAction): void {
     if (action.kind === "previous" && this.page === 0) {
-      this.html?.refuse(0, { ...REFUSE, reducedMotion: currentSettings(this).reducedMotion });
+      this.html?.refuse(0, currentSettings(this).reducedMotion);
       return;
     }
     const outcome = applyHelpAction(gameData.help.length, action, this.page);
