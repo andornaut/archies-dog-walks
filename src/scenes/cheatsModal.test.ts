@@ -28,7 +28,6 @@ const fake = vi.hoisted(() => ({
     toggleInvincible: vi.fn(),
   },
   update: vi.fn(),
-  useCheat: vi.fn(),
 }));
 vi.mock("../dev/devTools.ts", () => ({ devToolsOn: () => false }));
 vi.mock("../dev/cheatsView.ts", () => ({
@@ -71,14 +70,12 @@ vi.mock("./profileStore.ts", () => ({
   updateProfile: fake.update,
   walkerInUse: vi.fn(),
 }));
-vi.mock("./cheatSession.ts", () => ({
+vi.mock("./cheatChoices.ts", () => ({
   CHEATS_CHANGED_EVENT: "cheats-changed",
   nextWalk: () => fake.next,
   setNextWalk: (_scene: unknown, next: typeof NEXT_WALK_OFF) => {
-    fake.useCheat();
     fake.next = next;
   },
-  useCheat: fake.useCheat,
 }));
 
 beforeEach(() => {
@@ -103,17 +100,14 @@ function open(inWalk: boolean) {
   return { close, input: fake.input!, modal, scene };
 }
 
-it("allows installed-app actions and seed input while retaining the cheat session boundary", () => {
+it("applies a bank grant to the save and keeps a valid seed for the next walk", () => {
   const { close, input, scene } = open(false);
   input.act({ amount: cents(100), kind: "addBank" });
-  expect(fake.useCheat).toHaveBeenCalledOnce();
   expect(fake.update).toHaveBeenCalledWith(scene, expect.any(Function));
   input.seed("123");
   expect(fake.next?.seed).toBe(123);
-  expect(fake.useCheat).toHaveBeenCalledTimes(2);
   input.seed("invalid");
   expect(fake.next?.seed).toBe(123);
-  expect(fake.useCheat).toHaveBeenCalledTimes(2);
   expect(close).not.toHaveBeenCalled();
 });
 
@@ -128,7 +122,6 @@ it("selects a Start neighbourhood without changing other setup choices", () => {
   const zone = startZones(gameData)[1]!;
   input.act({ kind: "startAt", zone });
   expect(fake.next).toEqual({ ...NEXT_WALK_OFF, start: zone });
-  expect(fake.useCheat).toHaveBeenCalledOnce();
 });
 
 it("applies live invincibility and neighbourhood changes without closing Cheats or staging choices", () => {
@@ -163,14 +156,12 @@ it("does not stage later changes when the invoking walk has ended", () => {
   expect(fake.run.toggleInvincible).not.toHaveBeenCalled();
   expect(fake.run.jumpToZone).not.toHaveBeenCalled();
   expect(fake.next).toEqual(NEXT_WALK_OFF);
-  expect(fake.useCheat).not.toHaveBeenCalled();
 });
 
 it("applies bank and ownership grants immediately while Cheats remains over the walk", () => {
   const { close, input, scene } = open(true);
   input.act({ amount: cents(100), kind: "addBank" });
   input.act({ grant: "dogs", kind: "own" });
-  expect(fake.useCheat).toHaveBeenCalledTimes(2);
   expect(fake.update).toHaveBeenNthCalledWith(1, scene, expect.any(Function));
   expect(fake.update).toHaveBeenNthCalledWith(2, scene, expect.any(Function));
   expect(fake.render).toHaveBeenCalledTimes(2);

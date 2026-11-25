@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import type { AchievementId } from "../data/types.ts";
+import { addToBank, BANK_GRANTS, grantOwned } from "../dev/cheats.ts";
 import { packOf, runFactsFor, saveFor } from "../testing/achievements.ts";
 import {
   newPlayerSave,
@@ -18,6 +19,7 @@ import {
 } from "../testing/saves.ts";
 import { cents } from "../units.ts";
 import { earnedIfBanked } from "./achievementPreview.ts";
+import { saveContextFrom } from "./load.ts";
 import { ProfileSession, type ProfileStores } from "./profile.ts";
 import type { LaunchWalk, ResumeWalk } from "./resume.ts";
 import { type Checkpoint, SAVE_VERSION, type SaveDocument } from "./schema.ts";
@@ -506,15 +508,8 @@ it("keeps the saved bank when a zero-payout interruption cannot resume", async (
   expect(stored(reopened.entries).bankCents).toBe(20_000);
 });
 
-describe("a cheat session", () => {
-  const checkpoint: Checkpoint = {
-    counters: quietCounters(),
-    dogs: result.dogs,
-    earnedCents: cents(500),
-    route: ["distilleryDistrict"],
-    zonesFinished: 1,
-  };
-  // A finished walk as Not a Scratch's goal asks, which would earn it outside a session.
+describe("cheats", () => {
+  // A finished walk as Not a Scratch's goal asks.
   const goal = runFactsFor(gameData, ["notAScratch"]);
   const badgeWalk = {
     ...result,
@@ -522,64 +517,53 @@ describe("a cheat session", () => {
     earnedCents: goal.earnedCents,
   };
 
-  it("keeps every change in memory, writes and earns nothing, and ends on the save before it", async () => {
-    const { entries, session } = await openedVeteran();
-    await session.checkpointRun(checkpoint);
-    const before = new Map(entries);
-    const saved = session.save;
-    session.startCheats();
-    expect(session.cheating).toBe(true);
-    await session.update((save) => ({ ...save, bankCents: cents(999_999) }));
-    await session.purchase((save) => ({ ...save, owned: { ...save.owned, gear: [] } }));
-    await session.checkpointRun({ ...checkpoint, zonesFinished: 2 });
-    expect(session.earnedIfBanked(badgeWalk)).toEqual([]);
+  // Every grant as the Cheats modal makes it, read back through the game's own save context,
+  // which knows every item a grant adds.
+  it.each<[string, (save: SaveDocument) => SaveDocument]>([
+    ...BANK_GRANTS.map((amount): [string, (save: SaveDocument) => SaveDocument] => [
+      `${amount} cents to the bank`,
+      (save) => addToBank(amount, save),
+    ]),
+    ...(["all", "dogSlots", "dogs", "gear", "walkers"] as const).map(
+      (grant): [string, (save: SaveDocument) => SaveDocument] => [
+        `own ${grant}`,
+        (save) => grantOwned(gameData, grant, save),
+      ],
+    ),
+  ])("writes the %s grant, which a reload keeps", async (_name, grant) => {
+    const storage = memoryStorage();
+    const stores = {
+      earned: gameEarnedStore(gameData, storage),
+      save: gameSaveStore(saveContextFrom(gameData), storage),
+    };
+    const { session } = await ProfileSession.open(awards, stores);
+    const granted = grant(session.save);
+    await session.update(grant);
+    const reopened = await ProfileSession.open(awards, stores);
+    expect(reopened.session.save).toEqual(granted);
+  });
+
+  it("banks money added during a walk with the walk's pay and earns its badges", async () => {
+    const { entries, session } = await opened(newPlayerSave);
+    const added = BANK_GRANTS[1]!;
+    await session.update((save) => addToBank(added, save));
     await session.finishRun(badgeWalk, []);
-    await session.markHintShown("tip");
-    expect(session.save.bankCents).not.toBe(saved.bankCents);
-    expect(session.lastRunEnd?.achievements).toEqual([]);
-    expect(session.earned).toEqual(VETERAN_EARNED);
-    await settle();
-    expect(entries).toEqual(before);
-    session.endCheats();
-    expect(session.cheating).toBe(false);
-    expect(session.save).toBe(saved);
-    expect(session.save.checkpoint?.zonesFinished).toBe(1);
-    expect(session.lastRunEnd).toBeNull();
-  });
-
-  it("writes nothing for Update now's save, so the reload shows the save before the first cheat", async () => {
-    const { entries, session } = await openedVeteran();
-    await session.checkpointRun(checkpoint);
-    const before = new Map(entries);
-    session.startCheats();
-    await session.update((save) => ({ ...save, bankCents: cents(999_999) }));
-    void session.checkpointRun({ ...checkpoint, zonesFinished: 2 });
-    await session.settled();
-    expect(entries).toEqual(before);
-  });
-
-  it("writes again once it ends", async () => {
-    const { entries, session } = await openedVeteran();
-    session.startCheats();
-    session.endCheats();
-    await session.update((save) => ({ ...save, bankCents: cents(1) }));
-    expect(stored(entries).bankCents).toBe(1);
+    expect(session.lastRunEnd?.achievements).toContain("notAScratch");
+    const reopened = await opened(stored(entries), storedEarned(entries).earned);
+    expect(reopened.session.save.bankCents).toBe(added + badgeWalk.earnedCents);
+    expect(reopened.session.earned).toContain("notAScratch");
   });
 });
 
 describe("resetSave", () => {
-  it("requires successfully stored play rather than boot data or cheat progress", async () => {
+  it("requires successfully stored play rather than boot data", async () => {
     const { entries, session } = await opened(newPlayerSave);
     await session.markHintShown("tip");
     expect(session.canResetSave).toBe(false);
-    session.startCheats();
-    await session.update((save) => ({ ...save, bankCents: cents(100) }));
     const clearBadges = vi.fn(async () => ({ status: "saved" as const }));
     expect(await session.resetSave(clearBadges, newPlayerSave)).toBe(false);
     expect(clearBadges).not.toHaveBeenCalled();
-    expect(stored(entries).bankCents).toBe(0);
 
-    session.endCheats();
     const save = session.update((current) => ({ ...current, bankCents: cents(100) }));
     expect(session.canResetSave).toBe(false);
     await save;
@@ -591,27 +575,21 @@ describe("resetSave", () => {
     expect(stored(entries).bankCents).toBe(0);
   });
 
-  it.each([false, true])(
-    "writes a new player's save and no badges, then nothing (in a cheat session: %s)",
-    async (cheating) => {
-      const { entries, session } = await openedVeteran();
-      if (cheating) {
-        session.startCheats();
-      }
-      const fresh = newPlayerSave;
-      const earnedStore = gameEarnedStore(gameData, memoryStorage(entries));
-      await session.resetSave(async () => {
-        const reset = { earned: [], unannounced: [] };
-        const encoded = encodeSave(earnedRecordFormat(gameData), reset);
-        entries.set(EARNED_KEYS.save, encoded.ok ? encoded.value : "");
-        return { status: "saved" } as const;
-      }, fresh);
-      const saveStore = gameSaveStore(testContext, memoryStorage(entries));
-      expect((await saveStore.load()).save).toEqual(fresh);
-      expect((await earnedStore.load()).save.earned).toEqual([]);
-      const written = new Map(entries);
-      await session.update((save) => ({ ...save, bankCents: cents(1) }));
-      expect(entries).toEqual(written);
-    },
-  );
+  it("writes a new player's save and no badges, then nothing", async () => {
+    const { entries, session } = await openedVeteran();
+    const fresh = newPlayerSave;
+    const earnedStore = gameEarnedStore(gameData, memoryStorage(entries));
+    await session.resetSave(async () => {
+      const reset = { earned: [], unannounced: [] };
+      const encoded = encodeSave(earnedRecordFormat(gameData), reset);
+      entries.set(EARNED_KEYS.save, encoded.ok ? encoded.value : "");
+      return { status: "saved" } as const;
+    }, fresh);
+    const saveStore = gameSaveStore(testContext, memoryStorage(entries));
+    expect((await saveStore.load()).save).toEqual(fresh);
+    expect((await earnedStore.load()).save.earned).toEqual([]);
+    const written = new Map(entries);
+    await session.update((save) => ({ ...save, bankCents: cents(1) }));
+    expect(entries).toEqual(written);
+  });
 });

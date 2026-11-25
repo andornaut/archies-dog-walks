@@ -119,7 +119,7 @@ import { REFUSE } from "../ui/refuse.ts";
 import type { Cents } from "../units.ts";
 import { artReady, waitForWalkArt, whenArtReady } from "./artReady.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
-import { CHEATS_CHANGED_EVENT, endCheatsAfterWalk, nextWalk } from "./cheatSession.ts";
+import { CHEATS_CHANGED_EVENT, clearNextWalkAfterWalk, nextWalk } from "./cheatChoices.ts";
 import { pillColours } from "./effectNameColours.ts";
 import { HELP_CLOSED_EVENT } from "./HelpScene.ts";
 import { openHelp } from "./helpScreen.ts";
@@ -433,8 +433,8 @@ export class StartScene extends Scene {
   }
   create(): void {
     requestGameUpdateCheck();
-    // Back from a walk, a cheat session ends before the save is read.
-    endCheatsAfterWalk(this);
+    // Back from a walk, the next walk's choices are off.
+    clearNextWalkAfterWalk(this);
     this.action = { kind: "none" };
     this.artWait = undefined;
     this.entry = undefined;

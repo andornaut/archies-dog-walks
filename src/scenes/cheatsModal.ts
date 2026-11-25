@@ -26,7 +26,7 @@ import { packDogsOf } from "../state/pack.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
 import { PALETTE } from "../ui/palette.ts";
-import { CHEATS_CHANGED_EVENT, nextWalk, setNextWalk, useCheat } from "./cheatSession.ts";
+import { CHEATS_CHANGED_EVENT, nextWalk, setNextWalk } from "./cheatChoices.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import {
   canResetSave,
@@ -116,8 +116,8 @@ export function openCheatsModal(
     setNextWalk(scene, change(nextWalk(scene)));
     render();
   };
+  // A grant changes the save and is written like any change: Add money goes to the bank.
   const grant = (change: Parameters<typeof updateProfile>[1]) => {
-    useCheat(scene);
     void updateProfile(scene, change);
     changed();
   };

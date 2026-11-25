@@ -68,8 +68,7 @@ export function holdPlay(game: Game): { readonly pauseOpening: boolean; release(
 
 // Update now's prompt over whatever screen shows: the update modal (homeText.update) in the
 // region under the top bar, over the dimmed screen, with play held still under it. Update now
-// saves (the walk's checkpoint, then every pending write) and switches to the staged build. In a
-// cheat session that save writes nothing, so the reload ends the session on the save before it.
+// saves (the walk's checkpoint, then every pending write) and switches to the staged build.
 // Cancel, its close control, a tap outside, back, P and Escape dismiss it, and play continues on
 // this build until the next launch applies the update. While Update now switches, the card
 // closes and the loading line travels; a failed switch shows the card again with the failure

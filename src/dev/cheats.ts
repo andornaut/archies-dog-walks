@@ -1,6 +1,5 @@
 // The cheats, free of Phaser and the DOM: the next walk's choices, the Start screen's grants and
-// this walk's actions, as pure changes. A cheat session (src/save/profile.ts) keeps what they
-// change in memory and never writes it.
+// this walk's actions, as pure changes. What they change is saved like normal play.
 import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { pixels } from "@andornaut/game-kit/runtime/units";

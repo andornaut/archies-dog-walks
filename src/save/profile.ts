@@ -90,13 +90,6 @@ function withoutResume(checkpoint: Checkpoint): Checkpoint {
   return resume === undefined ? checkpoint : banked;
 }
 
-// What a cheat session sets aside, for its end to restore.
-interface CheatSnapshot {
-  readonly document: SaveDocument;
-  readonly earned: readonly AchievementId[];
-  readonly ended: RunEnd | null;
-}
-
 // The player's save and earned badges for this page's life. Every change applies in memory at
 // once, so a scene can read it straight after, and is then written in the order made, a run's
 // badges before the save that banks it, so a run banked is never written without them.
@@ -117,9 +110,6 @@ export class ProfileSession {
   private resumable: ResumeWalk | null = null;
   // Set once the game has crashed: no later checkpoint keeps a resume point (stopResuming).
   private resumeStopped = false;
-  // While a cheat session lasts, what it set aside: the save, the badges earned and the last
-  // run's end as they were before the first cheat. null outside one.
-  private beforeCheats: CheatSnapshot | null = null;
   // Set once the save has been reset: the page reloads, and nothing more is written.
   private halted = false;
 
@@ -205,18 +195,14 @@ export class ProfileSession {
     return this.writeSave(document);
   }
 
-  private writeSave(document: SaveDocument, outside = false): Promise<void> {
-    return this.write(
-      "save",
-      async () => {
-        const result = await this.stores.save.save(document);
-        if (result.status === "saved") {
-          this.storedPlay = hasSavedPlay(document);
-        }
-        return result;
-      },
-      outside,
-    );
+  private writeSave(document: SaveDocument): Promise<void> {
+    return this.write("save", async () => {
+      const result = await this.stores.save.save(document);
+      if (result.status === "saved") {
+        this.storedPlay = hasSavedPlay(document);
+      }
+      return result;
+    });
   }
 
   // Resolves once every change and checkpoint made so far has been written or has failed.
@@ -226,14 +212,9 @@ export class ProfileSession {
 
   // Runs write after every write before it, and resolves once it has been made or has failed;
   // write resolves to undefined when it had nothing to write. With a newer version's save or
-  // earned record stored, after a reset, or during a cheat session unless outside says the write
-  // is no cheat's, nothing is written.
-  private write(
-    what: string,
-    write: () => Promise<StoreSaveResult | undefined>,
-    outside = false,
-  ): Promise<void> {
-    if (this.state === "newer" || this.halted || (this.beforeCheats !== null && !outside)) {
+  // earned record stored, or after a reset, nothing is written.
+  private write(what: string, write: () => Promise<StoreSaveResult | undefined>): Promise<void> {
+    if (this.state === "newer" || this.halted) {
       return this.writes;
     }
     this.writes = this.writes.then(async () => {
@@ -253,9 +234,6 @@ export class ProfileSession {
   // The badges facts newly earn at scope, awarded: earned at once, and written in turn. Returns
   // them, in wall order.
   private earn(scope: AchievementScope, facts: AchievementFacts): AchievementId[] {
-    if (this.beforeCheats !== null) {
-      return [];
-    }
     const { achievements } = this.awards.data;
     const added = newlyEarned(this.judge, achievements, scope, facts, this.earnedIds);
     if (added.length > 0) {
@@ -289,12 +267,8 @@ export class ProfileSession {
     return this.update((save) => ({ ...save, shownHints: [...save.shownHints, hint] }));
   }
 
-  // What banking result now would newly earn, for a mid-run preview; nothing is written, and a
-  // cheat session earns nothing.
+  // What banking result now would newly earn, for a mid-run preview; nothing is written.
   earnedIfBanked(result: RunResult): AchievementId[] {
-    if (this.beforeCheats !== null) {
-      return [];
-    }
     return earnedIfBanked(this.awards, this.earnedIds, this.document, result);
   }
 
@@ -359,12 +333,9 @@ export class ProfileSession {
   }
 
   // The achievements waiting to be celebrated on the home screen, once each: they count as
-  // celebrated once taken. They wait out a cheat session.
+  // celebrated once taken.
   takeCelebrations(): AchievementId[] {
     const taken: AchievementId[] = [];
-    if (this.beforeCheats !== null) {
-      return taken;
-    }
     for (let id = this.celebrations.take(); id !== undefined; id = this.celebrations.take()) {
       taken.push(id);
     }
@@ -372,34 +343,9 @@ export class ProfileSession {
     return taken;
   }
 
-  // Whether a cheat session lasts: from the first cheat to its end (endCheats).
-  get cheating(): boolean {
-    return this.beforeCheats !== null;
-  }
-
-  // The first cheat starts a cheat session: from then on every change stays in memory, nothing is
-  // written and no badge is earned, until endCheats. A session already started goes on.
-  startCheats(): void {
-    this.beforeCheats ??= { document: this.document, earned: this.earnedIds, ended: this.ended };
-  }
-
-  // Ends the cheat session: the save, the badges and the last run's end go back to how they were
-  // before the first cheat, the checkpoint included, which storage still holds.
-  endCheats(): void {
-    const before = this.beforeCheats;
-    if (before === null) {
-      return;
-    }
-    this.beforeCheats = null;
-    this.document = before.document;
-    this.earnedIds = before.earned;
-    this.ended = before.ended;
-  }
-
   // Reset save: after every write before it, the stored save becomes fresh and resetEarned
-  // clears the earned badges, whatever a cheat session holds. Nothing is written after it, since
-  // the page then reloads into the new save. With a newer version's save stored, nothing is
-  // written.
+  // clears the earned badges. Nothing is written after it, since the page then reloads into the
+  // new save. With a newer version's save stored, nothing is written.
   async resetSave(
     resetEarned: () => Promise<StoreSaveResult>,
     fresh: SaveDocument,
@@ -407,8 +353,8 @@ export class ProfileSession {
     if (!this.canResetSave) {
       return false;
     }
-    void this.writeSave(fresh, true);
-    const reset = this.write("earned badges", resetEarned, true);
+    void this.writeSave(fresh);
+    const reset = this.write("earned badges", resetEarned);
     this.halted = true;
     await reset;
     return true;

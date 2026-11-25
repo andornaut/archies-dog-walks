@@ -205,21 +205,6 @@ export function walkerSpriteKey(scene: Scene, walker: WalkerId): string {
   return scene.textures.exists(own) ? own : gameData.walkers[gameData.defaultWalker].spriteKey;
 }
 
-// Whether a cheat session lasts (ProfileSession.cheating).
-export function inCheatSession(scene: Scene): boolean {
-  return openedSession(scene)?.cheating ?? false;
-}
-
-// The first cheat starts a cheat session, in which nothing is saved, earned or banked.
-export function startCheatSession(scene: Scene): void {
-  session(scene).startCheats();
-}
-
-// Ends any cheat session, the save back as it was before the first cheat.
-export function endCheatSession(scene: Scene): void {
-  openedSession(scene)?.endCheats();
-}
-
 export function canResetSave(scene: Scene): boolean {
   return session(scene).canResetSave;
 }

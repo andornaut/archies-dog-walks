@@ -52,7 +52,6 @@ import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/pixelText
 import { markArtReady, setBootWatch, type WaitedLoad } from "./artReady.ts";
 import { addBootPicture } from "./bootPicture.ts";
 import { stopOnceRetried } from "./bootRetries.ts";
-import { useCheat } from "./cheatSession.ts";
 import { waitForNativeHome } from "./nativeHomeReady.ts";
 import {
   currentSettings,
@@ -624,8 +623,7 @@ export class BootScene extends Scene {
     });
   }
 
-  // Starts the walk a dev link names, with everything loaded. The link's setup is a cheat, so
-  // the walk is a cheat session's.
+  // Starts the walk a dev link names, with everything loaded. It saves like any walk.
   private startWalk(): void {
     this.requireNativeUi(HUD_UI_KEYS, () => {
       if (requiredUpdate() !== undefined) {
@@ -642,7 +640,6 @@ export class BootScene extends Scene {
         pageRunSetup().setup,
       );
       const pick = { dogSlots: owned.dogSlots.length, loadout };
-      useCheat(this);
       startWakeLock();
       this.leaveFor(SCENE_KEYS.run, runSceneData(nextRunStart(), pick));
       this.stopOnceRetried();

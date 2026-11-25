@@ -62,7 +62,7 @@ import type { ResumeWalk } from "../save/resume.ts";
 import { checkpointOf, runResultOf } from "../save/runSlices.ts";
 import { type Loadout, newRun, type RunState } from "../state/runState.ts";
 import { colourFromHex, PALETTE } from "../ui/palette.ts";
-import { noteWalkStarted, useCheat } from "./cheatSession.ts";
+import { noteWalkStarted } from "./cheatChoices.ts";
 import type { HudSceneData } from "./HudScene.ts";
 import type { HudRun, RunHudView } from "./hudWalk.ts";
 import { onWindowEvent } from "./overlay.ts";
@@ -494,7 +494,6 @@ export class RunScene extends Scene implements HudRun {
     if (session === undefined || active === undefined) {
       return;
     }
-    useCheat(this);
     this.world?.recorder.abandon();
     const { walk } = session;
     this.cheats = { ...this.cheats, invincible: !active.invincible };
@@ -517,7 +516,6 @@ export class RunScene extends Scene implements HudRun {
       zone,
       session,
     );
-    useCheat(this);
     world.recorder.abandon();
     this.celebrationGeneration += 1;
     world.menus.closeZoneOverlays();
@@ -529,14 +527,14 @@ export class RunScene extends Scene implements HudRun {
     this.draw();
   }
 
-  // The walk as This walk's cheat leaves it, in a cheat session: nothing of it is saved. The
-  // walk's checkpoints and end stay in the session.
+  // The walk as This walk's cheat leaves it; it saves like any walk, and its replay recording
+  // stops, as for every live run edit.
   cheat(cheat: WalkCheat): void {
     const session = this.session;
     if (session === undefined || !this.cheatsApply()) {
       return;
     }
-    useCheat(this);
+    this.world?.recorder.abandon();
     const { run } = session.walk;
     const walk = { ...session.walk, run: walkCheat(gameData, cheat, run) };
     this.session = {
