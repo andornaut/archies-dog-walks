@@ -84,20 +84,17 @@
   color: #feae34;
 }
 /* The current page's text in the game's selected state, held still: a yellow face with plum
-   text, a frame (ink, an amber band, ink) 3px outside its ink edge, lifted 2px onto a plum
-   shadow, and the ui-check tick at its top-left corner. */
+   text lifted 2px onto a plum lip, as a picked tile, and the ui-check tick at its top-left
+   corner. Its border is the face's colour, so forced colours draw it as the face's edge. */
 .art-nav a[aria-current="page"] > span {
   position: relative;
   top: -2px;
   padding: 1px 6px 1px 10px;
-  color: #3e2731;
-  background: #fee761;
-  border: 1px solid #181425;
+  color: var(--palette-plum);
+  background: var(--palette-yellow);
+  border: 1px solid var(--palette-yellow);
   font-weight: 700;
-  box-shadow:
-    0 0 0 2px #feae34,
-    0 0 0 3px #181425,
-    0 2px 0 3px #3e2731;
+  box-shadow: 0 2px 0 var(--palette-plum);
 }
 .art-nav a[aria-current="page"] > span::before {
   content: "";
@@ -109,10 +106,24 @@
   background: url("/art/sprites/ui-check.png") -48px 0 / 64px 16px;
   image-rendering: pixelated;
 }
-/* Inside the press, so the scroller does not clip it. */
+/* Focus and press fill the whole press, behind a current page's face: cyan with ink text while
+   focused, forest with white text while pressed, and Highlight with HighlightText in forced
+   colours. */
 .art-nav a:focus-visible {
-  outline: 2px solid #feae34;
-  outline-offset: -2px;
+  outline: none;
+  background: var(--palette-cyan);
+  color: var(--palette-ink);
+}
+.art-nav a:active {
+  background: var(--palette-forest);
+  color: var(--palette-white);
+}
+@media (forced-colors: active) {
+  .art-nav a:is(:focus-visible, :active) {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
 }
 /* The shared icon control, fixed inside the safe area on long pages. */
 .to-top {

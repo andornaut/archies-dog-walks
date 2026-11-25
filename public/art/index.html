@@ -61,8 +61,11 @@ header p { margin: 0; color: var(--muted); max-width: 70ch; }
 .toolbar .gr { display: grid; place-items: center; width: 48px; height: 48px; position: relative; cursor: pointer; }
 .gr input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
 .gr i { display: block; width: 24px; height: 24px; border-radius: 4px; border: 1px solid var(--line); }
-.gr input:checked + i { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
-.gr input:focus-visible + i { outline: 2px solid var(--fg); outline-offset: 6px; }
+/* The checked swatch carries the game's ui-check tick at its top-left, as the nav's current page; focus fills its press cyan. */
+.gr input:checked + i { position: relative; }
+.gr input:checked + i::after { content: ""; position: absolute; left: -7px; top: -8px; width: 16px; height: 16px; background: url("/art/sprites/ui-check.png") -48px 0 / 64px 16px; image-rendering: pixelated; }
+.toolbar .gr:has(input:focus-visible) { background: var(--palette-cyan); }
+@media (forced-colors: active) { .toolbar .gr:has(input:focus-visible) { forced-color-adjust: none; background: Highlight; } }
 .grounds output { font-size: 13px; color: var(--muted); margin-left: 4px; min-width: 9em; }
 @media (max-width: 600px) { .toolbar { gap: 8px 14px; } .toolbar input[type="search"] { width: 9em; } .grounds output { display: none; } }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -80,7 +83,8 @@ canvas, .view img { display: block; image-rendering: pixelated; image-rendering:
 .meta .dims { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
 .tags { display: flex; flex-wrap: wrap; gap: 8px; }
 .tags .app-button { font-family: var(--f-mono); font-size: 12px; }
-.toolbar :focus-visible, .sound audio:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Editable fields keep native editing and take the game's seed field focus, a 2px cyan inset; audio players keep their native focus. */
+.toolbar :is(select, input[type="search"]):focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--palette-cyan); }
 .strip { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 2px; }
 .strip canvas { background: rgba(255, 255, 255, 0.04); }
 .sounds { display: grid; gap: 8px; }

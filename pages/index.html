@@ -222,9 +222,22 @@
         line-height: 0;
         cursor: pointer;
       }
+      /* Focus fills the card's heading band, as a focused choice card's label band: cyan with an
+         ink heading, or Highlight with HighlightText in forced colours. */
       .shot-link:focus-visible {
-        outline: 3px solid var(--palette-yellow);
-        outline-offset: 6px;
+        outline: none;
+      }
+      .hl:has(.shot-link:focus-visible) h2 {
+        background: var(--palette-cyan);
+        color: var(--palette-ink);
+        text-shadow: none;
+      }
+      @media (forced-colors: active) {
+        .hl:has(.shot-link:focus-visible) h2 {
+          forced-color-adjust: none;
+          background: Highlight;
+          color: HighlightText;
+        }
       }
       .art {
         display: flex;

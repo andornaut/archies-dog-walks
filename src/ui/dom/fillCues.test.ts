@@ -12,11 +12,23 @@ const KIT_CONTROLS = readFileSync(
   "utf8",
 );
 const squeeze = (text: string) => text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, "");
+// A page's own stylesheet, its <style> block.
+const pageStyle = (path: string) => /<style>([\s\S]*?)<\/style>/u.exec(css(path))?.[1] ?? "";
+const KIT_CRASH = readFileSync(
+  createRequire(import.meta.url).resolve("@andornaut/game-kit/runtime/web/crash/dom/crash.css"),
+  "utf8",
+);
 const SHEETS = {
   choice: squeeze(css("../../hud/dom/choiceCards.css")),
+  controls: squeeze(css("../../../public/controls.css")),
+  crash: squeeze(css("../../crash/crash.css")),
   focus: squeeze(css("./focusStyle.css")),
+  gallery: squeeze(pageStyle("../../../public/art/index.html")),
   game: squeeze(css("./gameButton.css")),
+  home: squeeze(pageStyle("../../../pages/index.html")),
   logbook: squeeze(css("../../hud/dom/logbook.css")),
+  mute: squeeze(css("./muteControl.css")),
+  nav: squeeze(css("../../../public/nav.css")),
   tile: squeeze(css("../../home/dom/selectionTile.css")),
   top: squeeze(css("./nativeTopSection.css")),
   ui: squeeze(UI_STYLE),
@@ -229,6 +241,36 @@ describe("control state cues", () => {
       '.adw-standard-button[data-ui-button-role="primary"]',
       "--adw-button-highlight:var(--adw-yellow)",
     ],
+    [
+      "a focused site button's face",
+      "controls",
+      ".crash .crash-button:focus-visible",
+      "--face:var(--palette-cyan);--face-text:var(--palette-ink);outline:none",
+    ],
+    [
+      "a pressed site button's face",
+      "controls",
+      ".crash .crash-button:active:not(:disabled)",
+      "--face:var(--palette-forest);--face-text:var(--palette-white)",
+    ],
+    [
+      "a focused nav link's press",
+      "nav",
+      ".art-nav a:focus-visible",
+      "background:var(--palette-cyan)",
+    ],
+    [
+      "the homepage screenshot link's focused heading band",
+      "home",
+      ".hl:has(.shot-link:focus-visible) h2",
+      "background:var(--palette-cyan)",
+    ],
+    [
+      "a focused gallery ground swatch's press",
+      "gallery",
+      ".toolbar .gr:has(input:focus-visible)",
+      "background:var(--palette-cyan)",
+    ],
   ] as const)("shows %s as a fill", (_what, sheet, selector, declaration) => {
     expect(rule(CUE_SHEETS[sheet], selector)).toContain(squeeze(declaration));
   });
@@ -254,7 +296,20 @@ describe("control state cues", () => {
         .filter(([, , body]) => !/content:none/.test(body!))
         .map(([, selector]) => `${name}: ${selector}`),
     );
-    // Only the editable seed field's inset band remains, on native text editing.
-    expect([...rings, ...afterRings]).toEqual(["focus: .adw-rowinput:focus-visible"]);
+    // Only the editable fields' inset bands remain, on native text editing: the seed field and
+    // the gallery's zoom and filter.
+    expect([...rings, ...afterRings]).toEqual([
+      "focus: .adw-rowinput:focus-visible",
+      'gallery: .toolbar:is(select,input[type="search"]):focus-visible',
+    ]);
+  });
+
+  it("fills the crash screen's focused Error details row over Kit's outline", () => {
+    const KIT_SUMMARY = ".crash-details summary:focus-visible";
+    const SUMMARY = ".crash .crash-details summary:focus-visible";
+    expect(squeeze(KIT_CRASH)).toContain(`${squeeze(KIT_SUMMARY)}{outline:`);
+    expect(rule(SHEETS.crash, SUMMARY)).toContain("outline:none");
+    expect(rule(forced(SHEETS.crash), SUMMARY)).toContain("outline:none");
+    expect(ranks(specificity(SUMMARY), specificity(KIT_SUMMARY))).toBeGreaterThan(0);
   });
 });

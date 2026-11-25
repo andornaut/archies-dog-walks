@@ -65,8 +65,11 @@
   padding-inline: var(--button-inset);
 }
 
+/* A press fills the face forest with a white label as it sinks, as the game's buttons do. */
 .app-button:active:not(:disabled),
 .crash .crash-button:active:not(:disabled) {
+  --face: var(--palette-forest);
+  --face-text: var(--palette-white);
   padding-top: var(--button-press);
   padding-bottom: var(--button-press);
   box-shadow: inset 0 calc(-1 * var(--button-press)) 0 var(--face-lip);
@@ -102,16 +105,26 @@
   cursor: default;
 }
 
-.app-button:focus-visible {
-  outline: 2px solid var(--palette-cyan);
-  outline-offset: 3px;
-}
-
 .app-button[aria-pressed="true"] {
   --face: var(--palette-yellow);
   --face-lip: var(--palette-amber);
   --face-text: var(--palette-plum);
   font-weight: 600;
+}
+
+/* Focus fills the face cyan with an ink label, over a selected face too, as the game's buttons do,
+   with no ring; a press outranks it. The crash screen's colours outrank the kit's focused Reload
+   in either load order. */
+.app-button:focus-visible,
+.crash .crash-button:focus-visible {
+  --face: var(--palette-cyan);
+  --face-text: var(--palette-ink);
+  outline: none;
+}
+
+.crash .crash-button:is(:focus-visible, :active:not(:disabled)) {
+  background-color: var(--face);
+  color: var(--face-text);
 }
 
 /* The icon control: the top bar's 20px face centred in its 48px press, its glyph at the top
@@ -164,6 +177,43 @@
 
 .app-button--icon:active:not(:disabled) svg {
   transform: translateY(var(--button-press));
+}
+
+/* The icon control's face takes the fills: cyan with an ink glyph while focused, and the top
+   bar's press, ink under the lit row with the cream glyph. */
+.app-button--icon:focus-visible {
+  color: var(--palette-ink);
+}
+
+.app-button--icon:focus-visible::before {
+  background: var(--palette-cyan);
+}
+
+.app-button--icon:active:not(:disabled) {
+  color: var(--palette-cream);
+}
+
+.app-button--icon:active:not(:disabled)::before {
+  background: var(--palette-ink);
+}
+
+/* Forced colours paint a focused or pressed face Highlight with a HighlightText label. */
+@media (forced-colors: active) {
+  :is(.app-button, .crash .crash-button):is(:focus-visible, :active:not(:disabled)):not(
+      .app-button--icon
+    ),
+  .app-button--icon:is(:focus-visible, :active:not(:disabled))::before {
+    forced-color-adjust: none;
+    background: Highlight;
+    border-color: ButtonBorder;
+    box-shadow: none;
+    color: HighlightText;
+  }
+
+  .app-button--icon:is(:focus-visible, :active:not(:disabled)) {
+    forced-color-adjust: none;
+    color: HighlightText;
+  }
 }
 
 .app-button[hidden],
