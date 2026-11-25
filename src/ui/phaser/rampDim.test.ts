@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from "vitest";
 
 import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import { ownDeviceFit } from "../worldFit.ts";
-import { addDim } from "./draw.ts";
 import { addModalShade, addRampDim } from "./rampDim.ts";
 
 vi.mock("phaser", () => ({
@@ -47,8 +46,7 @@ class Graphic {
   }
 }
 function fixture() {
-  const graphics: Graphic[] = [],
-    rectangles: { colour: number; alpha: number }[] = [];
+  const graphics: Graphic[] = [];
   const camera = {
     height: 560,
     originX: 0,
@@ -81,21 +79,6 @@ function fixture() {
         graphics.push(graphic);
         return graphic;
       },
-      rectangle: (
-        _x: number,
-        _y: number,
-        _w: number,
-        _h: number,
-        colour: number,
-        alpha: number,
-      ) => {
-        rectangles.push({ alpha, colour });
-        return {
-          setOrigin() {
-            return this;
-          },
-        };
-      },
     },
     cameras: { cameras: [camera], main: camera },
     scene: { key: "settings" },
@@ -105,7 +88,6 @@ function fixture() {
   return {
     camera,
     graphics,
-    rectangles,
     scene: stub as unknown as Scene,
     shown: (value: boolean) => {
       shown = value;
@@ -231,13 +213,5 @@ describe("neutral canvas underlay", () => {
     } finally {
       stop();
     }
-  });
-
-  it("keeps unrelated nonmodal dim styling separate", () => {
-    const f = fixture();
-    addDim(f.scene, area);
-    expect(f.rectangles[0]!.alpha).toBe(0.6);
-    addModalShade(f.scene, area);
-    expect(f.graphics[0]).toMatchObject({ alpha: 0.72, colour: 0 });
   });
 });

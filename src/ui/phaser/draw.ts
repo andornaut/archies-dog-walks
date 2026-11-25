@@ -9,28 +9,8 @@ export function addFilledRect(scene: Scene, colour: number, rect: Rect): GameObj
   return scene.add.rectangle(rect.x, rect.y, rect.width, rect.height, colour).setOrigin(0);
 }
 
-// The ink layer an overlay dims what is under it with.
-const DIM_ALPHA = 0.6;
-
-export function addDim(scene: Scene, rect: Rect): GameObjects.Rectangle {
-  return scene.add
-    .rectangle(rect.x, rect.y, rect.width, rect.height, PALETTE.ink, DIM_ALPHA)
-    .setOrigin(0);
-}
-
 export function fillRect(graphics: GameObjects.Graphics, colour: number, rect: Rect): void {
   graphics.fillStyle(colour).fillRect(rect.x, rect.y, rect.width, rect.height);
-}
-
-// rect filled with a square cut pixels wide left out at each corner.
-export function fillCutRect(
-  graphics: GameObjects.Graphics,
-  colour: number,
-  rect: Rect,
-  cut: number,
-): void {
-  fillRect(graphics, colour, { ...rect, width: rect.width - 2 * cut, x: rect.x + cut });
-  fillRect(graphics, colour, { ...rect, height: rect.height - 2 * cut, y: rect.y + cut });
 }
 
 // A ring of the given thickness just inside rect's edge.
@@ -206,51 +186,6 @@ export function drawPixelLine(
   graphics.fillStyle(colour);
   for (const [x, y] of pixelLinePoints(from.x, from.y, to.x, to.y)) {
     graphics.fillRect(x, y, 1, 1);
-  }
-}
-
-// A picture drawn from rows of text, each "#" a square pixel wide from at, row by row.
-export function drawPixelRows(
-  graphics: GameObjects.Graphics,
-  colour: number,
-  rows: readonly string[],
-  at: Point,
-  pixel: number,
-): void {
-  graphics.fillStyle(colour);
-  rows.forEach((row, dy) => {
-    [...row].forEach((cell, dx) => {
-      if (cell === "#") {
-        graphics.fillRect(at.x + dx * pixel, at.y + dy * pixel, pixel, pixel);
-      }
-    });
-  });
-}
-
-const HEART_ROWS = [".##.##.", "#######", "#######", ".#####.", "..###..", "...#..."];
-
-// A 7x6 heart.
-export function drawHeart(
-  graphics: GameObjects.Graphics,
-  x: number,
-  y: number,
-  colour: number,
-): void {
-  drawPixelRows(graphics, colour, HEART_ROWS, { x, y }, 1);
-}
-
-// A 1px border of 2-on, 2-off dashes, for an empty slot, the last dash on a side cut at its end.
-export function drawDashedRect(graphics: GameObjects.Graphics, colour: number, rect: Rect): void {
-  graphics.fillStyle(colour);
-  const right = rect.x + rect.width - 1;
-  const bottom = rect.y + rect.height - 1;
-  for (let i = 0; i < rect.width; i += 4) {
-    const dash = Math.min(2, rect.width - i);
-    graphics.fillRect(rect.x + i, rect.y, dash, 1).fillRect(rect.x + i, bottom, dash, 1);
-  }
-  for (let i = 0; i < rect.height; i += 4) {
-    const dash = Math.min(2, rect.height - i);
-    graphics.fillRect(rect.x, rect.y + i, 1, dash).fillRect(right, rect.y + i, 1, dash);
   }
 }
 

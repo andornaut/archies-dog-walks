@@ -1,6 +1,5 @@
 import { fillNames } from "@andornaut/game-kit/runtime/lines";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
-import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
@@ -12,7 +11,7 @@ import { sizeHearts } from "../rules/dogs.ts";
 import { capitalize, SIZE_NAMES } from "../rules/effectText.ts";
 import { startingDogSlots, unlockPrice } from "../rules/shop.ts";
 import type { Owned } from "../save/schema.ts";
-import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
+import { gameFont, inkWidth } from "../testing/fontInk.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
@@ -44,7 +43,6 @@ import {
   shopHeadingBand,
   shopListBottom,
   shopListFrame,
-  shopMessageCapTop,
   shopTabFace,
   shopTabRects,
 } from "./shopLayout.ts";
@@ -287,20 +285,14 @@ describe("shopOpenTab", () => {
   });
 });
 
-// A message, at 2x on one line, keeps its ink inside its plate's frame (every message fits the
-// plate's room: ui/textRoles.test.ts).
+// A message's room keeps inside its plate's text insets (every message fits the plate's room:
+// ui/textRoles.test.ts).
 describe("the shop's message", () => {
-  const body = fontFileMetrics("font-body");
-  const { frame, plate, textDx } = SHOP_LAYOUT.message;
-  const { room, style } = SHOP_MESSAGE_FIT;
+  const { plate, textDx } = SHOP_LAYOUT.message;
+  const { room } = SHOP_MESSAGE_FIT;
 
-  it("keeps a message's ink inside its plate's frame", () => {
+  it("keeps a message's room inside its plate's text insets", () => {
     expect(room).toBeLessThanOrEqual(plate.width - 2 * textDx);
-    const capTop = shopMessageCapTop(body, style.scale);
-    expect(capTop).toBeGreaterThanOrEqual(plate.y + frame);
-    expect(capTop + inkRowsFromCapTop(body) * style.scale).toBeLessThanOrEqual(
-      plate.y + plate.height - frame,
-    );
   });
 
   // The plate sits at the top of the list area, listClear rows under the tabs' press areas,

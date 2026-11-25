@@ -1,15 +1,13 @@
 import { registerPixelFont } from "@andornaut/game-kit/runtime/text/phaser/registerPixelFont";
 import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
-import type { GameObjects, Scene } from "phaser";
+import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
 import shippedManifest from "../../../public/art/manifest.json" with { type: "json" };
 import { parseManifest } from "../../assets/manifest.ts";
-import { gameData } from "../../data/index.ts";
-import { fontInk, gameGlyphs, laidChars, phaserFontData } from "../../testing/fontInk.ts";
-import { inPill, laidPills, pillRows } from "../namePills.ts";
+import { fontInk, phaserFontData } from "../../testing/fontInk.ts";
 import { GLYPH_HEIGHT, glyphAdvance, LINE_HEIGHT, PIXEL_GLYPHS } from "../pixelFont.ts";
-import { addPixelText, type FontRole, labelPills, registerFallbackPixelFont } from "./pixelText.ts";
+import { addPixelText, type FontRole, registerFallbackPixelFont } from "./pixelText.ts";
 
 vi.mock("@andornaut/game-kit/runtime/text/phaser/registerPixelFont", () => ({
   registerPixelFont: vi.fn(),
@@ -71,92 +69,6 @@ function fakeScene(): { drawn: { x: number }[]; scene: Scene } {
 
 // A word starting with each capital and digit, and with "$" and "+" for amounts.
 const FIRSTS = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+"];
-
-describe("labelPills", () => {
-  it("places a pill on its line, in the label's parent, by the label's origin and scale", () => {
-    const second = `${inPill(1, "Hi")} x`;
-    const laid = [
-      { char: "a", ink: { left: 0, right: 4 }, line: 0 },
-      ...laidChars("font-body", { scale: 1 }, second).map((char) => ({
-        ...char,
-        line: 1,
-      })),
-    ];
-    // As Phaser lays the label out: line tops a line height apart, the line break not drawn.
-    const characters = laid.map(({ char, ink, line }, i) => ({
-      char,
-      h: gameGlyphs("font-body").get(char)?.height ?? 0,
-      i,
-      line,
-      t: line * 10,
-      w: ink === null ? 0 : ink.right - ink.left,
-      x: ink?.left ?? 0,
-      y: line * 10 + (gameGlyphs("font-body").get(char)?.yOffset ?? 0),
-    }));
-    const label = {
-      displayOriginX: 4,
-      displayOriginY: 0,
-      getTextBounds: () => ({ characters }),
-      scaleX: 2,
-      scaleY: 2,
-      x: 100,
-      y: 50,
-    } as unknown as GameObjects.BitmapText;
-    const [pill] = laidPills(1, laid);
-    expect(labelPills(label)).toEqual([
-      {
-        index: 1,
-        name: [2, 3],
-        rect: {
-          height: 22,
-          width: ((pill?.right ?? 0) - (pill?.left ?? 0)) * 2,
-          x: 100 + ((pill?.left ?? 0) - 4) * 2,
-          y: 50 + (10 - 1) * 2,
-        },
-      },
-    ]);
-  });
-
-  it("centres every debuff's visible ink without moving the label or enlarging its reserved rows", () => {
-    for (const { name } of Object.values(gameData.debuffs)) {
-      const text = inPill(1, name);
-      const laid = laidChars("font-body", { scale: 1 }, text);
-      const characters = laid.map(({ char, ink }, i) => ({
-        char,
-        h: gameGlyphs("font-body").get(char)?.height ?? 0,
-        i,
-        line: 0,
-        t: 0,
-        w: ink === null ? 0 : ink.right - ink.left,
-        x: ink?.left ?? 0,
-        y: gameGlyphs("font-body").get(char)?.yOffset ?? 0,
-      }));
-      const label = {
-        displayOriginX: 0,
-        displayOriginY: 0,
-        getTextBounds: () => ({ characters }),
-        scaleX: 2,
-        scaleY: 2,
-        x: 41,
-        y: 97,
-      } as unknown as GameObjects.BitmapText;
-      const [pill] = labelPills(label);
-      expect(pill, name).toBeDefined();
-      const ink = characters.filter(({ h, w }) => w > 0 && h > 0);
-      const left = 41 + Math.min(...ink.map(({ x }) => x)) * 2;
-      const right = 41 + Math.max(...ink.map(({ w, x }) => x + w)) * 2;
-      const top = 97 + Math.min(...ink.map(({ y }) => y)) * 2;
-      const bottom = 97 + Math.max(...ink.map(({ h, y }) => y + h)) * 2;
-      expect(pill!.rect.x + pill!.rect.width / 2, name).toBe((left + right) / 2);
-      expect(pill!.rect.y + pill!.rect.height / 2, name).toBe((top + bottom) / 2);
-      expect(pill!.rect.y).toBeGreaterThanOrEqual(97 + pillRows(2).top);
-      expect(pill!.rect.y + pill!.rect.height).toBeLessThanOrEqual(
-        97 + pillRows(2).top + pillRows(2).height,
-      );
-      expect([label.x, label.y, label.scaleX, label.scaleY]).toEqual([41, 97, 2, 2]);
-    }
-  });
-});
 
 describe("addPixelText", () => {
   // The shift reads only where the first glyph's ink starts in each font, so at 1x the first

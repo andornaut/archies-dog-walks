@@ -2,7 +2,6 @@ import {
   createRequiredLoading,
   type LoadingAttemptState,
   type RequiredLoading,
-  type RequiredLoadingResource,
 } from "@andornaut/game-kit/runtime/load/loadingAttempts";
 import type { ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
 
@@ -10,7 +9,6 @@ import type { LoadingErrorView } from "../ui/dom/loadingError.ts";
 import type { UiLayer } from "../ui/dom/uiLayer.ts";
 
 export const REQUIRED_UI = "required-ui";
-export type RequiredUiResource = RequiredLoadingResource;
 export type RequiredUiController = Pick<
   RequiredLoading,
   "dispose" | "invalidate" | "observe" | "wait"

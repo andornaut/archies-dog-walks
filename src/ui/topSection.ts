@@ -14,10 +14,6 @@ import {
 // Visibility removes a control from the flow; every section uses this order and pitch.
 export const TOP_SECTION_ORDER = ["mute", "menu", "pause", "exit"] as const;
 export type TopSectionButton = (typeof TOP_SECTION_ORDER)[number];
-export interface TopSectionControl {
-  face: Point;
-  hit: Rect;
-}
 
 // The left edge of a section width wide set between left and right (the first column past the
 // section before it and the first of the section after it) with an equal gap on either side,

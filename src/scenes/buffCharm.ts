@@ -1,20 +1,18 @@
-import { insetRect, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
+import { insetRect, type Point } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import type { CardCharm } from "../hud/buffMarks.ts";
 import { effectIconFallback, type EffectItem, walkBarIconKey } from "../hud/effectIcons.ts";
 import type { LabelAnchor } from "../hud/feedback.ts";
-import { BUFF_POP, cardCharmWidth, CHARM, sparkleAt } from "../layout/buffLayout.ts";
+import { BUFF_POP, CHARM, sparkleAt } from "../layout/buffLayout.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addFilledRect, drawRing } from "../ui/phaser/draw.ts";
-import { addPixelText, inkSpan } from "../ui/phaser/pixelText.ts";
+import { addPixelText } from "../ui/phaser/pixelText.ts";
 import { floatLabel } from "./packFeedback.ts";
 import { playEffect } from "./sprites.ts";
-import type { TimedGroup } from "./timedGroup.ts";
-import { addNineSlice, fadeAway } from "./uiKit.ts";
+import { fadeAway } from "./uiKit.ts";
 
-// A buff's charm and the value it made, as cards, the road and the walk bar draw them.
+// A buff's charm and the value it made, as the road draws them.
 
 const SPARKLE = { key: "fx-sparkle", tag: "play" } as const;
 const WELL_KEY = "ui-effect-well";
@@ -56,37 +54,6 @@ function addCharmIcon(scene: Scene, item: EffectItem): GameObjects.GameObject {
       });
 }
 
-// A card option's charm, its plate's top-left at 0,0 until placed: ui-effect-well
-// widened into a plate (an ink rect while it is missing) with the buff's icon at its left, the
-// item's name in cream over what it did in amber, and a 1px amber ring around it. Returns the
-// charm and its plate's width in plate pixels.
-export function addCardCharm(
-  scene: Scene,
-  charm: CardCharm,
-): { container: GameObjects.Container; width: number } {
-  const { effectY, nameY, textX } = CHARM.card;
-  const { ring, size } = CHARM;
-  const x = size + textX;
-  const lines = [
-    addPixelText(scene, x, nameY, charm.name, { colour: PALETTE.cream }),
-    ...(charm.effect === null
-      ? []
-      : [addPixelText(scene, x, effectY, charm.effect, { colour: PALETTE.amber, font: "title" })]),
-  ];
-  const ink = Math.max(...lines.map((line) => line.x - x + inkSpan(line).right));
-  const width = cardCharmWidth(ink);
-  const plate = { height: size, width, x: 0, y: 0 };
-  const g = scene.add.graphics();
-  drawRing(g, PALETTE.amber, insetRect(-ring, plate), ring);
-  const parts: GameObjects.GameObject[] = [
-    addNineSlice(scene, WELL_KEY, plate) ?? addFilledRect(scene, PALETTE.ink, plate),
-    addCharmIcon(scene, charm.item),
-    ...lines,
-    g,
-  ];
-  return { container: scene.add.container(0, 0, parts), width };
-}
-
 // fx-sparkle over a charm or a well whose top-left is at, drawn at scale.
 function sparkleCharm(
   scene: Scene,
@@ -114,20 +81,6 @@ export function popCharm(
     ms: fadeMs,
     rise: moment.still ? 0 : rise,
   });
-}
-
-// The walk bar's well glinting with a pop: its amber ring blinks twice, and fx-sparkle plays at
-// its top-right, held with group.
-export function glintWell(scene: Scene, group: TimedGroup, well: Rect, depth: number): void {
-  const g = scene.add.graphics().setDepth(depth);
-  drawRing(g, PALETTE.amber, insetRect(-CHARM.ring, well), CHARM.ring);
-  const { blinkMs, blinks } = BUFF_POP;
-  group.every(scene, blinkMs, 2 * blinks - 2, () => g.setVisible(!g.visible));
-  group.after(scene, blinkMs * (2 * blinks - 1), () => g.destroy());
-  const sparkle = sparkleCharm(scene, well, depth + 1);
-  if (sparkle !== undefined) {
-    group.animate(sparkle);
-  }
 }
 
 // The value a buff made, as floatLabel draws a label: font-title at TEXT_SCALE in forest on

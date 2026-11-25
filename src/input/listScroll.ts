@@ -12,7 +12,6 @@ export {
   scrollBy,
   scrollMax,
   type ScrollRule,
-  scrollTo,
   scrollToShow,
   stepScroll,
   wheelScroll,

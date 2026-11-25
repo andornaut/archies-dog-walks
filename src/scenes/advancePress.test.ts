@@ -1,12 +1,12 @@
 import { EventEmitter } from "node:events";
 
 import { guardSceneInput } from "@andornaut/game-kit/runtime/input/phaser/guardSceneInput";
+import { containsPoint } from "@andornaut/game-kit/runtime/rect";
 import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
 import { END_LAYOUT } from "../home/endLayout.ts";
-import { type EndTarget, endTargetAt } from "../home/endView.ts";
 import { listenTargetPress, sameByValue } from "./targetPress.ts";
 
 vi.mock("phaser", () => ({ Scenes: { Events: { SHUTDOWN: "shutdown", UPDATE: "update" } } }));
@@ -27,11 +27,16 @@ function screen() {
   const dismiss = vi.fn(() => {
     cardOpen = false;
   });
-  listenTargetPress<EndTarget>(scene, {
+  listenTargetPress<"dismiss" | "home">(scene, {
     onPressed: () => undefined,
     onTap: (target) => (target === "dismiss" ? dismiss() : home()),
     same: sameByValue,
-    targetAt: (x, y) => endTargetAt({ badgeHits: [], button: END_LAYOUT.button, cardOpen }, x, y),
+    targetAt: (x, y) => {
+      if (cardOpen) {
+        return "dismiss";
+      }
+      return containsPoint(END_LAYOUT.button, x, y) ? "home" : undefined;
+    },
   });
   const send = (phase: "down" | "up", x: number, y: number, cancelled = false) => {
     Object.assign(pointer, { isDown: phase === "down", wasCanceled: cancelled, x, y });

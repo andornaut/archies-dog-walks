@@ -1,6 +1,5 @@
 import { wrapWords } from "@andornaut/game-kit/runtime/lines";
 import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
-import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import {
   type BitmapFont,
   type FontMetrics,
@@ -19,14 +18,7 @@ import {
 } from "@andornaut/game-kit/runtime/text/textFit";
 import type { GameObjects, Scene, Types } from "phaser";
 
-import {
-  centredPillBacking,
-  inkWithPills,
-  type LaidChar,
-  laidPills,
-  pillGlyphAdvances,
-  pillRows,
-} from "../namePills.ts";
+import { inkWithPills, type LaidChar, pillGlyphAdvances } from "../namePills.ts";
 import {
   GLYPH_HEIGHT,
   glyphAdvance,
@@ -304,48 +296,6 @@ export function setPixelText(label: GameObjects.BitmapText, text: string): void 
       label.setX(label.x + before - after);
     }
   }
-}
-
-// Each pill in a label's text (ui/namePills.ts): its kind, the rect it covers in the label's
-// parent's coordinates, and the indices Phaser tints its name's characters by.
-export function labelPills(
-  label: GameObjects.BitmapText,
-): { index: number; name: number[]; rect: Rect }[] {
-  // Read first: it also updates the label's display origin.
-  const { characters } = label.getTextBounds(false);
-  const rows = pillRows(1);
-  const left = label.x - label.displayOriginX * label.scaleX;
-  const top = label.y - label.displayOriginY * label.scaleY;
-  return laidPills(1, characters.map(laidChar)).map((pill) => {
-    const lineTop = characters[pill.name[0] ?? 0]?.t ?? 0;
-    const named = pill.name.flatMap((i) => {
-      const char = characters[i];
-      return char !== undefined && char.w > 0 && char.h > 0 ? [char] : [];
-    });
-    const inkLeft = Math.min(...named.map((char) => char.x));
-    const inkRight = Math.max(...named.map((char) => char.x + char.w));
-    const inkTop = Math.min(...named.map((char) => char.y));
-    const inkBottom = Math.max(...named.map((char) => char.y + char.h));
-    return {
-      index: pill.index,
-      // Phaser tints a character by its index among the characters it draws (i).
-      name: pill.name.map((at) => characters[at]?.i ?? 0),
-      rect: centredPillBacking(
-        {
-          height: rows.height * label.scaleY,
-          width: (pill.right - pill.left) * label.scaleX,
-          x: left + pill.left * label.scaleX,
-          y: top + (lineTop + rows.top) * label.scaleY,
-        },
-        {
-          height: (inkBottom - inkTop) * label.scaleY,
-          width: (inkRight - inkLeft) * label.scaleX,
-          x: left + inkLeft * label.scaleX,
-          y: top + inkTop * label.scaleY,
-        },
-      ),
-    };
-  });
 }
 
 // Gives each loaded pixel font a blank glyph for each pill character (ui/namePills.ts), copied

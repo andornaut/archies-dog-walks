@@ -145,12 +145,6 @@ export const SHOP_MESSAGE_FIT = {
   style: TEXT_STYLE,
 } as const;
 
-// The top of the message's capitals at scale, centred on its plate.
-export function shopMessageCapTop(body: FontMetrics, scale: number): number {
-  const { plate } = SHOP_LAYOUT.message;
-  return plate.y + Math.floor((plate.height - body.capHeight * scale) / 2);
-}
-
 // The bottom of a list of count rows, with the list area's padding under it. A list with no
 // rows keeps one row's room, for the line saying so.
 export function shopListBottom(

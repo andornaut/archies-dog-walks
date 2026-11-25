@@ -8,14 +8,8 @@ import { inside } from "../testing/rects.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
-import {
-  MODAL,
-  modalPanelWidth,
-  modalRect,
-  modalTitleLayout,
-  modalTitleWidth,
-} from "../ui/modal/layout.ts";
-import { modalTitleInk, modalTitleWidthAtScale } from "../ui/modal/titleRole.ts";
+import { MODAL, modalPanelWidth, modalRect, modalTitleLayout } from "../ui/modal/layout.ts";
+import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { modalCardView } from "../ui/modal/view.ts";
 import { TEXT_STYLE } from "../ui/textFit.ts";
@@ -27,9 +21,7 @@ it("uses the full logical viewport for narrow content and still respects a small
   expect(modalPanelWidth(160, 80)).toBe(160);
 });
 
-it("omits absent title reserves and rejects a word wider than the fixed-font title room", () => {
-  expect(modalTitleWidth(0)).toBe(0);
-  expect(modalTitleWidth(40, false)).toBe(modalTitleWidthAtScale(40) + 2 * MODAL.pad);
+it("rejects a word wider than the fixed-font title room", () => {
   expect(() =>
     modalTitleLayout(
       {

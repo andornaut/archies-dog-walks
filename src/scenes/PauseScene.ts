@@ -32,12 +32,7 @@ import {
   onceSceneEvent,
   openOverlay,
 } from "./overlay.ts";
-import {
-  addHtmlQuestionPanel,
-  type PanelEntry,
-  pauseDimsHtml,
-  type QuestionPanel,
-} from "./questionPanel.ts";
+import { addHtmlQuestionPanel, type PanelEntry, type QuestionPanel } from "./questionPanel.ts";
 import type { RunScene } from "./RunScene.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { SETTINGS_CLOSED_EVENT, type SettingsData } from "./SettingsScene.ts";
@@ -89,9 +84,6 @@ export class PauseScene extends Scene {
     const closeCheats = () => this.closeCheats(true);
     this.events.once(Scenes.Events.SHUTDOWN, () => this.closeCheats(false));
     const walkView = overlayRegion("walk");
-    // HTML under the menu, a paused celebration's, is palette-dimmed in HTML as the canvas's dim
-    // dims the walk, which cannot dim it.
-    const dimsHtml = pauseDimsHtml(this);
     const headHome = () => {
       soundboardOf(this).stopMusic();
       onHeadHome();
@@ -173,7 +165,7 @@ export class PauseScene extends Scene {
             showKeyNumbers: false,
             title: menu.title,
           };
-    const covered = addHtmlQuestionPanel(this, walkView, panel, dimsHtml);
+    const covered = addHtmlQuestionPanel(this, walkView, panel);
     if (covered === undefined) {
       return false;
     }

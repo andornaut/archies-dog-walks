@@ -141,8 +141,7 @@ export function followScene<
   return { ...panel, destroy };
 }
 
-// A panel's view in the HTML layer, following its scene (followScene), over the HTML it dims
-// where dimsUnder is set (dimOver).
+// A panel's view in the HTML layer, following its scene (followScene).
 function showHtmlPanel(
   scene: Scene,
   place: NonNullable<ReturnType<typeof htmlPanelPlace>>,
@@ -151,10 +150,9 @@ function showHtmlPanel(
     "backgroundCancel" | "close" | "onInvoke" | "numberKeys" | "numberPresses" | "presses"
   >,
   view: QuestionPanelView,
-  dimsUnder = false,
 ): DomQuestionPanel {
   const panel = showQuestionPanel(place.layer, { ...controls, ...htmlPanelInput(place), view });
-  return followScene(scene, dimsUnder ? dimOver(panel) : panel);
+  return followScene(scene, panel);
 }
 
 // The native question panel retains its view, actions and caller-owned outside-tap regions.
@@ -162,7 +160,6 @@ export function addHtmlQuestionPanel(
   scene: Scene,
   area: Rect,
   question: QuestionPanel,
-  dimsUnder = false,
 ): Rect[] | undefined {
   const place = htmlPanelPlace(scene);
   if (place === undefined) {
@@ -180,7 +177,7 @@ export function addHtmlQuestionPanel(
     presses,
     ...(question.numberPresses === undefined ? {} : { numberPresses: question.numberPresses }),
   };
-  showHtmlPanel(scene, place, controls, view, dimsUnder);
+  showHtmlPanel(scene, place, controls, view);
   return [...view.covered];
 }
 
@@ -347,81 +344,6 @@ export function htmlArtInput(place: NonNullable<ReturnType<typeof htmlPanelPlace
     pillColours: (index: number) => {
       const kind = pillKind(index);
       return kind === undefined ? undefined : pillColours(kind);
-    },
-  };
-}
-
-// HTML a scene draws that the pause menu dims while it pauses the scene: shown under the menu,
-// palette-dimmed as the canvas dims the view under it, taking no presses or focus, and hidden
-// while help or the settings cover the menu.
-export interface Dimmable {
-  focusControl?: (index: number | undefined) => void;
-  setDimmed(dimmed: boolean): void;
-  setInert(inert: boolean): void;
-  setShown(shown: boolean): void;
-}
-
-// HTML paused under the pause menu, which it dims while it shows.
-const dimmedUnder = new Set<Dimmable>();
-
-// html, which the pause menu dims while it pauses scene, in place of hiding it, until it is
-// destroyed.
-export function dimUnderPause<P extends Dimmable & { destroy(): void }>(scene: Scene, html: P): P {
-  const pause = () => dimmedUnder.add(html);
-  // As the scene resumes it takes presses and focus again.
-  const resume = () => {
-    if (dimmedUnder.delete(html)) {
-      html.setDimmed(false);
-      html.setInert(false);
-      html.setShown(true);
-      html.focusControl?.(undefined);
-    }
-  };
-  const stop = () => {
-    scene.events.off(Scenes.Events.PAUSE, pause);
-    scene.events.off(Scenes.Events.RESUME, resume);
-    scene.events.off(Scenes.Events.SHUTDOWN, stop);
-    dimmedUnder.delete(html);
-  };
-  scene.events.on(Scenes.Events.PAUSE, pause);
-  scene.events.on(Scenes.Events.RESUME, resume);
-  // The scene's shutdown destroys html itself.
-  scene.events.once(Scenes.Events.SHUTDOWN, stop);
-  return {
-    ...html,
-    destroy: () => {
-      stop();
-      html.destroy();
-    },
-  };
-}
-
-// Whether HTML lies under the pause menu that it must dim: a paused celebration's, where the
-// menu draws in HTML. The canvas's dim cannot dim HTML.
-export function pauseDimsHtml(scene: Scene): boolean {
-  return dimmedUnder.size > 0 && htmlPanelPlace(scene) !== undefined;
-}
-
-// The pause menu's HTML panel over the panels paused under it (pauseDimsHtml), which show under
-// it palette-dimmed while it shows and hide while it hides.
-function dimOver(panel: DomQuestionPanel): DomQuestionPanel {
-  const dim = (shown: boolean) => {
-    for (const under of dimmedUnder) {
-      under.setInert(true);
-      under.setDimmed(true);
-      under.setShown(shown);
-    }
-  };
-  dim(true);
-  return {
-    ...panel,
-    destroy: () => {
-      dim(false);
-      panel.destroy();
-    },
-    setShown: (shown) => {
-      dim(shown);
-      panel.setShown(shown);
     },
   };
 }

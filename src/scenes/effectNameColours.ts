@@ -1,9 +1,5 @@
-import type { GameObjects } from "phaser";
-
-import { type EffectNameKind, pillKind } from "../hud/effectNames.ts";
+import type { EffectNameKind } from "../hud/effectNames.ts";
 import { PALETTE } from "../ui/palette.ts";
-import { fillCutRect } from "../ui/phaser/draw.ts";
-import { labelPills } from "../ui/phaser/pixelText.ts";
 
 type PaletteName = keyof typeof PALETTE;
 
@@ -23,58 +19,4 @@ export const EFFECT_PILLS: Readonly<
 export function pillColours(kind: EffectNameKind): { name: number; pill: number } {
   const { name, pill } = EFFECT_PILLS[kind];
   return { name: PALETTE[name], pill: PALETTE[pill] };
-}
-
-// A disabled item's pills, such as on a card the player cannot afford: neutral, the name left in
-// the label's own grey.
-export const GREY_PILL: PaletteName = "neutralGrey";
-
-// The data key a label whose names addNamePills set in pills holds them under: the pills drawn
-// and whether they are grey, for the HTML interface to draw them in their place.
-export const NAME_PILLS_DATA = "namePills";
-
-export interface LabelNamePills {
-  readonly graphics: GameObjects.Graphics;
-  readonly grey: boolean;
-}
-
-// Draws the pill behind each effect's name the labels' text sets in one (hud/effectNames.ts),
-// under its label in the label's parent, and the name in its colour, or grey for a disabled
-// item. Call it once the labels' text is set, fitted and placed. Returns the pills drawn, which go
-// when their label does.
-export function addNamePills(
-  labels: readonly GameObjects.BitmapText[],
-  grey = false,
-): GameObjects.Graphics[] {
-  return labels.flatMap((label) => {
-    label.setCharacterTint(0, -1);
-    const pills = labelPills(label);
-    if (pills.length === 0) {
-      return [];
-    }
-    const g = label.scene.add.graphics();
-    for (const { index, name, rect } of pills) {
-      const kind = pillKind(index);
-      if (kind === undefined) {
-        continue;
-      }
-      if (grey) {
-        fillCutRect(g, PALETTE[GREY_PILL], rect, label.scaleX);
-        continue;
-      }
-      const colours = pillColours(kind);
-      fillCutRect(g, colours.pill, rect, label.scaleX);
-      name.forEach((i) => label.setCharacterTint(i, 1, undefined, colours.name));
-    }
-    const parent = label.parentContainer;
-    if (parent === null) {
-      g.setDepth(label.depth);
-      label.scene.children.moveBelow(g as GameObjects.GameObject, label);
-    } else {
-      parent.addAt(g, parent.getIndex(label));
-    }
-    label.once("destroy", () => g.destroy());
-    label.setData(NAME_PILLS_DATA, { graphics: g, grey } satisfies LabelNamePills);
-    return [g];
-  });
 }

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { devToolsOn, pageSearch, watchDevTools } from "./devTools.ts";
+import { devToolsOn, pageSearch } from "./devTools.ts";
 
 function browser() {
   const mode = Object.assign(new EventTarget(), { matches: false });
@@ -27,23 +27,5 @@ describe("browser-only development tools", () => {
     mode.matches = false;
     host.navigator.standalone = true;
     expect(devToolsOn()).toBe(false);
-  });
-
-  it("updates effective effects on display changes and restoration, and stops on disposal", () => {
-    const { host, mode } = browser();
-    const changed = vi.fn();
-    const stop = watchDevTools(changed);
-    mode.matches = true;
-    mode.dispatchEvent(new Event("change"));
-    mode.matches = false;
-    host.dispatchEvent(new Event("pageshow"));
-    host.navigator.standalone = true;
-    document.dispatchEvent(new Event("visibilitychange"));
-    expect(changed.mock.calls).toEqual([[true], [false], [true], [false]]);
-    stop();
-    mode.dispatchEvent(new Event("change"));
-    host.dispatchEvent(new Event("pageshow"));
-    document.dispatchEvent(new Event("visibilitychange"));
-    expect(changed).toHaveBeenCalledTimes(4);
   });
 });

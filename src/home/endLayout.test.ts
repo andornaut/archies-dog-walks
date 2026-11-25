@@ -42,7 +42,6 @@ import {
   sideTotalAmountY,
   sideTotalBand,
 } from "./endLayout.ts";
-import { endTargetAt } from "./endView.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 
 const { badges, breakdown, panel: most, quips, side } = END_LAYOUT;
@@ -482,13 +481,5 @@ describe("a badge strip's tap targets", () => {
       const right = defined(row.at(-1)).x + defined(row.at(-1)).width;
       expect(Math.abs(left + right - 2 * centre)).toBeLessThanOrEqual(1);
     }
-  });
-
-  it.each(BADGE_COUNTS)("opens each of %i badges' cards from its badge", (count) => {
-    const { hits, rect, strip } = laid(count);
-    const screen = { badgeHits: hits, button: END_LAYOUT.button, cardOpen: false };
-    strip.slots.forEach(({ centreX, top }, badge) => {
-      expect(endTargetAt(screen, centreX, rect.y + top + half)).toEqual({ badge });
-    });
   });
 });

@@ -20,7 +20,6 @@ vi.mock("phaser", () => ({
 vi.mock("./questionPanel.ts", async (original) => ({
   ...(await original<typeof import("./questionPanel.ts")>()),
   addHtmlQuestionPanel: (...args: Parameters<typeof questionPanel>) => questionPanel(...args),
-  pauseDimsHtml: () => () => undefined,
 }));
 vi.mock("./soundboard.ts", async (original) => ({
   ...(await original<typeof import("./soundboard.ts")>()),

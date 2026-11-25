@@ -26,9 +26,6 @@ type EffectRun = Pick<
   "foundGear" | "gear" | "immunities" | "modifiers" | "upgradesPicked" | "walker"
 >;
 
-// An effect's icon is this many pixels square.
-export const EFFECT_ICON_SIZE = 16;
-
 // A picked upgrade is in effect while one of its lasting effects is: a modifier it added, or an
 // immunity to its encounter. Upgrades that only act when picked, such as Belly rubs, never are.
 function inEffect(data: Pick<GameData, "upgrades">, run: EffectRun, upgrade: UpgradeId): boolean {

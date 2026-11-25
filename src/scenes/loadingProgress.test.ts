@@ -4,7 +4,7 @@ import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
 import { loadingProgress, waitedLoad } from "../loadingProgress.ts";
-import { fakeLoaderScene } from "./fakeLoader.ts";
+import { fakeLoaderScene } from "../testing/phaser/fakeLoader.ts";
 
 // The loader and scene events watchLoader listens for, as Phaser names them.
 vi.mock("phaser", () => ({

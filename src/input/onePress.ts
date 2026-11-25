@@ -1,1 +1,1 @@
-export { followOnePress, type OnePressStep } from "@andornaut/game-kit/runtime/input/onePress";
+export { followOnePress } from "@andornaut/game-kit/runtime/input/onePress";

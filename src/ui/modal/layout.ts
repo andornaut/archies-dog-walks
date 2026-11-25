@@ -67,14 +67,6 @@ export function modalActionWidth(ink: number): number {
   return Math.max(BUTTON_SIZE.icon.target, Math.ceil(ink + 2 * MODAL.pad));
 }
 
-export function modalTitleWidth(ink: number, closes = true): number {
-  if (ink <= 0) {
-    return 0;
-  }
-  const inset = closes ? BUTTON_SIZE.icon.target + MODAL.gap : MODAL.pad;
-  return Math.ceil(modalTitleWidthAtScale(ink) + 2 * inset);
-}
-
 // Wrap full-size headings and grow the header from their actual visible ink block.
 export function modalTitleLayout(
   context: {

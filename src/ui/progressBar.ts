@@ -1,4 +1,4 @@
-import type { ProgressBarStyle, ProgressMotion } from "@andornaut/game-kit/runtime/progress";
+import type { ProgressBarStyle } from "@andornaut/game-kit/runtime/progress";
 import type { DomProgressTiming } from "@andornaut/game-kit/runtime/web/progress/dom/progressBar";
 
 import { PROGRESS_BORDER } from "../data/layout.ts";
@@ -25,7 +25,3 @@ export const LOADING_TIMING = {
   fullMs: 250,
   segment: 0.25,
 } as const satisfies DomProgressTiming;
-export const LOADING_MOTION: ProgressMotion = {
-  cycleMs: LOADING_TIMING.cycleMs,
-  segment: LOADING_TIMING.segment,
-};

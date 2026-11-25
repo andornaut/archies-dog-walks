@@ -144,14 +144,6 @@ export function gridTransform(scale: DomScale): string {
   return `translate(${shift(scale.origin.x)}px, ${shift(scale.origin.y)}px) scale(${1 / scale.dpr})`;
 }
 
-// The root's size in device pixels over a layer width by height CSS px.
-export function deviceSize(
-  scale: DomScale,
-  size: { readonly height: number; readonly width: number },
-): { readonly height: number; readonly width: number } {
-  return { height: Math.ceil(size.height * scale.dpr), width: Math.ceil(size.width * scale.dpr) };
-}
-
 // A scrollbar's track and thumb in device pixels (scrollbarArt), the track's corner at corner, so
 // each is whole art pixels from it.
 export function scrollbarBoxes(
