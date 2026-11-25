@@ -101,3 +101,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0239 | Align owner and dog portraits in the walk HUD                    | [adw-0239.md](../work/adw-0239.md) |
 | adw-0240 | Finish shared Settings and recovery controls                     | [adw-0240.md](../work/adw-0240.md) |
 | adw-0242 | Make Cheats available during a walk                              | [adw-0242.md](../work/adw-0242.md) |
+| adw-0246 | Keep keyboard focus on the Start screen when an overlay closes   | [adw-0246.md](../work/adw-0246.md) |
