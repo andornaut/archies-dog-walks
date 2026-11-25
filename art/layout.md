@@ -20,47 +20,76 @@ Browser safe-area handling belongs to the [page shell](../src/main.css). A CSS/d
 
 Use 4/8/16 for the ordinary row/group/panel spacing roles, and the button gaps for neighbouring button faces. Named exceptions keep their own gaps; do not round every gap to this sequence.
 
-| Token                             | Value | Unit       | Scope                                                 | Source                                     |
-| --------------------------------- | ----- | ---------- | ----------------------------------------------------- | ------------------------------------------ |
-| BUTTON_SIZE.gap                   | 16    | px         | Side-by-side standard buttons, modal actions included | [layout data](../src/data/layout.ts)       |
-| BUTTON_SIZE.smallGap              | 24    | px         | Small buttons, in any direction                       | [layout data](../src/data/layout.ts)       |
-| BUTTON_SIZE.stackGap              | 8     | px         | Stacked standard buttons, list rows and tile grids    | [layout data](../src/data/layout.ts)       |
-| HOME_LAYOUT.sectionContentPadding | 4     | px minimum | Measured home card-edge clearance                     | [home layout](../src/home/homeLayout.ts)   |
-| MODAL.gap                         | 8     | px         | Present groups                                        | [modal tokens](../src/ui/modalGeometry.ts) |
-| MODAL.pad / MODAL.margin          | 16    | px         | Panel content / caller's protected area               | [modal tokens](../src/ui/modalGeometry.ts) |
-| MODAL.rowGap                      | 4     | px         | Text rows                                             | [modal tokens](../src/ui/modalGeometry.ts) |
+| Token                             | Value                             | Unit       | Scope                                                       | Source                                                                                  |
+| --------------------------------- | --------------------------------- | ---------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| body.pitch                        | 18                                | px         | Every independently placed 2× body line                     | [stats layout](../src/home/statsLayout.ts) and [help layout](../src/help/helpLayout.ts) |
+| BUTTON_SIZE.gap                   | 16                                | px         | Side-by-side standard buttons, modal actions included       | [layout data](../src/data/layout.ts)                                                    |
+| BUTTON_SIZE.smallGap              | 24                                | px         | Small buttons, in any direction                             | [layout data](../src/data/layout.ts)                                                    |
+| BUTTON_SIZE.stackGap              | 8                                 | px         | Stacked standard buttons, list rows and tile grids          | [layout data](../src/data/layout.ts)                                                    |
+| HOME_LAYOUT.sectionContentPadding | 4                                 | px minimum | Measured home card-edge clearance                           | [home layout](../src/home/homeLayout.ts)                                                |
+| ICON_LABEL_GAP                    | 4                                 | px         | A 16px icon's art cell to its label's first ink column      | [layout data](../src/data/layout.ts)                                                    |
+| label.value.gap                   | 8                                 | px minimum | Clear ink between a label and its value or note on one line | [shop layout](../src/home/shopLayout.ts) and [stats layout](../src/home/statsLayout.ts) |
+| MODAL.gap                         | 8                                 | px         | Present groups; the gap above every modal footer            | [modal tokens](../src/ui/modalGeometry.ts)                                              |
+| MODAL.pad / MODAL.margin          | 16                                | px         | Panel content / caller's protected area                     | [modal tokens](../src/ui/modalGeometry.ts)                                              |
+| MODAL.rowGap                      | 4                                 | px         | Text rows                                                   | [modal tokens](../src/ui/modalGeometry.ts)                                              |
+| separator                         | 1px line, 8 clear above and below | px         | Every content separator, full content width                 | [content separator](../src/ui/dom/contentSeparator.ts)                                  |
 
-The [button gaps](controls.md#sizing-and-spacing) define which buttons are small and list the exemptions. Omit absent groups and their gaps. Keep the full font role; wrap text or grow its measured container rather than reducing its scale. Detailed ink gaps remain in [Controls](controls.md#labels-and-icons).
+**Separators.** Every content separator (Settings rows, the Cheats dividers, the Cheats section divider included, and the detail card) is one 1px line across the full content width with 8 clear rows to the boxes above and below, a 17-row band. A section break that must read stronger needs its own named pattern, not a second spacing. Its colour is in the [style guide](style-guide.md#ui).
+
+The [button gaps](controls.md#sizing-and-spacing) define which buttons are small, give the tile-grid rule and list the named exemptions. Omit absent groups and their gaps. Keep the full font role; wrap text or grow its measured container rather than reducing its scale. Detailed ink gaps remain in [Controls](controls.md#labels-and-icons).
 
 ## Page bounds/alignment
 
-Choose one content rectangle for each page. Derive its outer margins, button edges and statistics label/value columns from that rectangle and its inset. Reserve scrollbar and close-control space before deriving those columns. Do not independently offset a button or statistic to make it appear aligned.
+Choose one content rectangle for each page. Derive its outer margins, button edges and statistics label/value columns from that rectangle and its inset. Reserve scrollbar and close-control space before deriving those columns. The scrollbar's room is always reserved: rows, notes and values end at x = 338, 6 short of the track at x = 344–351, on every page whether or not a scrollbar shows, so switching tabs or a list starting to scroll never reflows a row. Section headings on the Pet shop and Logbook pages start their ink at x = 8, the rows' left edge, on every tab; their notes stay right-aligned to the rows' right edge. Do not independently offset a button or statistic to make it appear aligned.
 
-| Token             | Value                                                 | Unit           | Scope                                                      | Source                                     |
-| ----------------- | ----------------------------------------------------- | -------------- | ---------------------------------------------------------- | ------------------------------------------ |
-| SHOP_LAYOUT.panel | 0,40,360,520                                          | x,y,w,h px     | Shop/Logbook page under the top bar, cream, no frame       | [shop layout](../src/home/shopLayout.ts)   |
-| SHOP_LAYOUT.row.x | 8; width 344, or 330 beside a scrollbar               | px             | Page inset: heading, tab span and row left edge            | [shop layout](../src/home/shopLayout.ts)   |
-| STATS_LAYOUT.rows | Shop heading left; shop row right, allowing scrollbar | derived bounds | Logbook label/value columns                                | [stats layout](../src/home/statsLayout.ts) |
-| SHOP_LAYOUT.list  | Top 144; height 348; bottom 492                       | y px           | Shared scrolling viewport, x = 0 to the track less 2       | [shop layout](../src/home/shopLayout.ts)   |
-| page.back         | 116,500,128,48                                        | x,y,w,h px     | Back: Shop, Logbook and Help, 12px above the screen's foot | [help layout](../src/help/helpLayout.ts)   |
+| Token             | Value                                        | Unit           | Scope                                                                    | Source                                     |
+| ----------------- | -------------------------------------------- | -------------- | ------------------------------------------------------------------------ | ------------------------------------------ |
+| SHOP_LAYOUT.panel | 0,40,360,520                                 | x,y,w,h px     | Shop/Logbook page under the top bar, cream, no frame                     | [shop layout](../src/home/shopLayout.ts)   |
+| SHOP_LAYOUT.row.x | 8; width 330, ending at x = 338              | px             | Page inset: heading, tab span and row left edge                          | [shop layout](../src/home/shopLayout.ts)   |
+| STATS_LAYOUT.rows | Shop heading left; shop row right at x = 338 | derived bounds | Logbook label/value columns                                              | [stats layout](../src/home/statsLayout.ts) |
+| SHOP_LAYOUT.list  | Top 144; height 348; bottom 492              | y px           | Shared scrolling viewport, x = 0 to the track less 2                     | [shop layout](../src/home/shopLayout.ts)   |
+| page.back         | 142,500,76,48                                | x,y,w,h px     | Content-sized Back: Shop, Logbook and Help, 12px above the screen's foot | [help layout](../src/help/helpLayout.ts)   |
 
-Shop, Logbook and Help are frameless pages under the live top bar: each fills `(0,40,360,520)` edge to edge with no frame, border, margin or close control, and Back is its only leave. Their content takes one 8px side inset, and a scrollbar's track sits at x = 344–351. Shop and Logbook share their page and list geometry. Use `shopListFrame` and `statsListFrame` for the actual scrolling/non-scrolling content room. Settings uses Large width and a height capped by both its caller's safe capacity and `560 - 2 × 48 = 464px`; a full-height panel starts at y = 48 below the protected top bar. Its header/X, centred 48px footer and full-size version label above the footer stay fixed while only rows and separators scroll. The footer is Back from Menu or Pause and Close when opened standalone. While its rows overflow, its scrollbar sits in the right padding, 4px past the rows (`MODAL.scrollGap`), so the rows keep their 296px width. Settings rows draw no focus ring: every row, switch or slider, takes the Pet shop row's cyan focus fill, and a switch row takes its green pressed fill with ink text and keeps its dip ([focus and press fills](controls.md#focus-and-press-fills)). Other full-screen pages retain their own bounds.
+Shop, Logbook and Help are frameless pages under the live top bar: each fills `(0,40,360,520)` edge to edge with no frame, border, margin or close control, and the content-sized Back (`page.back`) is its only leave. End's Back to title is a separate role: the results screen's main next step, the wide primary in Start walk's place, `(32,508,296,48)`. Their content takes one 8px side inset, and a scrollbar's track sits at x = 344–351. Shop and Logbook share their page and list geometry. Use `shopListFrame` and `statsListFrame` for the content room. Settings uses Large width and the ordinary [modal placement](#modals), with its height capped by its caller's protected area; its exact panel height and rows viewport follow the build. Its header/X, centred 48px footer and full-size version label above the footer stay fixed while only rows and separators scroll. The footer is Back from Menu or Pause and Close when opened standalone. While its rows overflow, its scrollbar sits in the right padding, 4px past the rows (`MODAL.scrollGap`), so the rows keep their 296px width. Settings rows draw no focus ring: every row, switch or slider, takes the Pet shop row's cyan focus fill, and a switch row takes its green pressed fill with ink text and keeps its dip ([focus and press fills](controls.md#focus-and-press-fills)). Other full-screen pages retain their own bounds.
+
+### Page rows
+
+Pet shop rows, Logbook rows and the badge wall share one row pattern:
+
+- **Columns:** the icon box starts at the content edge, the 8px page inset on an open page or 4 inside a framed row's edge (x = 12), and the text starts 8 right of the icon box, whatever the icon's size (36 framed, 32 open).
+- **Vertical placement:** the icon and the text block are each centred on the row's height by visible ink. An earned band and tick move with their badge.
+- **Label and value:** at least 8 clear (`label.value.gap`) between a label and the value or note on the same line; a longer label wraps instead.
+- **Pitch:** every 2× body line, in Help, the Logbook, the badge wall and wrapped Pet shop descriptions, is 18 apart (`body.pitch`). A line that gains a wrap grows its row; text never shrinks.
+- **Right edge:** rows, notes and values end at x = 338, with the [scrollbar room](#page-boundsalignment) reserved.
+
+### Help page
+
+[`HELP_LAYOUT`](../src/help/helpLayout.ts) is a frameless page `(0,40,360,520)` in dark brown under the live top bar, with an 8px side inset, separate from the ordinary modal families; its control rules are in [Controls](controls.md#sizing-and-spacing). The picture's chrome card `(8,48,344,234)` holds the well `(14,54,332,200)` round the full-size `(16,56,328,196)` picture, and the caption's capitals sit at y = 260, centred on the well. The amber 2× topic title is the page's title: its capitals sit at y = 307, centred across the screen on its visible ink, and a title wider than the 344px content width wraps and grows its row. The body starts at the title's lowest ink plus the label/help gap and flows left-aligned at x = 8–337 (330px) in the body-only viewport `(0,325,360,108)`: six whole 18px-pitch lines, ending at least `MODAL.gap` above the pager row. Every current body fits whole; a longer one scrolls only that viewport, beside the track at x = 344–351.
+
+The pager is one 48px row at y = 444: Previous, the six page dots and Next, with 8 between the dots and each button, centred in the 296px body room (x = 32–328) at `x = floor((296 - total) / 2)`. Each button is its label ink plus 2 × 16. The dots are 8×8, 4 apart (68 wide), centred down the row; their art is in the [style guide](style-guide.md#ui). The press areas of Previous and Next stop 4 short of the dots, half the gap. The row has no stacked fallback: a label that breaks the fit fails the layout test rather than clipping. With the current labels:
+
+| Pages  | Previous          | Dots             | Next or completion action |
+| ------ | ----------------- | ---------------- | ------------------------- |
+| 1 to 5 | `(41,444,118,48)` | `(167,464,68,8)` | `(243,444,76,48)`         |
+| 6      | `(36,444,118,48)` | `(162,464,68,8)` | `(238,444,86,48)`         |
+
+Back is the content-sized primary `page.back`, `(142,500,76,48)`, centred below the pager.
 
 ## Groups/columns
 
 Treat the home pickers and Start walk as one vertical group. The three sections are contiguous; their individual cards keep their detailed chrome and hit geometry. Position the grid from the cards themselves, preserving the separate non-touch badge gutter.
 
-| Token           | Value                      | Unit       | Scope                                                 | Source                                                                           |
-| --------------- | -------------------------- | ---------- | ----------------------------------------------------- | -------------------------------------------------------------------------------- |
-| home.divider    | Strip rows 138–140         | y px       | Divider row 140, above picker group                   | [home layout](../src/home/homeLayout.ts) and [style contract](style-guide.md#ui) |
-| home.outer.gaps | 0 above; 4 below           | px         | Entire picker/action group                            | [home export](../shared/export/layout.json)                                      |
-| home.walker     | 6,141,348,91               | x,y,w,h px | Walker section                                        | [home export](../shared/export/layout.json)                                      |
-| home.dogs       | 6,232,348,183              | x,y,w,h px | Dogs section                                          | [home export](../shared/export/layout.json)                                      |
-| home.pocket     | 6,415,348,91               | x,y,w,h px | Pocket section                                        | [home export](../shared/export/layout.json)                                      |
-| home.start      | 32,508,296,48              | x,y,w,h px | Start walk, 2px below Pocket                          | [home layout](../src/home/homeLayout.ts)                                         |
-| home.columns    | Walker 4; Dogs 3; Pocket 5 | columns    | Face gaps x/y in px: Walker 8/8, Dogs 6/8, Pocket 8/8 | [home layout](../src/home/homeLayout.ts)                                         |
+| Token           | Value                      | Unit       | Scope                                        | Source                                                                           |
+| --------------- | -------------------------- | ---------- | -------------------------------------------- | -------------------------------------------------------------------------------- |
+| home.divider    | Strip rows 138–140         | y px       | Divider row 140, above picker group          | [home layout](../src/home/homeLayout.ts) and [style contract](style-guide.md#ui) |
+| home.outer.gaps | 0 above; 4 below           | px         | Entire picker/action group                   | [home export](../shared/export/layout.json)                                      |
+| home.walker     | 6,141,348,91               | x,y,w,h px | Walker section                               | [home export](../shared/export/layout.json)                                      |
+| home.dogs       | 6,232,348,183              | x,y,w,h px | Dogs section                                 | [home export](../shared/export/layout.json)                                      |
+| home.pocket     | 6,415,348,91               | x,y,w,h px | Pocket section                               | [home export](../shared/export/layout.json)                                      |
+| home.start      | 32,508,296,48              | x,y,w,h px | Start walk, 2px below Pocket                 | [home layout](../src/home/homeLayout.ts)                                         |
+| home.columns    | Walker 4; Dogs 3; Pocket 5 | columns    | Face gaps 8 on both axes, outline to outline | [home layout](../src/home/homeLayout.ts)                                         |
 
-Walkers use 77×50 faces and Pocket uses 58×50 faces, each filling its press cell. Dogs use 105×42 faces within 109×48 press cells, inset 2px horizontally and 3px vertically. Dog press cells have 2px gaps on both axes.
+Walkers use 77×50 faces and Pocket uses 58×50 faces, each filling its press cell. Every grid's face gap is measured between the tiles' outlines, Dogs included. Dogs use 105×42 faces within 48px-tall press cells, inset 3px vertically; their cell widths follow the build of the 8px face gap.
 
 Keep hero, shop, sign and actor anchors independent of picker padding. On results pages, [endResultsPlacement](../src/home/endLayout.ts) moves the summary and attached art together, bounds the panel above the button and badge clearance and centres the unchanged badge strip in the remaining band. Full-size Body 2× owner names wrap only at spaces in their measured column, and a word wider than the 42px column ends its ink at the well's right edge (x = 323), 2 rows below the bubble; when complete owner rows exceed the allocated viewport, scroll only those rows, moving each face, bubble, tail, name and quote together. Title, earnings, badges and Back to title remain fixed; no name or quote is omitted or shrunk.
 
@@ -68,24 +97,70 @@ Keep hero, shop, sign and actor anchors independent of picker padding. On result
 
 Visible faces and touch targets use separate rectangles. Keep the game's 48px action/target and 20px icon-face roles; shared document structure across games does not make their control sizes interchangeable. See [Controls](controls.md#sizing-and-spacing) for sizing and [interaction rules](controls.md#interaction-and-accessibility) for semantics.
 
-| Token               | Value                                 | Unit | Scope                                                  | Source                                         |
-| ------------------- | ------------------------------------- | ---- | ------------------------------------------------------ | ---------------------------------------------- |
-| BUTTON_SIZE.wide    | 296×48                                | px   | Non-modal main actions                                 | [button geometry](../src/ui/buttonGeometry.ts) |
-| BUTTON_SIZE.compact | 128×48                                | px   | Non-modal secondary actions                            | [button geometry](../src/ui/buttonGeometry.ts) |
-| BUTTON_SIZE.icon    | Face 20×20; glyph 16×16; target 48×48 | px   | Non-bar icon controls                                  | [button geometry](../src/ui/buttonGeometry.ts) |
-| topbar.home.hit     | 48×48, rows 0–47                      | px   | Sound/Menu/Exit x = 216/264/312; else 264/312          | [home placement](../src/home/homeLayout.ts)    |
-| topbar.home.pitch   | 48                                    | px   | Faces x = 230/278/326, y = 8; else 278/326             | [home placement](../src/home/homeLayout.ts)    |
-| topbar.home.well    | 97 wide, at x = 5                     | px   | Home bank well                                         | [home placement](../src/home/homeLayout.ts)    |
-| topbar.walk.hit     | 48×48, rows 0–47                      | px   | Two columns at x = 264/312; debuff bars win rows 40–47 | [walk HUD](../src/hud/walkHud.ts)              |
-| press.min           | 48×48                                 | px   | Least press area; overlaps go to the nearest centre    | [Controls](controls.md#sizing-and-spacing)     |
+| Token               | Value                                 | Unit | Scope                                                   | Source                                         |
+| ------------------- | ------------------------------------- | ---- | ------------------------------------------------------- | ---------------------------------------------- |
+| BUTTON_SIZE.wide    | 296×48                                | px   | Non-modal main actions                                  | [button geometry](../src/ui/buttonGeometry.ts) |
+| BUTTON_SIZE.compact | 128×48                                | px   | Non-modal secondary actions                             | [button geometry](../src/ui/buttonGeometry.ts) |
+| BUTTON_SIZE.icon    | Face 20×20; glyph 16×16; target 48×48 | px   | Non-bar icon controls                                   | [button geometry](../src/ui/buttonGeometry.ts) |
+| topbar.face.gap     | 24                                    | px   | Faces x = 238/282/326, y = 8; else 282/326              | [home placement](../src/home/homeLayout.ts)    |
+| topbar.home.hit     | 48×48 centred on its face, rows 0–47  | px   | Sound/Menu/Exit x = 224/268/312; else 268/312           | [home placement](../src/home/homeLayout.ts)    |
+| topbar.home.well    | 97 wide, at x = 5                     | px   | Home bank well                                          | [home placement](../src/home/homeLayout.ts)    |
+| topbar.walk.hit     | 48×48 centred on its face, rows 0–47  | px   | Sound and Pause x = 268/312; debuff bars win rows 40–47 | [walk HUD](../src/hud/walkHud.ts)              |
+| press.min           | 48×48                                 | px   | Least press area; overlaps go to the nearest centre     | [Controls](controls.md#sizing-and-spacing)     |
+
+Neighbouring top-bar presses overlap by 4px, and each overlap goes to the nearest face centre (`pressedArea`), never to DOM stacking order. The effect-well region stays pinned at `[102,264)`.
 
 Modal actions use their full measured label/icon width plus padding, not the non-modal compact/wide width floors. Preserve prices, goals, reasons and full-size labels in every state.
 
-HUD effect geometry follows the [walk-bar exception](controls.md#sizing-and-spacing): 24×24 native icons in 26×26 wells, no extra gap or horizontal hold inset, y = 5 wells and y = 6 icons. Size the group from the visible count, with no empty reservations, and centre it within `[102,264)` on x = 183; six wells span 156px and start at x = 105,131,157,183,209,235, while two start at x = 157,183. The fixed cash well is `(5,4,97,29)`, with 84px of ink room at 3× scale. Centre the current dollar-sign/amount visible-ink union horizontally and vertically; the reserved maximum width is not an alignment box. Native faces, glyphs and wells share the same layout projection. Sound and Pause/Menu faces are `(278,8,20,20)` and `(326,8,20,20)`, within unchanged 48px targets, drawn on the plum with no backing.
+HUD effect geometry follows the [walk-bar exception](controls.md#sizing-and-spacing): 24×24 native icons in 26×26 wells, no extra gap or horizontal hold inset, y = 5 wells and y = 6 icons. Size the group from the visible count, with no empty reservations, and centre it within `[102,264)` on x = 183; six wells span 156px and start at x = 105,131,157,183,209,235, while two start at x = 157,183. The fixed cash well is `(5,4,97,29)`, with 84px of ink room at 3× scale. Centre the current dollar-sign/amount visible-ink union horizontally and vertically; the reserved maximum width is not an alignment box. Native faces, glyphs and wells share the same layout projection. Sound and Pause/Menu faces are `(282,8,20,20)` and `(326,8,20,20)`, each within a 48px target centred on it, drawn on the plum with no backing.
+
+## Icons and labels
+
+### Icons beside labels
+
+- **Gap:** a 16px icon beside its label leaves `ICON_LABEL_GAP` (4) from its 16px art cell to the label's first ink column: Settings rows (whose labels share one column, x = 58), the message strip, the new-walker info line, the iOS install steps, the Settings Install button and the reach chip.
+- **Vertical:** the icon centres on its label's capitals, with equal rows above and below them; an odd remainder puts the extra row below.
+- **Install:** the Settings Install button places its icon box, `ICON_LABEL_GAP` and label as one ink group (the icon contributes ink columns 3 to 15 of its cell) and centres the union of the icon and label ink on its face. The button is its row's sole action, centred in the row; its width and position follow the build.
+
+### Backed labels
+
+Every label on a backing (a raised button face, a plate, a band, a card margin, a picture) uses one rule. Centre the label's measured ink block on the backing's flat face in whole art pixels. Count rows on the flat fill only, excluding the outline, the lit and shade rows and the lip. An odd spare row goes under the ink. Horizontally, centre the ink with a half pixel rounding right. A label draws where it is laid out. On a pressed face the label sinks 2 rows with the face. For a raised button:
+
+`capTop = face.y + BUTTON_FACE_EDGE.top + floor((h - top - BUTTON_LIP_PX - bottom - inkRows) / 2) - inkTop`
+
+The Settings and Cheats state word keeps its own [switch-row](#switch-rows) placement. With the current strings, the rule gives these capital tops, offset from the backing's top, and rows clear above and below the ink:
+
+| Family                                                                                                                                                                   | Backing (flat face)                                                    | Capitals     | Above / below |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- | ------------ | ------------- |
+| Panel buttons (pause, home menu, Help, question panels, celebration, end screen, Settings Install, page Back, fork End walk, update notice) and the exported update text | Raised 48px face                                                       | y + 17       | 15 / 16       |
+| Cheats, one line                                                                                                                                                         | Raised 48px face                                                       | y + 17       | 15 / 16       |
+| Cheats, two lines (34-row block)                                                                                                                                         | Raised 48px face                                                       | y + 5        | 3 / 4         |
+| Start walk (3× capitals)                                                                                                                                                 | Raised 48px face                                                       | y + 15       | 13 / 13       |
+| Page tabs                                                                                                                                                                | 28-row face with a 4-row lip                                           | y + 7        | 5 / 6         |
+| Dog card Empty                                                                                                                                                           | Inside the dashed outline: card rows 1 to 68, columns 2 to 117         | y + 32       | 31 / 32       |
+| Dog card FIRED!                                                                                                                                                          | The red plate's 7×26 face on the empty photo                           | y + 30       | 1 / 1         |
+| Small choice-card band                                                                                                                                                   | Drawn margin between the frame and the picture outline: rows 2 to 14   | band.y + 3   | 2 / 3         |
+| Large choice-card band                                                                                                                                                   | Drawn margin above the picture: rows 4 to 29                           | band.y + 10  | 9 / 9         |
+| Small plaque (capitals and `$` strings)                                                                                                                                  | Card-cost face rows 2 to 9                                             | + 3          | 1 / 2         |
+| Large plaque                                                                                                                                                             | Card-cost face at 2×, rows 4 to 19                                     | + 9          | 5 / 6         |
+| Road banner heading                                                                                                                                                      | Upper half of the plate, rows 2 to 20, above the dotted rule on row 21 | y + 9        | 7 / 7         |
+| Road banner name                                                                                                                                                         | Lower half, rows 22 to 44; 14 ink rows with ring and shadow            | y + 27       | 4 / 5         |
+| Section band heading and note                                                                                                                                            | 22-row band face; heading and note as one block                        | Ink-centred  | 6 / 6         |
+| Gear initials, Pocket                                                                                                                                                    | 32×32 picture                                                          | picture + 13 | 13 / 14       |
+| Gear initials, 16×16 badge (scale 0.5)                                                                                                                                   | 16×16 picture                                                          | picture + 5  | Not measured  |
+
+The choice-card band tokens state the drawn margin they centre in: small `{ y: 2, height: 13 }`, large `{ y: 4, height: 26 }`. The `$` strings on the small plaque centre their own ink, 0 above and 1 below. Each road-banner line centres in its own half of the plate.
 
 ## Modals
 
-Target the full logical viewport's vertical midpoint, then clamp the measured panel to its caller's protected area with 16px margins. Horizontal actor avoidance may move it left or right without changing that vertical placement. Do not centre in the remaining safe band instead. Full-scene celebrations, results and bespoke pages are separate roles.
+Every ordinary modal, Settings and Cheats included, uses one vertical rule. Start its top at `(560 - H) / 2`, where `H` is its measured full-size height, which targets the full viewport's midpoint, y = 280, then clamp it with `rectAboveIn` to its caller's protected area. The protected top is y = 56 in every caller, the top bar's 48 press rows plus 8, so no modal covers the top bar. Horizontal actor avoidance may move it left or right without changing that vertical placement. Do not centre in the remaining safe band instead. Full-scene celebrations, results and bespoke pages are separate roles.
+
+| Caller                                                                       | Protected interval   |
+| ---------------------------------------------------------------------------- | -------------------- |
+| Home overlays and full-viewport callers (Settings, Cheats, install, details) | y ≥ 56, bottom ≤ 544 |
+| Walk overlays                                                                | y ≥ 56, bottom ≤ 466 |
+
+Clamping can move the final centre: a 400px-high walk modal clamps to y = 66, bottom = 466, without shrinking. Update, Quit, purchase, badge, item, grouped-detail, Settings and Cheats modals follow this rule; a body taller than its room scrolls, and its title, X and footer stay fixed.
 
 | Token                            | Value                                                | Unit | Scope                                                                   | Source                                                                                          |
 | -------------------------------- | ---------------------------------------------------- | ---- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
@@ -105,11 +180,11 @@ Detail cards place the portrait on the left and the left-aligned description on 
 
 Use dedicated `MODAL_TITLE_SCALE = 3` for ordinary modal and Shop/Logbook page headings. Measure actual glyph ink with [titleRole](../src/ui/modal/titleRole.ts), keeping 24px above and below it. Capital ink is 15px and its header 63px; punctuation can increase both. Wrap at a 36px pitch and grow header/body/panel height from actual ink. Body and action labels stay at 2×. End-results badge-strip headings retain their 2× section role. Modal controls, dismissal guards and safe keyboard choices remain defined in [Controls](controls.md#sizing-and-spacing). Width measurements must include every present group and action, not only the title.
 
-Cheats uses the Large panel: 328px wide, centred, with 16px margins. Its 296px body holds two 144px columns 8px apart. Measure the body at full text size, then fit the panel to its content up to the logical viewport height minus 32px. Only the body scrolls. The title, top-right X and centred 48px-high Back stay fixed, with 8px between the body viewport and Back and 16px below Back. When the body overflows, its scrollbar sits in the right padding, 4px past the rows (`MODAL.scrollGap`), so the rows keep the full body width. A label that does not fit its button on one line breaks onto two balanced lines at full size, inside the button's 48px height. See [Cheats layout](../src/dev/cheatsView.ts) and [scroll placement](../src/hud/dom/cheats.ts).
+Cheats uses the Large panel: 328px wide, centred, with 16px margins, placed by the modal rule above. Its 296px body holds two 140px columns 16px apart (`BUTTON_SIZE.gap`): left buttons at x = 32–172 and right buttons and the Money heading at x = 188–328, the same in the neighbourhood grid and the Unlocks and Money columns. Measure the body at full text size, then fit the panel to its content within its protected area. Only the body scrolls. The title, top-right X and centred 48px-high Back stay fixed, with 8px between the body viewport and Back and 16px below Back. When the body overflows, its scrollbar sits in the right padding, 4px past the rows (`MODAL.scrollGap`), so the rows keep the full body width. A label that does not fit its button on one line breaks onto two balanced lines at full size, inside the button's 48px height. Its switch row follows the [switch-row layout](#switch-rows), and its dividers, section divider included, are the one [separator](#spacing-tokens). See [Cheats layout](../src/dev/cheatsView.ts) and [scroll placement](../src/hud/dom/cheats.ts).
 
-The adjacent Next Walk toggles have contiguous, nonoverlapping 48px-high targets. Shift each label, value and switch 6px toward the shared boundary for 36px between their visible centres. Keep a 16px gutter in the neighbourhood grid and the Unlocks and Money columns. Separate Next Walk from Start Screen with a 1px rule and 16px above and below.
+### Switch rows
 
-Help's framed picture card is `(8,48,344,234)`, its well `(14,54,332,200)` round the `(16,56,328,196)` picture and its caption's capitals at y = 260. The title's capitals sit at y = 307, x = 8, and the body-only scroll viewport `(0,325,360,54)` shows three whole 18px-pitch lines, retaining every line. Dots at y = 412 keep full 48px hits above secondary Previous/Next at y = 444; primary Back is `(116,500,128,48)`. Keep the [page-specific contract](controls.md#sizing-and-spacing) and [`helpLayout`](../src/help/helpLayout.ts) separate from ordinary modal families.
+Settings and Cheats switch rows share one layout. The row's leading icon or label starts 6 in from the row's left, and the 32×16 switch sits at the row's upper right, 8 in from its right edge. The state word sits 8 below the switch, with its ink's right edge on the switch's right edge. The whole row is the target, and row heights follow their content (Cheats 48, Settings Sound 82).
 
 ## HUD/overlays
 
