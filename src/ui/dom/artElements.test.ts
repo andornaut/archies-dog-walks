@@ -2,7 +2,13 @@ import { expect, it, vi } from "vitest";
 
 import { FakeDocument } from "../../testing/fakeDom.ts";
 import { domScale, gridRect, gridX } from "../domScale.ts";
-import { imageArt, imageNineSlice, sheetArt, sheetThreeSlice } from "./artElements.ts";
+import {
+  imageArt,
+  imageNineSlice,
+  sheetArt,
+  type SheetArtPlace,
+  sheetThreeSlice,
+} from "./artElements.ts";
 import { setRampDimmed } from "./rampDim.ts";
 
 it("uses original sheet metadata with a disabled image and the requested animated frame", async () => {
@@ -31,6 +37,40 @@ it("uses original sheet metadata with a disabled image and the requested animate
     height: "12px",
     width: "8px",
   });
+});
+
+// A sheet of two 4x6 frames, its pulse tag playing them 100 ms each, placed at 3,4 at scale 1.
+it.each<[string, Partial<SheetArtPlace>, Record<string, string>]>([
+  [
+    "a crop from the frame's corner",
+    { crop: { height: 2, width: 3, x: 1, y: 4 } },
+    { backgroundPosition: "-1px -4px", height: "2px", left: "3px", top: "4px", width: "3px" },
+  ],
+  ["its centre at x", { originX: 0.5 }, { left: "1px", width: "4px" }],
+  ["its tag's frame playing", { playMs: 150, tag: "pulse" }, { backgroundPosition: "-8px 0px" }],
+  [
+    "its tag's loop from the start",
+    { playMs: 250, tag: "pulse" },
+    { backgroundPosition: "0px 0px" },
+  ],
+  ["the tag's first frame still", { tag: "pulse" }, { backgroundPosition: "0px 0px" }],
+])("draws a sheet frame's %s", async (_name, art, style) => {
+  const json = {
+    frames: {
+      first: { duration: 100, frame: { h: 6, w: 4, x: 0, y: 0 } },
+      second: { duration: 100, frame: { h: 6, w: 4, x: 8, y: 0 } },
+    },
+    meta: { frameTags: [{ from: 0, name: "pulse", to: 1 }], size: { h: 6, w: 12 } },
+  };
+  const source = { artUrl: (path: string) => path, loadSheet: vi.fn().mockResolvedValue(json) };
+  const part = sheetArt(new FakeDocument() as unknown as Document, source, "fires");
+  part.place(
+    domScale(1, { height: 560, width: 360, x: 0, y: 0 }),
+    { x: 0, y: 0 },
+    { projection: "layout", x: 3, y: 4, ...art },
+  );
+  await part.ready;
+  expect(part.element.style).toMatchObject(style);
 });
 
 it("paints an image panel with unchanged nine-slice geometry from its frame on its sheet", async () => {

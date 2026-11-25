@@ -76,6 +76,25 @@ export function gridFillPart(
   return gridBoxPart(origin, colourBox(doc, fill.colour, tag), fill.rect);
 }
 
+// A ring width art pixels wide in colour just inside rect on the device grid (placeBox), from
+// origin.
+export function ringPart(
+  doc: Document,
+  origin: Point,
+  ring: { readonly colour: number; readonly rect: Rect; readonly width: number },
+): DomPart {
+  const element = doc.createElement("span");
+  element.className = "adw-art";
+  Object.assign(element.style, { borderColor: cssHex(ring.colour), borderStyle: "solid" });
+  return {
+    element,
+    place: (scale) => {
+      placeBox(scale, origin, element, ring.rect);
+      element.style.borderWidth = `${ring.width * artPixel(scale)}px`;
+    },
+  };
+}
+
 // A box placed by place, filled in fill an art pixel inside its border.
 export function borderedPart(
   doc: Document,

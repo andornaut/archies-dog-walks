@@ -5,7 +5,6 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { cardGreyPath } from "../../assets/cardArt.ts";
-import { domArtPath } from "../../assets/domArt.ts";
 import { DIFFICULTY_KEY } from "../../assets/spriteKeys.ts";
 import { SLICES } from "../../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../../data/screen.ts";
@@ -15,17 +14,17 @@ import { CARD_LAYOUT, cardRowIn, forkHomeRect } from "../../layout/cardLayout.ts
 import { type CardView, MAX_CARD_OPTIONS } from "../../rules/choices.ts";
 import { cardHeader } from "../../ui/cardRow.ts";
 import { bindGameAction } from "../../ui/dom/actionBinding.ts";
-import { type DomArtSource, imageArt, imageNineSlice } from "../../ui/dom/artElements.ts";
+import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
 import { type NativeGesture } from "../../ui/dom/modalLifecycle.ts";
-import { type DomPart, framelessView, gridBoxPart } from "../../ui/dom/parts.ts";
-import { createTextLine, placeBox, placeText, setBox } from "../../ui/dom/pixelLine.ts";
+import { type DomPart, framelessView, gridBoxPart, ringPart } from "../../ui/dom/parts.ts";
+import { createTextLine, placeBox, placeText } from "../../ui/dom/pixelLine.ts";
 import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
-import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, type DomScale, gridRect } from "../../ui/domScale.ts";
+import { artPixel, type DomScale } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { panelButton } from "../../ui/modal/view.ts";
-import { cssHex, PALETTE } from "../../ui/palette.ts";
+import { PALETTE } from "../../ui/palette.ts";
+import { charmRing } from "../charmRing.ts";
 import {
   type ChoiceCardFonts,
   type ChoiceCardSurface,
@@ -65,6 +64,8 @@ function imagePart(doc: Document, source: DomArtSource, key: string, rect: Rect)
   };
 }
 
+// A sheet frame by its tag from at, through sheetArt: cropped, centred on at.x, or playing its
+// tag's frames in a loop from now (pulse).
 function sheetPart(
   doc: Document,
   source: Source,
@@ -73,51 +74,32 @@ function sheetPart(
   at: Point,
   options: { crop?: Rect; centre?: boolean; pulse?: boolean; scale?: number } = {},
 ): DomPart & { destroy(): void } {
-  const element = doc.createElement("span");
-  element.className = "adw-art";
-  element.style.backgroundImage = `url("${source.artUrl(domArtPath("sheet", key, "png"))}")`;
-  const urls = [source.artUrl(domArtPath("sheet", key, "png"))];
-  let frames: TagFrame[] = [];
-  let scale: DomScale | undefined;
+  const art = sheetArt(doc, source, key);
   const started = source.now();
+  let scale: DomScale | undefined;
   const paint = () => {
-    if (scale === undefined || frames.length === 0) {
-      return;
+    if (scale !== undefined) {
+      art.place(scale, ORIGIN, {
+        ...(options.crop === undefined ? {} : { crop: options.crop }),
+        ...(options.centre ? { originX: 0.5 } : {}),
+        ...(options.pulse ? { playMs: source.now() - started } : {}),
+        projection: "layout",
+        ...(options.scale === undefined ? {} : { scale: options.scale }),
+        tag,
+        x: at.x,
+        y: at.y,
+      });
     }
-    const total = frames.reduce((sum, frame) => sum + frame.durationMs, 0);
-    const index =
-      options.pulse && total > 0
-        ? (playingFrame(frames, (source.now() - started) % total) ?? 0)
-        : 0;
-    const frame = frames[index]!;
-    const factor = options.scale ?? 1;
-    const crop = options.crop ?? { height: frame.height, width: frame.width, x: 0, y: 0 };
-    const box = gridRect(scale, {
-      height: crop.height * factor,
-      width: crop.width * factor,
-      x: at.x - (options.centre ? (frame.width * factor) / 2 : 0),
-      y: at.y,
-    });
-    const across = box.width / crop.width;
-    const down = box.height / crop.height;
-    setBox(element, box);
-    element.style.backgroundSize = `${frame.sheet.width * across}px ${frame.sheet.height * down}px`;
-    element.style.backgroundPosition = `${-(frame.x + crop.x) * across}px ${-(frame.y + crop.y) * down}px`;
   };
-  const ready = source.loadSheet(source.artUrl(domArtPath("sheet", key, "json"))).then((json) => {
-    frames = sheetTagFrames(json, tag);
-    paint();
-    return urls;
-  });
   const stop = options.pulse ? source.everyFrame(paint) : () => {};
   return {
     destroy: stop,
-    element,
+    element: art.element,
     place: (value) => {
       scale = value;
       paint();
     },
-    ready,
+    ready: art.ready,
   };
 }
 
@@ -234,22 +216,7 @@ function surfaceParts(
       place: (scale) => well.place(scale, ORIGIN, plate),
       ready: well.ready,
     });
-    const ring = doc.createElement("span");
-    ring.className = "adw-art";
-    ring.style.borderStyle = "solid";
-    ring.style.borderColor = cssHex(PALETTE.amber);
-    all.push({
-      element: ring,
-      place: (scale) => {
-        placeBox(scale, ORIGIN, ring, {
-          height: plate.height + 2 * CHARM.ring,
-          width: plate.width + 2 * CHARM.ring,
-          x: plate.x - CHARM.ring,
-          y: plate.y - CHARM.ring,
-        });
-        ring.style.borderWidth = `${CHARM.ring * artPixel(scale)}px`;
-      },
-    });
+    all.push(ringPart(doc, ORIGIN, charmRing(plate)));
     all.push(
       imagePart(doc, original, walkBarIconKey(charm.item), {
         height: CHARM.size - 2 * CHARM.icon,

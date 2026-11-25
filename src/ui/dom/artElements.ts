@@ -3,7 +3,13 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { domArtPath } from "../../assets/domArt.ts";
 import { artPixel, type DomScale, frameRect, gridRect, gridX, gridY } from "../domScale.ts";
 import { setBox } from "./pixelLine.ts";
-import { type SheetFrame, sheetFrame, sheetFrameNamed } from "./sheetFrames.ts";
+import {
+  playingFrame,
+  type SheetFrame,
+  sheetFrame,
+  sheetFrameNamed,
+  sheetTagFrames,
+} from "./sheetFrames.ts";
 import { sliceParts } from "./sliceParts.ts";
 
 // Art the HTML interface draws as backgrounds of its key's DOM sheet: an image's one frame, or
@@ -19,13 +25,38 @@ export interface DomArtSource {
 
 // One frame of a sheet by its tag, from its top-left at a game point.
 export interface SheetArtPlace {
+  // The part of the frame drawn, from the frame's corner; the whole frame where undefined.
+  readonly crop?: Rect;
   readonly frame?: number | string | SheetFrame;
+  // The share of the drawn width left of x: 0 puts its left edge at x, 0.5 its centre.
+  readonly originX?: number;
+  // The tag's frame playing playMs into its loop, where the sheet has the tag; else its first.
+  readonly playMs?: number;
   // Layout art follows logical rect edges; default art retains whole authored-pixel scaling.
   readonly projection?: "art" | "layout";
   readonly scale?: number;
   readonly tag?: string;
   readonly x: number;
   readonly y: number;
+}
+
+// The frame art names on its sheet's JSON.
+function placedFrame(json: unknown, art: SheetArtPlace): SheetFrame {
+  if (typeof art.frame === "object") {
+    return art.frame;
+  }
+  if (art.frame !== undefined) {
+    return sheetFrameNamed(json, art.frame);
+  }
+  if (art.playMs !== undefined && art.tag !== undefined) {
+    const frames = sheetTagFrames(json, art.tag);
+    const total = frames.reduce((sum, { durationMs }) => sum + durationMs, 0);
+    const playing = frames[total > 0 ? (playingFrame(frames, art.playMs % total) ?? 0) : 0];
+    if (playing !== undefined) {
+      return playing;
+    }
+  }
+  return sheetFrame(json, art.tag);
 }
 
 function artUrls(
@@ -124,26 +155,24 @@ export function paintSheetArt(
   return {
     place: (scale, origin, art, at) =>
       loaded((json) => {
-        const frame =
-          typeof art.frame === "object"
-            ? art.frame
-            : art.frame === undefined
-              ? sheetFrame(json, art.tag)
-              : sheetFrameNamed(json, art.frame);
-        const pixel = artPixel(scale) * (art.scale ?? 1);
+        const frame = placedFrame(json, art);
+        const factor = art.scale ?? 1;
+        const crop = art.crop ?? { height: frame.height, width: frame.width, x: 0, y: 0 };
+        const x = art.x - (art.originX ?? 0) * crop.width * factor;
+        const pixel = artPixel(scale) * factor;
         const box =
           art.projection === "layout"
             ? gridRect(scale, {
-                height: frame.height * (art.scale ?? 1),
-                width: frame.width * (art.scale ?? 1),
-                x: art.x,
+                height: crop.height * factor,
+                width: crop.width * factor,
+                x,
                 y: art.y,
               })
             : {
-                height: frame.height * pixel,
-                left: gridX(scale, art.x),
+                height: crop.height * pixel,
+                left: gridX(scale, x),
                 top: gridY(scale, art.y),
-                width: frame.width * pixel,
+                width: crop.width * pixel,
               };
         setBox(element, {
           height: box.height,
@@ -151,10 +180,10 @@ export function paintSheetArt(
           top: at?.top ?? box.top - gridY(scale, origin.y),
           width: box.width,
         });
-        const across = art.projection === "layout" ? box.width / frame.width : pixel;
-        const down = art.projection === "layout" ? box.height / frame.height : pixel;
+        const across = art.projection === "layout" ? box.width / crop.width : pixel;
+        const down = art.projection === "layout" ? box.height / crop.height : pixel;
         element.style.backgroundSize = `${frame.sheet.width * across}px ${frame.sheet.height * down}px`;
-        element.style.backgroundPosition = `${-frame.x * across}px ${-frame.y * down}px`;
+        element.style.backgroundPosition = `${-(frame.x + crop.x) * across}px ${-(frame.y + crop.y) * down}px`;
         if (art.alternate !== undefined) {
           const other = sheetFrame(json, art.alternate.tag);
           element.style.setProperty(
@@ -427,15 +456,7 @@ export function sheetNineSlice(
   return {
     element,
     place: (scale, origin, art) =>
-      loaded((json) => {
-        const frame =
-          typeof art.frame === "object"
-            ? art.frame
-            : art.frame === undefined
-              ? sheetFrame(json, art.tag)
-              : sheetFrameNamed(json, art.frame);
-        paint(scale, origin, art, frame);
-      }),
+      loaded((json) => paint(scale, origin, art, placedFrame(json, art))),
     ready: loaded.ready,
   };
 }

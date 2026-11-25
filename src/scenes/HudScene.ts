@@ -1,4 +1,4 @@
-import { insetRect, type Point, type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import { Core, Scene } from "phaser";
@@ -8,6 +8,7 @@ import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { AchievementId, DebuffId, DogId, HintTrigger } from "../data/types.ts";
 import { FEEDBACK as MENU_FEEDBACK } from "../home/feedback.ts";
+import { charmRing } from "../hud/charmRing.ts";
 import { createHudCards, type HudCards } from "../hud/dom/hudCards.ts";
 import { createHudChrome } from "../hud/dom/hudChrome.ts";
 import { createHudMoments, type HudMoment, type HudMomentPainter } from "../hud/dom/hudMoments.ts";
@@ -60,7 +61,7 @@ import {
   type WalkBarButtonId,
   walkBarLayout,
 } from "../hud/walkHud.ts";
-import { BUFF_POP, CHARM, sparkleAt } from "../layout/buffLayout.ts";
+import { BUFF_POP, sparkleAt } from "../layout/buffLayout.ts";
 import { dollarAmountText, shortDollarAmountText } from "../presentation/currency.ts";
 import { ownerMaxHearts } from "../rules/dogs.ts";
 import { hintFor, hintJumpsQueue } from "../rules/hints.ts";
@@ -76,7 +77,6 @@ import {
 import { dimDrawn, followModalUnderlay } from "../ui/dom/rampDim.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
-import { PALETTE } from "../ui/palette.ts";
 import { displayBitmapFont } from "../ui/phaser/displayText.ts";
 import { pixelBitmapFont, pixelFontMetrics } from "../ui/phaser/pixelText.ts";
 import { type Cents, cents } from "../units.ts";
@@ -625,9 +625,8 @@ export class HudScene extends Scene {
         return;
       }
       const marks = painter.group(1);
-      ringRects(CHARM.ring, insetRect(-CHARM.ring, well)).forEach((rect) =>
-        marks.panel(rect, undefined, { border: PALETTE.amber, fill: PALETTE.amber }),
-      );
+      const ring = charmRing(well);
+      marks.ring(ring.rect, ring.colour, ring.width);
       const { blinkMs, blinks } = BUFF_POP;
       this.labels.every(this, blinkMs, 2 * blinks - 2, () => {
         marks.state.visible = !marks.state.visible;

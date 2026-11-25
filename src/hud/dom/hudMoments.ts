@@ -12,6 +12,7 @@ import {
   type SheetArtPlace,
   sheetNineSlice,
 } from "../../ui/dom/artElements.ts";
+import { ringPart } from "../../ui/dom/parts.ts";
 import { boundsAdvance, type DomTextBlock, placeBox, shownText } from "../../ui/dom/pixelLine.ts";
 import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
 import { textBlock } from "../../ui/dom/textBlock.ts";
@@ -346,17 +347,8 @@ export function createHudMoments(
         });
       },
       ring(rect, colour, width) {
-        const rim = doc.createElement("span");
-        rim.className = "adw-art";
-        Object.assign(rim.style, {
-          borderColor: cssHex(colour),
-          borderStyle: "solid",
-          boxSizing: "border-box",
-        });
-        mount(rim, Promise.resolve([]), (scale) => {
-          placeBox(scale, ORIGIN, rim, rect);
-          rim.style.borderWidth = `${width * artPixel(scale)}px`;
-        });
+        const rim = ringPart(doc, ORIGIN, { colour, rect, width });
+        mount(rim.element, Promise.resolve([]), rim.place);
       },
       state,
       text(text) {
