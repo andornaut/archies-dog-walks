@@ -213,6 +213,7 @@ export class HelpPictureScene extends Scene {
         affected: [],
         explaining: undefined,
         packX: laneMotionX(LANE_XS, walk.road.control.motion),
+        pressedEffect: undefined,
         run: walk.run,
       }),
       reducedMotion: () => true,

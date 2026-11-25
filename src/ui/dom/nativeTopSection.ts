@@ -63,6 +63,7 @@ export interface NativeTopSection {
   dispose(): void;
   setAmount(full: string, short: string): void;
   setEffectCount(count: number): void;
+  setEffectPressed(index: number | undefined): void;
   setInert(inert: boolean): void;
   setInputBottom(bottom: number | undefined): void;
   setMuted(muted: boolean): void;
@@ -122,15 +123,41 @@ export function createNativeTopSection(
     .filter(({ rect }) => rect.height !== 1 || rect.y !== TOP_BAR_TRIM.line.row)
     .forEach(({ colour, rect }) => box(underlayElement, PALETTE[colour], rect));
   let effectCount = 0;
+  let effectPressed: number | undefined;
   const effectArt = layout.effectWells.map(() => image("ui-hud-effect-well"));
   effectArt.forEach((art) => underlayElement.append(art.element));
+  // A pressed well takes a top-bar face's press: it dips and its face is ink to the edge, its
+  // lip (the bottom row and right column) covered.
+  const lip = ["bottom", "right"].map(() => {
+    const element = doc.createElement("span");
+    element.className = "adw-framed adw-top-section-well-lip";
+    element.style.backgroundColor = hex(PALETTE.ink);
+    underlayElement.append(element);
+    return element;
+  });
   const placeEffects = (scale: DomScale) => {
     const wells = topSectionLayout(config.buttons, { ...config, effects: effectCount }).effectWells;
     effectArt.forEach((art, index) => {
       const rect = wells[index];
       art.element.hidden = rect === undefined;
       if (rect !== undefined) {
-        art.place(scale, ORIGIN, { ...rect, projection: "layout" });
+        const dip = index === effectPressed ? BUTTON_SIZE.press : 0;
+        art.place(scale, ORIGIN, { ...rect, projection: "layout", y: rect.y + dip });
+      }
+    });
+    const pressed = effectPressed === undefined ? undefined : wells[effectPressed];
+    lip.forEach((element, side) => {
+      element.hidden = pressed === undefined;
+      if (pressed !== undefined) {
+        const y = pressed.y + BUTTON_SIZE.press;
+        placeBox(
+          scale,
+          ORIGIN,
+          element,
+          side === 0
+            ? { height: 1, width: pressed.width - 2, x: pressed.x + 1, y: y + pressed.height - 1 }
+            : { height: pressed.height - 2, width: 1, x: pressed.x + pressed.width - 1, y: y + 1 },
+        );
       }
     });
   };
@@ -571,6 +598,12 @@ export function createNativeTopSection(
       }
       if (effectCount !== count) {
         effectCount = count;
+        placeEffects(layer.scale());
+      }
+    },
+    setEffectPressed(index) {
+      if (effectPressed !== index) {
+        effectPressed = index;
         placeEffects(layer.scale());
       }
     },

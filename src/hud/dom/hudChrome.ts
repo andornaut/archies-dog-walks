@@ -3,7 +3,7 @@ import { fontMetrics, laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmap
 
 import { debuffIconKey } from "../../assets/iconKeys.ts";
 import { gameData } from "../../data/index.ts";
-import { SLICES } from "../../data/layout.ts";
+import { BUTTON_SIZE, SLICES } from "../../data/layout.ts";
 import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import type { DebuffId } from "../../data/types.ts";
 import { debuffLasting } from "../../rules/durations.ts";
@@ -123,7 +123,8 @@ export function createHudChrome(
       groups.forEach((group) => group.dispose());
       groups.clear();
     },
-    update(run: RunState) {
+    // pressedEffect: the effect well a press is down on, whose icon and pip dip with it.
+    update(pressedEffect: number | undefined, run: RunState) {
       const debuffs = run.debuffs.map(({ debuff }) => debuff);
       if (debuffs.join() !== barsKey) {
         barsKey = debuffs.join();
@@ -254,14 +255,17 @@ export function createHudChrome(
       }
       const effects = effectItems(gameData, run),
         spare = spareTreatWell(effects, run);
-      const key = `${effectItemsKey(effects)}:${spare}`;
+      const key = `${effectItemsKey(effects)}:${spare}:${pressedEffect}`;
       if (effectsKey !== key) {
         effectsKey = key;
         replace(
           "effects",
           0,
           (group) => {
-            const { effectWells } = walkBarLayout(SCREEN_LAYOUT.topBar, effects.length);
+            const effectWells = walkBarLayout(SCREEN_LAYOUT.topBar, effects.length).effectWells.map(
+              (well, index) =>
+                index === pressedEffect ? { ...well, y: well.y + BUTTON_SIZE.press } : well,
+            );
             effects.forEach((item: EffectItem, index) => {
               const well = effectWells[index];
               if (well === undefined) {

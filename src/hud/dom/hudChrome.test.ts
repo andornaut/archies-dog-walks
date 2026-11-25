@@ -2,7 +2,7 @@ import { pixels } from "@andornaut/game-kit/runtime/units";
 import { expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
-import { DEBUFF_BAR, ZONE_PILL_SIZES } from "../../data/layout.ts";
+import { BUTTON_SIZE, DEBUFF_BAR, ZONE_PILL_SIZES } from "../../data/layout.ts";
 import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import type { ZoneId } from "../../data/types.ts";
 import { modifiersOf } from "../../rules/modifiers.ts";
@@ -65,16 +65,16 @@ function fixture(hasArt: (key: string) => boolean = () => true) {
 it("retains unchanged native chrome and repaints only changed debuff and progress groups", () => {
   const { chrome, views } = fixture();
   const run = testState({ archie: 3 });
-  chrome.update(run);
+  chrome.update(undefined, run);
   const count = views.length;
-  chrome.update(run);
+  chrome.update(undefined, run);
   expect(views).toHaveLength(count);
   const debuffed = {
     ...run,
     debuffs: [{ debuff: "muddy" as const, secondsLeft: 1, untilZone: run.zoneIndex }],
     zoneDistance: pixels(100),
   };
-  chrome.update(debuffed);
+  chrome.update(undefined, debuffed);
   expect(chrome.bars()).toEqual([{ debuff: "muddy", rect: expect.objectContaining({ x: 0 }) }]);
   expect(views.flatMap((view) => vi.mocked(view.art).mock.calls).map(([art]) => art.key)).toContain(
     "icon-muddy",
@@ -92,7 +92,7 @@ it("retains unchanged native chrome and repaints only changed debuff and progres
 it("uses actual visible wells for one or six HUD icons and the spare treat pip", () => {
   const { chrome, views } = fixture();
   const few = testState({ archie: 3 });
-  chrome.update(few);
+  chrome.update(undefined, few);
   const oneWell = walkBarLayout(SCREEN_LAYOUT.topBar, 1).effectWells[0]!;
   expect(vi.mocked(views.at(-1)!.art).mock.calls.map(([art]) => art)).toEqual([
     {
@@ -125,7 +125,7 @@ it("uses actual visible wells for one or six HUD icons and the spare treat pip",
   );
   const items = effectItems(gameData, full);
   expect(items).toHaveLength(6);
-  chrome.update(full);
+  chrome.update(undefined, full);
   const wells = walkBarLayout(SCREEN_LAYOUT.topBar, items.length).effectWells;
   const calls = vi.mocked(views.at(-1)!.art).mock.calls.map(([art]) => art);
   expect(calls.slice(0, items.length)).toEqual(
@@ -146,9 +146,22 @@ it("uses actual visible wells for one or six HUD icons and the spare treat pip",
   chrome.dispose();
 });
 
+it("dips the pressed effect well's icon with its well", () => {
+  const { chrome, views } = fixture();
+  const run = testState({ archie: 3 });
+  const well = walkBarLayout(SCREEN_LAYOUT.topBar, 1).effectWells[0]!;
+  const inset = WALK_BAR.effects.icon;
+  const iconAt = () => vi.mocked(views.at(-1)!.art).mock.calls.at(-1)![0].at;
+  chrome.update(undefined, run);
+  expect(iconAt()).toEqual({ x: well.x + inset, y: well.y + inset });
+  chrome.update(0, run);
+  expect(iconAt()).toEqual({ x: well.x + inset, y: well.y + inset + BUTTON_SIZE.press });
+  chrome.dispose();
+});
+
 it("centres a missing optional HUD icon's glyph in the authored well without drawing a legacy icon", () => {
   const { chrome, views } = fixture((key) => !key.startsWith("icon-hud-effect-"));
-  chrome.update(testState({ archie: 3 }));
+  chrome.update(undefined, testState({ archie: 3 }));
   const effect = views.at(-1)!;
   const well = walkBarLayout(SCREEN_LAYOUT.topBar, 1).effectWells[0]!;
   expect(effect.art).not.toHaveBeenCalled();
@@ -168,7 +181,7 @@ it("reserves every current full-size effect name and centres actual body ink abo
       return ink.right - ink.left;
     }),
   );
-  chrome.update({
+  chrome.update(undefined, {
     ...run,
     debuffs: [{ debuff: "muddy", secondsLeft: 1, untilZone: run.zoneIndex }],
   });
@@ -188,7 +201,7 @@ it("reserves every current full-size effect name and centres actual body ink abo
   const debuffs = (Object.keys(gameData.debuffs) as (keyof typeof gameData.debuffs)[]).map(
     (debuff) => ({ debuff, secondsLeft: 1, untilZone: run.zoneIndex }),
   );
-  chrome.update({ ...run, debuffs });
+  chrome.update(undefined, { ...run, debuffs });
   const texts = views
     .slice(before)
     .flatMap((view) => vi.mocked(view.text).mock.calls)
@@ -216,7 +229,7 @@ it("reserves every current full-size effect name and centres actual body ink abo
 it("renders the neighbourhood pill at the shared body role with measured ink and padding", () => {
   const { chrome, views } = fixture();
   const run = testState({ archie: 3 });
-  chrome.update(run);
+  chrome.update(undefined, run);
   const zone = views.find((view) =>
     vi.mocked(view.panel).mock.calls.some(([, art]) => art?.key === "ui-zone-pill"),
   )!;
@@ -257,20 +270,20 @@ it.each([
       return vi.mocked(pill.text).mock.calls.map(([text]) => text.lines[0]);
     };
     const { chrome, views } = fixture();
-    chrome.update({ ...runs.switched, route });
+    chrome.update(undefined, { ...runs.switched, route });
     expect(pillTexts(views)).toEqual([
       zoneName(route.at(-1)!),
       zoneProgressText(gameData, route.length - 1),
     ]);
-    chrome.update(runs.switched);
+    chrome.update(undefined, runs.switched);
     expect(pillTexts(views)).toEqual([
       zoneName(zone),
       zoneProgressText(gameData, route.length - 1),
     ]);
-    chrome.update(runs.next);
+    chrome.update(undefined, runs.next);
     expect(pillTexts(views)).toEqual([zoneName(next), zoneProgressText(gameData, route.length)]);
     const resumed = fixture();
-    resumed.chrome.update(runs.resumed);
+    resumed.chrome.update(undefined, runs.resumed);
     expect(pillTexts(resumed.views)).toEqual([
       zoneName(zone),
       zoneProgressText(gameData, route.length - 1),

@@ -109,6 +109,13 @@ export class RunInput {
     return this.pointers.open;
   }
 
+  // The effect well a press is down on while it is still a hold candidate, which shows pressed.
+  pressedEffect(): number | undefined {
+    const { hold } = this.pointers;
+    const target = hold === undefined ? undefined : this.context().explainAt(hold.start);
+    return target?.kind === "effect" ? target.effect : undefined;
+  }
+
   // Each frame: a press held still on an element long enough opens its explanation.
   tick(nowMs: number): void {
     const presses = this.presses();

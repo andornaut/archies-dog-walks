@@ -426,6 +426,7 @@ export class RunScene extends Scene implements HudRun {
       affected: this.world?.menus.card()?.affected ?? [],
       explaining: this.world?.input.explanation(),
       packX: packPoint(session.walk).x,
+      pressedEffect: this.world?.input.pressedEffect(),
       run,
     };
   }

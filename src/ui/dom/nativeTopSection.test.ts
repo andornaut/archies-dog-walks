@@ -287,6 +287,30 @@ describe("native top section integration", () => {
     expect(wells.every((node) => node.hidden)).toBe(true);
     expect(() => view.setEffectCount(7)).toThrow("configured top section");
   });
+  it("dips a pressed effect well and covers its lip in ink, as a pressed top-bar face", () => {
+    const { element, view } = fixture(6);
+    const wells = element
+      .all()
+      .filter((node) => node.style.backgroundImage?.includes("ui-hud-effect-well"));
+    const lip = element.all().filter((node) => node.className.includes("adw-top-section-well-lip"));
+    const shown = () => [
+      wells.filter((node) => !node.hidden).map((node) => node.style.top),
+      lip.filter((node) => !node.hidden).map((node) => [node.style.left, node.style.top]),
+    ];
+    view.setEffectCount(2);
+    expect(shown()).toEqual([["5px", "5px"], []]);
+    view.setEffectPressed(0);
+    expect(lip.map((node) => node.style.backgroundColor)).toEqual(["#181425", "#181425"]);
+    expect(shown()).toEqual([
+      ["7px", "5px"],
+      [
+        ["158px", "32px"],
+        ["182px", "8px"],
+      ],
+    ]);
+    view.setEffectPressed(undefined);
+    expect(shown()).toEqual([["5px", "5px"], []]);
+  });
   it("fits approved five-character currency labels in one fixed well with unchanged controls", () => {
     const { element, view } = fixture(6);
     const money = currencyTexts(view);

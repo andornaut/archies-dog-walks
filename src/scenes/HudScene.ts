@@ -477,8 +477,9 @@ export class HudScene extends Scene {
     }
     const overlay = this.overlayScene();
     this.showExplanation(view, overlay);
-    this.chrome?.update(view.run);
+    this.chrome?.update(view.pressedEffect, view.run);
     this.topSection?.setEffectCount(effectItems(gameData, view.run).length);
+    this.topSection?.setEffectPressed(view.pressedEffect);
     this.debuffBars = [...(this.chrome?.bars() ?? [])];
     this.topSection?.setInputBottom(
       this.debuffBars.length > 0 ? LAYOUT.topBar.y + LAYOUT.topBar.height : undefined,

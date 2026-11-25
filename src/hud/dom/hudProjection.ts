@@ -103,6 +103,7 @@ export function projectHudTopSections(views: readonly NativeTopSection[]): Nativ
     revealed: Promise.all(views.map((view) => view.revealed)).then((ready) => ready.every(Boolean)),
     setAmount: (full, short) => views.forEach((view) => view.setAmount(full, short)),
     setEffectCount: (count) => views.forEach((view) => view.setEffectCount(count)),
+    setEffectPressed: (index) => views.forEach((view) => view.setEffectPressed(index)),
     setInert: (inert) => views.forEach((view) => view.setInert(inert)),
     setInputBottom: (bottom) => views.forEach((view) => view.setInputBottom(bottom)),
     setMuted: (muted) => views.forEach((view) => view.setMuted(muted)),

@@ -7,12 +7,13 @@ import type { ExplainTarget } from "../hud/walkHud.ts";
 import type { RunState } from "../state/runState.ts";
 import type { PauseSceneData } from "./PauseScene.ts";
 
-// What the HUD draws: the run, the dogs the open card affects, what a held press explains and
-// the pack's centre across the screen.
+// What the HUD draws: the run, the dogs the open card affects, what a held press explains, the
+// pack's centre across the screen and the effect well a press is down on.
 export interface RunHudView {
   affected: readonly DogId[];
   explaining: ExplainTarget | undefined;
   packX: number;
+  pressedEffect: number | undefined;
   run: RunState;
 }
 
