@@ -4,6 +4,7 @@ import type { Scene } from "phaser";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
+import type { ZoneId } from "../data/types.ts";
 import { NEXT_WALK_OFF, startZones } from "../dev/cheats.ts";
 import type { CheatsState } from "../dev/cheatsView.ts";
 import type { DomCheatsInput } from "../hud/dom/cheats.ts";
@@ -88,7 +89,10 @@ beforeEach(() => {
   fake.run.jumpToZone.mockReset();
   fake.run.toggleInvincible.mockReset();
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
 
 function open(inWalk: boolean) {
   const scene = {
@@ -124,9 +128,24 @@ it("selects a Start neighbourhood without changing other setup choices", () => {
   expect(fake.next).toEqual({ ...NEXT_WALK_OFF, start: zone });
 });
 
-it("applies live invincibility and neighbourhood changes without closing Cheats or staging choices", () => {
+// Queued frame callbacks run on paint(), and the timeouts they start run on the fake clock.
+function frames() {
+  const queued: FrameRequestCallback[] = [];
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => queued.push(callback));
+  vi.stubGlobal("cancelAnimationFrame", (id: number) => {
+    queued[id - 1] = () => undefined;
+  });
+  return {
+    paint: () => {
+      queued.splice(0).forEach((callback) => callback(0));
+      vi.runAllTimers();
+    },
+  };
+}
+
+it("applies live invincibility without closing Cheats or staging choices", () => {
   const { close, input } = open(true);
-  const zone = startZones(gameData)[2]!;
   fake.run.toggleInvincible.mockImplementation(() => {
     fake.run.activeCheats.mockReturnValue({ invincible: true, zone: startZones(gameData)[0]! });
   });
@@ -135,17 +154,51 @@ it("applies live invincibility and neighbourhood changes without closing Cheats 
   expect(fake.projection).toHaveBeenLastCalledWith(
     expect.objectContaining({ walk: { invincible: true, zone: startZones(gameData)[0]! } }),
   );
-  fake.run.jumpToZone.mockImplementation(() => {
-    fake.run.activeCheats.mockReturnValue({ invincible: true, zone });
+  expect(fake.next).toEqual(NEXT_WALK_OFF);
+  expect(close).not.toHaveBeenCalled();
+});
+
+it("shows a live neighbourhood selected on the press and switches the walk after that paint", () => {
+  const { paint } = frames();
+  const { close, input } = open(true);
+  const [, second, third] = startZones(gameData);
+  fake.run.jumpToZone.mockImplementation((zone: ZoneId) => {
+    fake.run.activeCheats.mockReturnValue({ invincible: false, zone });
   });
-  input.act({ kind: "startAt", zone });
-  expect(fake.run.jumpToZone).toHaveBeenCalledExactlyOnceWith(zone);
+  input.act({ kind: "startAt", zone: second! });
+  expect(fake.render).toHaveBeenCalledOnce();
   expect(fake.projection).toHaveBeenLastCalledWith(
-    expect.objectContaining({ walk: { invincible: true, zone } }),
+    expect.objectContaining({ walk: { invincible: false, zone: second } }),
+  );
+  expect(fake.run.jumpToZone).not.toHaveBeenCalled();
+  // A second press before the paint replaces the first: one switch, to the last choice.
+  input.act({ kind: "startAt", zone: third! });
+  expect(fake.projection).toHaveBeenLastCalledWith(
+    expect.objectContaining({ walk: { invincible: false, zone: third } }),
+  );
+  paint();
+  expect(fake.run.jumpToZone).toHaveBeenCalledExactlyOnceWith(third);
+  expect(fake.projection).toHaveBeenLastCalledWith(
+    expect.objectContaining({ walk: { invincible: false, zone: third } }),
   );
   expect(fake.next).toEqual(NEXT_WALK_OFF);
-  expect(fake.render).toHaveBeenCalledTimes(2);
   expect(close).not.toHaveBeenCalled();
+});
+
+it.each([
+  ["another cheat", (modal: ReturnType<typeof open>) => modal.input.act({ kind: "refillHearts" })],
+  ["closing Cheats", (modal: ReturnType<typeof open>) => modal.modal.destroy()],
+])("applies a pending neighbourhood switch before %s", (_name, then) => {
+  const { paint } = frames();
+  const modal = open(true);
+  const zone = startZones(gameData)[1]!;
+  modal.input.act({ kind: "startAt", zone });
+  then(modal);
+  expect(fake.run.jumpToZone).toHaveBeenCalledExactlyOnceWith(zone);
+  const order = fake.run.jumpToZone.mock.invocationCallOrder[0]!;
+  expect(fake.run.cheat.mock.invocationCallOrder.every((call) => call > order)).toBe(true);
+  paint();
+  expect(fake.run.jumpToZone).toHaveBeenCalledOnce();
 });
 
 it("does not stage later changes when the invoking walk has ended", () => {

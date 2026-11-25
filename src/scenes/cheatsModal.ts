@@ -5,6 +5,7 @@ import type { Scene } from "phaser";
 import { domArtUrl } from "../assets/domArtFiles.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import type { ZoneId } from "../data/types.ts";
 import {
   addToBank,
   grantOwned,
@@ -83,6 +84,23 @@ function runLink(scene: Scene, next: NextWalk & { readonly seed: number }): stri
   return nextWalkLink(gameData, page, next, base);
 }
 
+// Runs work in the task after the browser next paints, so what the press drew shows first: a
+// frame callback runs before that paint, and the timeout it starts runs after. Returns a cancel.
+function afterPaint(work: () => void): () => void {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  if (typeof globalThis.requestAnimationFrame !== "function") {
+    timer = setTimeout(work, 0);
+    return () => clearTimeout(timer);
+  }
+  const frame = globalThis.requestAnimationFrame(() => {
+    timer = setTimeout(work, 0);
+  });
+  return () => {
+    globalThis.cancelAnimationFrame(frame);
+    clearTimeout(timer);
+  };
+}
+
 export function openCheatsModal(
   scene: Scene,
   inWalk: boolean,
@@ -93,12 +111,16 @@ export function openCheatsModal(
     return undefined;
   }
   let question: DomQuestionPanel | undefined;
+  // A live Start at press shows its neighbourhood selected at once. The switch plans the new
+  // road, which takes long enough to hold the frame, so it runs after that frame paints.
+  let switching: { readonly cancel: () => void; readonly zone: ZoneId } | undefined;
   const state = (): CheatsState => {
-    const run = runOf(scene, inWalk);
+    const walk = runOf(scene, inWalk)?.activeCheats();
     return {
       canResetSave: canResetSave(scene),
       next: nextWalk(scene),
-      walk: run?.activeCheats(),
+      walk:
+        walk === undefined || switching === undefined ? walk : { ...walk, zone: switching.zone },
     };
   };
   const view = () =>
@@ -179,7 +201,34 @@ export function openCheatsModal(
     dom.setDimmed(true);
     dom.setInert(true);
   };
+  // The pending switch, if any, applied now: before any other cheat, and as the modal closes.
+  const finishSwitch = () => {
+    if (switching === undefined) {
+      return;
+    }
+    const { cancel, zone } = switching;
+    switching = undefined;
+    cancel();
+    runOf(scene, true)?.jumpToZone(zone);
+  };
+  const switchZone = (zone: ZoneId) => {
+    if (runOf(scene, true) === undefined) {
+      return;
+    }
+    switching?.cancel();
+    switching = {
+      cancel: afterPaint(() => {
+        finishSwitch();
+        render();
+      }),
+      zone,
+    };
+    render();
+  };
   const act = (action: CheatAction) => {
+    if (action.kind !== "startAt") {
+      finishSwitch();
+    }
     switch (action.kind) {
       case "addMoney":
       case "debuff":
@@ -221,8 +270,7 @@ export function openCheatsModal(
       }
       case "startAt": {
         if (inWalk) {
-          runOf(scene, true)?.jumpToZone(action.zone);
-          render();
+          switchZone(action.zone);
         } else {
           setNext((next) => ({ ...next, start: action.zone }));
         }
@@ -261,6 +309,7 @@ export function openCheatsModal(
       return true;
     },
     destroy: () => {
+      finishSwitch();
       question?.destroy();
       question = undefined;
       dom.destroy();
