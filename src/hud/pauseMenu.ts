@@ -15,11 +15,12 @@ export const QUIT_QUESTION_ANSWERS = ["keepPlaying", "quit"] as const;
 const TITLE_Y = MODAL.titleTop;
 const BUTTON = { ...BUTTON_SIZE.wide, gap: BUTTON_SIZE.stackGap, x: MODAL.pad, y: MODAL.header };
 
-// The width a button's label has, its key number included, 4px in from each side. The panel's
-// title is placed beside its close control, as on every modal card (panelTitle).
-export const PANEL_TEXT_ROOM = {
-  label: BUTTON.width - PAUSE_PANEL.labelPad,
-} as const;
+// The width a button's label has on panel, its key number included: a button is as wide as its
+// label's ink and the label's padding either side (modalActionWidth), at most the panel's inside.
+// The panel's title is placed beside its close control, as on every modal card (panelTitle).
+export function labelTextRoom(panel: Pick<Rect, "width">): number {
+  return panel.width - 4 * MODAL.pad;
+}
 // The note plate spans the panel inside its padding. The note is body text at scale, wrapped to
 // the plate's width less padX each side (noteTextRoom), its first line's capitals padTop under
 // the plate's top, a line of the body font apart, and the last line's lowest ink padBottom over

@@ -162,8 +162,6 @@ export const MODAL_WIDTHS = { large: 328, medium: 264 } as const;
 export const PAUSE_PANEL = {
   // How far a button's press area reaches past its face, above and below.
   hitReach: 0,
-  // A button label's room is the button's width less this.
-  labelPad: 8,
   // The pause menu's note's lines.
   noteLines: 2,
   // The note's text scale.

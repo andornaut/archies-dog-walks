@@ -59,9 +59,10 @@ import { FIRED_LINE_FIT, LOW_CHIP_FIT, lowHeartsText } from "../hud/moments.ts";
 import { MONEY_LABEL } from "../hud/moneyLabels.ts";
 import {
   HOME_QUESTION_ANSWERS,
+  homeQuestionLayout,
+  labelTextRoom,
   NOTE_PLATE,
   noteTextRoom,
-  PANEL_TEXT_ROOM,
   PAUSE_NOTE_LINES,
   pauseMenuLayout,
   QUIT_QUESTION_ANSWERS,
@@ -478,24 +479,37 @@ function pauseNoteRoles(): TextRoleCase[] {
   return plainRole("pause menu's note", "font-body", fit, notes);
 }
 
-// The pause menu's, the Home question's and Quit?'s buttons' labels with the number key that
-// picks each; their titles are cardTitles'.
+// The pause menu's buttons' labels, and the Home question's and Quit?'s with the number key that
+// picks each, on the panel each is shown on; their titles are cardTitles'.
 function questionPanelRoles(): TextRoleCase[] {
   const home = gameData.runText.homeQuestion;
   const { quit } = gameData.homeText;
+  const parts = (buttonCount: number) => ({ buttonCount, noteLines: 0 });
+  const numbered = (labels: readonly string[]) => labels.map((label, i) => `${i + 1} ${label}`);
   const menus = [
-    PAUSE_MENU_ITEMS.map((item) => pauseMenuItemLabel(gameData, item)),
-    HOME_QUESTION_ANSWERS.map((answer) => home[answer]),
-    QUIT_QUESTION_ANSWERS.map((answer) => quit[answer]),
+    {
+      labels: PAUSE_MENU_ITEMS.map((item) => pauseMenuItemLabel(gameData, item)),
+      panel: pauseMenuLayout(BODY, overlayRegion("walk"), parts(PAUSE_MENU_ITEMS.length)).panel,
+    },
+    {
+      labels: numbered(HOME_QUESTION_ANSWERS.map((answer) => home[answer])),
+      panel: homeQuestionLayout(BODY, overlayRegion("walk"), parts(HOME_QUESTION_ANSWERS.length))
+        .panel,
+    },
+    {
+      labels: numbered(QUIT_QUESTION_ANSWERS.map((answer) => quit[answer])),
+      panel: homeQuestionLayout(BODY, overlayRegion("home"), parts(QUIT_QUESTION_ANSWERS.length))
+        .panel,
+    },
   ];
-  return [
-    ...plainRole(
+  return menus.flatMap(({ labels, panel }) =>
+    plainRole(
       "pause menu's and questions' button",
       "font-title",
-      { room: PANEL_TEXT_ROOM.label, style: TEXT_STYLE },
-      menus.flatMap((labels) => labels.map((label, i) => `${i + 1} ${label}`)),
+      { room: labelTextRoom(panel), style: TEXT_STYLE },
+      labels,
     ),
-  ];
+  );
 }
 
 // The update notice over the home screen, as UpdateScene lays it out. Each button is as wide as its
