@@ -106,3 +106,6 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0251 | Audit the interface for shared components and principled alignment   | [adw-0251.md](../work/adw-0251.md) |
 | adw-0252 | Adopt the Game Kit spacing tokens with Art                           | [adw-0252.md](../work/adw-0252.md) |
 | adw-0253 | Build every shared control from Game Kit components                  | [adw-0253.md](../work/adw-0253.md) |
+| adw-0255 | Simplify the interface code with pixel-identical refactors           | [adw-0255.md](../work/adw-0255.md) |
+| adw-0256 | Fix the crash screen and panel test defects                          | [adw-0256.md](../work/adw-0256.md) |
+| adw-0257 | Unify visible label placement, rows and control looks                | [adw-0257.md](../work/adw-0257.md) |
