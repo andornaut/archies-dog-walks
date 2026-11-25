@@ -24,6 +24,7 @@ import {
 import { PALETTE } from "../palette.ts";
 import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL, topBarRects } from "../topBarTrim.ts";
 import {
+  topBarGlyphRect,
   type TopSectionButton,
   topSectionCurrency,
   topSectionCurrencyText,
@@ -274,12 +275,7 @@ export function createNativeTopSection(
         x: face.x + TOP_BAR_FACE.fill.x,
         y: face.y + TOP_BAR_FACE.fill.y + (pressed ? BUTTON_SIZE.press : 0),
       });
-      const glyphRect = {
-        height: 16,
-        width: 16,
-        x: face.x + 2,
-        y: face.y + 1 + (pressed ? BUTTON_SIZE.press : 0),
-      };
+      const glyphRect = topBarGlyphRect(face, pressed);
       const glyphBox = gridRect(scale, glyphRect);
       setBox(glyphRoot, {
         ...glyphBox,

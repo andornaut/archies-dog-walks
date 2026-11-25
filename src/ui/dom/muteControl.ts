@@ -1,24 +1,44 @@
 import "./focusStyle.css";
+import "./nativeTopSection.css";
 import "./muteControl.css";
 
+import { containsPoint } from "@andornaut/game-kit/runtime/rect";
 import crashArt from "virtual:adw-crash-art";
 
+import { BUTTON_SIZE } from "../../data/layout.ts";
 import { MENU_TEXT } from "../../data/menuText.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { cssHex, PALETTE } from "../palette.ts";
 import { TITLE_CAP_ROWS } from "../textFit.ts";
-import { topSectionLayout, topSectionStateCapTop } from "../topSection.ts";
+import { TOP_BAR_FACE } from "../topBarTrim.ts";
+import { topBarGlyphRect, topSectionLayout, topSectionStateCapTop } from "../topSection.ts";
 import { bindGameActionHolds } from "./actionBinding.ts";
-import { createControlGlyph } from "./controlGlyph.ts";
 import { createGameButton } from "./gameButton.ts";
 
 // Rows from the top of an 8px line box to Silkscreen's capitals at 8px, which the crash screen's
 // title face (src/crash/crash.css) sets the state word in, as font-title draws it on the top bar.
 export const STATE_WORD_CAP_TOP = 2;
 
+// The state word's face, as muteControl.css sets it, for measuring its ink.
+const STATE_FONT = '8px "Archie crash title"';
+
+// The pen's x that centres text's ink on centreX, its first inked column on the game pixel
+// nearest where the middle puts it, a half rounded up, as the top bar places its state word.
+// Undefined where the document cannot measure text.
+function inkCentredPen(doc: Document, text: string, centreX: number): number | undefined {
+  const context = doc.createElement("canvas").getContext?.("2d");
+  if (!context) {
+    return undefined;
+  }
+  context.font = STATE_FONT;
+  const ink = context.measureText(text);
+  const width = ink.actualBoundingBoxLeft + ink.actualBoundingBoxRight;
+  return Math.floor(centreX - width / 2 + 0.5) + ink.actualBoundingBoxLeft;
+}
+
 // Renderer failure uses the same device preference as Phaser's soundboard.
-// The control needs neither a compatible progress save nor loaded game fonts or textures, and
-// uses a vector glyph with inlined raster and text fallbacks rather than a loaded sheet.
+// The control needs neither a compatible progress save nor loaded game fonts or textures: it
+// draws the top bar's Sound from inlined art, with its state word below.
 export interface MuteControlSettings {
   readonly current: { readonly muted: boolean };
   setMuted(muted: boolean): void;
@@ -29,22 +49,7 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
   const doc = parent.ownerDocument;
   const view = doc.createElement("div");
   view.className = "adw-standalone-mute";
-  for (const name of [
-    "cream",
-    "cyan",
-    "darkGreen",
-    "forest",
-    "green",
-    "ink",
-    "navy",
-    "neutralGrey",
-    "neutralLightGrey",
-    "neutralSlate",
-    "plum",
-    "tan",
-    "white",
-    "yellow",
-  ] as const) {
+  for (const name of ["cream", "cyan", "darkSlate", "ink"] as const) {
     view.style.setProperty(`--adw-${name}`, cssHex(PALETTE[name]));
   }
   const active = () => !parent.inert && !parent.hidden;
@@ -53,68 +58,166 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
       settings.setMuted(!settings.current.muted);
     }
   };
+  // The top bar's face art at rest and pressed, its state fill, and the Sound glyph over them.
   const icon = doc.createElement("span");
-  icon.className = "adw-standalone-mute-icon";
   icon.setAttribute("aria-hidden", "true");
+  const part = (className: string, image?: string) => {
+    const element = doc.createElement("span");
+    element.className = `adw-standalone-mute-part ${className}`;
+    if (image !== undefined) {
+      element.style.backgroundImage = `url("${image}")`;
+    }
+    icon.append(element);
+    return element;
+  };
+  const faces = [crashArt.face, crashArt.facePressed].map((image) =>
+    part("adw-standalone-mute-face", image),
+  );
+  const fill = part("adw-top-section-fill");
+  const glyph = part("adw-standalone-mute-glyph", crashArt.sound);
   const controlView = createGameButton(doc, {
+    appearance: { className: "adw-top-section-button", role: "navigation" },
     content: { icon, kind: "icon", name: MENU_TEXT.settings.sound },
     getAction: () => ({ activate: toggle }),
     // Pressed means sound on, as the top bar's Sound control reports it.
     getState: () => ({ toggled: !settings.current.muted }),
+    skin: "authored",
   });
   const button = controlView.element;
   button.setAttribute("aria-keyshortcuts", "M");
   view.append(button);
-  const [, control] = topSectionLayout(["mute", "menu"]).controls[0]!;
+  const [, { face, hit }] = topSectionLayout(["mute", "menu"]).controls[0]!;
+  const px = (value: number) => `${value}px`;
   Object.assign(button.style, {
-    height: `${control.hit.height}px`,
-    left: `${control.hit.x}px`,
-    top: `${control.hit.y}px`,
-    width: `${control.hit.width}px`,
+    height: px(hit.height),
+    left: px(hit.x),
+    top: px(hit.y),
+    width: px(hit.width),
   });
-  button.style.setProperty("--mute-face-x", `${control.face.x - control.hit.x}px`);
-  button.style.setProperty("--mute-face-y", `${control.face.y - control.hit.y}px`);
-  // The current state, as the top bar shows it: directly below the face, centred across the hit
-  // box. The button's pressed state carries it for assistive technology.
+  Object.assign(controlView.face.style, {
+    height: px(TOP_BAR_FACE.size),
+    left: px(face.x - hit.x),
+    top: px(face.y - hit.y),
+    width: px(TOP_BAR_FACE.size),
+  });
+  // The current state, as the top bar shows it: directly below the face, its ink centred on the
+  // face. The button's pressed state carries it for assistive technology.
   const state = doc.createElement("span");
   state.className = "adw-standalone-mute-state";
   state.setAttribute("aria-hidden", "true");
-  Object.assign(state.style, {
-    left: `${control.hit.x}px`,
-    top: `${topSectionStateCapTop(control.face, TITLE_CAP_ROWS) - STATE_WORD_CAP_TOP}px`,
-    width: `${control.hit.width}px`,
-  });
+  state.style.top = px(topSectionStateCapTop(face, TITLE_CAP_ROWS) - STATE_WORD_CAP_TOP);
   view.append(state);
-  const image = doc.createElement("img");
-  let rasterReady = false;
-  let vector = false;
-  image.alt = "";
-  image.onload = () => {
-    rasterReady = true;
-    if (!vector) {
-      icon.classList.add("adw-standalone-mute-native");
-    }
-    icon.style.setProperty("--mute-sprite", `url("${image.src}")`);
+  let pressed = false;
+  let disposed = false;
+  // The face's parts, as the top bar places them: the pressed frame, the fill and the glyph sink
+  // with a press.
+  const placeFace = () => {
+    faces.forEach((element, index) => {
+      element.hidden = index !== Number(pressed);
+    });
+    const dip = pressed ? BUTTON_SIZE.press : 0;
+    Object.assign(fill.style, {
+      height: px(TOP_BAR_FACE.fill.height),
+      left: px(TOP_BAR_FACE.fill.x),
+      top: px(TOP_BAR_FACE.fill.y + dip),
+      width: px(TOP_BAR_FACE.fill.width),
+    });
+    const glyphRect = topBarGlyphRect(face, pressed);
+    Object.assign(glyph.style, {
+      height: px(glyphRect.height),
+      left: px(glyphRect.x - face.x),
+      top: px(glyphRect.y - face.y),
+      width: px(glyphRect.width),
+    });
   };
-  image.src = crashArt.sound;
+  const setPressed = (value: boolean) => {
+    if (pressed !== value && !disposed) {
+      pressed = value;
+      controlView.setPressed(value);
+      placeFace();
+    }
+  };
   const show = () => {
+    if (disposed) {
+      return;
+    }
     const { muted } = settings.current;
     controlView.refresh();
-    button.title = `${MENU_TEXT.settings.sound}: ${muted ? MENU_TEXT.settings.off : MENU_TEXT.settings.on}`;
+    const word = muted ? MENU_TEXT.settings.off : MENU_TEXT.settings.on;
+    button.title = `${MENU_TEXT.settings.sound}: ${word}`;
     button.setAttribute("data-muted", String(muted));
-    state.textContent = (muted ? MENU_TEXT.settings.off : MENU_TEXT.settings.on).toUpperCase();
-    try {
-      icon.replaceChildren(createControlGlyph(doc, muted ? "sound-off" : "sound-on"));
-      vector = true;
-      icon.classList.remove("adw-standalone-mute-native");
-    } catch {
-      // Keep the inlined bootstrap art and readable text if this DOM cannot construct SVG.
-      vector = false;
-      icon.replaceChildren();
-      icon.textContent = muted ? "X" : MENU_TEXT.settings.on;
-      icon.classList.toggle("adw-standalone-mute-native", rasterReady);
+    state.textContent = word.toUpperCase();
+    const pen = inkCentredPen(doc, state.textContent, face.x + TOP_BAR_FACE.size / 2);
+    Object.assign(
+      state.style,
+      pen === undefined
+        ? { left: px(hit.x), textAlign: "center", width: px(hit.width) }
+        : { left: px(pen), textAlign: "left", width: "" },
+    );
+  };
+  // The held face, by pointer while the press stays over the button, or by Enter or Space.
+  let pointer: number | undefined;
+  const inside = (event: PointerEvent) => {
+    const rect = button.getBoundingClientRect();
+    return containsPoint(
+      { height: rect.height, width: rect.width, x: rect.left, y: rect.top },
+      event.clientX,
+      event.clientY,
+    );
+  };
+  const release = (event: PointerEvent) => {
+    if (event.pointerId === pointer) {
+      pointer = undefined;
+      setPressed(false);
     }
   };
+  const listeners: [string, (event: never) => void][] = [
+    [
+      "pointerdown",
+      (event: PointerEvent) => {
+        if (event.isPrimary && event.button === 0 && active()) {
+          pointer = event.pointerId;
+          setPressed(true);
+        }
+      },
+    ],
+    [
+      "pointermove",
+      (event: PointerEvent) => {
+        if (event.pointerId === pointer) {
+          setPressed(inside(event));
+        }
+      },
+    ],
+    ["pointerup", release],
+    ["pointercancel", release],
+    [
+      "keydown",
+      (event: KeyboardEvent) => {
+        if ((event.code === "Enter" || event.code === "Space") && !event.repeat && active()) {
+          setPressed(true);
+        }
+      },
+    ],
+    [
+      "keyup",
+      (event: KeyboardEvent) => {
+        if (event.code === "Enter" || event.code === "Space") {
+          setPressed(false);
+        }
+      },
+    ],
+    [
+      "blur",
+      () => {
+        pointer = undefined;
+        setPressed(false);
+      },
+    ],
+  ];
+  for (const [name, listener] of listeners) {
+    button.addEventListener(name, listener as EventListener);
+  }
   const key = (event: KeyboardEvent) => {
     if (active() && event.code === "KeyM" && !event.repeat) {
       event.preventDefault();
@@ -148,16 +251,22 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
   const resize = typeof ResizeObserver === "undefined" ? undefined : new ResizeObserver(place);
   resize?.observe(parent);
   parent.append(view);
+  placeFace();
   show();
   place();
+  // The state word's ink is measured in its own face once that has loaded.
+  void doc.fonts?.load(STATE_FONT).then(show, () => undefined);
   return () => {
+    disposed = true;
     stop();
     stopHold();
+    for (const [name, listener] of listeners) {
+      button.removeEventListener(name, listener as EventListener);
+    }
     controlView.dispose();
     resize?.disconnect();
     parent.removeEventListener("keydown", key);
     doc.defaultView?.removeEventListener("keydown", key);
-    image.onload = null;
     view.remove();
   };
 }

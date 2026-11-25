@@ -8,9 +8,11 @@ import { ART_DIR } from "./artManifest.ts";
 export const CRASH_ART_MODULE = "virtual:adw-crash-art";
 const RESOLVED = `\0${CRASH_ART_MODULE}`;
 
-// The crash screen's art by its path under /art/: the mute control's icon sheet and Archie's
-// upset face sheet.
+// The crash screen's art by its path under /art/: the Sound control's faces at rest and pressed,
+// as the top bar draws them, its icon sheet, and Archie's upset face sheet.
 export const CRASH_ART = {
+  face: "images/ui-icon-button-normal.png",
+  facePressed: "images/ui-icon-button-pressed.png",
   pose: "sprites/face-dog-archie.png",
   sound: "sprites/icon-sound.png",
 } as const;

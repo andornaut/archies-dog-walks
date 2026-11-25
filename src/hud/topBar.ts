@@ -3,6 +3,7 @@ import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtim
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { isMuteKey, isPauseKey } from "../input/keyBindings.ts";
 import type { PressMode } from "../input/pointerTracking.ts";
+import { topBarGlyphRect } from "../ui/topSection.ts";
 import {
   type BarButton,
   debuffBarRects,
@@ -19,7 +20,8 @@ export const TOP_BAR_BUTTONS: Readonly<Record<WalkBarButtonId, BarButton>> = wal
 
 // Where the button's icon sits on its face.
 export function buttonIcon(button: BarButton): Point {
-  return { x: button.face.x + 2, y: button.face.y + 1 };
+  const { x, y } = topBarGlyphRect(button.face);
+  return { x, y };
 }
 
 // Each button's press area with debuffs debuff bars showing: its hit area, which reaches under

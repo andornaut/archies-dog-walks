@@ -9,7 +9,7 @@ import { mountMuteControl, STATE_WORD_CAP_TOP } from "../ui/dom/muteControl.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { TOP_BAR_FACE } from "../ui/topBarTrim.ts";
-import { topSectionLayout } from "../ui/topSection.ts";
+import { topBarGlyphRect, topSectionLayout } from "../ui/topSection.ts";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -33,22 +33,21 @@ it("shares pre-profile mute with the device settings, follows external changes a
     },
   );
   const doc = new FakeDocument();
-  vi.spyOn(doc, "createElementNS").mockImplementation(() => {
-    throw new Error("SVG unavailable");
-  });
   const parent = Object.assign(doc.createElement("div"), { clientHeight: 560, clientWidth: 360 });
   doc.body.append(parent);
-  const created = vi.spyOn(doc, "createElement");
   const remove = mountMuteControl(settings, parent as unknown as HTMLElement);
-  // The control's art is inlined, so the crash screen loads no file for it.
+  // The control draws the top bar's Sound from inlined art, so the crash screen loads no file.
   const button = parent.all().find((node) => node.tagName === "button")!;
-  expect(button.classList.contains("adw-standard-button")).toBe(true);
-  expect(button.children[0]?.classList.contains("adw-standard-button-face")).toBe(true);
-  const icon = created.mock.results.find(({ value }) => value.tagName === "img")?.value as {
-    src: string;
-  };
-  expect(icon.src).toBe(crashArt.sound);
-  for (const url of [crashArt.sound]) {
+  expect(button.classList.contains("adw-top-section-button")).toBe(true);
+  expect(button.getAttribute("data-ui-button-role")).toBe("navigation");
+  const images = parent
+    .all()
+    .map((node) => node.style.backgroundImage)
+    .filter(Boolean);
+  expect(images).toEqual(
+    [crashArt.face, crashArt.facePressed, crashArt.sound].map((url) => `url("${url}")`),
+  );
+  for (const url of [crashArt.face, crashArt.facePressed, crashArt.sound]) {
     const image = decodePng(Buffer.from(url.replace(/^data:image\/png;base64,/, ""), "base64"));
     expect(image.width).toBeGreaterThan(0);
   }
@@ -57,7 +56,6 @@ it("shares pre-profile mute with the device settings, follows external changes a
   );
   expect(button.getAttribute("aria-label")).toBe(MENU_TEXT.settings.sound);
   expect(button.getAttribute("role")).toBeNull();
-  expect(parent.all().some((node) => node.tagName === "svg")).toBe(false);
   expect(button.getAttribute("aria-pressed")).toBe("true");
   button.focus();
   button.fire("click");
@@ -139,26 +137,31 @@ it.each(["hidden", "inert"] as const)(
   },
 );
 
-it("uses the shared inline sound glyph when SVG is available without moving native focus", () => {
+it.each([
+  ["a pointer", { button: 0, isPrimary: true, pointerId: 1 }, "pointerdown", "pointerup"],
+  ["Space", { code: "Space", repeat: false }, "keydown", "keyup"],
+] as const)("holds the top bar's pressed face while %s holds it", (_, event, down, up) => {
   const settings = new DeviceSettings(undefined, false);
   const doc = new FakeDocument();
   const parent = Object.assign(doc.createElement("div"), { clientHeight: 560, clientWidth: 360 });
   doc.body.append(parent);
   const remove = mountMuteControl(settings, parent as unknown as HTMLElement);
   const button = parent.all().find((node) => node.tagName === "button")!;
-  const first = parent.all().find((node) => node.tagName === "svg")!;
-  expect(first).toBeDefined();
-  expect(first.getAttribute("aria-hidden")).toBe("true");
-  expect(first.getAttribute("focusable")).toBe("false");
-  expect(button.getAttribute("aria-label")).toBe(MENU_TEXT.settings.sound);
-  expect(button.getAttribute("role")).toBeNull();
-  button.focus();
-  settings.setMuted(true);
-  const second = parent.all().find((node) => node.tagName === "svg")!;
-  expect(second).toBeDefined();
-  expect(second).not.toBe(first);
-  expect(button.getAttribute("aria-pressed")).toBe("false");
-  expect(doc.activeElement).toBe(button);
+  const part = (name: string) =>
+    parent.all().filter((node) => node.classList.contains(`adw-${name}`));
+  const [face, glyph] = [part("standalone-mute-face"), part("standalone-mute-glyph")[0]!];
+  const [, control] = topSectionLayout(["mute", "menu"]).controls[0]!;
+  const look = () => ({
+    face: face.map((node) => !node.hidden),
+    glyph: Number.parseFloat(glyph.style.top!),
+    pressed: button.hasAttribute("data-ui-pressed"),
+  });
+  const glyphTop = (pressed: boolean) => topBarGlyphRect(control.face, pressed).y - control.face.y;
+  expect(look()).toEqual({ face: [true, false], glyph: glyphTop(false), pressed: false });
+  button.fire(down, { ...event });
+  expect(look()).toEqual({ face: [false, true], glyph: glyphTop(true), pressed: true });
+  button.fire(up, { ...event });
+  expect(look()).toEqual({ face: [true, false], glyph: glyphTop(false), pressed: false });
   remove();
 });
 
@@ -186,6 +189,7 @@ it.each([false, true])(
     expect(capTop + TITLE_CAP_ROWS).toBeLessThanOrEqual(hit.y + hit.height);
     const left = Number.parseFloat(word.style.left!);
     expect(left + Number.parseFloat(word.style.width!) / 2).toBe(face.x + TOP_BAR_FACE.size / 2);
+    expect(word.style.textAlign).toBe("center");
     settings.setMuted(!muted);
     expect(button.getAttribute("aria-pressed")).toBe(String(muted));
     expect(word.textContent).toBe(
@@ -194,3 +198,31 @@ it.each([false, true])(
     remove();
   },
 );
+
+// Ink 11 columns wide, a column right of the pen, and 14 wide from the pen.
+it.each([
+  [MENU_TEXT.settings.on, { actualBoundingBoxLeft: -1, actualBoundingBoxRight: 12 }],
+  [MENU_TEXT.settings.off, { actualBoundingBoxLeft: 0, actualBoundingBoxRight: 14 }],
+])("centres the %s state word's ink on the face, a half rounded up", (word, ink) => {
+  const settings = new DeviceSettings(undefined, false);
+  settings.setMuted(word === MENU_TEXT.settings.off);
+  const doc = new FakeDocument();
+  const create = doc.createElement.bind(doc);
+  vi.spyOn(doc, "createElement").mockImplementation((tagName) =>
+    tagName === "canvas"
+      ? Object.assign(create(tagName), { getContext: () => ({ font: "", measureText: () => ink }) })
+      : create(tagName),
+  );
+  const parent = Object.assign(doc.createElement("div"), { clientHeight: 560, clientWidth: 360 });
+  doc.body.append(parent);
+  const remove = mountMuteControl(settings, parent as unknown as HTMLElement);
+  const state = parent.all().find((node) => node.className === "adw-standalone-mute-state")!;
+  const [, { face }] = topSectionLayout(["mute", "menu"]).controls[0]!;
+  const width = ink.actualBoundingBoxLeft + ink.actualBoundingBoxRight;
+  const inkLeft = Number.parseFloat(state.style.left!) - ink.actualBoundingBoxLeft;
+  expect(state.textContent).toBe(word.toUpperCase());
+  expect(Number.isInteger(inkLeft)).toBe(true);
+  expect([0, 0.5]).toContain(inkLeft + width / 2 - (face.x + TOP_BAR_FACE.size / 2));
+  expect(state.style.textAlign).toBe("left");
+  remove();
+});

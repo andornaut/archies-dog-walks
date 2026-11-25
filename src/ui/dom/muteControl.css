@@ -6,18 +6,37 @@
   transform-origin: top left;
 }
 
-/* The common skin owns frame, bevel, focus and interaction fills. Keep the existing hit box. */
-.adw-standalone-mute .adw-standard-button.ui-standard-button {
-  pointer-events: auto;
-  font: 10px monospace;
+/* The top bar's face art, state fill and glyph, placed from the face's corner in game pixels.
+   nativeTopSection.css gives the button its focus, press and forced-colours fills. */
+.adw-standalone-mute-part {
+  position: absolute;
+  inset: 0 auto auto 0;
+  pointer-events: none;
 }
 
-.adw-standalone-mute .adw-standard-button .adw-standard-button-face {
-  inset: auto;
-  left: var(--mute-face-x);
-  top: var(--mute-face-y);
-  width: 20px;
-  height: 20px;
+.adw-standalone-mute-face,
+.adw-standalone-mute-glyph {
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+
+.adw-standalone-mute-face {
+  width: 100%;
+  height: 100%;
+  background-size: 100% 100%;
+}
+
+.adw-standalone-mute-part[hidden] {
+  display: none;
+}
+
+/* The icon-sound sheet's frames: on, then off. */
+.adw-standalone-mute-glyph {
+  background-size: 200% 100%;
+}
+
+.adw-standalone-mute button[data-muted="true"] .adw-standalone-mute-glyph {
+  background-position-x: 100%;
 }
 
 .adw-standalone-mute-state {
@@ -27,23 +46,5 @@
     8px / 8px "Archie crash title",
     ui-monospace,
     monospace;
-  text-align: center;
   white-space: nowrap;
-}
-
-.adw-standalone-mute-icon {
-  display: grid;
-  place-items: center;
-  width: 16px;
-  height: 16px;
-}
-
-.adw-standalone-mute-native {
-  background: var(--mute-sprite) 0 0 / 32px 16px no-repeat;
-  color: transparent;
-  image-rendering: pixelated;
-}
-
-.adw-standalone-mute button[data-muted="true"] .adw-standalone-mute-native {
-  background-position-x: -16px;
 }

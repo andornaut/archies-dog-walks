@@ -1,6 +1,6 @@
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { MIN_PRESS, TOP_BAR_SIZES, WALK_BAR_PARTS } from "../data/layout.ts";
+import { BUTTON_SIZE, MIN_PRESS, TOP_BAR_SIZES, WALK_BAR_PARTS } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { TITLE_CAP_ROWS } from "./textFit.ts";
 import {
@@ -92,6 +92,20 @@ export function topSectionStateCapTop(face: Point, capRows: number): number {
   return Math.floor(
     (face.y + TOP_BAR_FACE.size + topBarContentRows(TOP_BAR_HEIGHT).bottom - capRows) / 2,
   );
+}
+
+// art: where a top bar button's glyph sits on its face, in from the face's corner.
+const TOP_BAR_GLYPH = { x: 2, y: 1 } as const;
+
+// A top bar button's glyph on its face at face, sunk with the face while pressed: the top bar's
+// and the standalone Sound's.
+export function topBarGlyphRect(face: Point, pressed = false): Rect {
+  return {
+    height: BUTTON_SIZE.icon.glyph,
+    width: BUTTON_SIZE.icon.glyph,
+    x: face.x + TOP_BAR_GLYPH.x,
+    y: face.y + TOP_BAR_GLYPH.y + (pressed ? BUTTON_SIZE.press : 0),
+  };
 }
 
 // Currency follows the same full-size metrics with or without an effects section.
