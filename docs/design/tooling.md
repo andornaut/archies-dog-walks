@@ -71,3 +71,4 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0245 | Let cheats change the save like normal play                                  | [adw-0245.md](../work/adw-0245.md) |
 | adw-0250 | Name the chosen neighbourhood after a live Cheats switch                     | [adw-0250.md](../work/adw-0250.md) |
 | adw-0254 | Bring the procedural systems in line with the cross-game procedural policy   | [adw-0254.md](../work/adw-0254.md) |
+| adw-0258 | Audit the source structure and propose layered, encapsulated modules         | [adw-0258.md](../work/adw-0258.md) |
