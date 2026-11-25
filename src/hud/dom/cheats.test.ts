@@ -6,6 +6,7 @@ import { cheatsView } from "../../dev/cheatsView.ts";
 import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
+import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
 import { domScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
@@ -138,6 +139,23 @@ it("accepts a single press on Invincible and the selected neighbourhood during a
   pointerClick(button);
   expect(act).toHaveBeenLastCalledWith(selected.action);
   expect(act).toHaveBeenCalledTimes(2);
+  shown.destroy();
+});
+
+it("refuses a disabled switch row's press with the cue on the whole row", async () => {
+  const { act, element, pointerClick, shown, view } = await cheatsScreen();
+  shown.update({
+    ...view,
+    rows: view.rows.map((row) => (row.kind === "switch" ? { ...row, enabled: false } : row)),
+  });
+  const toggle = element.all().find((node) => node.getAttribute("role") === "switch")!;
+  pointerClick(toggle);
+  expect(act).not.toHaveBeenCalled();
+  expect([
+    toggle.hasAttribute(REFUSAL_RED),
+    toggle.classList.contains("adw-refusing-still"),
+  ]).toEqual([true, true]);
+  expect(toggle.all().some((node) => node.classList.contains("adw-refusing-still"))).toBe(false);
   shown.destroy();
 });
 

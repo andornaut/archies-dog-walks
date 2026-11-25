@@ -190,8 +190,9 @@ function buttonsPart(
 }
 
 // A switch row: Game Kit's form row (one button, role switch, its label its name and its value
-// its state word), over its face, which carries its focus and press fills, its text and the
-// ui-switch frame on the kit's switch, at the places the row's view lays out.
+// its state word), over its face, which carries its focus, press and refusal fills, its text and
+// the ui-switch frame on the kit's switch, at the places the row's view lays out. A refused row
+// plays the refusal cue (refuse) on the whole row, as a Settings row does.
 function settingRowPart(
   doc: Document,
   input: DomCheatsInput,
@@ -224,7 +225,7 @@ function settingRowPart(
     label: first.label,
     onPointerRefusal: () => {
       if (press.accepts()) {
-        refuse(input.reducedMotion(), texts);
+        refuse(input.reducedMotion(), view.element);
       }
     },
     switch: true,
