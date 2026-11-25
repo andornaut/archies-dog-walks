@@ -1,16 +1,30 @@
-import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import "@andornaut/game-kit/runtime/web/ui/dom/pager.css";
 
+import { createPager } from "@andornaut/game-kit/runtime/web/ui/dom/pager";
+import { type RefusalCue, refuse } from "@andornaut/game-kit/runtime/web/ui/dom/refusalCue";
+
+import { gameData } from "../../data/index.ts";
 import { HELP_LAYOUT } from "../../help/helpLayout.ts";
-import { HELP_DOTS, type HelpView } from "../../help/helpView.ts";
-import { borderedPart, boxPart, type DomBox, type DomPart } from "../../ui/dom/parts.ts";
-import { createTextLine, type DomTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
+import { HELP_DOTS, type HelpButton, type HelpView } from "../../help/helpView.ts";
+import { holdRule, TILE_SLOP_PX } from "../../holdRule.ts";
+import { colourBox, type DomBox, type DomPart } from "../../ui/dom/parts.ts";
+import {
+  createTextLine,
+  type DomTextLine,
+  placeBox,
+  placeFrame,
+  placeText,
+  setBox,
+} from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
 import { type PanelText } from "../../ui/modal/types.ts";
-import { PALETTE } from "../../ui/palette.ts";
+import { cssHex, PALETTE } from "../../ui/palette.ts";
+import { REFUSE } from "../../ui/refuse.ts";
 import { BODY_ASCENT_ROWS } from "../../ui/textFit.ts";
 import { showPage } from "./page.ts";
-import type { DomQuestionPanel, DomQuestionPanelInput } from "./questionPanel.ts";
+import { bindPanelFeedback } from "./panelButton.ts";
+import { addTapBurst, type DomQuestionPanel, type DomQuestionPanelInput } from "./questionPanel.ts";
 
 // Native Help text, page controls, body scrolling and dismissal share the scene's callbacks, on
 // the page template (showPage). The canvas keeps the page's backing, the picture's frame and the
@@ -22,7 +36,18 @@ export type DomHelpInput = Pick<
 > & {
   // What Back does.
   readonly footerPress: () => void;
+  // Whether a refusal plays without its shake.
+  readonly reducedMotion: () => boolean;
   readonly view: HelpView;
+};
+
+// The refusal cue on Previous, in REFUSE's times and shake.
+const REFUSAL_CUE: RefusalCue = {
+  shake: REFUSE.shake,
+  shakeMs: REFUSE.shakeMs,
+  shakeShape: "yoyo",
+  stepMs: REFUSE.flashMs,
+  steps: REFUSE.flashes,
 };
 
 // Ids that tie each screen's dialog to its page.
@@ -47,15 +72,121 @@ function dotBoxes(scale: DomScale, dots: HelpView["dots"]): DomBox[] {
   }));
 }
 
-// A dot: filled, or a ring an art pixel wide round the dark screen's colour.
-function dotPart(
+// The dot element as a dot: filled, or a ring an art pixel wide round the dark screen's colour.
+function dotLook(element: HTMLElement, current: boolean): (box: DomBox, pixel: number) => void {
+  element.classList.add("adw-framed");
+  element.style.borderRadius = "0";
+  element.style.backgroundColor = cssHex(current ? HELP_DOTS.current : HELP_DOTS.ring);
+  const fill = current ? undefined : colourBox(element.ownerDocument, PALETTE.darkBrown, "span");
+  if (fill !== undefined) {
+    element.append(fill);
+  }
+  return (box, pixel) => {
+    setBox(element, box);
+    if (fill !== undefined) {
+      setBox(fill, {
+        height: box.height - 2 * pixel,
+        left: pixel,
+        top: pixel,
+        width: box.width - 2 * pixel,
+      });
+    }
+  };
+}
+
+// The kit pager (Previous, the page dots and Next) at the places the view lays out: each button
+// its press area round its face with its label drawn as a panel button's, and the dots in the
+// count between them.
+function pagerPart(
+  input: DomHelpInput,
   doc: Document,
-  dot: HelpView["dots"][number],
-  box: (scale: DomScale) => DomBox,
-): DomPart {
-  return dot.current
-    ? boxPart(doc, HELP_DOTS.current, box)
-    : borderedPart(doc, { border: HELP_DOTS.ring, fill: PALETTE.darkBrown }, box);
+  page: {
+    readonly accepts: () => boolean;
+    readonly burst: (event: PointerEvent) => void;
+  },
+): DomPart & { dispose(): void; previous: HTMLElement } {
+  const { view } = input;
+  const [previous, next] = view.buttons as readonly [HelpButton, HelpButton];
+  const pager = createPager(doc, {
+    active: page.accepts,
+    appearance: {
+      className: "adw-reset-button adw-standard-button adw-button adw-secondary",
+      contentClassName: "adw-standard-button-content visually-hidden",
+      face: { className: "adw-standard-button-face adw-face" },
+      layout: "caller",
+    },
+    countText: ({ page: shown, pages }) => `${shown + 1} / ${pages}`,
+    dots: true,
+    labels: { next: next.label, previous: previous.label },
+    refusal: { cue: REFUSAL_CUE, reducedMotion: input.reducedMotion },
+    rule: holdRule(gameData.tuning, TILE_SLOP_PX),
+    // Next is always available: on the last page it is the completion action.
+    state: () => ({
+      next: true,
+      page: view.page,
+      pages: view.dots.length,
+      previous: previous.available,
+    }),
+    step: (direction) => input.presses[direction < 0 ? 0 : 1]?.(),
+  });
+  pager.element.style.setProperty("--ui-refusal-colour", "var(--adw-red)");
+  Object.assign(pager.element.style, {
+    height: "0",
+    left: "0",
+    position: "absolute",
+    top: "0",
+    width: "0",
+  });
+  pager.count.classList.add("adw-framed");
+  const buttons = [
+    { button: previous, view: pager.previous },
+    { button: next, view: pager.next },
+  ].map(({ button, view: control }) => {
+    const content = doc.createElement("span");
+    content.className = "adw-lines";
+    const label = createTextLine(doc, button.text);
+    label.setAttribute("aria-hidden", "true");
+    label.setAttribute("data-ui-refusal-label", "");
+    content.append(label);
+    control.face.append(content);
+    if (button.pressed) {
+      control.setPressed(true);
+    }
+    const stop = bindPanelFeedback(control, page);
+    return {
+      place: (scale: DomScale) => {
+        placeBox(scale, { x: 0, y: 0 }, control.element, button.hit);
+        placeFrame(scale, button.hit, control.face, button.rect);
+        placeText(input.fonts.title, scale, button.rect, label, button.text);
+      },
+      stop,
+    };
+  });
+  const dots = [...pager.count.querySelectorAll<HTMLElement>(".ui-pager-dot")].map((dot, i) =>
+    dotLook(dot, view.dots[i]?.current === true),
+  );
+  // The dots sit at their own places from the count's corner, not in the count's flex row.
+  for (const row of pager.count.querySelectorAll<HTMLElement>(".ui-pager-dots")) {
+    Object.assign(row.style, { left: "0", position: "absolute", top: "0" });
+  }
+  return {
+    controls: [pager.previous.element, pager.next.element],
+    dispose: () => {
+      buttons.forEach(({ stop }) => stop());
+      pager.dispose();
+    },
+    element: pager.element,
+    place: (scale) => {
+      buttons.forEach((button) => button.place(scale));
+      const count = gridRect(scale, view.count);
+      setBox(pager.count, count);
+      const pixel = artPixel(scale);
+      dotBoxes(scale, view.dots).forEach((box, i) =>
+        dots[i]?.({ ...box, left: box.left - count.left, top: box.top - count.top }, pixel),
+      );
+    },
+    previous: pager.previous.element,
+  };
 }
 
 // Lines of text in parent, placed as the canvas places them.
@@ -171,12 +302,14 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
   const surface = doc.createElement("div");
   surface.setAttribute("aria-hidden", "true");
   Object.assign(surface.style, { pointerEvents: "auto", position: "absolute" });
-  const parts: DomPart[] = [
-    { element: surface, place: (scale) => setBox(surface, gridRect(scale, HELP_LAYOUT.presses)) },
-    ...view.dots.map((dot, i) =>
-      dotPart(doc, dot, (scale) => itemAt(dotBoxes(scale, view.dots), i)),
-    ),
-  ];
+  const surfacePart: DomPart = {
+    element: surface,
+    place: (scale) => setBox(surface, gridRect(scale, HELP_LAYOUT.presses)),
+  };
+  const pager = pagerPart(input, doc, {
+    accepts: () => shown.accepts(),
+    burst: (event) => addTapBurst(layer, input.toGame({ x: event.clientX, y: event.clientY })),
+  });
   const bodyPart: DomPart = {
     controls: [clip],
     element: page,
@@ -227,9 +360,8 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
             return scroll ? false : input.gesture?.up?.(event, cancelled);
           },
         };
-  return showPage(layer, {
+  const shown = showPage(layer, {
     back: input.footerPress,
-    buttons: view.buttons,
     chrome: { back: view.footer },
     describedBy: page.id,
     fonts: input.fonts,
@@ -244,8 +376,21 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
         viewport: HELP_LAYOUT.body.viewport,
       }),
     },
-    parts,
-    presses: input.presses,
+    // The pager after the body, so focus moves from the body to Previous and Next, then Back.
+    overlays: [pager],
+    parts: [surfacePart],
     toGame: input.toGame,
   });
+  return {
+    ...shown,
+    destroy: () => {
+      pager.dispose();
+      shown.destroy();
+    },
+    refuse: (index, reducedMotion) => {
+      if (index === 0) {
+        refuse(REFUSAL_CUE, reducedMotion, pager.previous);
+      }
+    },
+  };
 }

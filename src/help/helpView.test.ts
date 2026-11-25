@@ -7,7 +7,6 @@ import { gameFont } from "../testing/fontInk.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { shownText } from "../ui/dom/pixelLine.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
-import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { BUTTON_COLOURS } from "../ui/selection.ts";
@@ -115,46 +114,45 @@ it("provides Back as the sole primary on every full-size Help page", () => {
   }
 });
 
-it("sizes Help actions from full-font ink and shares their exact rendered pointer bounds", () => {
-  for (const page of [0, gameData.help.length - 1]) {
+// Art's pager table (art/layout.md): Previous, the dots 4 apart and Next in one row, 8 between
+// the dots and each button, centred in the 296px body room; Back under it.
+it.each([
+  ["a middle page", 1, [41, 118], [167, 68], [243, 76]],
+  ["the last page", gameData.help.length - 1, [36, 118], [162, 68], [238, 86]],
+] as const)(
+  "lays out the pager on %s and shares its press areas with the pointer",
+  (_, page, [previousX, previousWidth], [countX, countWidth], [nextX, nextWidth]) => {
     const view = helpView(gameData, MEASURE, page, undefined);
     const [previous, next] = view.buttons;
-    const actions = { footer: view.footer.hit, next: next!.hit, previous: previous!.hit };
-    for (const [button, anchor] of [
-      [previous!, HELP_LAYOUT.previous],
-      [next!, HELP_LAYOUT.next],
-      [view.footer, HELP_LAYOUT.footer],
-    ] as const) {
-      expect(button.rect.width).toBe(
-        Math.max(48, Math.ceil(MEASURE.inkWidth("title", button.label) + 2 * MODAL.pad)),
-      );
-      expect(button.rect).toMatchObject({ height: anchor.height, y: anchor.y });
-      expect(button.hit).toEqual(button.rect);
-      expect(button.text.scale).toBe(2);
-      expect(button.text.centreX).toBe(button.rect.x + button.rect.width / 2);
-    }
-    expect(next!.rect.x - previous!.rect.x - previous!.rect.width).toBe(BUTTON_SIZE.gap);
-    expect((previous!.rect.x + next!.rect.x + next!.rect.width) / 2).toBe(
-      HELP_LAYOUT.screen.width / 2,
+    expect(previous!.rect).toEqual({ height: 48, width: previousWidth, x: previousX, y: 444 });
+    expect(next!.rect).toEqual({ height: 48, width: nextWidth, x: nextX, y: 444 });
+    expect(view.count).toEqual({ height: 8, width: countWidth, x: countX, y: 464 });
+    expect(view.dots.map(({ rect }) => rect.x)).toEqual(
+      Array.from({ length: gameData.help.length }, (_, i) => countX + 12 * i),
     );
-    expect(view.footer.rect.x + view.footer.rect.width / 2).toBe(HELP_LAYOUT.screen.width / 2);
+    expect(view.footer.rect).toEqual({ height: 48, width: 76, x: 142, y: 500 });
+    // The press areas are the faces and half the stacked gap round them: 4 short of the dots
+    // and of Back.
+    expect(previous!.hit).toEqual({
+      height: 56,
+      width: previousWidth + 8,
+      x: previousX - 4,
+      y: 440,
+    });
+    expect(previous!.hit.x + previous!.hit.width).toBe(countX - 4);
+    expect(next!.hit.x).toBe(countX + countWidth + 4);
+    expect(next!.hit.y + next!.hit.height).toBe(view.footer.rect.y - 4);
+    const actions = { footer: view.footer.hit, next: next!.hit, previous: previous!.hit };
     for (const [target, expected] of [
       [actions.previous, { kind: "previous" }],
       [actions.next, { kind: "advance" }],
       [actions.footer, { kind: "close" }],
     ] as const) {
       const point = { x: target.x + 1, y: target.y + target.height / 2 };
-      expect(helpActionAt(gameData.help.length, actions, point)).toEqual(expected);
-      expect(helpActionForPointer(gameData.help.length, actions, point, point)).toEqual(expected);
+      expect(helpActionAt(actions, point)).toEqual(expected);
+      expect(helpActionForPointer(actions, point, point)).toEqual(expected);
     }
-    const oldFooterEdge = { x: HELP_LAYOUT.footer.x + 1, y: view.footer.rect.y + 1 };
-    expect(helpActionAt(gameData.help.length, actions, oldFooterEdge)).toBeUndefined();
-    expect(
-      helpActionForPointer(gameData.help.length, actions, oldFooterEdge, oldFooterEdge),
-    ).toBeUndefined();
-    const point = { x: next!.rect.x + 1, y: next!.rect.y + 1 };
-    expect(
-      helpActionForPointer(gameData.help.length, actions, point, { ...point, x: point.x + 50 }),
-    ).toEqual({ kind: "previous" });
-  }
-});
+    const dot = { x: countX + 1, y: 466 };
+    expect(helpActionAt(actions, dot)).toBeUndefined();
+  },
+);

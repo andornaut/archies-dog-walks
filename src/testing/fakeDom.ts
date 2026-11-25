@@ -212,6 +212,10 @@ export class FakeElement extends FakeTarget {
     );
   }
 
+  querySelector(selector: string): FakeElement | null {
+    return this.all().find((element) => element !== this && element.matches(selector)) ?? null;
+  }
+
   querySelectorAll(selector: string): FakeElement[] {
     return this.all().filter((element) => element.matches(selector));
   }

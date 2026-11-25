@@ -7,7 +7,6 @@ import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 export type HelpAction =
   | { readonly kind: "advance" }
   | { readonly kind: "close" }
-  | { readonly kind: "goTo"; readonly page: number }
   | { readonly kind: "next" }
   | { readonly kind: "previous" };
 
@@ -35,8 +34,6 @@ export function applyHelpAction(pageCount: number, action: HelpAction, page: num
       return current === pageCount - 1 ? { kind: "close" } : { kind: "show", page: current + 1 };
     case "close":
       return { kind: "close" };
-    case "goTo":
-      return { kind: "show", page: clampPage(pageCount, action.page) };
     case "next":
       return { kind: "show", page: clampPage(pageCount, current + 1) };
     case "previous":

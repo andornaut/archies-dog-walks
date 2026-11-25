@@ -28,9 +28,8 @@ export function helpActionForKey(repeat: boolean, code: string): HelpAction | un
 }
 
 // Read on release. A swipe left brings in the next page, as if dragging the page aside;
-// a tap acts on the button or dot where it started.
+// a tap acts on the button where it started.
 export function helpActionForPointer(
-  pageCount: number,
   actions: HelpActionBounds,
   start: Point,
   end: Point,
@@ -42,5 +41,5 @@ export function helpActionForPointer(
   if (exceedsTapDistance(read(gameData.tuning, "pixels", "tapMaxDistance"), start, end)) {
     return undefined;
   }
-  return helpActionAt(pageCount, actions, start);
+  return helpActionAt(actions, start);
 }

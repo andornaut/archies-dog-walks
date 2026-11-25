@@ -860,8 +860,8 @@ export const HELP_SCREEN = {
   // The body: its line pitch, most lines, scale and left edge, and its lines' gap from the
   // scrollbar's track.
   body: { lineHeight: 18, maxLines: 6, scale: 2, scrollGap: 6, x: 8 },
-  // The page dots' side.
-  dots: { size: 8 },
+  // The pager's page dots: their side and the gap between them.
+  dots: { gap: 4, size: 8 },
   // The picture's frame: its top under the top bar, the cream pad round the picture's well, and
   // the rows from the well to the caption's capitals and from its lowest ink to the face's foot.
   frame: { captionGap: 6, pad: 4, top: 8 },

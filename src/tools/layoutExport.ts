@@ -20,7 +20,7 @@ import {
   SCREEN_LAYOUT,
 } from "../data/screen.ts";
 import type { GameData } from "../data/types.ts";
-import { dotRects, HELP_LAYOUT } from "../help/helpLayout.ts";
+import { dotRects, HELP_LAYOUT, helpPager } from "../help/helpLayout.ts";
 import { END_LAYOUT } from "../home/endLayout.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import {
@@ -153,6 +153,30 @@ export const SETTINGS_EXPORT_ROWS: readonly SettingsRowShape[] = [
 // A top-bar button with where its icon sits.
 function withIcon(button: BarButton) {
   return { ...button, icon: buttonIcon(button) };
+}
+
+// Help's pager on its middle pages and on its last, where Next is the completion action: each
+// button's face and press area, and the dots.
+function helpPagers(data: Pick<GameData, "help" | "menuText">) {
+  const width = (label: string) =>
+    modalActionWidth(inkWidth(readBitmapFont("font-title"), 2, plainMarks(label).toUpperCase()));
+  const words = data.menuText.help;
+  return Object.fromEntries(
+    (["next", "gotIt"] as const).map((next) => {
+      const pager = helpPager(data.help.length, {
+        next: width(words[next]),
+        previous: width(words.previous),
+      });
+      return [
+        next,
+        {
+          dots: dotRects(pager.count, data.help.length),
+          next: { face: pager.next.face, press: pager.next.press },
+          previous: { face: pager.previous.face, press: pager.previous.press },
+        },
+      ];
+    }),
+  );
 }
 
 export function layoutExport(
@@ -304,10 +328,7 @@ export function layoutExport(
         zoneDone: { ...CELEBRATION_LAYOUT.zoneDone, ...zoneRows },
       },
       end: END_LAYOUT,
-      help: {
-        ...HELP_LAYOUT,
-        dots: { ...HELP_LAYOUT.dots, rects: dotRects(data.help.length) },
-      },
+      help: { ...HELP_LAYOUT, pagers: helpPagers(data) },
       home: {
         ...HOME_LAYOUT,
         // Visible controls use one shared layout regardless of Quit availability.

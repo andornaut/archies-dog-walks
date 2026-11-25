@@ -1,8 +1,8 @@
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
+import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
 import { helpActionForKey, helpActionForPointer } from "./helpInput.ts";
-import { HELP_LAYOUT } from "./helpLayout.ts";
 import type { HelpAction } from "./helpPaging.ts";
 
 const advance: HelpAction = { kind: "advance" };
@@ -56,10 +56,12 @@ describe("helpActionForKey", () => {
 
 describe("helpActionForPointer", () => {
   it("turns a page on a swipe, acts on the button a tap started on, and ignores short or vertical drags", () => {
-    const button = {
-      x: HELP_LAYOUT.next.x + HELP_LAYOUT.next.width / 2,
-      y: HELP_LAYOUT.next.y + HELP_LAYOUT.next.height / 2,
+    const actions = {
+      footer: PAGE_LAYOUT.back,
+      next: { height: 48, width: 76, x: 243, y: 444 },
+      previous: { height: 48, width: 118, x: 41, y: 444 },
     };
+    const button = { x: actions.next.x + actions.next.width / 2, y: actions.next.y + 24 };
     const cases: readonly [string, Point, Point, HelpAction | undefined][] = [
       ["brings in the next page on a swipe left", { x: 250, y: 400 }, { x: 200, y: 410 }, next],
       [
@@ -84,7 +86,7 @@ describe("helpActionForPointer", () => {
       ["ignores a vertical drag", { x: 180, y: 300 }, { x: 190, y: 400 }, undefined],
     ];
     for (const [, from, to, expected] of cases) {
-      expect(helpActionForPointer(6, HELP_LAYOUT, from, to)).toEqual(expected);
+      expect(helpActionForPointer(actions, from, to)).toEqual(expected);
     }
   });
 });

@@ -1583,7 +1583,7 @@
         "scrollGap": 6,
         "x": 8,
         "viewport": {
-          "height": 54,
+          "height": 108,
           "width": 360,
           "x": 0,
           "y": 325
@@ -1594,50 +1594,6 @@
       "caption": {
         "centreX": 180,
         "y": 260
-      },
-      "dots": {
-        "centreX": 180,
-        "size": 8,
-        "spacing": 48,
-        "y": 412,
-        "rects": [
-          {
-            "height": 8,
-            "width": 8,
-            "x": 56,
-            "y": 412
-          },
-          {
-            "height": 8,
-            "width": 8,
-            "x": 104,
-            "y": 412
-          },
-          {
-            "height": 8,
-            "width": 8,
-            "x": 152,
-            "y": 412
-          },
-          {
-            "height": 8,
-            "width": 8,
-            "x": 200,
-            "y": 412
-          },
-          {
-            "height": 8,
-            "width": 8,
-            "x": 248,
-            "y": 412
-          },
-          {
-            "height": 8,
-            "width": 8,
-            "x": 296,
-            "y": 412
-          }
-        ]
       },
       "footer": {
         "height": 48,
@@ -1657,29 +1613,27 @@
         "x": 16,
         "y": 56
       },
-      "next": {
-        "height": 48,
-        "width": 128,
-        "x": 188,
-        "y": 444
-      },
       "page": {
         "height": 520,
         "width": 360,
         "x": 0,
         "y": 40
       },
+      "pager": {
+        "dots": {
+          "gap": 4,
+          "size": 8
+        },
+        "height": 48,
+        "width": 296,
+        "x": 32,
+        "y": 444
+      },
       "presses": {
         "height": 512,
         "width": 360,
         "x": 0,
         "y": 48
-      },
-      "previous": {
-        "height": 48,
-        "width": 128,
-        "x": 44,
-        "y": 444
       },
       "screen": {
         "height": 560,
@@ -1697,6 +1651,144 @@
         "width": 332,
         "x": 14,
         "y": 54
+      },
+      "pagers": {
+        "next": {
+          "dots": [
+            {
+              "height": 8,
+              "width": 8,
+              "x": 167,
+              "y": 464
+            },
+            {
+              "height": 8,
+              "width": 8,
+              "x": 179,
+              "y": 464
+            },
+            {
+              "height": 8,
+              "width": 8,
+              "x": 191,
+              "y": 464
+            },
+            {
+              "height": 8,
+              "width": 8,
+              "x": 203,
+              "y": 464
+            },
+            {
+              "height": 8,
+              "width": 8,
+              "x": 215,
+              "y": 464
+            },
+            {
+              "height": 8,
+              "width": 8,
+              "x": 227,
+              "y": 464
+            }
+          ],
+          "next": {
+            "face": {
+              "height": 48,
+              "width": 76,
+              "x": 243,
+              "y": 444
+            },
+            "press": {
+              "height": 56,
+              "width": 84,
+              "x": 239,
+              "y": 440
+            }
+          },
+          "previous": {
+            "face": {
+              "height": 48,
+              "width": 118,
+              "x": 41,
+              "y": 444
+            },
+            "press": {
+              "height": 56,
+              "width": 126,
+              "x": 37,
+              "y": 440
+            }
+          }
+        },
+        "gotIt": {
+          "dots": [
+            {
+              "height": 8,
+              "width": 8,
+              "x": 162,
+              "y": 464
+            },
+            {
+              "height": 8,
+              "width": 8,
+              "x": 174,
+              "y": 464
+            },
+            {
+              "height": 8,
+              "width": 8,
+              "x": 186,
+              "y": 464
+            },
+            {
+              "height": 8,
+              "width": 8,
+              "x": 198,
+              "y": 464
+            },
+            {
+              "height": 8,
+              "width": 8,
+              "x": 210,
+              "y": 464
+            },
+            {
+              "height": 8,
+              "width": 8,
+              "x": 222,
+              "y": 464
+            }
+          ],
+          "next": {
+            "face": {
+              "height": 48,
+              "width": 86,
+              "x": 238,
+              "y": 444
+            },
+            "press": {
+              "height": 56,
+              "width": 94,
+              "x": 234,
+              "y": 440
+            }
+          },
+          "previous": {
+            "face": {
+              "height": 48,
+              "width": 118,
+              "x": 36,
+              "y": 444
+            },
+            "press": {
+              "height": 56,
+              "width": 126,
+              "x": 32,
+              "y": 440
+            }
+          }
+        }
       }
     },
     "home": {

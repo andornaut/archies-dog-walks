@@ -180,7 +180,7 @@ export class HelpScene extends Scene {
       return false;
     }
     if (!cancelled && start.accepts()) {
-      const action = helpActionForPointer(gameData.help.length, start.actions, start.point, point);
+      const action = helpActionForPointer(start.actions, start.point, point);
       if (action !== undefined) {
         this.act(action);
       }
@@ -253,6 +253,7 @@ export class HelpScene extends Scene {
           },
         },
         presses: [() => this.act({ kind: "previous" }), () => this.act({ kind: "advance" })],
+        reducedMotion: () => currentSettings(this).reducedMotion,
       },
       view,
     );

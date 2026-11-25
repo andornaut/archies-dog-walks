@@ -4,7 +4,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameData } from "../data/types.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
-import { arrangePanelActions } from "../ui/modal/actionGroup.ts";
+import { modalActionWidth } from "../ui/modal/layout.ts";
 import { type PanelButton, type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
 import { panelButton } from "../ui/modal/view.ts";
 import { pageBack } from "../ui/pageLayout.ts";
@@ -12,7 +12,7 @@ import { PALETTE } from "../ui/palette.ts";
 import { BUTTON_COLOURS } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { helpBody } from "./helpBody.ts";
-import { dotRects, FRAME_LINES, HELP_LAYOUT } from "./helpLayout.ts";
+import { dotRects, FRAME_LINES, HELP_LAYOUT, helpPager } from "./helpLayout.ts";
 import { clampPage, helpButtons } from "./helpPaging.ts";
 
 // The help page laid out as one view both renderers draw: the canvas's (HelpScene) and the HTML
@@ -47,12 +47,13 @@ export interface HelpView {
   // the page's picture.
   readonly backdrop: readonly HelpFill[];
   readonly body: HelpBody;
-  // Previous, then Next.
+  // Previous, then Next or the completion action, each its press area as its hit.
   readonly buttons: readonly HelpButton[];
   // The picture's caption, centred on its ink across the well.
   readonly caption: PanelText;
-  // Each page's dot, in order: the current page's filled white, the others hollow tan rings a
-  // pixel wide on the dark screen.
+  // The pager's count between Previous and Next, and in it each page's dot, in order: the
+  // current page's filled white, the others hollow tan rings a pixel wide on the dark screen.
+  readonly count: Rect;
   readonly dots: readonly { readonly current: boolean; readonly rect: Rect }[];
   readonly footer: PanelButton;
   readonly illustration: Rect;
@@ -127,8 +128,8 @@ function leftLine(
 }
 
 // The help page at page, its pages read now, with what pressed shows pressed: the framed picture
-// and its caption, the page's title and body, the dots, Previous (disabled on the first page),
-// Next and the primary Back footer.
+// and its caption, the page's title and body, the pager (Previous, disabled on the first page,
+// the dots and Next) and the primary Back footer.
 export function helpView(
   data: GameData,
   measure: HelpMeasure,
@@ -182,22 +183,30 @@ export function helpView(
           },
     };
   };
-  const buttons = arrangePanelActions(measure, layout.page, "row", [
-    button(layout.previous, words.previous, {
-      available: previousEnabled,
-      pressed: pressed === "previous",
-      primary: false,
-    }),
-    button(layout.next, words[next], {
-      available: true,
-      pressed: pressed === "next",
-      primary: false,
-    }),
-  ]).map((button) => ({
-    ...button,
-    available: button.available !== false,
-    pressed: button.pressed === true,
-  }));
+  const labels = { next: words[next], previous: words.previous };
+  const widthOf = (label: string) => modalActionWidth(measure.inkWidth("title", label));
+  const pager = helpPager(pages.length, {
+    next: widthOf(labels.next),
+    previous: widthOf(labels.previous),
+  });
+  const buttons = [
+    {
+      ...button(pager.previous.face, labels.previous, {
+        available: previousEnabled,
+        pressed: pressed === "previous",
+        primary: false,
+      }),
+      hit: pager.previous.press,
+    },
+    {
+      ...button(pager.next.face, labels.next, {
+        available: true,
+        pressed: pressed === "next",
+        primary: false,
+      }),
+      hit: pager.next.press,
+    },
+  ];
   return {
     backdrop: [
       { colour: PALETTE.darkBrown, rect: layout.page },
@@ -216,7 +225,8 @@ export function helpView(
       scale: TEXT_SCALE,
       text: shown.caption,
     },
-    dots: dotRects(pages.length).map((rect, i) => ({ current: i === current, rect })),
+    count: pager.count,
+    dots: dotRects(pager.count, pages.length).map((rect, i) => ({ current: i === current, rect })),
     footer: pageBack(measure, data.menuText.pageBack),
     illustration: layout.illustration,
     label: words.heading,

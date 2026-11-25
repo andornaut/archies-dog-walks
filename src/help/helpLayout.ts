@@ -1,10 +1,9 @@
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
+import { arrangePager, type PagerArrangement } from "@andornaut/game-kit/runtime/ui/pager";
 
 import { HELP_SCREEN, MIN_PRESS } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
-import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { rectIndexAt } from "../ui/grid.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { MODAL } from "../ui/modalGeometry.ts";
 import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
@@ -12,7 +11,7 @@ import { BODY_ASCENT_ROWS, BODY_INK_ROWS, TEXT_SCALE, TITLE_CAP_ROWS } from "../
 import type { HelpAction } from "./helpPaging.ts";
 
 const { screen: SCREEN } = SCREEN_LAYOUT;
-const { height, width } = SCREEN;
+const { width } = SCREEN;
 const HELP = HELP_SCREEN;
 
 // The frame's lines, an ink line round a plum one, as the house chrome's, and the well's rings
@@ -44,21 +43,22 @@ const FRAME_TOP = grow(WELL, HELP.frame.pad + FRAME_LINES);
 const FRAME: Rect = { ...FRAME_TOP, height: FACE_BOTTOM + FRAME_LINES - FRAME_TOP.y };
 const TITLE_Y = FRAME.y + FRAME.height - 1 + HELP.titleGap;
 const BUTTONS_Y = PAGE_LAYOUT.back.y - BUTTON_SIZE.stackGap - BUTTON_SIZE.compact.height;
-const DOTS_Y = BUTTONS_Y - BUTTON_SIZE.smallGap - HELP.dots.size;
+// The pager's room: the Large panel's body columns.
+const PAGER_X = MODAL.margin + MODAL.pad;
 const BODY_Y = TITLE_Y + TITLE_CAP_ROWS * TEXT_SCALE + LABEL_HELP_GAP;
 // Each body line's slot, lineHeight rows from its letters' top, holds the line's whole ink; the
 // viewport shows whole slots only.
 const BODY_TOP = BODY_Y - BODY_ASCENT_ROWS * HELP.body.scale;
-const DOTS_HIT_TOP = DOTS_Y - (MIN_TAP_SIZE - HELP.dots.size) / 2;
 const BODY_HEIGHT =
-  Math.floor((DOTS_HIT_TOP - MODAL.gap - BODY_TOP) / HELP.body.lineHeight) * HELP.body.lineHeight;
+  Math.floor((BUTTONS_Y - MODAL.gap - BODY_TOP) / HELP.body.lineHeight) * HELP.body.lineHeight;
 const BODY_VIEWPORT = { height: BODY_HEIGHT, width, x: 0, y: BODY_TOP } as const;
 
 // The help page's geometry at the render resolution. A text position is its first line's
 // left edge and capitals' top.
 // The page has no heading and no close control: the top bar over it is the screen's own.
 // The framed picture comes first, its caption centred across the well under it, then the page's
-// title and body. The body's lines, at most maxLines of them, are lineHeight apart, its capitals
+// title and body, then the pager: Previous, the page dots and Next in one row centred in its room,
+// over Back. The body's lines, at most maxLines of them, are lineHeight apart, its capitals
 // the label gap under the title's actual ink, and stop scrollGap short of the pages' scrollbar
 // track.
 // The body scrolls in its viewport, whole lines at a time.
@@ -72,57 +72,52 @@ export const HELP_LAYOUT = {
     y: BODY_Y,
   },
   caption: { centreX: WELL.x + WELL.width / 2, y: CAPTION_Y },
-  // A tap target apart, so each dot's target is its own slot, ending above Previous's and
-  // Next's, the small button gap over their faces.
-  dots: {
-    centreX: width / 2,
-    size: HELP.dots.size,
-    spacing: MIN_TAP_SIZE,
-    y: DOTS_Y,
-  },
   // Back, the pages' own.
   footer: PAGE_LAYOUT.back,
   frame: FRAME,
   illustration: PICTURE,
-  next: {
-    ...BUTTON_SIZE.compact,
-    x: width / 2 + BUTTON_SIZE.gap / 2,
-    y: BUTTONS_Y,
-  },
   page: PAGE,
-  presses: { ...PAGE, height: PAGE.y + PAGE.height - MIN_PRESS, y: MIN_PRESS },
-  previous: {
-    ...BUTTON_SIZE.compact,
-    x: width / 2 - BUTTON_SIZE.gap / 2 - BUTTON_SIZE.compact.width,
+  // The pager's row: its room, the row's top, and the dots' side and gap.
+  pager: {
+    dots: HELP.dots,
+    height: BUTTON_SIZE.compact.height,
+    width: width - 2 * PAGER_X,
+    x: PAGER_X,
     y: BUTTONS_Y,
   },
+  presses: { ...PAGE, height: PAGE.y + PAGE.height - MIN_PRESS, y: MIN_PRESS },
   screen: SCREEN,
   title: { ...HELP.title, y: TITLE_Y },
   well: WELL,
 } as const;
 
-// The art's rect grown about its centre to at least MIN_TAP_SIZE each way, then shifted back
-// onto the screen, so small art keeps a full-size target.
-export function tapRect(art: Rect): Rect {
-  const grow = (start: number, size: number, limit: number) => {
-    const grown = Math.max(size, MIN_TAP_SIZE);
-    const from = start - (grown - size) / 2;
-    return { from: Math.min(Math.max(0, from), limit - grown), grown };
-  };
-  const across = grow(art.x, art.width, width);
-  const down = grow(art.y, art.height, height);
-  return { height: down.grown, width: across.grown, x: across.from, y: down.from };
+// The pager for pageCount pages, Previous previousWidth wide and Next nextWidth: the dots' row,
+// each dot its side and gap apart, between the buttons in the pager's room (arrangePager). Each
+// button's press area is its face and half the stacked gap round it, as a stacked button's is, so
+// it stops short of the dots and of Back the stacked gap below.
+export function helpPager(
+  pageCount: number,
+  widths: { readonly next: number; readonly previous: number },
+): PagerArrangement {
+  const { dots, height, width, x, y } = HELP_LAYOUT.pager;
+  return arrangePager(
+    { origin: { x, y }, press: { margin: BUTTON_SIZE.stackGap / 2 }, width },
+    {
+      count: { height: dots.size, width: pageCount * dots.size + (pageCount - 1) * dots.gap },
+      next: { height, width: widths.next },
+      previous: { height, width: widths.previous },
+    },
+  );
 }
 
-// One dot per page, centred as a row.
-export function dotRects(pageCount: number): Rect[] {
-  const { centreX, size, spacing, y } = HELP_LAYOUT.dots;
-  const left = centreX - (pageCount * spacing) / 2 + (spacing - size) / 2;
+// The dots in the pager's count, left to right.
+export function dotRects(count: Rect, pageCount: number): Rect[] {
+  const { gap, size } = HELP_LAYOUT.pager.dots;
   return Array.from({ length: pageCount }, (_, i) => ({
     height: size,
     width: size,
-    x: Math.round(left + i * spacing),
-    y,
+    x: count.x + i * (size + gap),
+    y: count.y,
   }));
 }
 
@@ -132,12 +127,8 @@ export interface HelpActionBounds {
   readonly previous: Rect;
 }
 
-// The rendered button or dot under a tap, if any.
-export function helpActionAt(
-  pageCount: number,
-  actions: HelpActionBounds,
-  { x, y }: Point,
-): HelpAction | undefined {
+// The rendered button under a tap, if any.
+export function helpActionAt(actions: HelpActionBounds, { x, y }: Point): HelpAction | undefined {
   if (containsPoint(actions.footer, x, y)) {
     return { kind: "close" };
   }
@@ -147,6 +138,5 @@ export function helpActionAt(
   if (containsPoint(actions.next, x, y)) {
     return { kind: "advance" };
   }
-  const page = rectIndexAt(dotRects(pageCount).map(tapRect), x, y);
-  return page === undefined ? undefined : { kind: "goTo", page };
+  return undefined;
 }

@@ -14,7 +14,7 @@ const show = (page: number): HelpOutcome => ({ kind: "show", page });
 const close: HelpOutcome = { kind: "close" };
 
 describe("applyHelpAction", () => {
-  it("turns, holds at the ends, jumps, advances and closes, past a shrunken page count too", () => {
+  it("turns, holds at the ends, advances and closes, past a shrunken page count too", () => {
     const cases: readonly [string, number, HelpAction, number, HelpOutcome][] = [
       ["turns one page with next", PAGES, { kind: "next" }, 2, show(3)],
       ["turns one page with previous", PAGES, { kind: "previous" }, 2, show(1)],
@@ -22,8 +22,6 @@ describe("applyHelpAction", () => {
       ["holds previous at the first page", PAGES, { kind: "previous" }, 0, show(0)],
       ["advances like next until the last page", PAGES, { kind: "advance" }, 0, show(1)],
       ["closes on advance from the last page", PAGES, { kind: "advance" }, LAST, close],
-      ["jumps to a page", PAGES, { kind: "goTo", page: 4 }, 0, show(4)],
-      ["jumps to a page held in range", PAGES, { kind: "goTo", page: 9 }, 0, show(LAST)],
       ["closes from any page", PAGES, { kind: "close" }, 3, close],
       ["closes on advance past a shrunken page count", 3, { kind: "advance" }, 5, close],
       [

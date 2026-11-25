@@ -6,7 +6,7 @@ import { gameData } from "../../data/index.ts";
 import { HELP_LAYOUT } from "../../help/helpLayout.ts";
 import { helpView } from "../../help/helpView.ts";
 import { bodyTextWidth } from "../../testing/bodyFont.ts";
-import { FakeDocument, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
+import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import type { NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import { domScale } from "../../ui/domScale.ts";
@@ -38,6 +38,7 @@ function helpScreen(
     footerPress: close,
     ...(gesture === undefined ? {} : { gesture }),
     presses,
+    reducedMotion: () => true,
     toGame: (point) => point,
     view: helpView(
       gameData,
@@ -53,6 +54,10 @@ function helpScreen(
   const [dialog] = layerViews(element);
   return { close, dialog, doc, nodes: dialog?.all() ?? [], presses, shown };
 }
+
+// A control's accessible name: its label, or its text for a kit text button.
+const controlName = (node: FakeElement) =>
+  node.getAttribute("aria-label") ?? node.querySelector(".ui-control-label")?.textContent ?? null;
 
 describe("the HTML help screen", () => {
   it("exposes native page controls with the authored dialog name and keyboard focus", async () => {
@@ -72,8 +77,10 @@ describe("the HTML help screen", () => {
     expect(controls[0]!.getAttribute("aria-description")).toBeNull();
     controls[0]?.fire("click", { detail: 0 });
     expect(presses[0]).not.toHaveBeenCalled();
+    // Previous on the first page refuses a press with the refusal cue.
     controls[0]?.fire("click", { detail: 1 });
-    expect(presses[0]).toHaveBeenCalledOnce();
+    expect(presses[0]).not.toHaveBeenCalled();
+    expect(controls[0]?.hasAttribute("data-ui-refusal-red")).toBe(true);
     controls[1]?.fire("click", { detail: 0 });
     expect(presses[1]).toHaveBeenCalledOnce();
     const page = nodes.find((node) => node.id === dialog?.getAttribute("aria-describedby"));
@@ -91,21 +98,18 @@ describe("the HTML help screen", () => {
     expect(
       nodes
         .filter((node) => node.tagName === "button" && node.attributes.has("data-ui-pressed"))
-        .map((node) => node.getAttribute("aria-label")),
+        .map(controlName),
     ).toEqual(shown);
     expect(nodes.some((node) => node.className === "adw-close")).toBe(false);
     const previous = nodes.find(
-      (node) =>
-        node.tagName === "button" &&
-        node.getAttribute("aria-label") === gameData.menuText.help.previous,
+      (node) => node.tagName === "button" && controlName(node) === gameData.menuText.help.previous,
     )!;
     expect(previous).toBeDefined();
-    expect(previous.classList.contains("adw-disabled")).toBe(page === 0);
     expect(previous.getAttribute("aria-disabled") === "true").toBe(page === 0);
   });
 });
 
-it("keeps all Help copy scrollable without page gestures and binds every page's Back independently", async () => {
+it("shows every Help body whole without page gestures and binds every page's Back independently", async () => {
   await Promise.all(
     [0, gameData.help.length - 1].map(async (page) => {
       const down = vi.fn(),
@@ -121,7 +125,7 @@ it("keeps all Help copy scrollable without page gestures and binds every page's 
       expect(body.style.overflowY).toBe("auto");
       expect(body.style.touchAction).toBe("pan-y");
       expect(body.style.overscrollBehavior).toBe("contain");
-      expect(Number.parseFloat(body.children[0]!.style.height!)).toBeGreaterThan(
+      expect(Number.parseFloat(body.children[0]!.style.height!)).toBeLessThanOrEqual(
         Number.parseFloat(body.style.height!),
       );
       expect(Number.parseFloat(body.style.height!)).toBe(HELP_LAYOUT.body.viewport.height * 2);
@@ -132,9 +136,9 @@ it("keeps all Help copy scrollable without page gestures and binds every page's 
       const slots = body.children[0]!.children.filter(
         (child) => child.style.scrollSnapAlign === "start",
       );
-      expect(slots.length).toBeGreaterThan(HELP_LAYOUT.body.viewport.height / 18);
+      expect(slots.length).toBeLessThanOrEqual(HELP_LAYOUT.body.viewport.height / 18);
       const track = nodes.find((node) => node.className === "adw-scroll-track");
-      expect(track?.parent?.hidden).toBe(false);
+      expect(track?.parent?.hidden).toBe(true);
       const stop = vi.fn();
       for (const code of ["ArrowDown", "PageDown", "Space"]) {
         body.fire("keydown", { code, stopPropagation: stop });
@@ -195,6 +199,7 @@ it("hides the scrollbar while the body fits its viewport", () => {
     fonts,
     footerPress: vi.fn(),
     presses: [vi.fn(), vi.fn()],
+    reducedMotion: () => true,
     toGame: (point) => point,
     view: helpView(gameData, MEASURE, 0, undefined),
   });
