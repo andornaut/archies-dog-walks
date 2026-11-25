@@ -4,7 +4,7 @@ import { type GameObjects, Scene } from "phaser";
 
 import { firstTag, playTag } from "../assets/phaser/sprites.ts";
 import { gameData } from "../data/index.ts";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
 import { BADGE_CHEER, BADGE_POP, type BadgeView, earnedBadges } from "../home/badgesView.ts";
 import { END_LAYOUT } from "../home/endLayout.ts";
 import { endScreenView } from "../home/endScreenView.ts";
@@ -22,6 +22,7 @@ import type { DomEndScreen } from "../hud/dom/endScreen.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
 import { isConfirmKey, isMuteKey } from "../input/keyBindings.ts";
 import { screenArea } from "../input/outsideTap.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { PackFigures } from "../pack/phaser/packFigures.ts";
 import { stopWakeLock } from "../pwa/index.ts";
 import type { LastWalk } from "../save/schema.ts";

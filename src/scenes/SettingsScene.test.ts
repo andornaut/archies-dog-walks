@@ -1,7 +1,6 @@
 import { expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import { installStepsLayout, settingsLayout } from "../home/settings.ts";
 import {
@@ -12,6 +11,7 @@ import {
   settingsView,
 } from "../home/settingsView.ts";
 import { type DomSettingsInput, showSettings } from "../hud/dom/settings.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
 import { SettingsScene } from "../scenes/SettingsScene.ts";
 import { FakeDocument, fakeLayer, layerViews } from "../testing/fakeDom.ts";

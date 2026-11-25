@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { MIN_PRESS } from "../data/layout.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { PressMode } from "../input/pointerTracking.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import {
   gameplayAllowed,
   NOTHING_PAUSED,

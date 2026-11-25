@@ -2,13 +2,13 @@ import { type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { Core, Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { type ChoiceEntry } from "../hud/choiceCardView.ts";
 import { type NativeChoiceCards, showChoiceCards } from "../hud/dom/choiceCards.ts";
 import { type HoldPress, holdRule, startHold, tickHold } from "../input/hold.ts";
 import { cardNumberForKey, menuKeyActs } from "../input/keyBindings.ts";
 import { keyNumbersShown } from "../input/keyNumbers.ts";
 import { pressDown, pressUp, type TargetPress } from "../input/targetPress.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { cardRowIn } from "../presentation/cardLayout.ts";
 import { type CardView, type Choice, MAX_CARD_OPTIONS } from "../rules/choices.ts";
 import type { UiLayer } from "../ui/dom/uiLayer.ts";

@@ -4,7 +4,6 @@ import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import { Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { FEEDBACK } from "../home/feedback.ts";
 import { type Focus, moveFocus } from "../home/focus.ts";
 import { type OverlayRegion, overlayRegion } from "../home/homeBar.ts";
@@ -43,6 +42,7 @@ import {
   isPauseKey,
   menuKeyActs,
 } from "../input/keyBindings.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import {
   installApp,
   installState,

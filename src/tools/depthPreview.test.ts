@@ -1,9 +1,9 @@
 import { blankImage } from "@andornaut/art-kit/build/rgbaImage";
 import { describe, expect, it } from "vitest";
 
-import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
 import { depthDraw } from "../layout/depthScale.ts";
 import { project } from "../layout/projection.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
 import { depthPreviewArgs, type PreviewArt, sweepDistances, sweepRow } from "./depthPreview.ts";
 

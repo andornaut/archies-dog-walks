@@ -4,12 +4,12 @@ import { advanceWidth, fontMetrics } from "@andornaut/game-kit/runtime/text/bitm
 import { expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { messageLine } from "../home/homeLines.ts";
 import { gearRows, type ShopTab, slotRows } from "../home/shop.ts";
 import { SHOP_LAYOUT, SHOP_MESSAGE_FIT, shopRowTextRoom } from "../home/shopLayout.ts";
 import type { ShopScreenView } from "../hud/dom/shopScreen.ts";
 import { type ListScroll, listScroll } from "../input/listScroll.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { FakeDocument, fakeLayer } from "../testing/fakeDom.ts";
 import { fontInkRows, gameFont } from "../testing/fontInk.ts";
 import { newPlayerSave } from "../testing/saves.ts";

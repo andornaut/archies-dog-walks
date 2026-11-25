@@ -1,9 +1,10 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { describe, expect, it, vi } from "vitest";
 
-import { ROAD_CAMERA, SCREEN_CONFIG } from "../data/screen.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { ZoneId } from "../data/types.ts";
 import { project, roadProjection } from "../layout/projection.ts";
+import { ROAD_CAMERA } from "../layout/screen.ts";
 import { screenLayout, walkerFootY } from "../layout/screenLayout.ts";
 import {
   distanceBehind,

@@ -1,7 +1,8 @@
 import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { amountText } from "../rules/causes.ts";
 import { fontFileMetrics } from "../testing/fontInk.ts";
 import { cents } from "../units.ts";

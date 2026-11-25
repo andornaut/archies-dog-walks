@@ -8,12 +8,13 @@ import { describe, expect, it } from "vitest";
 
 import { depthVariantKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import { LANE_COUNT } from "../data/screen.ts";
 import type { DogId, EncounterId, MinorObstacleId } from "../data/types.ts";
 import { type DepthArt, depthDraw } from "../layout/depthScale.ts";
 import { obstacleParts } from "../layout/obstacleArt.ts";
 import { everyPack, PART_INSET } from "../layout/packFormation.ts";
 import { project, SCALE_STEPS, screenYAt } from "../layout/projection.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { testState } from "../testing/runState.ts";
 import { spriteSource } from "../tools/atlas/atlasLayout.ts";
 import { type DogBox, hitDog, type LanedBox, type ScaledBox } from "./collision.ts";

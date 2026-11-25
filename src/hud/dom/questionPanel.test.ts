@@ -2,7 +2,7 @@ import { PENDING_ATTRIBUTE } from "@andornaut/game-kit/runtime/web/ui/dom/imageR
 import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
-import { SCREEN_LAYOUT } from "../../data/screen.ts";
+import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { FakeDocument, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { artPixel, domScale } from "../../ui/domScale.ts";

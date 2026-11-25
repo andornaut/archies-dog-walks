@@ -8,9 +8,10 @@ import shippedManifest from "../../public/art/manifest.json" with { type: "json"
 import { minorObstacleSpriteKey } from "../assets/spriteKeys.ts";
 import { minorLook } from "../content/obstacleLooks.ts";
 import { gameData } from "../data/index.ts";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import { LANE_COUNT } from "../data/screen.ts";
 import type { MinorObstacleId } from "../data/types.ts";
 import { laneCentreXs } from "../layout/lanes.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { newRun } from "../rules/newRun.ts";
 import { currentZone } from "../rules/route.ts";
 import { read } from "../rules/units.ts";

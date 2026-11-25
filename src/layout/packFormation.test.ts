@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 
 import { dogSpriteKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import { LANE_COUNT } from "../data/screen.ts";
 import type { DogId, Size, WalkerId } from "../data/types.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
 import { spriteSource } from "../tools/atlas/atlasLayout.ts";
@@ -34,6 +34,7 @@ import {
   WALKER_SILHOUETTES,
 } from "./packFormation.ts";
 import { distanceAtY, project, scaleAt, screenYAt } from "./projection.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "./screen.ts";
 
 const ROAD = SCREEN_LAYOUT.road;
 // The game's projection, its feet on the walker's feet line.

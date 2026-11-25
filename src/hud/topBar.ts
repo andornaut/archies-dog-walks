@@ -1,8 +1,8 @@
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { isMuteKey, isPauseKey } from "../input/keyBindings.ts";
 import type { PressMode } from "../input/pointerTracking.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { topBarGlyphRect, topSectionButtonAt } from "../ui/topSection.ts";
 import {
   type BarButton,

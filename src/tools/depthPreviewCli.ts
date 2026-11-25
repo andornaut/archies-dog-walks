@@ -14,10 +14,11 @@ import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import type { AssetManifest } from "../assets/manifest.ts";
 import { backdropKey, depthVariantKey, roadTileKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { LANE_COUNT, SCREEN_CONFIG } from "../data/screen.ts";
 import type { Zone } from "../data/types.ts";
 import { laneCentreXs } from "../layout/lanes.ts";
 import { SCALE_STEPS } from "../layout/projection.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import {
   drawRoad,
   type PixelImage,

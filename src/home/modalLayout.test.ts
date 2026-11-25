@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { MIN_PRESS } from "../data/layout.ts";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";

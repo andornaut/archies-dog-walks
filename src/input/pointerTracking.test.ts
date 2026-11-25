@@ -9,8 +9,9 @@ import {
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
+import type { ScreenConfig } from "../data/screen.ts";
 import { walkPaused } from "../hud/topBar.ts";
-import { type ScreenConfig, screenLayout } from "../layout/screenLayout.ts";
+import { screenLayout } from "../layout/screenLayout.ts";
 import { read } from "../rules/units.ts";
 import {
   advanceLaneControl,

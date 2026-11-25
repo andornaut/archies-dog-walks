@@ -3,8 +3,8 @@ import { expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
 import { BUTTON_SIZE, DEBUFF_BAR, ZONE_PILL_SIZES } from "../../data/layout.ts";
-import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import type { ZoneId } from "../../data/types.ts";
+import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { modifiersOf } from "../../rules/modifiers.ts";
 import { currentZone } from "../../rules/route.ts";
 import { FakeDocument } from "../../testing/fakeDom.ts";

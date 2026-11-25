@@ -6,8 +6,8 @@ import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { QuipMoment } from "../data/types.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { bodyRunWidth } from "../testing/bodyFont.ts";
 import { defined } from "../testing/defined.ts";
 import { everyStripLine } from "../testing/everyStripLine.ts";

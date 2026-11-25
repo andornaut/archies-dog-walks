@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { dogFaceKey } from "../../assets/spriteKeys.ts";
 import { gameData } from "../../data/index.ts";
-import { SCREEN_LAYOUT } from "../../data/screen.ts";
+import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";

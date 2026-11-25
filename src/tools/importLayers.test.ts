@@ -98,8 +98,6 @@ const KNOWN: Readonly<Record<Kind, readonly string[]>> = {
   cycle: [],
   sideways: [],
   upward: [
-    "src/data/screen.ts -> src/layout/projection.ts",
-    "src/data/screen.ts -> src/layout/screenLayout.ts",
     "src/home/detailCardView.ts -> src/hud/effectNames.ts",
     "src/home/dom/speech.ts -> src/hud/dom/detailCard.ts",
     "src/home/endScreenView.ts -> src/hud/hudView.ts",

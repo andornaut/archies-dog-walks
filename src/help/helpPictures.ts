@@ -4,7 +4,7 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { pixels } from "@andornaut/game-kit/runtime/units";
 
 import { dogSpriteKey } from "../assets/spriteKeys.ts";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { LANE_COUNT, SCREEN_CONFIG } from "../data/screen.ts";
 import type {
   CardSource,
   DogId,
@@ -14,6 +14,7 @@ import type {
   MinorObstacleId,
 } from "../data/types.ts";
 import { laneCentreXs } from "../layout/lanes.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { cardRowIn } from "../presentation/cardLayout.ts";
 import type { Change } from "../rules/causes.ts";
 import { cardFor, type CardView, forkCard, MAX_CARD_OPTIONS } from "../rules/choices.ts";

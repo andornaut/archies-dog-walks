@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 
-import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { screenArea } from "./outsideTap.ts";
 
 it("uses the logical game screen and retains the covered overlay regions", () => {

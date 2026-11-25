@@ -11,7 +11,6 @@ import { playEffect, spriteMetrics } from "../assets/phaser/sprites.ts";
 import { dogSpriteKey, gearIconKey, walkerPortraitKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { PLATE_PAD } from "../data/layout.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId, GearId, WalkerId } from "../data/types.ts";
 import { clearRunOverrides } from "../dev/pageRunSetup.ts";
 import { startWalkOpensHelp } from "../help/helpSeen.ts";
@@ -91,6 +90,7 @@ import {
 } from "../input/keyBindings.ts";
 import { screenArea } from "../input/outsideTap.ts";
 import type { PackPlacement } from "../layout/packFormation.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { waitedLoad } from "../loadingProgress.ts";
 import { addFigure, PackFigures } from "../pack/phaser/packFigures.ts";
 import { dollarAmountText, shortDollarAmountText } from "../presentation/currency.ts";

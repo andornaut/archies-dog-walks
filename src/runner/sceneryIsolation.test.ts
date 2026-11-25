@@ -3,8 +3,9 @@ import { randomStream } from "@andornaut/game-kit/runtime/random";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import { LANE_COUNT } from "../data/screen.ts";
 import { distanceAtY } from "../layout/projection.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { startAmbient, stepAmbient } from "../road/ambient.ts";
 import { newRoadsidePlaces, placeRoadside, ROADSIDE } from "../road/roadsideProps.ts";
 import { type KeptScenery, struckBy, struckNow } from "../road/struckScenery.ts";

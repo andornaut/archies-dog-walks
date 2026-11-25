@@ -3,7 +3,6 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { Events, type GameObjects, Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { HelpPictureId } from "../data/types.ts";
 import {
   type DragLoop,
@@ -17,6 +16,7 @@ import {
 } from "../help/helpPictures.ts";
 import { changeLabels } from "../hud/hudView.ts";
 import { NOTHING_PAUSED } from "../hud/topBar.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { currentZone } from "../rules/route.ts";
 import { read } from "../rules/units.ts";
 import { laneControlIn } from "../runner/laneControl.ts";

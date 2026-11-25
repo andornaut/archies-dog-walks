@@ -1,7 +1,18 @@
-import { roadCameraFor } from "../layout/projection.ts";
-import { type ScreenConfig, screenLayout, walkerFootY } from "../layout/screenLayout.ts";
 import { HUD_REGIONS, TOP_BAR_HEIGHT } from "./layout.ts";
-import { TUNING } from "./tuning.ts";
+
+export interface ScreenConfig {
+  backdropHeight: number;
+  dogCardHeight: number;
+  dogRowHeight: number;
+  dogSlotCount: number;
+  height: number;
+  junctionRows: number;
+  roadIntoBand: number;
+  roadWidth: number;
+  topBarHeight: number;
+  width: number;
+  zoneProgressHeight: number;
+}
 
 // Internal render resolution: portrait, scaled to the window without smoothing. The walk bar,
 // the dog card row and the progress line take their sizes from src/data/layout.ts.
@@ -26,21 +37,9 @@ export const SCREEN_CONFIG: ScreenConfig = {
   zoneProgressHeight: HUD_REGIONS.zoneProgressHeight,
 };
 
-// The screen's regions, laid out for SCREEN_CONFIG.
-export const SCREEN_LAYOUT = screenLayout(SCREEN_CONFIG);
-
 export const LANE_COUNT = 5;
 
-// The pseudo-3D road's camera: the screen row the road's vanishing point sits on, and the
-// ground's screen speed at the walker's feet relative to sprite scale there. The road's far
-// edge, on the backdrop band's bottom edge, is at scale 0.5 whatever the speed, so the
-// backdrops, drawn to continue the road at their bottom row, keep their join. The rest of the
-// camera derives from the band's bottom edge and the walker's feet.
+// The scale of the pseudo-3D road's far edge, on the backdrop band's bottom edge, whatever the
+// speed, so the backdrops, drawn to continue the road at their bottom row, keep their join
+// (ROAD_CAMERA in src/layout/screen.ts).
 export const ROAD_FAR_SCALE = 0.5;
-const { road } = SCREEN_LAYOUT;
-export const ROAD_CAMERA = roadCameraFor({
-  farScale: ROAD_FAR_SCALE,
-  farY: road.y,
-  footY: walkerFootY(road),
-  visibleDistance: TUNING.seconds.lookAheadSeconds * TUNING.pixels.roadScrollSpeed,
-});

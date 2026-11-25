@@ -1,8 +1,8 @@
 import { expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { helpPicture } from "../help/helpPictures.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { CARD_LAYOUT, cardRowIn } from "../presentation/cardLayout.ts";
 import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
 import { gameFont } from "../testing/fontInk.ts";

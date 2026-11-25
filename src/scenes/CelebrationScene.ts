@@ -2,7 +2,6 @@ import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { AchievementId, DogId } from "../data/types.ts";
 import {
   BADGE_STRIP,
@@ -17,6 +16,7 @@ import { overlayRegion } from "../home/homeBar.ts";
 import { ordinaryBadgeModalLayout } from "../hud/celebrationLayout.ts";
 import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import { screenArea } from "../input/outsideTap.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { achievementLabel } from "../rules/achievements.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";

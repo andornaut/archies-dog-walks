@@ -3,8 +3,9 @@ import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects } from "phaser";
 
 import { gameData } from "../../data/index.ts";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../../data/screen.ts";
+import { LANE_COUNT } from "../../data/screen.ts";
 import { laneCentreXs } from "../../layout/lanes.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { walkerFootY } from "../../layout/screenLayout.ts";
 import { fadeIn, rowsHidden } from "../../road/roadClip.ts";
 import { read } from "../../rules/units.ts";

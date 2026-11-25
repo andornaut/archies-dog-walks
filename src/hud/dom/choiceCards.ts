@@ -12,9 +12,10 @@ import {
 import { cardGreyPath } from "../../assets/cardArt.ts";
 import { DIFFICULTY_KEY } from "../../assets/spriteKeys.ts";
 import { SLICES } from "../../data/layout.ts";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../../data/screen.ts";
+import { SCREEN_CONFIG } from "../../data/screen.ts";
 import type { GameData } from "../../data/types.ts";
 import { CHARM } from "../../layout/buffLayout.ts";
+import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { CARD_LAYOUT, cardRowIn, forkHomeRect } from "../../presentation/cardLayout.ts";
 import { type CardView, MAX_CARD_OPTIONS } from "../../rules/choices.ts";
 import { cardHeader } from "../../ui/cardRow.ts";

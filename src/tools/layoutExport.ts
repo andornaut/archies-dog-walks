@@ -12,7 +12,7 @@ import {
 } from "../assets/spriteKeys.ts";
 import { LOADING_WALKER_START } from "../data/layout.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
-import { LANE_COUNT, ROAD_CAMERA, ROAD_FAR_SCALE, SCREEN_LAYOUT } from "../data/screen.ts";
+import { LANE_COUNT, ROAD_FAR_SCALE } from "../data/screen.ts";
 import type { GameData } from "../data/types.ts";
 import { dotRects, HELP_LAYOUT, helpPager } from "../help/helpLayout.ts";
 import { END_LAYOUT } from "../home/endLayout.ts";
@@ -78,6 +78,7 @@ import {
   type RoadProjection,
   rowScale,
 } from "../layout/projection.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { walkerFootY } from "../layout/screenLayout.ts";
 import {
   CARD_LAYOUT,

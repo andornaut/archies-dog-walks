@@ -6,8 +6,8 @@ import { fitsRoom, fittingText, type TextFitStyle } from "@andornaut/game-kit/ru
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { WalkerId } from "../data/types.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { bodyRunWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";

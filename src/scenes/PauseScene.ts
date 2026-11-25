@@ -1,12 +1,12 @@
 import { Core, Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import type { HomeNoteLine } from "../hud/homeQuestion.ts";
 import { HOME_QUESTION_ANSWERS, homeQuestionLayout, pauseMenuLayout } from "../hud/pauseMenu.ts";
 import { screenArea } from "../input/outsideTap.ts";
 import { WALKER_SILHOUETTES } from "../layout/packFormation.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { walkerFootY } from "../layout/screenLayout.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import {

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { homeBarButtonAt } from "../home/homeBar.ts";
 import { HOME_BAR_BUTTONS, homeBarButtons } from "../home/homeLayout.ts";
 import { topBarButtonAt } from "../hud/topBar.ts";
 import { WALK_BAR_BUTTONS, walkBarLayout } from "../hud/walkHud.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { topSectionButtonBacking, topSectionCurrency, topSectionLayout } from "../ui/topSection.ts";
 
 // These are the same owners under their overlays, not separate overlay layouts.

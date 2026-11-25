@@ -3,7 +3,7 @@ import { containsPoint, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";

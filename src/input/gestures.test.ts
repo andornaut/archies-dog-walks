@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { type ScreenConfig, screenLayout } from "../layout/screenLayout.ts";
+import type { ScreenConfig } from "../data/screen.ts";
+import { screenLayout } from "../layout/screenLayout.ts";
 import { advanceLaneControl, laneControlIn, steerLane } from "../runner/laneControl.ts";
 import { type LaneMotion, stillInLane } from "../runner/laneMotion.ts";
 import {

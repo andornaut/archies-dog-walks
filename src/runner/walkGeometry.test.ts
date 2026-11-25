@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { ROAD_HIT_SIZE, ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import { LANE_COUNT } from "../data/screen.ts";
 import { TUNING } from "../data/tuning.ts";
 import { tallestPackLength } from "../layout/packFormation.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { walkerFootY } from "../layout/screenLayout.ts";
 import { walkGeometry, walkProjection } from "./walkGeometry.ts";
 

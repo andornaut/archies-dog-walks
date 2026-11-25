@@ -11,7 +11,6 @@ import { describe, expect, it } from "vitest";
 import { SKIP_CARD_ART } from "../assets/cardArt.ts";
 import { DIFFICULTY_KEY } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { charmEffects } from "../hud/buffMarks.ts";
 import { largeBodyText, smallCardText } from "../hud/cardText.ts";
 import { type EffectItem, effectName } from "../hud/effectIcons.ts";
@@ -22,6 +21,7 @@ import {
   cardCharmWidth,
   CHARM,
 } from "../layout/buffLayout.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
 import { everyCardOption } from "../testing/everyCardOption.ts";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";

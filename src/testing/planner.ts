@@ -3,12 +3,13 @@
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import { MINOR_OBSTACLES } from "../data/minorObstacles.ts";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import { LANE_COUNT } from "../data/screen.ts";
 import { TUNING } from "../data/tuning.ts";
 import type { WalkerId, World, Zone, ZoneId } from "../data/types.ts";
 import { DEFAULT_WALKER, WALKERS } from "../data/walkers.ts";
 import { WORLD } from "../data/world.ts";
 import { type PackSprites, PART_INSET } from "../layout/packFormation.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { newRun } from "../rules/newRun.ts";
 import { read } from "../rules/units.ts";
 import { slowestDebuffedAgility, slowestPackAgility } from "../rules/walkers.ts";

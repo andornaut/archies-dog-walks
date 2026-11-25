@@ -6,8 +6,8 @@ import { expect, it, vi } from "vitest";
 
 import { ownerFaceKey } from "../../assets/spriteKeys.ts";
 import { gameData } from "../../data/index.ts";
-import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import { earnedBadges } from "../../home/badgesView.ts";
+import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";

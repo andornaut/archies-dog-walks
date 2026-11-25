@@ -7,7 +7,6 @@ import { type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 import { buildLabel } from "@andornaut/game-kit/runtime/web/buildLabel";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import {
   BADGE_NAME_STYLE,
   BADGE_STRIP,
@@ -69,6 +68,7 @@ import {
 import { DOG_CARD, WALK_BAR } from "../hud/walkHud.ts";
 import { celebrationText } from "../hud/zoneCelebration.ts";
 import { zonePillNameRoom } from "../hud/zonePill.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import {
   boxStyle,
   CARD_LAYOUT,

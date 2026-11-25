@@ -1,7 +1,7 @@
 import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
-import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { homeBackAction, homeBarAction, homeBarButtonAt, overlayRegion } from "./homeBar.ts";
 import { HOME_LAYOUT, homeBarButtons } from "./homeLayout.ts";
 

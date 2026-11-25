@@ -7,11 +7,11 @@ import { DEPTH_STEPS, splitDepthKey, stepSize } from "../assets/depthSteps.ts";
 import { parseManifest } from "../assets/manifest.ts";
 import { depthVariantKey, dogSpriteKey, standsOnGround } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
 import { type DepthArt, depthDraw } from "./depthScale.ts";
 import { PACK_DEPTH } from "./packFormation.ts";
 import { SCALE_STEPS, scaleAt } from "./projection.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "./screen.ts";
 
 const manifest = parseManifest(shippedManifest);
 const sprites = new Map(manifest.sprites.map((entry) => [entry.key, entry]));

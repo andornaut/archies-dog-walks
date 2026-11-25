@@ -8,10 +8,11 @@ import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 import { HIT_RULE } from "@andornaut/game-kit/runtime/ui/hitAreas";
 
 import { HOME_SCREEN, MIN_PRESS } from "../data/layout.ts";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { DogId } from "../data/types.ts";
 import { ownerPhotoRect, WALK_BAR } from "../hud/walkHud.ts";
 import type { PackPlacement } from "../layout/packFormation.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { BUTTON_SIZE, raisedLabelCapTop } from "../ui/buttonGeometry.ts";
 import type { GridSpec } from "../ui/grid.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";

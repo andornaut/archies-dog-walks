@@ -3,8 +3,8 @@ import { readFileSync } from "node:fs";
 import { afterEach, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
-import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import { helpPicture } from "../../help/helpPictures.ts";
+import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { read } from "../../rules/units.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";

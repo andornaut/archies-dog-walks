@@ -5,7 +5,7 @@ import { Core, Scene } from "phaser";
 
 import { domArtUrl } from "../assets/domArtFiles.ts";
 import { gameData } from "../data/index.ts";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { AchievementId, DebuffId, DogId, HintTrigger } from "../data/types.ts";
 import { FEEDBACK as MENU_FEEDBACK } from "../home/feedback.ts";
 import { charmRing } from "../hud/charmRing.ts";
@@ -62,6 +62,7 @@ import {
   walkBarLayout,
 } from "../hud/walkHud.ts";
 import { BUFF_POP, sparkleAt } from "../layout/buffLayout.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { dollarAmountText, shortDollarAmountText } from "../presentation/currency.ts";
 import { ownerMaxHearts } from "../rules/dogs.ts";
 import { hintFor, hintJumpsQueue } from "../rules/hints.ts";

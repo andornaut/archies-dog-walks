@@ -2,10 +2,10 @@ import type { Scene } from "phaser";
 
 import { ownerFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId } from "../data/types.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import { OWNER_TAB, ownerTabRect } from "../hud/walkHud.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";
 import type { TimedGroup } from "./timedGroup.ts";

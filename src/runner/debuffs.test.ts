@@ -2,8 +2,9 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import { LANE_COUNT } from "../data/screen.ts";
 import type { DebuffId, DogId } from "../data/types.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { applyEffects } from "../rules/effects.ts";
 import { read } from "../rules/units.ts";
 import type { ActiveDebuff, RunState } from "../state/runState.ts";

@@ -8,10 +8,10 @@ import shippedManifest from "../../public/art/manifest.json" with { type: "json"
 import { parseManifest } from "../assets/manifest.ts";
 import { ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { AmbientMover, ZoneId } from "../data/types.ts";
 import { CROSS_STREET } from "../layout/crossStreet.ts";
 import { scaleAtY } from "../layout/projection.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
 import {
   AMBIENT_LIMIT,

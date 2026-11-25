@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { Core, type Game, type GameObjects, type Scene, Scenes } from "phaser";
 
-import { SCREEN_LAYOUT } from "../../data/screen.ts";
+import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { MODAL_DARKNESS } from "../dimArt.ts";
 import { shownWorldRect } from "../worldFit.ts";
 import { fitWorldCamera } from "./worldCamera.ts";

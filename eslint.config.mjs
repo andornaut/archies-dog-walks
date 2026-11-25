@@ -61,6 +61,7 @@ const CONTEXTS = {
     "layout/crossStreet.ts",
     "layout/lanes.ts",
     "layout/projection.ts",
+    "layout/screen.ts",
     "layout/screenLayout.ts",
     "rules/newRun.ts",
     "rules/route.ts",
@@ -68,7 +69,7 @@ const CONTEXTS = {
     "runner",
     "tools/atlas/shared/png.ts",
   ],
-  ui: ["assets", "data", "input/holdRule.ts"],
+  ui: ["assets", "data", "input/holdRule.ts", "layout/screen.ts"],
 };
 
 const SRC_FOLDERS = folders("src").filter((folder) => folder !== "testing");

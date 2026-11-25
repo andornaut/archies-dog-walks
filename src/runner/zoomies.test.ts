@@ -3,9 +3,10 @@ import { seededRandom } from "@andornaut/game-kit/runtime/random";
 import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { LANE_COUNT, ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
+import { LANE_COUNT } from "../data/screen.ts";
 import type { DebuffDriftMovement, GameData, ZoneId } from "../data/types.ts";
 import type { LaneDirection } from "../layout/lanes.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { newRun } from "../rules/newRun.ts";
 import { read } from "../rules/units.ts";
 import type { RunState } from "../state/runState.ts";

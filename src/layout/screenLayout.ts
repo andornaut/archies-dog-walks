@@ -1,6 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { BUTTON_SIZE, WIDE_BUTTON_X } from "../data/layout.ts";
+import type { ScreenConfig } from "../data/screen.ts";
 
 // The smallest tap target each way, in game pixels (MIN_PRESS).
 export const MIN_TAP_SIZE = BUTTON_SIZE.icon.target;
@@ -10,20 +11,6 @@ export const WIDE_BUTTON = { ...BUTTON_SIZE.wide, x: WIDE_BUTTON_X } as const;
 
 // How far the walker's feet stand above the bottom of the road.
 const WALKER_FEET_ABOVE_ROAD_BOTTOM = 4;
-
-export interface ScreenConfig {
-  backdropHeight: number;
-  dogCardHeight: number;
-  dogRowHeight: number;
-  dogSlotCount: number;
-  height: number;
-  junctionRows: number;
-  roadIntoBand: number;
-  roadWidth: number;
-  topBarHeight: number;
-  width: number;
-  zoneProgressHeight: number;
-}
 
 // The whole screen (screen), and top to bottom, each across the full width: the walk bar (topBar),
 // the backdrop band, the road, the row of dog cards and the neighbourhood's progress line

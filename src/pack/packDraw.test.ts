@@ -1,11 +1,11 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { describe, expect, it } from "vitest";
 
-import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId } from "../data/types.ts";
 import { END_LAYOUT } from "../home/endLayout.ts";
 import { HOME_LAYOUT } from "../home/homeLayout.ts";
 import { everyPack, formationOrder, packDogOf, packPlacements } from "../layout/packFormation.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
 import { type Feet, packLayers, type StandingDog } from "./packDraw.ts";
 

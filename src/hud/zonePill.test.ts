@@ -2,7 +2,7 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { fontFileMetrics, fontInk, fontInkRows } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";

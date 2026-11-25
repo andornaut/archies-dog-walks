@@ -4,7 +4,7 @@ import shippedManifest from "../../public/art/manifest.json" with { type: "json"
 import { parseManifest } from "../assets/manifest.ts";
 import { ROAD_HIT_SIZE, ROAD_SPRITE_SIZE, standsOnGround } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { ROAD_CAMERA, ROAD_FAR_SCALE, SCREEN_LAYOUT } from "../data/screen.ts";
+import { ROAD_FAR_SCALE } from "../data/screen.ts";
 import { TUNING } from "../data/tuning.ts";
 import {
   COLLAR_HEIGHTS,
@@ -16,6 +16,7 @@ import {
   WALKER_HANDS,
   WALKER_SILHOUETTES,
 } from "../layout/packFormation.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { walkerFootY } from "../layout/screenLayout.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
 import { layoutExport } from "./layoutExport.ts";

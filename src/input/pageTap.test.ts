@@ -2,7 +2,8 @@ import { clampInto, containsPoint, type Point, type Rect } from "@andornaut/game
 import { type FrameTurn, pageToGame } from "@andornaut/game-kit/runtime/view/pagePoint";
 import { describe, expect, it } from "vitest";
 
-import { LANE_COUNT, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { LANE_COUNT, SCREEN_CONFIG } from "../data/screen.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { type GestureContext, pointerDown, pointerMove } from "./gestures.ts";
 import { walkPagePoint } from "./pageTap.ts";
 

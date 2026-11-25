@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { fadeIn, rowsAboveJuncture, rowsHidden } from "./roadClip.ts";
 
 const { approach, junction, road } = SCREEN_LAYOUT;

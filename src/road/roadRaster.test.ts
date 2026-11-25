@@ -7,9 +7,10 @@ import { describe, expect, it } from "vitest";
 
 import { roadTileKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { ZoneId } from "../data/types.ts";
 import { roadProjection, rowScale } from "../layout/projection.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { walkerFootY } from "../layout/screenLayout.ts";
 import {
   drawRoad,

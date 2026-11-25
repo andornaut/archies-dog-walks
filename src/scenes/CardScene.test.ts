@@ -3,10 +3,10 @@ import { EventEmitter } from "node:events";
 import { beforeEach, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { helpPicture } from "../help/helpPictures.ts";
 import { type NativeChoiceCards, showChoiceCards } from "../hud/dom/choiceCards.ts";
 import { holdRule } from "../input/hold.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { cardRowIn } from "../presentation/cardLayout.ts";
 import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
 import { read } from "../rules/units.ts";

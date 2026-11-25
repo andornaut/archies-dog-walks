@@ -2,7 +2,6 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import { type FaceRow } from "../hud/faceText.ts";
 import {
@@ -12,6 +11,7 @@ import {
   ownerLeadPanel,
   stripLeadSlot,
 } from "../hud/messageStrip.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { FakeDocument } from "../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont } from "../testing/fontInk.ts";

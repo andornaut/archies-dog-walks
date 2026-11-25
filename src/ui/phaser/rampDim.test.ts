@@ -2,7 +2,7 @@ import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
-import { SCREEN_LAYOUT } from "../../data/screen.ts";
+import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { ownDeviceFit } from "../worldFit.ts";
 import { addModalShade, addRampDim } from "./rampDim.ts";
 

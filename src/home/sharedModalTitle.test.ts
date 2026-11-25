@@ -3,9 +3,9 @@ import { expect, it } from "vitest";
 
 import { gearSmallIconKey } from "../assets/iconKeys.ts";
 import { gameData } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { pauseMenuLayout } from "../hud/pauseMenu.ts";
 import { questionPanelView } from "../hud/questionPanelView.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { closeControl } from "../ui/closeControl.ts";

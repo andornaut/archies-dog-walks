@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ROAD_CAMERA, ROAD_FAR_SCALE, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { ROAD_FAR_SCALE, SCREEN_CONFIG } from "../data/screen.ts";
 import { TUNING } from "../data/tuning.ts";
 import {
   columnSpan,
@@ -13,6 +13,7 @@ import {
   scaleAt,
   screenYAt,
 } from "./projection.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "./screen.ts";
 import { walkerFootY } from "./screenLayout.ts";
 
 const { backdrop, road } = SCREEN_LAYOUT;

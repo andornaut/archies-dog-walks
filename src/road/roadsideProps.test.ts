@@ -8,10 +8,10 @@ import { describe, expect, it } from "vitest";
 import shippedManifest from "../../public/art/manifest.json" with { type: "json" };
 import { DEPTH_STEPS } from "../assets/depthSteps.ts";
 import { gameData } from "../data/index.ts";
-import { ROAD_CAMERA, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { ZoneId } from "../data/types.ts";
 import { WORLD } from "../data/world.ts";
 import { distanceAtY, project } from "../layout/projection.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
 import {
   CARRIED_LIGHT_UP,

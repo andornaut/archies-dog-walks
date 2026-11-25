@@ -7,7 +7,7 @@ import { playTag } from "../assets/phaser/sprites.ts";
 import { ownerFaceKey, WARNING_KEY, WARNING_TAG } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { SLICES } from "../data/layout.ts";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { DogId } from "../data/types.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import { inlineFaceBox, styledFaceRows } from "../hud/faceText.ts";
@@ -47,6 +47,7 @@ import {
 } from "../hud/moments.ts";
 import { playerPaused, type RunPause, walkPaused } from "../hud/topBar.ts";
 import { DOG_CARD } from "../hud/walkHud.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { slotIndexOf } from "../state/pack.ts";
 import type { RunState } from "../state/runState.ts";
 import { PALETTE } from "../ui/palette.ts";

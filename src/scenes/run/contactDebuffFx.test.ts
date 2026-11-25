@@ -6,9 +6,9 @@ import type { Scene } from "phaser";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { playTagOnce } from "../../assets/phaser/sprites.ts";
-import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import type { DogId } from "../../data/types.ts";
 import { type DebuffHitEffect, HIT_ART } from "../../layout/hitEffects.ts";
+import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { tagFrame } from "../uiKit.ts";
 import { playContactDebuff } from "./contactDebuffFx.ts";
 

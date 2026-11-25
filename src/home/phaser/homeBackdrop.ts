@@ -1,6 +1,6 @@
 import type { Scene } from "phaser";
 
-import { SCREEN_LAYOUT } from "../../data/screen.ts";
+import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { fillRect } from "../../ui/phaser/draw.ts";
 import { HOME_LAYOUT } from "../homeLayout.ts";

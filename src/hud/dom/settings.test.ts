@@ -1,10 +1,10 @@
 import { expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
-import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import { overlayRegion } from "../../home/homeBar.ts";
 import { installStepsLayout, settingsLayout } from "../../home/settings.ts";
 import { type SettingsMeasure, settingsRows, settingsView } from "../../home/settingsView.ts";
+import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { DEFAULT_SETTINGS } from "../../save/settings.ts";
 import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, fontInk, gameFont } from "../../testing/fontInk.ts";

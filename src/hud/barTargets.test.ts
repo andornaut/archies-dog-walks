@@ -1,9 +1,9 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
-import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { homeBarAction, homeBarButtonAt } from "../home/homeBar.ts";
 import { HOME_LAYOUT, homeBarButtons } from "../home/homeLayout.ts";
+import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import {
   NOTHING_PAUSED,
   type RunPause,
