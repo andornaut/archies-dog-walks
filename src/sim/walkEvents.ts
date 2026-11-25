@@ -1,7 +1,6 @@
 import type { ZoneId } from "../data/types.ts";
 import type { SlotPlanningFailure } from "../runner/slotPlanner.ts";
 import type { AdmissionReport } from "../runner/spawnAdmission.ts";
-import { SpawnPlanningError, type SpawnPlanSnapshot } from "../runner/spawnSearch.ts";
 import type { SpawnAudit } from "../runner/spawnValidation.ts";
 import type { Walk, WalkStep } from "../runner/walk.ts";
 import type { WalkItemKind } from "../runner/walkItems.ts";
@@ -9,21 +8,14 @@ import type { ZoneSlotDelivery } from "../runner/zonePlan.ts";
 import { type ZoneSlotInput, ZoneSlotPlanningError } from "../runner/zoneSlotInput.ts";
 import type { RunState } from "../state/runState.ts";
 
-export type PlanningFailure =
-  | {
-      readonly kind: "quota";
-      readonly message: string;
-      readonly seed: number;
-      readonly snapshot: SpawnPlanSnapshot;
-    }
-  | {
-      readonly input: ZoneSlotInput<string>;
-      readonly kind: "slots";
-      readonly message: string;
-      readonly purpose: "runtime-actual";
-      readonly result: SlotPlanningFailure<string>;
-      readonly seed: number;
-    };
+export interface PlanningFailure {
+  readonly input: ZoneSlotInput<string>;
+  readonly kind: "slots";
+  readonly message: string;
+  readonly purpose: "runtime-actual";
+  readonly result: SlotPlanningFailure<string>;
+  readonly seed: number;
+}
 
 export function capturePlanningFailure(
   seed: number,
@@ -43,10 +35,7 @@ export function capturePlanningFailure(
         seed,
       };
     }
-    if (!(error instanceof SpawnPlanningError)) {
-      throw error;
-    }
-    return { kind: "quota", message: error.message, seed, snapshot: error.snapshot };
+    throw error;
   }
 }
 

@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { SLOT_LIMITS } from "../runner/slotPlanner.ts";
-import { SpawnPlanningError, type SpawnPlanSnapshot } from "../runner/spawnSearch.ts";
 import { type SpawnAudit } from "../runner/spawnValidation.ts";
 import type { WalkItemKind } from "../runner/walkItems.ts";
 import type { ZoneSlotDelivery } from "../runner/zonePlan.ts";
@@ -20,40 +19,34 @@ import {
   recordWalkEvents,
 } from "./walkEvents.ts";
 
-const snapshot: SpawnPlanSnapshot<WalkItemKind> = {
-  context: { seed: 7, zoneIndex: 3 },
-  draws: { movers: [0.2], spawns: [0.4] },
-  plan: {
-    cellInset: 0,
-    cellLength: 10,
-    fixedKinds: [],
-    laneCount: 5,
-    laneInset: 0,
-    laneMoveSeconds: 0.1,
-    maxEmptyRows: null,
-    minOpenLanes: 2,
-    minSpacing: 20,
-    moverCaps: { darts: 6, slowVehicles: 4, total: 10 },
-    packHitLength: 10,
-    packLength: 10,
-    pathLaneMoveSeconds: 0.3,
-    pathStart: 2,
-    quotas: [],
-    reactionSeconds: 0.5,
-    riderFollowGap: 10,
-    roadLength: 100,
-    scrollSpeed: 100,
-    sightLength: 90,
-    stepSeconds: 1 / 60,
-    zoneLength: 1000,
-  },
+const geometry: ZoneSlotInput<WalkItemKind>["geometry"] = {
+  cellInset: 0,
+  cellLength: 10,
+  fixedKinds: [],
+  laneCount: 5,
+  laneInset: 0,
+  laneMoveSeconds: 0.1,
+  maxEmptyRows: null,
+  minOpenLanes: 2,
+  minSpacing: 20,
+  moverCaps: { darts: 6, slowVehicles: 4, total: 10 },
+  packHitLength: 10,
+  packLength: 10,
+  pathLaneMoveSeconds: 0.3,
+  pathStart: 2,
+  reactionSeconds: 0.5,
+  riderFollowGap: 10,
+  roadLength: 100,
+  scrollSpeed: 100,
+  sightLength: 90,
+  stepSeconds: 1 / 60,
+  zoneLength: 1000,
 };
 
 function slotInput(): ZoneSlotInput<WalkItemKind> {
-  const { quotas: auxiliary, ...geometry } = snapshot.plan;
   return {
     actualRun: walkWith(["ginger"]).run,
-    auxiliary,
+    auxiliary: [],
     catalogue: [
       {
         footprint: { lanes: 1, rows: 1 },
@@ -142,7 +135,7 @@ describe("simulator spawn observations", () => {
     expect(input.config.active.minorFixed).toBe(1);
   });
 
-  it("preserves exact runtime slot failure input and result without a legacy quota snapshot", () => {
+  it("preserves exact runtime slot failure input and result", () => {
     const input = { ...slotInput(), catalogue: [] };
     const result = replayZoneSlots(input);
     expect(result.status).toBe("unsupported");
@@ -154,22 +147,26 @@ describe("simulator spawn observations", () => {
       throw error;
     });
     expect(failure).toMatchObject({ kind: "slots", purpose: "runtime-actual", seed: 7 });
-    if (failure?.kind !== "slots") {
+    if (failure === undefined) {
       throw Error("Expected actual slot diagnostic");
     }
     expect(failure.input).toBe(input);
     expect(failure.result).toBe(result);
-    expect(failure).not.toHaveProperty("snapshot");
     expect(JSON.parse(JSON.stringify(failure)).input.context).toEqual(input.context);
   });
 
   it("preserves planning failures and replay draws without swallowing unrelated errors", () => {
+    const input = { ...slotInput(), catalogue: [] };
+    const result = replayZoneSlots(input);
+    if (result.status !== "unsupported") {
+      throw Error("Expected unsupported original catalogue");
+    }
     const state = { modifiers: ["rushHour"], visited: ["highPark"] };
     const failure = capturePlanningFailure(7, () => {
       state.visited.push("cabbagetown");
-      throw new SpawnPlanningError("unfilled quota", snapshot);
+      throw new ZoneSlotPlanningError(input, result);
     });
-    expect(failure).toEqual({ kind: "quota", message: "unfilled quota", seed: 7, snapshot });
+    expect(failure).toMatchObject({ input, kind: "slots", result, seed: 7 });
     expect(state.visited).toEqual(["highPark", "cabbagetown"]);
     expect(state.modifiers).toEqual(["rushHour"]);
     expect(() =>

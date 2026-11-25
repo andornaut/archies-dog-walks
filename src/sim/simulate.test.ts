@@ -8,10 +8,15 @@ import { currentZoneId } from "../rules/route.ts";
 import { bumpCash, tipValue } from "../rules/run.ts";
 import { NO_PULLS } from "../runner/pulls.ts";
 import * as sessions from "../runner/session.ts";
-import { SpawnPlanningError, type SpawnPlanSnapshot } from "../runner/spawnSearch.ts";
+import { SLOT_LIMITS } from "../runner/slotPlanner.ts";
 import { startRoad, type WalkStep } from "../runner/walk.ts";
 import type { WalkItemKind } from "../runner/walkItems.ts";
 import type { ZonePlanObservation } from "../runner/zonePlan.ts";
+import {
+  replayZoneSlots,
+  type ZoneSlotInput,
+  ZoneSlotPlanningError,
+} from "../runner/zoneSlotInput.ts";
 import { TALLY_IDS } from "../save/schema.ts";
 import { packDogs, packOrder } from "../state/pack.ts";
 import type { PackDogs, RunState } from "../state/runState.ts";
@@ -387,36 +392,48 @@ describe("simulateRun planning diagnostics", () => {
       walk: { road, run: first },
       zoneEndPending: false,
     };
-    const snapshot: SpawnPlanSnapshot<WalkItemKind> = {
-      context: { seed: 7, zoneIndex: 2 },
-      draws: { movers: [], spawns: [] },
-      plan: {
-        cellInset: 0,
-        cellLength: 10,
-        fixedKinds: [],
-        laneCount: 5,
-        laneInset: 0,
-        laneMoveSeconds: 0.1,
-        maxEmptyRows: null,
-        minOpenLanes: 2,
-        minSpacing: 20,
-        moverCaps: { darts: 6, slowVehicles: 4, total: 10 },
-        packHitLength: 10,
-        packLength: 10,
-        pathLaneMoveSeconds: 0.3,
-        pathStart: 2,
-        quotas: [],
-        reactionSeconds: 0.5,
-        riderFollowGap: 10,
-        roadLength: 100,
-        scrollSpeed: 100,
-        sightLength: 90,
-        stepSeconds: 1 / 60,
-        zoneLength: 1000,
-      },
+    const geometry = {
+      cellInset: 0,
+      cellLength: 10,
+      fixedKinds: [],
+      laneCount: 5,
+      laneInset: 0,
+      laneMoveSeconds: 0.1,
+      maxEmptyRows: null,
+      minOpenLanes: 2,
+      minSpacing: 20,
+      moverCaps: { darts: 6, slowVehicles: 4, total: 10 },
+      packHitLength: 10,
+      packLength: 10,
+      pathLaneMoveSeconds: 0.3,
+      pathStart: 2,
+      reactionSeconds: 0.5,
+      riderFollowGap: 10,
+      roadLength: 100,
+      scrollSpeed: 100,
+      sightLength: 90,
+      stepSeconds: 1 / 60,
+      zoneLength: 1000,
     };
+    // A catalogue with no kinds cannot fill the active request.
+    const input: ZoneSlotInput<WalkItemKind> = {
+      actualRun: second,
+      auxiliary: [],
+      catalogue: [],
+      config: {
+        active: { encounterFixed: 0, encounterMoving: 0, minorFixed: 1, minorMoving: 0 },
+        capacity: { encounterFixed: 0, encounterMoving: 0, minorFixed: 1, minorMoving: 0 },
+        guarantees: [],
+      },
+      context: { limits: SLOT_LIMITS, seed: 7, zoneIndex: 2 },
+      geometry,
+      tuning: gameData.tuning,
+    };
+    const unsupported = replayZoneSlots(input);
+    if (unsupported.status !== "unsupported") {
+      throw Error("Expected an unsupported slot input");
+    }
     const observed: { observation: ZonePlanObservation; run: RunState }[] = [];
-    const observationSnapshot = { ...snapshot, context: { seed: 7, zoneIndex: 1 } };
     const starting = vi.spyOn(sessions, "startSession").mockReturnValue(initial);
     const stepping = vi
       .spyOn(sessions, "stepSession")
@@ -424,7 +441,7 @@ describe("simulateRun planning diagnostics", () => {
         const observation = {
           context: { seed: 7, zoneIndex: 1 },
           plan: {
-            ...snapshot.plan,
+            ...geometry,
             fixedKinds: [],
             maxEmptyRows: Infinity,
             quotas: [{ blocksLane: false, count: 5, kind: "tip" as const }],
@@ -441,7 +458,6 @@ describe("simulateRun planning diagnostics", () => {
             path: [],
             visibility: [],
           },
-          snapshot: observationSnapshot,
         };
         streams.observeSpawns?.(observation);
         return {
@@ -450,18 +466,18 @@ describe("simulateRun planning diagnostics", () => {
         };
       })
       .mockImplementationOnce(() => {
-        throw new SpawnPlanningError("unfilled later quota", snapshot);
+        throw new ZoneSlotPlanningError(input, unsupported);
       });
     try {
       const result = simulateRun(gameData, 7, {
         ...config(),
         observeSpawnPlan: (observation, run) => observed.push({ observation, run }),
       });
-      expect(result.planningFailure).toEqual({
-        kind: "quota",
-        message: "unfilled later quota",
+      expect(result.planningFailure).toMatchObject({
+        input,
+        kind: "slots",
+        result: unsupported,
         seed: 7,
-        snapshot,
       });
       expect(
         result.spawnEvents.map(({ configured, position }) => ({ configured, position })),
@@ -474,7 +490,7 @@ describe("simulateRun planning diagnostics", () => {
       expect(result.run).toBe(second);
       expect(observed).toHaveLength(1);
       expect(observed[0]?.run).toBe(second);
-      expect(observed[0]?.observation).toMatchObject({ snapshot: observationSnapshot });
+      expect(observed[0]?.observation).toMatchObject({ context: { seed: 7, zoneIndex: 1 } });
       expect(result.spawnEvents[1]?.modifiers).toEqual([modifier]);
       expect(result.spawnEvents[1]?.route).toEqual(["highPark", "cabbagetown"]);
       expect(result.finished).toBe(false);

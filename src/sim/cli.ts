@@ -286,10 +286,7 @@ async function main(): Promise<void> {
           directory,
           `cell-${cell}-run-${index}-seed-${run.seed}-zone-${run.zoneIndex}.json`,
         );
-        writeFileSync(
-          snapshotPath,
-          `${JSON.stringify(run.failure.kind === "slots" ? run.failure.input : run.failure.snapshot, null, 2)}\n`,
-        );
+        writeFileSync(snapshotPath, `${JSON.stringify(run.failure.input, null, 2)}\n`);
         writeFileSync(`${snapshotPath}.metadata.json`, `${JSON.stringify(run, null, 2)}\n`);
         process.stderr.write(
           `Planning failure: seed ${run.seed}, zone ${run.zoneIndex}, snapshot ${snapshotPath}: ` +
@@ -330,7 +327,7 @@ async function main(): Promise<void> {
   );
   if (failed) {
     process.stdout.write(
-      `\nFailed plans (partial results retained)\n${formatSpawnFailures(rows, options.delivery === "kinds")}\n`,
+      `\nFailed plans (partial results retained)\n${formatSpawnFailures(rows)}\n`,
     );
   }
   if (options.delivery === "kinds") {

@@ -13,9 +13,9 @@ import { moverSpec } from "../runner/moverSpecs.ts";
 import { startRoad, stepWalk, type Walk } from "../runner/walk.ts";
 import { footprintOf } from "../runner/walkItems.ts";
 import { zoneLength } from "../runner/walkMotion.ts";
-import { planZone } from "../runner/zonePlan.ts";
 import { plannerStreams } from "../testing/movers.ts";
 import { FASTEST_WALKER, GAME_ROAD, inZone, REAL, type Real, realRun } from "../testing/planner.ts";
+import { planZoneForSeed } from "../testing/zonePlan.ts";
 import { distractionScroll } from "./distractions.ts";
 import { herringNow } from "./herrings.ts";
 
@@ -41,7 +41,7 @@ const HERRING_SEEDS_MOST = 240;
 
 // A zone planned on a seed at the walk's first or last position.
 const planned = (data: Real, zone: ZoneId, zoneIndex: number, seed: number): Walk =>
-  planZone(data, GAME_ROAD, plannerStreams(seed), {
+  planZoneForSeed(data, GAME_ROAD, seed, {
     road: startRoad(LANE_COUNT),
     run: inZone(realRun(data, FASTEST_WALKER), zone, zoneIndex),
   });

@@ -6,7 +6,6 @@ import { gameData } from "../data/index.ts";
 import type { DogId, ZoneId } from "../data/types.ts";
 import type { SlotDelivery, SlotPartialAudit } from "../runner/slotDelivery.ts";
 import { SLOT_LIMITS } from "../runner/slotPlanner.ts";
-import type { SpawnPlanSnapshot } from "../runner/spawnSearch.ts";
 import type { SpawnAudit } from "../runner/spawnValidation.ts";
 import type { WalkItemKind } from "../runner/walkItems.ts";
 import {
@@ -14,7 +13,7 @@ import {
   type ZoneSlotInput,
   ZoneSlotPlanningError,
 } from "../runner/zoneSlotInput.ts";
-import type { PackDogs } from "../state/runState.ts";
+import type { PackDogs, RunState } from "../state/runState.ts";
 import { cents } from "../units.ts";
 import { POLICY_IDS } from "./policies.ts";
 import {
@@ -345,10 +344,12 @@ describe("simulateMatrix", () => {
   });
 });
 
-const failedSnapshot: SpawnPlanSnapshot = {
-  context: { seed: 7, zoneIndex: 3 },
-  draws: { movers: [0.2], spawns: [0.4] },
-  plan: {
+// A zone plan whose slot input has no catalogue, so it cannot fill its active request.
+const failedPlan: Pick<ZoneSlotInput<string>, "auxiliary" | "geometry"> = {
+  auxiliary: [
+    { blocksLane: false, count: 10, first: false, footprint: { lanes: 1, rows: 1 }, kind: "tip" },
+  ],
+  geometry: {
     cellInset: 0,
     cellLength: 10,
     fixedKinds: [],
@@ -363,9 +364,6 @@ const failedSnapshot: SpawnPlanSnapshot = {
     packLength: 10,
     pathLaneMoveSeconds: 0.3,
     pathStart: 2,
-    quotas: [
-      { blocksLane: false, count: 10, first: false, footprint: { lanes: 1, rows: 1 }, kind: "tip" },
-    ],
     reactionSeconds: 0.5,
     riderFollowGap: 10,
     roadLength: 100,
@@ -449,6 +447,33 @@ const observedRow = <Row extends object>(row: Row, zones: readonly ZoneWalkEvent
   ],
 });
 
+// The planning failure of failedPlan's zone on run.
+function failedPlanning(run: RunState) {
+  const input: ZoneSlotInput<string> = {
+    ...failedPlan,
+    actualRun: run,
+    catalogue: [],
+    config: {
+      active: { encounterFixed: 0, encounterMoving: 0, minorFixed: 1, minorMoving: 0 },
+      capacity: { encounterFixed: 0, encounterMoving: 0, minorFixed: 20, minorMoving: 0 },
+      guarantees: [],
+    },
+    context: { limits: SLOT_LIMITS, seed: 7, zoneIndex: 3 },
+    tuning: gameData.tuning,
+  };
+  const unsupported = replayZoneSlots(input);
+  if (unsupported.status !== "unsupported") {
+    throw Error("Expected missing source diagnostic");
+  }
+  const planningFailure = capturePlanningFailure(7, () => {
+    throw new ZoneSlotPlanningError(input, unsupported);
+  });
+  if (planningFailure === undefined) {
+    throw Error("Expected structural planning failure");
+  }
+  return { input, planningFailure, unsupported };
+}
+
 describe("spawn reporting", () => {
   it("reports a structural runtime failure against actual role counts without inventing a kind mix", () => {
     const cell = itemAt(matrixCells(SMALL), 0);
@@ -460,30 +485,7 @@ describe("spawn reporting", () => {
       route: cell.route,
       walker: cell.walker,
     });
-    const { quotas: auxiliary, ...geometry } = failedSnapshot.plan;
-    const input: ZoneSlotInput<string> = {
-      actualRun: original.run,
-      auxiliary,
-      catalogue: [],
-      config: {
-        active: { encounterFixed: 0, encounterMoving: 0, minorFixed: 1, minorMoving: 0 },
-        capacity: { encounterFixed: 0, encounterMoving: 0, minorFixed: 20, minorMoving: 0 },
-        guarantees: [],
-      },
-      context: { limits: SLOT_LIMITS, seed: 7, zoneIndex: 3 },
-      geometry,
-      tuning: gameData.tuning,
-    };
-    const unsupported = replayZoneSlots(input);
-    if (unsupported.status !== "unsupported") {
-      throw Error("Expected missing source diagnostic");
-    }
-    const planningFailure = capturePlanningFailure(7, () => {
-      throw new ZoneSlotPlanningError(input, unsupported);
-    });
-    if (planningFailure === undefined) {
-      throw Error("Expected structural planning failure");
-    }
+    const { input, planningFailure, unsupported } = failedPlanning(original.run);
     const spy = vi
       .spyOn(simulator, "simulateRun")
       .mockReturnValueOnce({ ...original, planningFailure });
@@ -494,11 +496,10 @@ describe("spawn reporting", () => {
         failure: { input, kind: "slots", purpose: "runtime-actual", result: unsupported },
         zoneIndex: 3,
       });
-      const table = formatSpawnFailures([row], true);
+      const table = formatSpawnFailures([row]);
       expect(table).toContain("all");
       expect(table).toContain("unavailable");
       expect(table).toContain("unverified");
-      expect(row.spawnRuns[0]!.failure).not.toHaveProperty("snapshot");
     } finally {
       spy.mockRestore();
     }
@@ -518,12 +519,7 @@ describe("spawn reporting", () => {
       ...result,
       earnings: cents(999999),
       finished: false,
-      planningFailure: {
-        kind: "quota" as const,
-        message: "unfilled quota",
-        seed: 7,
-        snapshot: failedSnapshot,
-      },
+      planningFailure: failedPlanning(result.run).planningFailure,
     };
     const spy = vi
       .spyOn(simulator, "simulateRun")

@@ -481,9 +481,7 @@ function summarizeCell(
       zoneIndex:
         result.planningFailure === undefined
           ? result.run.zoneIndex
-          : result.planningFailure.kind === "slots"
-            ? result.planningFailure.input.context.zoneIndex
-            : result.planningFailure.snapshot.context.zoneIndex,
+          : result.planningFailure.input.context.zoneIndex,
       zones: result.spawnEvents ?? [],
     })),
     spawnSummary: sumSpawnEvents(
@@ -1210,44 +1208,25 @@ export function formatSpawnEventTable(rows: readonly MatrixRow[], byKind = false
   );
 }
 
-export function formatSpawnFailures(rows: readonly MatrixRow[], byKind = false): string {
+export function formatSpawnFailures(rows: readonly MatrixRow[]): string {
   const failures = rows.flatMap((row) => row.spawnRuns.filter((run) => run.failure !== null));
   return textTable(
     3,
     ["Seed", "Zone index", "Kind", "Frozen configured", "Admitted", "Valid", "Snapshot"],
-    failures.flatMap((run) => {
+    failures.map((run) => {
       const failure = run.failure!;
-      if (failure.kind === "slots") {
-        return [
-          [
-            String(run.seed),
-            String(run.zoneIndex),
-            "all",
-            String(
-              slotCountTotal(failure.input.config.active) +
-                failure.input.auxiliary.reduce((count, quota) => count + quota.count, 0),
-            ),
-            "unavailable",
-            "unverified",
-            run.snapshotPath ?? "embedded in spawnRuns",
-          ],
-        ];
-      }
-      const quotas = failure.snapshot.plan.quotas;
-      const kinds = byKind ? [...new Set(quotas.map(({ kind }) => kind))].sort() : ["all"];
-      return kinds.map((kind) => [
+      return [
         String(run.seed),
         String(run.zoneIndex),
-        kind,
+        "all",
         String(
-          quotas
-            .filter((quota) => kind === "all" || quota.kind === kind)
-            .reduce((n, quota) => n + quota.count, 0),
+          slotCountTotal(failure.input.config.active) +
+            failure.input.auxiliary.reduce((count, quota) => count + quota.count, 0),
         ),
         "unavailable",
         "unverified",
         run.snapshotPath ?? "embedded in spawnRuns",
-      ]);
+      ];
     }),
   );
 }

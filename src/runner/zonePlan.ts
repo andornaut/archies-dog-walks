@@ -27,10 +27,10 @@ import { pickSkin } from "./obstacleLooks.ts";
 import type { SlotAudit } from "./slotAudit.ts";
 import { apportionSlotCounts, slotCountTotal, type SlotGuarantee } from "./slotConfig.ts";
 import { minimumSlotDelivery, type SlotDelivery, type SlotPartialAudit } from "./slotDelivery.ts";
+import type { SlotSeedContext } from "./slotEntropy.ts";
 import type { SlotAssignment } from "./slotPlan.ts";
 import { SLOT_LIMITS, type SlotDiagnostics } from "./slotPlanner.ts";
 import type { PlannedSpawns, SpawnPlan, SpawnQuota } from "./spawning.ts";
-import { type SpawnPlanSnapshot, type SpawnSearchContext } from "./spawnSearch.ts";
 import { spacedStretch } from "./stretches.ts";
 import { type Walk, type WalkData } from "./walk.ts";
 import { type RoadGeometry } from "./walkGeometry.ts";
@@ -223,10 +223,9 @@ export type ZoneSlotDelivery = {
 );
 
 export interface ZonePlanObservation {
-  readonly context: SpawnSearchContext;
+  readonly context: SlotSeedContext;
   readonly plan: SpawnPlan<WalkItemKind>;
   readonly planned: PlannedSpawns<WalkItemKind>;
-  readonly snapshot?: SpawnPlanSnapshot<WalkItemKind>;
   readonly slots?: ZoneSlotDelivery & {
     readonly purpose: "runtime-actual";
     readonly assignments: readonly SlotAssignment<WalkItemKind>[];
@@ -235,7 +234,7 @@ export interface ZonePlanObservation {
   };
 }
 
-export interface ZonePlanningContext extends SpawnSearchContext {
+export interface ZonePlanningContext extends SlotSeedContext {
   readonly observePlan?: (observation: ZonePlanObservation) => void;
 }
 
@@ -432,20 +431,4 @@ export function planZoneWithContext(
     return skin === undefined ? event : { ...event, skin };
   });
   return { road: { ...road, admission, herrings, path, pending, planned }, run };
-}
-
-// Direct planner callers have no session seed. Their deterministic repair namespace is explicit.
-export function planZone(
-  data: WalkData,
-  geometry: Parameters<typeof planZoneWithContext>[1],
-  streams: PlannerStreams,
-  walk: Walk,
-): Walk {
-  return planZoneWithContext(
-    data,
-    geometry,
-    { seed: 0, zoneIndex: walk.run.zoneIndex },
-    streams,
-    walk,
-  );
 }
