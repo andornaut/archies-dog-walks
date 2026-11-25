@@ -2,13 +2,14 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { FittedText } from "@andornaut/game-kit/runtime/text/textFit";
 
 import { ZONE_CELEBRATION_ART } from "../assets/spriteKeys.ts";
-import { SLICES } from "../data/layout.ts";
+import { ICON_LABEL_GAP, SLICES } from "../data/layout.ts";
 import type {
   DetailArt,
   DetailArtSize,
   DetailMeasure,
   DetailText,
 } from "../home/detailCardView.ts";
+import { iconBesideLabel } from "../ui/iconLabel.ts";
 import { type PanelButton } from "../ui/modal/types.ts";
 import { panelButton } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -148,7 +149,7 @@ function zoneDoneView(
 // layout.
 function infoLine(
   measure: DetailMeasure,
-  row: { iconY: number; y: number },
+  row: { y: number },
   parts: readonly LinePart[],
 ): CentredRow {
   // Each item and the screen pixels it takes across, its art's size for an icon.
@@ -168,16 +169,20 @@ function infoLine(
   const left = Math.round(LAYOUT.centreX - laid.width / 2);
   return {
     centreX: LAYOUT.centreX,
-    items: items.flatMap(({ item, size }, i): CentredRow["items"][number][] => {
+    items: items.flatMap(({ item, size, width }, i): CentredRow["items"][number][] => {
       const x = left + (laid.xs[i] ?? 0);
       const gap = i === 0 ? 0 : x - left - ((laid.xs[i - 1] ?? 0) + (items[i - 1]?.width ?? 0));
+      const capTop = capTopAt(measure, row.y, TEXT_SCALE);
       if (item.kind === "text") {
-        const capTop = capTopAt(measure, row.y, TEXT_SCALE);
         return [{ gap, text: { capTop, colour: PALETTE.plum, lines: [item.text], x } }];
       }
-      return size === undefined
-        ? []
-        : [{ art: { key: item.icon, scale: 1, size, x, y: row.iconY }, gap }];
+      // On its word's capitals, its art cell ICON_LABEL_GAP before the word's ink.
+      const at = iconBesideLabel({
+        capHeight: measure.body.capHeight * TEXT_SCALE,
+        capTop,
+        inkLeft: x + width + ICON_LABEL_GAP,
+      });
+      return size === undefined ? [] : [{ art: { key: item.icon, scale: 1, size, ...at }, gap }];
     }),
   };
 }

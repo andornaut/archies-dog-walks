@@ -804,18 +804,23 @@ export class HudScene extends Scene {
     if (painter === undefined) {
       throw new Error("Native HUD moments are not ready");
     }
+    const reached = label.reachIcon !== undefined && painter.hasArt(label.reachIcon);
+    // The icon takes its span of the room.
     const fitted = fittingText(
       CHANGE_LABEL_STYLE,
       (style, line) => inkWidth(painter.fonts.body, style.scale, line),
-      room,
+      room - (reached ? REACH_ICON.span : 0),
       label.text,
     );
     const scale = fitted.style.scale;
     const width = Math.max(
       ...fitted.lines.map((line) => inkWidth(painter.fonts.body, scale, line)),
     );
-    const reached = label.reachIcon !== undefined && painter.hasArt(label.reachIcon);
-    const placed = reachChipPlace(place, reached, { lines: fitted.lines.length, scale, width });
+    const placed = reachChipPlace(pixelFontMetrics(this, "body"), place, reached, {
+      lines: fitted.lines.length,
+      scale,
+      width,
+    });
     const chip = painter.group(depth);
     chip.panel(placed.chip);
     chip.text({

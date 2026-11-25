@@ -1,8 +1,9 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { CHANGE_CHIP, HUD_LANES } from "../data/layout.ts";
+import { CHANGE_CHIP, HUD_LANES, LABEL_ICON } from "../data/layout.ts";
 import type { ScreenLayout } from "../layout/screenLayout.ts";
+import { iconBesideLabel } from "../ui/iconLabel.ts";
 import { TEXT_STYLE } from "../ui/textFit.ts";
 import { OWNER_TAB } from "./walkHud.ts";
 
@@ -83,8 +84,9 @@ export interface ChipText {
 }
 
 // A reached pickup's change label shows the reaching buff's icon, size square, inside its chip at
-// its left, vertically centred, gap columns left of its text; the chip widens by span to hold it.
-const REACH_ICON_SIZE = 16;
+// its left, centred down its text's capitals, gap columns left of its text; the chip widens by span
+// to hold it.
+const REACH_ICON_SIZE = LABEL_ICON;
 const REACH_ICON_GAP = HUD_LANES.reachIconGap;
 export const REACH_ICON = {
   gap: REACH_ICON_GAP,
@@ -93,10 +95,11 @@ export const REACH_ICON = {
 } as const;
 
 // A change label's chip as place puts it, and where its ink's left edge and capitals' top go,
-// for text; with reached, its chip widened by REACH_ICON.span and placed as place places a chip
-// that wide, the icon's top-left at its left and the text's ink past the icon. icon is null
-// without reached.
+// for text in body; with reached, its chip widened by REACH_ICON.span and placed as place places a
+// chip that wide, the text's ink past the icon and the icon beside it (iconBesideLabel). icon is
+// null without reached.
 export function reachChipPlace(
+  body: FontMetrics,
   place: (text: ChipText) => { chip: Rect; text: Point },
   reached: boolean,
   text: ChipText,
@@ -104,12 +107,16 @@ export function reachChipPlace(
   if (!reached) {
     return { ...place(text), icon: null };
   }
-  const { size, span } = REACH_ICON;
-  const placed = place({ ...text, width: text.width + span });
+  const placed = place({ ...text, width: text.width + REACH_ICON.span });
+  const ink = { x: placed.text.x + REACH_ICON.span, y: placed.text.y };
   return {
     chip: placed.chip,
-    icon: { x: placed.text.x, y: placed.chip.y + Math.floor((placed.chip.height - size) / 2) },
-    text: { x: placed.text.x + span, y: placed.text.y },
+    icon: iconBesideLabel({
+      capHeight: body.capHeight * text.scale,
+      capTop: ink.y,
+      inkLeft: ink.x,
+    }),
+    text: ink,
   };
 }
 

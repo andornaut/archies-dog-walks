@@ -4,8 +4,10 @@ import { type Point, type Rect, rectsOverlap } from "@andornaut/game-kit/runtime
 import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
+import { ICON_LABEL_GAP } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { fontFileMetrics } from "../testing/fontInk.ts";
+import { iconBesideLabel } from "../ui/iconLabel.ts";
 import { perkIconKey } from "./effectIcons.ts";
 import {
   CHANGE_CHIP,
@@ -98,28 +100,27 @@ describe("a reached pickup's chip", () => {
   });
 
   it.each(places)(
-    "widens %s chip for the icon, held at its left before the text, and keeps it when not reached",
+    "widens %s chip for the icon, held at its left on the text's capitals, and keeps it when not reached",
     (_name, place) => {
-      const { gap, size } = REACH_ICON;
       const plain = place(text);
-      expect(reachChipPlace(place, false, text)).toEqual({ ...plain, icon: null });
-      const { chip, icon, text: ink } = reachChipPlace(place, true, text);
-      const at = icon ?? { x: Number.NaN, y: Number.NaN };
-      expect(chip.width).toBe(plain.chip.width + size + gap);
+      expect(reachChipPlace(BODY, place, false, text)).toEqual({ ...plain, icon: null });
+      const { chip, icon, text: ink } = reachChipPlace(BODY, place, true, text);
+      expect(REACH_ICON.gap).toBe(ICON_LABEL_GAP);
+      expect(chip.width).toBe(plain.chip.width + REACH_ICON.span);
       expect(chip.height).toBe(plain.chip.height);
-      expect(at.x).toBe(chip.x + CHANGE_CHIP.padX);
-      expect(ink).toEqual({ x: at.x + size + gap, y: plain.text.y });
-      const above = at.y - chip.y;
-      const below = chip.y + chip.height - (at.y + size);
-      expect(above).toBeGreaterThanOrEqual(0);
-      expect(Math.abs(above - below)).toBeLessThanOrEqual(1);
+      expect(ink).toEqual({ x: chip.x + CHANGE_CHIP.padX + REACH_ICON.span, y: plain.text.y });
+      const capHeight = BODY.capHeight * text.scale;
+      expect(icon).toEqual(iconBesideLabel({ capHeight, capTop: ink.y, inkLeft: ink.x }));
+      expect(icon!.x).toBe(chip.x + CHANGE_CHIP.padX);
+      expect(icon!.y).toBeGreaterThan(chip.y);
+      expect(icon!.y + REACH_ICON.size).toBeLessThan(chip.y + chip.height);
     },
   );
 
   it("stays centred where the cash places it", () => {
     const place = (shown: ChipText) => cashChipPlace(BODY, 0, shown);
     const centre = ({ width, x }: Rect) => x + width / 2;
-    const reached = reachChipPlace(place, true, text).chip;
+    const reached = reachChipPlace(BODY, place, true, text).chip;
     expect(Math.abs(centre(reached) - centre(place(text).chip))).toBeLessThanOrEqual(0.5);
   });
 });

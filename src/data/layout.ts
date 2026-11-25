@@ -325,8 +325,8 @@ export const HUD_LANES = {
   // A heart label's lane on its card: its rows over the card's bottom, its height, and the
   // columns it leaves of the card's width.
   heartLabel: { foot: 2, height: 24, margin: 4 },
-  // The columns between a reach icon and its chip's text.
-  reachIconGap: 2,
+  // The columns between a reach icon's art cell and its chip's text's ink.
+  reachIconGap: ICON_LABEL_GAP,
 } as const;
 
 // A change label's chip: its least height and its text's padding.
@@ -442,9 +442,9 @@ export const CELEBRATIONS = {
     feet: 105,
     // The greeting's lines.
     greetingLines: 2,
-    // The info lines: the icon's drop, the gaps after an icon and after a text, and each line's
-    // capitals' top under the bubble's top.
-    info: { iconDrop: 1, iconGap: 4, itemGap: 10, y: [51, 71] },
+    // The info lines: the gaps after an icon and after a text, and each line's capitals' top
+    // under the bubble's top.
+    info: { iconGap: ICON_LABEL_GAP, itemGap: 10, y: [51, 71] },
     // The dotted rule: its columns, dot step, and row under the bubble's top.
     rule: { fromX: 36, step: 3, toX: 323, y: 43 },
     // The tail's left edge, and its top from the bubble's top.

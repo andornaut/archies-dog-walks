@@ -1349,7 +1349,7 @@
           "y": 159
         },
         "bubble": {
-          "height": 111,
+          "height": 110,
           "width": 264,
           "x": 48,
           "y": 311
@@ -1358,7 +1358,7 @@
           "height": 48,
           "width": 116,
           "x": 122,
-          "y": 430
+          "y": 429
         },
         "greeting": {
           "lines": 2,
@@ -1366,20 +1366,19 @@
           "top": 327
         },
         "info": {
-          "iconDrop": 1,
           "iconGap": 4,
           "itemGap": 10,
           "maxWidth": 232,
           "y": [
-            374,
-            392
+            373,
+            391
           ]
         },
         "rule": {
           "fromX": 64,
           "step": 3,
           "toX": 295,
-          "y": 369
+          "y": 368
         },
         "tail": {
           "x": 176,

@@ -12,6 +12,7 @@ import { CELEBRATIONS } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { WIDE_BUTTON } from "../layout/screenLayout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
+import { iconBesideLabel } from "../ui/iconLabel.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
@@ -107,11 +108,10 @@ export const CELEBRATION_LAYOUT = {
       top: BUBBLE_TOP + MODAL.pad,
     },
     // The agility line over the perk line, a line of the body font at 2x apart, their tops at y,
-    // each centred within maxWidth: an icon iconDrop rows under its line's top, iconGap, its
-    // word; itemGap between the rest. The first line's icon tops leave LABEL_HELP_GAP clear rows
-    // under the body font's lowest ink on the greeting's last line.
+    // each centred within maxWidth: an icon on its word's capitals (iconBesideLabel), iconGap,
+    // its word; itemGap between the rest. The first line's icon tops leave LABEL_HELP_GAP clear
+    // rows under the body font's lowest ink on the greeting's last line.
     info: {
-      iconDrop: CELEBRATION.newWalker.info.iconDrop,
       iconGap: CELEBRATION.newWalker.info.iconGap,
       itemGap: CELEBRATION.newWalker.info.itemGap,
       maxWidth: BUBBLE_ROOM,
@@ -177,10 +177,16 @@ export function newWalkerRows(
   fitted: FittedText,
   actionInk?: number,
 ) {
-  const { bubble, button, greeting, info, rule } = CELEBRATION_LAYOUT.newWalker;
+  const { bubble, button, greeting, rule } = CELEBRATION_LAYOUT.newWalker;
   const greetingBottom =
     greeting.top + (body.capTop + inkRowsOfLines(body, fitted.lines.length)) * fitted.style.scale;
-  const firstInfo = greetingBottom + LABEL_HELP_GAP - info.iconDrop;
+  // An info icon's top under its line's top, on the line's capitals.
+  const iconDrop = iconBesideLabel({
+    capHeight: body.capHeight * TEXT_SCALE,
+    capTop: body.capTop * TEXT_SCALE,
+    inkLeft: 0,
+  }).y;
+  const firstInfo = greetingBottom + LABEL_HELP_GAP - iconDrop;
   const ruleY = firstInfo - MODAL.rowGap - 1;
   const rowInk = inkRowsFromCapTop(body) * TEXT_SCALE;
   const infoBottom =
@@ -196,7 +202,7 @@ export function newWalkerRows(
       y: bubble.y + height + MODAL.gap,
     },
     info: Array.from({ length: infoLines }, (_, i) => ({
-      iconY: firstInfo + i * (rowInk + MODAL.rowGap) + info.iconDrop,
+      iconY: firstInfo + i * (rowInk + MODAL.rowGap) + iconDrop,
       y: firstInfo + i * (rowInk + MODAL.rowGap),
     })),
     rule: {
