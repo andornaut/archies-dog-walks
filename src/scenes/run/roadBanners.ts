@@ -157,22 +157,18 @@ export function showDebuffPopup(scene: Scene, leadTop: Point, debuff: DebuffId):
 }
 
 // The zone banner's heading ("Toronto, neighbourhood 2") and the zone's name, slid in over
-// the road at each zone's start.
+// the road at each zone's start, a live neighbourhood switch's included: each show replaces the
+// banner still up with the run's current slot and neighbourhood.
 export class ZoneBanner {
   private banner: GameObjects.Container | undefined;
   private readonly scene: Scene;
-  private shown = -1;
 
   constructor(scene: Scene) {
     this.scene = scene;
   }
 
   show(run: RunState, still: boolean): void {
-    if (run.zoneIndex === this.shown) {
-      return;
-    }
     const { scene } = this;
-    this.shown = run.zoneIndex;
     this.banner?.destroy();
     const zone = currentZone(gameData, run);
     const { road } = LAYOUT;

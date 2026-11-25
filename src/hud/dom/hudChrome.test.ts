@@ -4,10 +4,12 @@ import { expect, it, vi } from "vitest";
 import { gameData } from "../../data/index.ts";
 import { DEBUFF_BAR, ZONE_PILL_SIZES } from "../../data/layout.ts";
 import { SCREEN_LAYOUT } from "../../data/screen.ts";
+import type { ZoneId } from "../../data/types.ts";
 import { modifiersOf } from "../../rules/modifiers.ts";
 import { currentZone } from "../../rules/route.ts";
 import { FakeDocument } from "../../testing/fakeDom.ts";
 import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
+import { liveSwitchRuns } from "../../testing/liveSwitch.ts";
 import { activeModifier, testState } from "../../testing/runState.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
@@ -237,3 +239,41 @@ it("renders the neighbourhood pill at the shared body role with measured ink and
     );
   }
 });
+
+// A live switch keeps the walk's slot, so the pill names the chosen neighbourhood there, then the
+// next zone's, and a resumed walk's pill names the chosen one again.
+it.each([
+  { next: "cabbagetown", route: ["highPark"], zone: "theBeaches" },
+  { next: "kensingtonMarket", route: ["highPark", "cabbagetown"], zone: "yongeStreet" },
+] satisfies { next: ZoneId; route: ZoneId[]; zone: ZoneId }[])(
+  "names $zone in slot $route.length on the pill after a switch from $route, then $next",
+  ({ next, route, zone }) => {
+    const runs = liveSwitchRuns(route, zone, next);
+    const zoneName = (id: ZoneId) => gameData.world.zones.find((each) => each.id === id)!.name;
+    const pillTexts = (views: readonly HudMoment[]) => {
+      const pill = views.findLast((view) =>
+        vi.mocked(view.panel).mock.calls.some(([, art]) => art?.key === "ui-zone-pill"),
+      )!;
+      return vi.mocked(pill.text).mock.calls.map(([text]) => text.lines[0]);
+    };
+    const { chrome, views } = fixture();
+    chrome.update({ ...runs.switched, route });
+    expect(pillTexts(views)).toEqual([
+      zoneName(route.at(-1)!),
+      zoneProgressText(gameData, route.length - 1),
+    ]);
+    chrome.update(runs.switched);
+    expect(pillTexts(views)).toEqual([
+      zoneName(zone),
+      zoneProgressText(gameData, route.length - 1),
+    ]);
+    chrome.update(runs.next);
+    expect(pillTexts(views)).toEqual([zoneName(next), zoneProgressText(gameData, route.length)]);
+    const resumed = fixture();
+    resumed.chrome.update(runs.resumed);
+    expect(pillTexts(resumed.views)).toEqual([
+      zoneName(zone),
+      zoneProgressText(gameData, route.length - 1),
+    ]);
+  },
+);

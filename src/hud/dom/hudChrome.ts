@@ -190,11 +190,12 @@ export function createHudChrome(
           }),
         );
       }
-      const currentZoneKey = `${run.zoneIndex}:${run.debuffs.length}`;
+      // Keyed on the texts drawn, so a live neighbourhood switch, which keeps the slot, renames it.
+      const name = currentZone(gameData, run).name,
+        count = zoneProgressText(gameData, run.zoneIndex);
+      const currentZoneKey = `${name}:${count}:${run.debuffs.length}`;
       if (zoneKey !== currentZoneKey) {
         zoneKey = currentZoneKey;
-        const name = currentZone(gameData, run).name,
-          count = zoneProgressText(gameData, run.zoneIndex);
         const ink = { count: inkOf(count), name: inkOf(name) };
         const layout = zonePillLayout(
           SCREEN_LAYOUT.topBar,

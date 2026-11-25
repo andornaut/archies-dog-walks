@@ -5,9 +5,14 @@ import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
 import { debuffIconKey } from "../../assets/iconKeys.ts";
+import { gameData } from "../../data/index.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
+import type { ZoneId } from "../../data/types.ts";
+import { zoneBannerHeading } from "../../hud/zoneCelebration.ts";
+import type { RunState } from "../../state/runState.ts";
+import { liveSwitchRuns } from "../../testing/liveSwitch.ts";
 import { fadeAway } from "../uiKit.ts";
-import { popUpArt, showDebuffPopup } from "./roadBanners.ts";
+import { popUpArt, showDebuffPopup, ZoneBanner } from "./roadBanners.ts";
 import { DEPTH } from "./stage.ts";
 
 vi.mock("phaser", () => ({
@@ -16,6 +21,19 @@ vi.mock("phaser", () => ({
 }));
 
 vi.mock("../uiKit.ts", () => ({ fadeAway: vi.fn() }));
+
+// The banner's texts draw as the stub's bitmap texts, and with no bitmap font it mounts no DOM.
+vi.mock("../../ui/phaser/pixelText.ts", () => ({
+  addPixelText: (scene: Scene, x: number, y: number, text: string) =>
+    scene.add.bitmapText(x, y, "title", text),
+  pixelBitmapFont: () => undefined,
+}));
+vi.mock("../../ui/phaser/displayText.ts", () => ({
+  addDisplayText: (scene: Scene, x: number, y: number, text: string) =>
+    scene.add.bitmapText(x, y, "display", text),
+  displayBitmapFont: () => undefined,
+  hasDisplayFont: () => false,
+}));
 
 class Image extends EventEmitter {
   active = true;
@@ -100,4 +118,53 @@ describe("received effect popups", () => {
     popUpArt(scene, { at: { x: 180, y: 400 }, key: "gear", scale: 2 }, false);
     expect(fadeAway).toHaveBeenLastCalledWith(scene, images, { ms: 1800, rise: 16 });
   });
+});
+
+describe("zone banner", () => {
+  const zoneName = (zone: ZoneId) => gameData.world.zones.find(({ id }) => id === zone)!.name;
+
+  // The texts of the banners still up: their heading, then the neighbourhood's name.
+  const shownTexts = (scene: Scene) =>
+    scene.children.list.flatMap((object) =>
+      object.type === "Container"
+        ? [
+            (object as unknown as { list: { text: string; type: string }[] }).list.flatMap(
+              ({ text, type }) => (type === "BitmapText" ? [text] : []),
+            ),
+          ]
+        : [],
+    );
+
+  const bannerScene = () =>
+    sceneStub(vi.fn, {
+      textures: { exists: () => true },
+      tweens: { chain: vi.fn() },
+    }) as unknown as Scene;
+
+  // A live switch keeps the walk's slot, so the banner names the chosen neighbourhood there, then
+  // the next zone's, and a resumed walk's banner names the chosen one again.
+  it.each([
+    { next: "cabbagetown", route: ["highPark"], zone: "theBeaches" },
+    { next: "kensingtonMarket", route: ["highPark", "cabbagetown"], zone: "yongeStreet" },
+  ] satisfies { next: ZoneId; route: ZoneId[]; zone: ZoneId }[])(
+    "names $zone in slot $route.length after a switch from $route, then $next",
+    ({ next, route, zone }) => {
+      const runs = liveSwitchRuns(route, zone, next);
+      const expected = (zoneIndex: number, id: ZoneId) => [
+        [zoneBannerHeading(gameData, { zoneIndex }), zoneName(id)],
+      ];
+      const scene = bannerScene();
+      const banner = new ZoneBanner(scene);
+      const walked: RunState = { ...runs.switched, route };
+      banner.show(walked, true);
+      expect(shownTexts(scene)).toEqual(expected(route.length - 1, route.at(-1)!));
+      banner.show(runs.switched, true);
+      expect(shownTexts(scene)).toEqual(expected(route.length - 1, zone));
+      banner.show(runs.next, true);
+      expect(shownTexts(scene)).toEqual(expected(route.length, next));
+      const resumed = bannerScene();
+      new ZoneBanner(resumed).show(runs.resumed, true);
+      expect(shownTexts(resumed)).toEqual(expected(route.length - 1, zone));
+    },
+  );
 });
