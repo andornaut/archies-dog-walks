@@ -100,6 +100,13 @@
   --adw-button-lip: var(--adw-plum);
   --adw-button-text: var(--adw-white);
 }
+/* A focused face's label stays at full opacity over its fill; it names the button and the kit
+   only means to let a picture's fill show through. */
+button.adw-standard-button.ui-standard-button:focus-visible
+  > .ui-button-face
+  > [aria-hidden="true"] {
+  opacity: 1;
+}
 /* Suppress inherited game focus decorations; this control's face supplies its focus cue. */
 .adw-standard-button.ui-standard-button:focus-visible .adw-standard-button-face::after {
   content: none;

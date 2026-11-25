@@ -295,23 +295,29 @@ export function panelBadgeStrip(rect: Rect, rows: number, count: number): BadgeS
   return badgeStrip(layout, rows, count);
 }
 
+// The bottom of a badge strip panel's flat face, above its lip row and frame.
+export function badgeStripFaceBottom(rect: Pick<Rect, "height" | "y">): number {
+  return rect.y + rect.height - BADGE_STRIP.frame - BADGE_STRIP.lip;
+}
+
 // Each of count badges' tap targets in rows rows across a panel at rect: its slot, edge to edge
-// with its row's neighbours. A lone row's run from the badges' top down to the panel's frame.
-// With more rows, each row's end at its badges' bottom, the first's starting MIN_TAP_SIZE
-// above that and each later row's where the row above's end, and the last's run down to the
-// frame.
+// with its row's neighbours. A lone row's run from the badges' top down to the panel's flat face's
+// bottom (badgeStripFaceBottom). With more rows, each row's end at its badges' bottom, the
+// first's starting MIN_TAP_SIZE above that and each later row's where the row above's end, and
+// the last's run down to the flat face's bottom, or MIN_TAP_SIZE tall where that is lower.
 export function badgeStripHits(rect: Rect, rows: number, count: number): Rect[] {
-  const { badgeSize, badgeTop, frame, inset, rowPitch } = BADGE_STRIP;
+  const { badgeSize, badgeTop, inset, rowPitch } = BADGE_STRIP;
   const cells = stripCells({ width: rect.width - inset * 2, x: rect.x + inset }, rows, count);
   const last = Math.max(0, rows - 1);
-  const end = (row: number) =>
-    row === last ? rect.y + rect.height - frame : rect.y + badgeTop + row * rowPitch + badgeSize;
+  const badgesEnd = (row: number) => rect.y + badgeTop + row * rowPitch + badgeSize;
   const start = (row: number) => {
     if (row > 0) {
-      return end(row - 1);
+      return badgesEnd(row - 1);
     }
-    return last === 0 ? rect.y + badgeTop : end(0) - MIN_TAP_SIZE;
+    return last === 0 ? rect.y + badgeTop : badgesEnd(0) - MIN_TAP_SIZE;
   };
+  const end = (row: number) =>
+    row === last ? Math.max(badgeStripFaceBottom(rect), start(row) + MIN_TAP_SIZE) : badgesEnd(row);
   return cells.map(({ left, right, row }) => {
     const x = Math.round(left);
     const y = start(row);

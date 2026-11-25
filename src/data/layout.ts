@@ -486,9 +486,8 @@ export const CHOICE_CARDS = {
   // art: card-frame's plaque, and the rows of the card-cost face its text is centred on.
   badge: { face: { height: 8, y: 2 }, height: 13, width: 71, x: 20, y: 136 },
   // art: card-frame's band: the margin between the frame and the picture's outline, its top and
-  // height, which the label is centred on, the press fill's rows from its top, and its label's
-  // widest ink.
-  band: { height: 13, press: 11, room: 106, y: 2 },
+  // height, which the press fill covers and the label is centred on, and its label's widest ink.
+  band: { height: 13, room: 106, y: 2 },
   // The effect: its rows over the plaque, its width and left edge.
   effect: { plaqueGap: 1, width: 100, x: 6 },
   // art: ui-fires: its top ink's row, side and top-left.
@@ -715,6 +714,8 @@ export const BADGE_STRIP = {
   frame: 2,
   // The slots' inset from the panel's sides.
   inset: BADGE_STRIP_INSET,
+  // art: the panel's lip row over its bottom frame, below the flat face.
+  lip: 1,
   // The most badges that show their names.
   maxNamed: 3,
   // The most rows.

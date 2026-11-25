@@ -497,7 +497,8 @@ export function createNativeTopSection(
       title,
       scale,
       ORIGIN,
-      { ...rect, height: rect.height - TOP_BAR_WELL.lip },
+      // The well's flat face, less its lip's row and column.
+      { ...rect, height: rect.height - TOP_BAR_WELL.lip, width: rect.width - TOP_BAR_WELL.lip },
       [whole],
       "layout",
     )[0]!;

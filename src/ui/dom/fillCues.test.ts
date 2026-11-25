@@ -40,6 +40,9 @@ const CUE_SHEETS = { ...SHEETS, tileForced: forced(SHEETS.tile), topForced: forc
 const FORCED_TOP_ARTWORK =
   "button.adw-top-section-button.ui-standard-button:is(:focus-visible, [data-ui-pressed])" +
   ' > .ui-button-face > [aria-hidden="true"]';
+// A focused standard button's label, which must outrank Kit's focused artwork opacity.
+const STANDARD_FOCUSED_LABEL =
+  'button.adw-standard-button.ui-standard-button:focus-visible > .ui-button-face > [aria-hidden="true"]';
 // Kit's focused artwork opacity, which the forced-colours top-bar artwork must outrank.
 const KIT_FOCUSED_ARTWORK =
   'button.ui-standard-button:focus-visible > .ui-button-face > [aria-hidden="true"]';
@@ -279,6 +282,13 @@ describe("control state cues", () => {
     ],
   ] as const)("shows %s as a fill", (_what, sheet, selector, declaration) => {
     expect(rule(CUE_SHEETS[sheet], selector)).toContain(squeeze(declaration));
+  });
+
+  it("keeps a focused standard button's label at full opacity over Kit's focused artwork", () => {
+    expect(rule(SHEETS.game, STANDARD_FOCUSED_LABEL)).toContain("opacity:1");
+    expect(
+      ranks(specificity(STANDARD_FOCUSED_LABEL), specificity(KIT_FOCUSED_ARTWORK)),
+    ).toBeGreaterThan(0);
   });
 
   it("outranks Kit's focused artwork opacity with the forced-colours top-bar artwork", () => {

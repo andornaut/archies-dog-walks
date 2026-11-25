@@ -1171,10 +1171,7 @@ export class StartScene extends Scene {
       shop.shopIdle?.update(
         !reduced && this.overlay === undefined && this.artWait === undefined && this.sys.isActive(),
       );
-      shop.container.setPosition(
-        shakeOffset(reduced, now, this.shakes.get("petShop")),
-        shop.iconButton === undefined ? dip("petShop") : 0,
-      );
+      shop.container.setPosition(0, shop.iconButton === undefined ? dip("petShop") : 0);
     }
     const scale = uiLayer()?.scale();
     const view = this.nativeView;

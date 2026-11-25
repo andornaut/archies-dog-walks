@@ -3,7 +3,7 @@ import "./logbook.css";
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { badgeStripHits, type BadgeView } from "../../home/badgesView.ts";
+import { badgeStripFaceBottom, badgeStripHits, type BadgeView } from "../../home/badgesView.ts";
 import type { DetailArt, DetailText } from "../../home/detailCardView.ts";
 import { END_LAYOUT } from "../../home/endLayout.ts";
 import type { EndResults, EndScreenView } from "../../home/endScreenView.ts";
@@ -254,6 +254,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
           reduced: input.reduced,
           rows: strip.rows,
         });
+  const faceBottom = strip === undefined ? 0 : badgeStripFaceBottom(strip.panel);
   const badgeControls = (
     strip === undefined ? [] : badgeStripHits(strip.panel, strip.rows, input.badges.length)
   ).map((rect, index): DomPart & { readonly hit: Rect; dispose(): void } => {
@@ -280,9 +281,13 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
       },
       element,
       hit: rect,
+      // The face, which fills on focus and press, ends on the panel's flat face, above its lip.
       place: (scale) => {
         placeBox(scale, ORIGIN, element, rect);
-        placeBox(scale, rect, face, rect);
+        placeBox(scale, rect, face, {
+          ...rect,
+          height: Math.min(rect.y + rect.height, faceBottom) - rect.y,
+        });
       },
     };
   });

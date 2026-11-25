@@ -209,10 +209,10 @@ function surfaceParts(
     const band = doc.createElement("span");
     band.className = "adw-art adw-choice-press-band";
     band.setAttribute("aria-hidden", "true");
-    const { press, room, y } = CARD_LAYOUT.band;
+    const { height, room, y } = CARD_LAYOUT.band;
     all.push(
       gridBoxPart(ORIGIN, band, {
-        height: press,
+        height,
         width: room,
         x: rect.x + (rect.width - room) / 2,
         y: rect.y + y,
