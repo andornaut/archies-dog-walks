@@ -67,6 +67,8 @@ function fixture(overrides: Partial<WitnessWork<string>> = {}, auxiliary = false
     minimumDelivery: jobs.length,
     ordinaryOrder: "original",
     progress: () => 0,
+    propagate: () => true,
+    stopped: () => false,
     ...overrides,
   };
   const search = createSlotWitnessSearch(work, road, path, domains, jobs);

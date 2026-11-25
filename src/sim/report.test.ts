@@ -4,15 +4,12 @@ import { describe, expect, it, vi } from "vitest";
 import { DOGS } from "../data/dogs.ts";
 import { gameData } from "../data/index.ts";
 import type { DogId, ZoneId } from "../data/types.ts";
+import { ZonePlanningError } from "../runner/session.ts";
 import type { SlotDelivery, SlotPartialAudit } from "../runner/slotDelivery.ts";
 import { SLOT_LIMITS } from "../runner/slotPlanner.ts";
 import type { SpawnAudit } from "../runner/spawnValidation.ts";
 import type { WalkItemKind } from "../runner/walkItems.ts";
-import {
-  replayZoneSlots,
-  type ZoneSlotInput,
-  ZoneSlotPlanningError,
-} from "../runner/zoneSlotInput.ts";
+import { replayZoneSlots, type ZoneSlotInput } from "../runner/zoneSlotInput.ts";
 import type { PackDogs, RunState } from "../state/runState.ts";
 import { cents } from "../units.ts";
 import { POLICY_IDS } from "./policies.ts";
@@ -466,7 +463,7 @@ function failedPlanning(run: RunState) {
     throw Error("Expected missing source diagnostic");
   }
   const planningFailure = capturePlanningFailure(7, () => {
-    throw new ZoneSlotPlanningError(input, unsupported);
+    throw new ZonePlanningError({ input, reason: "unsupported", result: unsupported });
   });
   if (planningFailure === undefined) {
     throw Error("Expected structural planning failure");

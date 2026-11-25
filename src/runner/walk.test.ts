@@ -153,7 +153,7 @@ function observedPlan(
   walk: Walk,
 ) {
   let observation: ZonePlanObservation | undefined;
-  const { road } = planZoneWithContext(
+  const outcome = planZoneWithContext(
     tuned,
     roadGeometry,
     {
@@ -166,7 +166,10 @@ function observedPlan(
     plannerStreams(seed),
     walk,
   );
-  return { road, slots: defined(defined(observation).slots) };
+  if (outcome.status === "failed") {
+    throw new Error(outcome.failure.reason);
+  }
+  return { road: outcome.walk.road, slots: defined(defined(observation).slots) };
 }
 
 function expectCertifiedDelivery({ road, slots }: ReturnType<typeof observedPlan>): void {

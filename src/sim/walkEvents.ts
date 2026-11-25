@@ -1,21 +1,18 @@
 import type { ZoneId } from "../data/types.ts";
-import type { SlotPlanningFailure } from "../runner/slotPlanner.ts";
+import { ZonePlanningError } from "../runner/session.ts";
 import type { AdmissionReport } from "../runner/spawnAdmission.ts";
 import type { SpawnAudit } from "../runner/spawnValidation.ts";
 import type { Walk, WalkStep } from "../runner/walk.ts";
 import type { WalkItemKind } from "../runner/walkItems.ts";
-import type { ZoneSlotDelivery } from "../runner/zonePlan.ts";
-import { type ZoneSlotInput, ZoneSlotPlanningError } from "../runner/zoneSlotInput.ts";
+import type { ZonePlanFailure, ZoneSlotDelivery } from "../runner/zonePlan.ts";
 import type { RunState } from "../state/runState.ts";
 
-export interface PlanningFailure {
-  readonly input: ZoneSlotInput<string>;
+export type PlanningFailure = ZonePlanFailure<string> & {
   readonly kind: "slots";
   readonly message: string;
   readonly purpose: "runtime-actual";
-  readonly result: SlotPlanningFailure<string>;
   readonly seed: number;
-}
+};
 
 export function capturePlanningFailure(
   seed: number,
@@ -25,13 +22,12 @@ export function capturePlanningFailure(
     play();
     return undefined;
   } catch (error) {
-    if (error instanceof ZoneSlotPlanningError) {
+    if (error instanceof ZonePlanningError) {
       return {
-        input: error.input,
+        ...error.failure,
         kind: "slots",
         message: error.message,
         purpose: "runtime-actual",
-        result: error.result,
         seed,
       };
     }

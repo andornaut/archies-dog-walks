@@ -12,11 +12,7 @@ import { SLOT_LIMITS } from "../runner/slotPlanner.ts";
 import { startRoad, type WalkStep } from "../runner/walk.ts";
 import type { WalkItemKind } from "../runner/walkItems.ts";
 import type { ZonePlanObservation } from "../runner/zonePlan.ts";
-import {
-  replayZoneSlots,
-  type ZoneSlotInput,
-  ZoneSlotPlanningError,
-} from "../runner/zoneSlotInput.ts";
+import { replayZoneSlots, type ZoneSlotInput } from "../runner/zoneSlotInput.ts";
 import { TALLY_IDS } from "../save/schema.ts";
 import { packDogs, packOrder } from "../state/pack.ts";
 import type { PackDogs, RunState } from "../state/runState.ts";
@@ -466,7 +462,7 @@ describe("simulateRun planning diagnostics", () => {
         };
       })
       .mockImplementationOnce(() => {
-        throw new ZoneSlotPlanningError(input, unsupported);
+        throw new sessions.ZonePlanningError({ input, reason: "unsupported", result: unsupported });
       });
     try {
       const result = simulateRun(gameData, 7, {

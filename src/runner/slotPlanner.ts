@@ -128,15 +128,6 @@ export type SlotPlanningResult<Kind extends string> =
   | SlotCompositionPartial<Kind>
   | SlotPlanningFailure<Kind>;
 
-export class SlotPlanningError<Kind extends string> extends Error {
-  readonly result: Extract<SlotPlanningResult<Kind>, { readonly status: "unsupported" }>;
-  constructor(result: Extract<SlotPlanningResult<Kind>, { readonly status: "unsupported" }>) {
-    super(`Unsupported slot configuration (${result.stage}): ${JSON.stringify(result.failures)}`);
-    this.result = result;
-    this.name = "SlotPlanningError";
-  }
-}
-
 // Runtime emits only an independently audited actual composition. It certifies the runtime-90
 // floor while preferring full delivery, and tries the original ordering, then the balanced one,
 // each within one SLOT_LIMITS.candidateChecks allowance of the context's total limit.
@@ -669,7 +660,7 @@ export function planSlotSpawns<Kind extends string>(
     workFailure === undefined &&
     solved.status !== "compatible" &&
     solved.status !== "partial" &&
-    !(solved.status === "blocked" && solved.failure?.classification === "unattributed")
+    !(solved.status === "blocked" && solved.failure.classification === "unattributed")
   ) {
     attemptStart = {
       candidateChecks: stats.candidateChecks,
@@ -733,12 +724,7 @@ export function planSlotSpawns<Kind extends string>(
   }
   if (solved.status !== "compatible") {
     return unsupported("construction", [
-      {
-        code:
-          solved.status === "blocked"
-            ? (solved.failure?.rule ?? "bounded-joint-construction")
-            : "bounded-joint-construction",
-      },
+      { code: solved.status === "blocked" ? solved.failure.rule : "bounded-joint-construction" },
     ]);
   }
   const selected = bind(solved.selections);

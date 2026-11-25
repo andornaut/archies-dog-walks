@@ -31,7 +31,12 @@ import {
 } from "./walk.ts";
 import { type RoadGeometry } from "./walkGeometry.ts";
 import { zoneLength } from "./walkMotion.ts";
-import { planZoneWithContext, type ZonePlanObservation } from "./zonePlan.ts";
+import {
+  planZoneWithContext,
+  type ZonePlanFailure,
+  zonePlanFailureMessage,
+  type ZonePlanObservation,
+} from "./zonePlan.ts";
 import { type DebuffMovementClock, hasDebuffDrift, stepDebuffMovement } from "./zoomies.ts";
 
 // One walk's step order, shared by the run scene and the simulator: the inputs, the pulls, the
@@ -125,6 +130,17 @@ export type SessionEvent =
 export interface SessionStep {
   readonly events: readonly SessionEvent[];
   readonly session: Session;
+}
+
+// A walk cannot go on into a zone the planner has no plan for: the session stops with the
+// planner's reason.
+export class ZonePlanningError extends Error {
+  readonly failure: ZonePlanFailure<string>;
+  constructor(failure: ZonePlanFailure<string>) {
+    super(zonePlanFailureMessage(failure));
+    this.failure = failure;
+    this.name = "ZonePlanningError";
+  }
 }
 
 // A stream that counts its draws, having drawn skip numbers already.
@@ -428,7 +444,8 @@ export function headHomeSession(session: Session): SessionStep {
 }
 
 // The walk with its current zone planned from the seed, as a step plans it: the same seed and
-// walk plan the same zone wherever they are planned.
+// walk plan the same zone wherever they are planned. Throws a ZonePlanningError when the zone has
+// no plan.
 export function planZoneFromSeed(
   data: SessionData,
   geometry: SessionGeometry,
@@ -449,7 +466,7 @@ function planCurrentZone(
     movers: randomStream(streams.seed, `movers-${zone}`),
     spawns: randomStream(streams.seed, `spawns-${zone}`),
   };
-  return planZoneWithContext(
+  const outcome = planZoneWithContext(
     data,
     geometry(walk.run),
     {
@@ -460,6 +477,10 @@ function planCurrentZone(
     planner,
     walk,
   );
+  if (outcome.status === "failed") {
+    throw new ZonePlanningError(outcome.failure);
+  }
+  return outcome.walk;
 }
 
 // An owner who just fired you holds the walk while their moment plays, as a hit stop does:

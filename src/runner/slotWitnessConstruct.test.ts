@@ -159,16 +159,21 @@ function fixture(road: typeof geometry, specs: readonly Spec[], limit = Infinity
     checkpoint: () => ({ context, native: state.checkpoint() }),
     complete: () => (check() ? state.checkComplete() : undefined),
     entries: state.entries,
+    laneClosure: () => ({ accepted: true }),
     minimumDelivery: jobs.length,
+    motionTiers: () => ({ status: "unknown" }),
     omissionAttempts: SLOT_OMISSION_ATTEMPTS.reserve,
     ordinaryOrder: "original",
     partial: () => false,
     preparations: (job) => job.preparations(),
     propagate: work.propagate,
+    rejects: () => false,
+    repairRow: () => ({ status: "none" }),
     restore: (mark) => {
       state.restore(mark.native);
       context = mark.context;
     },
+    stopped: () => false,
     test: (job, candidate) => {
       if (!check()) {
         return undefined;

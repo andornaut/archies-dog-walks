@@ -26,9 +26,9 @@ export interface SpawnVisibilityTrace extends SpawnVisibility {
 
 export function visibilityRejection(
   entrySpacing: number,
+  onFailure: FeasibilityObserver | undefined,
   planned: readonly SpawnVisibility[],
   incoming: SpawnVisibility,
-  onFailure?: FeasibilityObserver,
 ): SpawnRejection | undefined {
   const same = planned.filter((other) => other.kind === incoming.kind);
   const overlapping = same.filter(

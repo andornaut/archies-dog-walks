@@ -29,7 +29,7 @@ import { apportionSlotCounts, slotCountTotal, type SlotGuarantee } from "./slotC
 import { minimumSlotDelivery, type SlotDelivery, type SlotPartialAudit } from "./slotDelivery.ts";
 import type { SlotSeedContext } from "./slotEntropy.ts";
 import type { SlotAssignment } from "./slotPlan.ts";
-import { SLOT_LIMITS, type SlotDiagnostics } from "./slotPlanner.ts";
+import { SLOT_LIMITS, type SlotDiagnostics, type SlotPlanningFailure } from "./slotPlanner.ts";
 import type { PlannedSpawns, SpawnPlan, SpawnQuota } from "./spawning.ts";
 import { spacedStretch } from "./stretches.ts";
 import { type Walk, type WalkData } from "./walk.ts";
@@ -45,12 +45,7 @@ import {
   type WalkSpawn,
 } from "./walkItems.ts";
 import { walkScrollSpeed, zoneLength } from "./walkMotion.ts";
-import {
-  replayZoneSlots,
-  type ZoneSlotInput,
-  type ZoneSlotKind,
-  ZoneSlotPlanningError,
-} from "./zoneSlotInput.ts";
+import { replayZoneSlots, type ZoneSlotInput, type ZoneSlotKind } from "./zoneSlotInput.ts";
 
 // The entries of a zone's weights above 0, in the data's order.
 function positiveWeights<Id extends string>(weights: Readonly<Record<Id, number>>): [Id, number][] {
@@ -234,13 +229,38 @@ export interface ZonePlanObservation {
   };
 }
 
+// Why a zone has no plan: the slot planner found no certified layout (unsupported), or the partial
+// layout it returned does not certify the delivery it reports against the zone's requests.
+export type ZonePlanFailure<Kind extends string = WalkItemKind> = {
+  readonly input: ZoneSlotInput<Kind>;
+} & (
+  | { readonly reason: "invalid-partial-certificate" }
+  | { readonly reason: "unsupported"; readonly result: SlotPlanningFailure<Kind> }
+);
+
+export type ZonePlanOutcome =
+  | { readonly status: "planned"; readonly walk: Walk }
+  | { readonly failure: ZonePlanFailure; readonly status: "failed" };
+
+// A failure's description, naming the zone, seed and position it was planned for.
+export function zonePlanFailureMessage(failure: ZonePlanFailure<string>): string {
+  const { input } = failure;
+  const zone = input.actualRun.route[input.actualRun.zoneIndex] ?? "unknown";
+  const detail =
+    failure.reason === "unsupported"
+      ? `Unsupported slot configuration (${failure.result.stage}): ${JSON.stringify(failure.result.failures)}`
+      : "Invalid runtime partial slot certificate";
+  return `Zone ${zone}, seed ${input.context.seed}, position ${input.context.zoneIndex}: ${detail}`;
+}
+
 export interface ZonePlanningContext extends SlotSeedContext {
   readonly observePlan?: (observation: ZonePlanObservation) => void;
 }
 
 // Plans the run's current zone: its spawns, each obstacle and lucky encounter drawn by the
 // zone's weights. Last, each minor obstacle with skins picks its skin (pickSkin) from the spawns
-// stream, after every spawn is placed, so the picks move no spawn.
+// stream, after every spawn is placed, so the picks move no spawn. A zone with no certified
+// layout fails with its reason.
 export function planZoneWithContext(
   data: WalkData,
   geometry: Pick<
@@ -258,7 +278,7 @@ export function planZoneWithContext(
   context: ZonePlanningContext,
   streams: PlannerStreams,
   walk: Walk,
-): Walk {
+): ZonePlanOutcome {
   const { road, run } = walk;
   const length = zoneLength(data);
   // Each lane-blocking kind's drawn hit length, standing and moving, for the pack-fit gap.
@@ -387,7 +407,7 @@ export function planZoneWithContext(
   };
   const result = replayZoneSlots(input);
   if (result.status === "unsupported") {
-    throw new ZoneSlotPlanningError(input, result);
+    return { failure: { input, reason: "unsupported", result }, status: "failed" };
   }
   if (
     result.status === "partial" &&
@@ -400,7 +420,7 @@ export function planZoneWithContext(
           input.auxiliary.reduce((count, quota) => count + quota.count, 0) ||
       result.delivery.delivered < minimumSlotDelivery("runtime-90", result.delivery.configured))
   ) {
-    throw new Error("Invalid runtime partial slot certificate");
+    return { failure: { input, reason: "invalid-partial-certificate" }, status: "failed" };
   }
   context.observePlan?.({
     context: { seed: context.seed, zoneIndex: context.zoneIndex },
@@ -430,5 +450,8 @@ export function planZoneWithContext(
       : undefined;
     return skin === undefined ? event : { ...event, skin };
   });
-  return { road: { ...road, admission, herrings, path, pending, planned }, run };
+  return {
+    status: "planned",
+    walk: { road: { ...road, admission, herrings, path, pending, planned }, run },
+  };
 }

@@ -17,7 +17,6 @@ import type { LaneDirection } from "../layout/lanes.ts";
 import { newRun } from "../rules/newRun.ts";
 import { mapPack } from "../state/pack.ts";
 import type { PackDogs } from "../state/runState.ts";
-import { plannerStreams } from "../testing/movers.ts";
 import { TEST_ROAD_GEOMETRY } from "../testing/packGeometry.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
 import { TEST_WALKER_DATA } from "../testing/walkers.ts";
@@ -27,6 +26,7 @@ import {
   TEST_WORLD,
   zoneGuarantees,
 } from "../testing/world.ts";
+import { planZoneForSeed } from "../testing/zonePlan.ts";
 import { laneControlIn } from "./laneControl.ts";
 import { stillInLane } from "./laneMotion.ts";
 import { type MoverPath, moverPlace, moverY } from "./movers.ts";
@@ -43,7 +43,6 @@ import {
 } from "./pulls.ts";
 import { startRoad, steerWalk, stepWalk, type Walk } from "./walk.ts";
 import { type WalkItem } from "./walkItems.ts";
-import { planZoneWithContext } from "./zonePlan.ts";
 
 const data = {
   debuffs: DEBUFFS,
@@ -588,13 +587,7 @@ describe("replay with pulls", () => {
     const play = (seed: number, movesAt: (frame: number, timeMs: number) => LaneDirection[]) => {
       const setup = { dev: true, invincible: false, seed, speed: 1, zone: 1 };
       const initial = walkWith(["lady", "kilo"]);
-      const start = planZoneWithContext(
-        replayData,
-        geometry,
-        { seed, zoneIndex: initial.run.zoneIndex },
-        plannerStreams(seed),
-        initial,
-      );
+      const start = planZoneForSeed(replayData, geometry, seed, initial);
       const rolls = seededRandom(seed + 4);
       let log = startInputLog(setup);
       let walk = start;

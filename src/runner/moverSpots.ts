@@ -201,7 +201,7 @@ export function fitsMoverSpot(
   ) {
     return false;
   }
-  if (!screenHasRoom(caps, onScreen, onScreenOf(placement.path, [start, end]), grid.onFailure)) {
+  if (!screenHasRoom(caps, grid.onFailure, onScreen, onScreenOf(placement.path, [start, end]))) {
     return reject("screen-cap");
   }
   if (!cells.every(({ lane, row }) => grid.isFree(placement.path.motion, lane, spot.row + row))) {

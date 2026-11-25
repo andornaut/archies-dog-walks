@@ -19,12 +19,7 @@ import { planSlotSpawns, SLOT_LIMITS } from "./slotPlanner.ts";
 import * as witnessSearch from "./slotWitnessSearch.ts";
 import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 import { auditSpawnPlan } from "./spawnValidation.ts";
-import {
-  compileZoneSlotInput,
-  replayZoneSlots,
-  type ZoneSlotInput,
-  ZoneSlotPlanningError,
-} from "./zoneSlotInput.ts";
+import { compileZoneSlotInput, replayZoneSlots, type ZoneSlotInput } from "./zoneSlotInput.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,
@@ -642,8 +637,7 @@ describe("safe slot planning", () => {
     if (failed.status !== "unsupported") {
       return;
     }
-    const error = new ZoneSlotPlanningError(failedInput, failed);
-    const captured = JSON.parse(JSON.stringify({ input: error.input, result: error.result }));
+    const captured = JSON.parse(JSON.stringify({ input: failedInput, result: failed }));
     expect(captured.input.actualRun).toEqual(input.actualRun);
     expect(replayZoneSlots(captured.input)).toEqual(failed);
     expect(captured.result.stage).toBe("construction");

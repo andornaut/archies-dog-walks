@@ -1,15 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
+import { ZonePlanningError } from "../runner/session.ts";
 import { SLOT_LIMITS } from "../runner/slotPlanner.ts";
 import { type SpawnAudit } from "../runner/spawnValidation.ts";
 import type { WalkItemKind } from "../runner/walkItems.ts";
 import type { ZoneSlotDelivery } from "../runner/zonePlan.ts";
-import {
-  replayZoneSlots,
-  type ZoneSlotInput,
-  ZoneSlotPlanningError,
-} from "../runner/zoneSlotInput.ts";
+import { replayZoneSlots, type ZoneSlotInput } from "../runner/zoneSlotInput.ts";
 import { step, walkWith } from "../testing/walk.ts";
 import { sumDeliveries, zoneDelivery } from "./delivery.ts";
 import {
@@ -142,7 +139,7 @@ describe("simulator spawn observations", () => {
     if (result.status !== "unsupported") {
       throw Error("Expected unsupported original catalogue");
     }
-    const error = new ZoneSlotPlanningError(input, result);
+    const error = new ZonePlanningError({ input, reason: "unsupported", result });
     const failure = capturePlanningFailure(7, () => {
       throw error;
     });
@@ -151,7 +148,7 @@ describe("simulator spawn observations", () => {
       throw Error("Expected actual slot diagnostic");
     }
     expect(failure.input).toBe(input);
-    expect(failure.result).toBe(result);
+    expect(failure).toHaveProperty("result", result);
     expect(JSON.parse(JSON.stringify(failure)).input.context).toEqual(input.context);
   });
 
@@ -164,7 +161,7 @@ describe("simulator spawn observations", () => {
     const state = { modifiers: ["rushHour"], visited: ["highPark"] };
     const failure = capturePlanningFailure(7, () => {
       state.visited.push("cabbagetown");
-      throw new ZoneSlotPlanningError(input, result);
+      throw new ZonePlanningError({ input, reason: "unsupported", result });
     });
     expect(failure).toMatchObject({ input, kind: "slots", result, seed: 7 });
     expect(state.visited).toEqual(["highPark", "cabbagetown"]);

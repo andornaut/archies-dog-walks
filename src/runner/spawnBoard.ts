@@ -25,6 +25,7 @@ import {
   blockingPlace,
   blockingSpan,
   type Cell,
+  type Footprint,
   hitLength,
   lastHitRow,
   lastRowTaken,
@@ -62,6 +63,15 @@ export type PlacementResult =
   { readonly accepted: true } | { readonly accepted: false; readonly failure: PlacementRejection };
 const identity = (entry: SpawnPlacement<string>) =>
   `${entry.trace.quotaIndex}:${entry.trace.memberIndex}`;
+// A refusal no native rule names.
+const UNATTRIBUTED: PlacementRejection = {
+  classification: "unattributed",
+  conflicts: [],
+  rule: "unattributed",
+};
+// Each admit or refuse check of the board returns its refusal, or undefined to admit. The
+// feasibility rules the board calls into take boolean checks; passes reports a refusal to the
+// probe that is observing and admits only without one.
 export class SpawnBoard<Kind extends string> {
   private readonly mode: "complete" | "partial";
   private readonly plan: SpawnPlan<Kind>;
@@ -100,44 +110,17 @@ export class SpawnBoard<Kind extends string> {
     this.cells = new SpawnCells(this.rows.length, plan.laneCount, 0);
     this.geometry = { ...plan, rowSpacing: this.spacing, window: blockingLength(plan, 1) };
     this.standingFit = {
-      canShow: (quota, cell) => this.canShow(this.standingTrace(quota, cell)),
+      canShow: (quota, cell) =>
+        this.passes(this.visibilityRefusal(this.standingTrace(quota, cell))),
       cells: this.cells,
-      clearOfMovers: (cell, footprint) => {
-        const from = this.rows[cell.row]!,
-          to = from + hitLength(plan, footprint.rows);
-        const clear = this.bodies.every(
-          (body) =>
-            !sharesRoad(
-              { ...body, lanes: laneMask(body.lanes.first, body.lanes.count) },
-              { from, lanes: laneMask(cell.lane, footprint.lanes), to },
-            ),
-        );
-        if (!clear && this.observation !== undefined) {
-          this.observation({
-            requests: this.entries
-              .filter((other) => {
-                const body = other.trace.placement?.body;
-                return (
-                  body !== undefined &&
-                  sharesRoad(
-                    { ...body, lanes: laneMask(body.lanes.first, body.lanes.count) },
-                    { from, lanes: laneMask(cell.lane, footprint.lanes), to },
-                  )
-                );
-              })
-              .map(identity),
-            rule: "body",
-          });
-        }
-        return clear;
-      },
+      clearOfMovers: (cell, footprint) => this.passes(this.moverBodyRefusal(cell, footprint)),
       completeLaneCheck: true,
       laneMode: mode,
       lanes: this.lanes,
       places: this.places,
       plan,
       reject: (_kind, rule) => {
-        this.observation?.({ intrinsic: rule === "outside-road" || rule === "outside-rows", rule });
+        this.passes({ intrinsic: rule === "outside-road" || rule === "outside-rows", rule });
         return false;
       },
       retainBlocks: true,
@@ -190,17 +173,140 @@ export class SpawnBoard<Kind extends string> {
       ? quota
       : undefined;
   }
-  private canShow(trace: SpawnVisibilityTrace): boolean {
-    if (!trace.hazard) {
-      return true;
+  private passes(refusal: FeasibilityWitness | undefined): boolean {
+    if (refusal !== undefined) {
+      this.observation?.(refusal);
     }
-    const rejection = visibilityRejection(
+    return refusal === undefined;
+  }
+  // A hazard's refusal for sharing the screen with others of its kind (visibilityRejection).
+  private visibilityRefusal(trace: SpawnVisibilityTrace): FeasibilityWitness | undefined {
+    if (!trace.hazard) {
+      return undefined;
+    }
+    let refusal: FeasibilityWitness | undefined;
+    visibilityRejection(
       this.plan.scrollSpeed * this.plan.stepSeconds,
+      (witness) => {
+        refusal = witness;
+      },
       this.entries.filter((entry) => entry.trace.hazard).map((entry) => entry.trace),
       trace,
-      (failure) => this.observation?.(failure),
     );
-    return rejection === undefined;
+    return refusal;
+  }
+  // A standing spawn's refusal for sharing road with a planned mover's body.
+  private moverBodyRefusal(cell: Cell, footprint: Footprint): FeasibilityWitness | undefined {
+    const from = this.rows[cell.row]!,
+      to = from + hitLength(this.plan, footprint.rows);
+    const meets = (body: MoverBody) =>
+      sharesRoad(
+        { ...body, lanes: laneMask(body.lanes.first, body.lanes.count) },
+        { from, lanes: laneMask(cell.lane, footprint.lanes), to },
+      );
+    if (!this.bodies.some(meets)) {
+      return undefined;
+    }
+    return {
+      requests: this.entries
+        .filter((other) => {
+          const body = other.trace.placement?.body;
+          return body !== undefined && meets(body);
+        })
+        .map(identity),
+      rule: "body",
+    };
+  }
+  // A mover's refusal for showing alongside others of its kind, or for crossing or resting on a
+  // standing pickup that does not allow it (pickupAllowsMover).
+  private moverShowRefusal(
+    quota: SpawnQuota<Kind>,
+    entry: SpawnPlacement<Kind>,
+    cells: Parameters<typeof pickupAllowsMover>[1]["cells"],
+  ): FeasibilityWitness | undefined {
+    const hidden = this.visibilityRefusal(entry.trace);
+    if (hidden !== undefined) {
+      return hidden;
+    }
+    const refused = this.entries.find((other) => {
+      const q = this.quota(other);
+      if (other.herring || other.event.mover !== undefined || q === undefined || q.blocksLane) {
+        return false;
+      }
+      const footprint = quotaFootprint(q),
+        row = this.rows.indexOf(other.event.distance),
+        last = lastRowTaken(
+          this.plan,
+          this.spacing,
+          { lane: other.event.lane, row },
+          footprint,
+          false,
+        );
+      return !pickupAllowsMover(
+        {
+          firstRow: row,
+          from: other.event.distance,
+          lane: other.event.lane,
+          lanes: footprint.lanes,
+          lastRow: last,
+          moversPassOver: q.moversPassOver === true,
+          moversRestOn: q.moversRestOn === true,
+          to: this.rows[last]! + hitLength(this.plan, 1),
+        },
+        {
+          blocksLane: quota.blocksLane,
+          cells,
+          rests: moverRestSpans(this.plan, quota.mover!, entry.event),
+        },
+      );
+    });
+    return refused === undefined ? undefined : { requests: [identity(refused)], rule: "pickup" };
+  }
+  // A mover body's refusal for sharing road with a lane-blocking standing spawn.
+  private standingBodyRefusal(body: MoverBody): FeasibilityWitness | undefined {
+    const refused = this.entries.find((other) => {
+      const q = this.quota(other);
+      if (other.herring || other.event.mover !== undefined || !q?.blocksLane) {
+        return false;
+      }
+      const footprint = quotaFootprint(q),
+        from = other.event.distance,
+        to = from + hitLength(this.plan, footprint.rows);
+      return sharesRoad(
+        { ...body, lanes: laneMask(body.lanes.first, body.lanes.count) },
+        { from, lanes: laneMask(other.event.lane, footprint.lanes), to },
+      );
+    });
+    return refused === undefined ? undefined : { requests: [identity(refused)], rule: "body" };
+  }
+  // A lane-blocking rider's refusal for following another too closely (ridersMeet).
+  private riderRefusal(ride: RiderSpan): FeasibilityWitness | undefined {
+    if (this.riders.every((other) => !ridersMeet(this.plan.riderFollowGap, ride, other))) {
+      return undefined;
+    }
+    const other = this.riders.find((placed) => ridersMeet(this.plan.riderFollowGap, ride, placed))!;
+    return {
+      requests: this.entries
+        .filter((entry) => {
+          const quota = this.quota(entry),
+            spot = this.spot(entry, true);
+          if (!quota?.blocksLane || quota.mover === undefined || spot === undefined) {
+            return false;
+          }
+          const span = riderSpanOf(
+            this.geometry,
+            quota.mover,
+            entry.event.distance,
+            spot.placement,
+          );
+          return (
+            span !== undefined &&
+            Object.entries(span).every(([key, value]) => Reflect.get(other, key) === value)
+          );
+        })
+        .map(identity),
+      rule: "rider-gap",
+    };
   }
   private standingTrace(quota: SpawnQuota<string>, cell: Cell): SpawnVisibilityTrace {
     const entry = this.rows[cell.row]!,
@@ -259,100 +365,17 @@ export class SpawnBoard<Kind extends string> {
         );
       },
       canShow: (_event, _interval, cells = []) =>
-        this.canShow(entry.trace) &&
-        this.entries.every((other) => {
-          const q = this.quota(other);
-          if (other.herring || other.event.mover !== undefined || q === undefined || q.blocksLane) {
-            return true;
-          }
-          const footprint = quotaFootprint(q),
-            row = this.rows.indexOf(other.event.distance),
-            last = lastRowTaken(
-              this.plan,
-              this.spacing,
-              { lane: other.event.lane, row },
-              footprint,
-              false,
-            );
-          const allowed = pickupAllowsMover(
-            {
-              firstRow: row,
-              from: other.event.distance,
-              lane: other.event.lane,
-              lanes: footprint.lanes,
-              lastRow: last,
-              moversPassOver: q.moversPassOver === true,
-              moversRestOn: q.moversRestOn === true,
-              to: this.rows[last]! + hitLength(this.plan, 1),
-            },
-            {
-              blocksLane: blocking,
-              cells,
-              rests: moverRestSpans(this.plan, quota.mover!, entry.event),
-            },
-          );
-          if (!allowed) {
-            this.observation?.({ requests: [identity(other)], rule: "pickup" });
-          }
-          return allowed;
-        }),
-      clearOf: (body) =>
-        this.entries.every((other) => {
-          const q = this.quota(other);
-          if (other.herring || other.event.mover !== undefined || !q?.blocksLane) {
-            return true;
-          }
-          const footprint = quotaFootprint(q),
-            from = other.event.distance,
-            to = from + hitLength(this.plan, footprint.rows);
-          const clear = !sharesRoad(
-            { ...body, lanes: laneMask(body.lanes.first, body.lanes.count) },
-            { from, lanes: laneMask(other.event.lane, footprint.lanes), to },
-          );
-          if (!clear) {
-            this.observation?.({ requests: [identity(other)], rule: "body" });
-          }
-          return clear;
-        }),
-      clearOfRiders: (ride) =>
-        !blocking ||
-        this.riders.every((other) => {
-          const clear = !ridersMeet(this.plan.riderFollowGap, ride, other);
-          if (!clear && this.observation !== undefined) {
-            this.observation({
-              requests: this.entries
-                .filter((entry) => {
-                  const quota = this.quota(entry),
-                    spot = this.spot(entry, true);
-                  if (!quota?.blocksLane || quota.mover === undefined || spot === undefined) {
-                    return false;
-                  }
-                  const span = riderSpanOf(
-                    this.geometry,
-                    quota.mover,
-                    entry.event.distance,
-                    spot.placement,
-                  );
-                  return (
-                    span !== undefined &&
-                    Object.entries(span).every(([key, value]) => Reflect.get(other, key) === value)
-                  );
-                })
-                .map(identity),
-              rule: "rider-gap",
-            });
-          }
-          return clear;
-        }),
+        this.passes(this.moverShowRefusal(quota, entry, cells)),
+      clearOf: (body) => this.passes(this.standingBodyRefusal(body)),
+      clearOfRiders: (ride) => !blocking || this.passes(this.riderRefusal(ride)),
       clearRun: (span, row) => this.lanes.clearRun(span, row),
       heldLanes: (row) => this.lanes.heldAt(row),
-      isFree: (motion, lane, row) => {
-        const free = this.cells.isFreeForRepair(motion, lane, row, blocking);
-        if (!free) {
-          this.observation?.({ mask: laneMask(lane, 1), row, rule: "cells" });
-        }
-        return free;
-      },
+      isFree: (motion, lane, row) =>
+        this.passes(
+          this.cells.isFreeForRepair(motion, lane, row, blocking)
+            ? undefined
+            : { mask: laneMask(lane, 1), row, rule: "cells" },
+        ),
       leavesRoom: (spots) => this.cells.leavesRoom(this.cells.untaken(spots)),
       occupy: (body) => {
         this.bodies.push(body);
@@ -418,18 +441,16 @@ export class SpawnBoard<Kind extends string> {
         : undefined);
     return placement === undefined ? undefined : { distance, placement, row };
   }
-  probe(entry: SpawnPlacement<Kind>, onFailure: (failure: PlacementRejection) => void): boolean {
-    let reported = false;
+  // The refusal of a placement on the board as it stands, or undefined to admit it: the first
+  // native rule it fails, with the placed requests that rule attributes the failure to.
+  refusal(entry: SpawnPlacement<Kind>): PlacementRejection | undefined {
+    let rejection: PlacementRejection | undefined;
     this.observation = (witness) => {
-      if (reported) {
-        return;
-      }
-      reported = true;
-      onFailure(this.rejection(entry, witness));
+      rejection ??= this.rejection(entry, witness);
     };
     this.standingFit.onFailure = this.observation;
     try {
-      return this.fits(entry);
+      return this.fits(entry) ? undefined : (rejection ?? UNATTRIBUTED);
     } finally {
       this.observation = undefined;
       delete this.standingFit.onFailure;
@@ -446,11 +467,14 @@ export class SpawnBoard<Kind extends string> {
     return row;
   }
 
-  checkComplete(onFailure: (failure: PlacementRejection) => void): boolean {
-    return this.lanes.keepsAllLanesOpen(
-      (witness) => onFailure(this.rejection(undefined, witness)),
-      "complete",
-    );
+  // The complete board's refusal for a row without its open lanes, or undefined when every row
+  // keeps them.
+  completeRefusal(): PlacementRejection | undefined {
+    let rejection: PlacementRejection | undefined;
+    const open = this.lanes.keepsAllLanesOpen((witness) => {
+      rejection ??= this.rejection(undefined, witness);
+    }, "complete");
+    return open ? undefined : (rejection ?? UNATTRIBUTED);
   }
 
   private rejection(
@@ -729,19 +753,20 @@ export class SpawnBoard<Kind extends string> {
     return { accepted: true };
   }
 
-  fits(entry: SpawnPlacement<Kind>): boolean {
+  private fits(entry: SpawnPlacement<Kind>): boolean {
     const intrinsic = this.checkIntrinsic(entry);
     if (!intrinsic.accepted) {
-      this.observation?.({ intrinsic: true, rule: intrinsic.rule });
-      return false;
+      return this.passes({ intrinsic: true, rule: intrinsic.rule });
     }
     const quota = this.quota(entry)!;
     if (this.entries.some((other) => identity(other) === identity(entry))) {
-      this.observation?.({ requests: [identity(entry)], rule: "duplicate-request" });
-      return false;
+      return this.passes({ requests: [identity(entry)], rule: "duplicate-request" });
     }
     if (entry.herring) {
-      return this.canShow(entry.trace) && this.lanes.keepsAllLanesOpen(this.observation, this.mode);
+      return (
+        this.passes(this.visibilityRefusal(entry.trace)) &&
+        this.lanes.keepsAllLanesOpen(this.observation, this.mode)
+      );
     }
     const row = entry.trace.placement?.block.row ?? this.rows.indexOf(entry.event.distance);
     if (entry.event.mover === undefined) {
@@ -763,7 +788,7 @@ export class SpawnBoard<Kind extends string> {
         grid: this.grid(quota, entry),
         onScreen: quota.blocksLane ? this.screens : this.prizeScreens,
         reject: (rule) => {
-          this.observation?.({ intrinsic: rule === "outside-zone", rule });
+          this.passes({ intrinsic: rule === "outside-zone", rule });
           return false;
         },
       },

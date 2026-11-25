@@ -84,8 +84,10 @@ describe("signature admission", () => {
     const other = { dart: true, interval: [0, 100] as const, slowVehicle: false };
     const limits = { darts: 1, slowVehicles: 1, total: 10 };
     expect(shown.dart).toBe(true);
-    expect(screenHasRoom(limits, [other], shown)).toBe(false);
-    expect(screenHasRoom(limits, [{ ...other, interval: [100, 200] }], shown)).toBe(true);
+    expect(screenHasRoom(limits, undefined, [other], shown)).toBe(false);
+    expect(screenHasRoom(limits, undefined, [{ ...other, interval: [100, 200] }], shown)).toBe(
+      true,
+    );
   });
 
   it.each(profiles)(

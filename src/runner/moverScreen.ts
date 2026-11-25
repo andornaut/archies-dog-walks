@@ -33,9 +33,9 @@ export function onScreenOf(path: MoverPath, interval: readonly [number, number])
 // are more on screen than a cap allows, of the movers that cap counts.
 export function screenHasRoom(
   caps: MoverCaps,
+  onFailure: FeasibilityObserver | undefined,
   planned: readonly OnScreen[],
   mover: OnScreen,
-  onFailure?: FeasibilityObserver,
 ): boolean {
   const [start, end] = mover.interval;
   const overlapping = planned.filter(({ interval: [from, to] }) => from < end && start < to);

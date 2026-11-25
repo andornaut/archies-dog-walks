@@ -16,7 +16,7 @@ describe("visible logical obstacle limits", () => {
     { entry: 100, lane: 2, name: "a kind's new entry after a departure", want: undefined },
   ])("judges $name: $want", ({ entry, lane, want }) => {
     const planned = [shown(0, 0), shown(20, 1), shown(25, 3, "cat")];
-    expect(visibilityRejection(1, planned, shown(entry, lane))).toBe(want);
+    expect(visibilityRejection(1, undefined, planned, shown(entry, lane))).toBe(want);
   });
 
   it.each([
@@ -44,6 +44,6 @@ describe("visible logical obstacle limits", () => {
       want: "kind-cap",
     },
   ])("rejects a spawn $name: $want", ({ entry, existing, lane, want }) => {
-    expect(visibilityRejection(1, existing, shown(entry, lane))).toBe(want);
+    expect(visibilityRejection(1, undefined, existing, shown(entry, lane))).toBe(want);
   });
 });

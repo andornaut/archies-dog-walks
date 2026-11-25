@@ -63,7 +63,7 @@ function solve(
           entry.event.lane === anchor.lane,
       ),
     );
-  const probe = vi.spyOn(SpawnBoard.prototype, "probe");
+  const probe = vi.spyOn(SpawnBoard.prototype, "refusal");
   let checks = 0;
   try {
     const result = guaranteeCompatiblePath(
@@ -75,7 +75,7 @@ function solve(
     );
     return {
       checks,
-      nativeAccepted: probe.mock.results.map(({ value }) => value),
+      nativeAccepted: probe.mock.results.map(({ value }) => value === undefined),
       result,
     };
   } finally {

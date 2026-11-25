@@ -125,19 +125,8 @@ function createNativeSlotState<Kind extends string>(
       ...entry,
       trace: Object.freeze({ ...entry.trace, quotaIndex: ledger.length }),
     });
-    let rejection: PlacementRejection | undefined;
-    const accepted = board.probe(bound, (failure) => {
-      rejection ??= failure;
-    });
-    return accepted
-      ? { accepted: true, entry: bound }
-      : failureOf(
-          rejection ?? {
-            classification: "unattributed",
-            conflicts: [],
-            rule: "unattributed",
-          },
-        );
+    const rejection = board.refusal(bound);
+    return rejection === undefined ? { accepted: true, entry: bound } : failureOf(rejection);
   };
   const commit = (owner: ConstraintOwner, entry: SlotPlacement<Kind>): ConstraintResult<Kind> => {
     const result = probe(owner, entry);
@@ -158,14 +147,8 @@ function createNativeSlotState<Kind extends string>(
   }
   const complete = ():
     { readonly accepted: true } | Extract<ConstraintResult<Kind>, { accepted: false }> => {
-    let rejection: PlacementRejection | undefined;
-    return board.checkComplete((failure) => {
-      rejection ??= failure;
-    })
-      ? { accepted: true }
-      : failureOf(
-          rejection ?? { classification: "unattributed", conflicts: [], rule: "unattributed" },
-        );
+    const rejection = board.completeRefusal();
+    return rejection === undefined ? { accepted: true } : failureOf(rejection);
   };
   return {
     // The placements a held-rule conflict depends on, or undefined for any other failure.

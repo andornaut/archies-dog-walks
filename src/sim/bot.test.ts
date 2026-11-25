@@ -20,13 +20,13 @@ import { itemHeight, obstacleHitBox, plannedCellInset } from "../runner/obstacle
 import { moverOutcomes } from "../runner/outcomes.ts";
 import { NO_PULLS } from "../runner/pulls.ts";
 import { screenRoadGeometry } from "../runner/screenGeometry.ts";
+import { ZonePlanningError } from "../runner/session.ts";
 import { apportionSlotCounts, SLOT_ROLES } from "../runner/slotConfig.ts";
 import { blockingLength } from "../runner/spawning.ts";
 import { packBoxes, startRoad, steerWalk, sweptPackBoxes, type Walk } from "../runner/walk.ts";
 import { blocksLane, type WalkItem, type WalkItemKind } from "../runner/walkItems.ts";
 import { laneMoveSeconds, walkScrollSpeed } from "../runner/walkMotion.ts";
 import { zoneSlotGuarantees } from "../runner/zonePlan.ts";
-import { ZoneSlotPlanningError } from "../runner/zoneSlotInput.ts";
 import type { PackDogs } from "../state/runState.ts";
 import { defined } from "../testing/defined.ts";
 import { hoppingInstead, plannerStreams, sharedWorld } from "../testing/movers.ts";
@@ -110,8 +110,8 @@ function run(
   sight: BotSight = "sight",
 ): RunResult {
   const result = simulateRun(data, seed, simConfig(skill, pack, {}, sight));
-  if (result.planningFailure?.kind === "slots") {
-    throw new ZoneSlotPlanningError(result.planningFailure.input, result.planningFailure.result);
+  if (result.planningFailure !== undefined) {
+    throw new ZonePlanningError(result.planningFailure);
   }
   expect(
     result.planningFailure,

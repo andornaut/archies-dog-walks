@@ -270,6 +270,7 @@ describe("native slot motion retry capabilities", () => {
       checkpoint: state.checkpoint,
       complete: state.checkComplete,
       entries: state.entries,
+      laneClosure: () => ({ accepted: true }),
       minimumDelivery: 1,
       motionTiers: (kind) => domains.motionTiers(work, kind),
       omissionAttempts: SLOT_OMISSION_ATTEMPTS.reserve,
@@ -277,7 +278,10 @@ describe("native slot motion retry capabilities", () => {
       partial: () => false,
       preparations: (owner) => owner.preparations(),
       propagate: work.propagate,
+      rejects: () => false,
+      repairRow: () => ({ status: "none" }),
       restore: state.restore,
+      stopped: () => false,
       test: (owner, candidate) => state.commit(owner, candidate.entry),
     };
     const result = createSlotWitnessConstruct(geometry, path, [job])(ports);

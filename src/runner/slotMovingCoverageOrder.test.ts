@@ -105,13 +105,18 @@ function fixture(pools: readonly (readonly SlotSource<string>[])[]) {
     checkpoint: state.checkpoint,
     complete: state.checkComplete,
     entries: state.entries,
+    laneClosure: () => ({ accepted: true }),
     minimumDelivery: pools.length,
+    motionTiers: () => ({ status: "unknown" }),
     omissionAttempts: SLOT_OMISSION_ATTEMPTS.reserve,
     ordinaryOrder: "original",
     partial: () => false,
     preparations: (job) => job.preparations(),
     propagate: work.propagate,
+    rejects: () => false,
+    repairRow: () => ({ status: "none" }),
     restore: state.restore,
+    stopped: () => false,
     test(job, candidate) {
       attempts.push({ candidate, key: job.key });
       return state.commit(job, candidate.entry);

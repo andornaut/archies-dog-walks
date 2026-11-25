@@ -6,7 +6,6 @@ import type { SlotConfiguration, SlotKind } from "./slotConfig.ts";
 import {
   planSlotSpawns,
   type SlotPlanningContext,
-  SlotPlanningError,
   type SlotPlanningResult,
 } from "./slotPlanner.ts";
 import type { SpawnPlan, SpawnQuota } from "./spawning.ts";
@@ -62,18 +61,4 @@ export function replayZoneSlots<Kind extends string>(
 ): SlotPlanningResult<Kind> {
   const { catalogue, geometry } = compileZoneSlotInput(input);
   return planSlotSpawns(input.context, geometry, catalogue, input.auxiliary, input.config);
-}
-
-export class ZoneSlotPlanningError<Kind extends string> extends SlotPlanningError<Kind> {
-  readonly input: ZoneSlotInput<Kind>;
-  constructor(
-    input: ZoneSlotInput<Kind>,
-    result: Extract<SlotPlanningResult<Kind>, { readonly status: "unsupported" }>,
-  ) {
-    super(result);
-    this.input = input;
-    const zone = input.actualRun.route[input.actualRun.zoneIndex] ?? "unknown";
-    this.message = `Zone ${zone}, seed ${input.context.seed}, position ${input.context.zoneIndex}: ${this.message}`;
-    this.name = "ZoneSlotPlanningError";
-  }
 }

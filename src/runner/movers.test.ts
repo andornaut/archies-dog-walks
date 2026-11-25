@@ -1352,7 +1352,7 @@ describe("screenHasRoom", () => {
       planned: readonly OnScreen[];
       room: boolean;
     }[]) {
-      expect(screenHasRoom(CAPS, planned, mover)).toBe(room);
+      expect(screenHasRoom(CAPS, undefined, planned, mover)).toBe(room);
     }
   });
 });

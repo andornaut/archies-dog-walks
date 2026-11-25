@@ -205,13 +205,18 @@ function run(pools: readonly (readonly PreparedSlotKind<string>[])[], allowance 
     checkpoint: state.checkpoint,
     complete: state.checkComplete,
     entries: state.entries,
+    laneClosure: () => ({ accepted: true }),
     minimumDelivery: jobs.length,
+    motionTiers: () => ({ status: "unknown" }),
     omissionAttempts: SLOT_OMISSION_ATTEMPTS.reserve,
     ordinaryOrder: "original",
     partial: () => false,
     preparations: (job) => job.preparations(),
     propagate: work.propagate,
+    rejects: () => false,
+    repairRow: () => ({ status: "none" }),
     restore: state.restore,
+    stopped: () => false,
     test: (job, candidate) => state.commit(job, candidate.entry),
   };
   try {

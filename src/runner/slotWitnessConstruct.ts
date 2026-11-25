@@ -30,21 +30,21 @@ export interface SlotWitnessConstructPorts<Kind extends string, Mark> {
   complete(): { readonly accepted: true } | Rejection<Kind> | undefined;
   entries(): readonly ConstraintEntry<Kind>[];
   // Draw tuples' native values, tried before later retry tuples.
-  motionTiers?(prepared: PreparedSlotKind<Kind>): SlotMotionTiers;
+  motionTiers(prepared: PreparedSlotKind<Kind>): SlotMotionTiers;
   readonly minimumDelivery: number;
   // Failed placement attempts before a frame may omit its optional request.
   readonly omissionAttempts: number;
   readonly ordinaryOrder: "original" | "balanced";
   partial(omissions: readonly WitnessOmission<Kind>[]): boolean | undefined;
-  laneClosure?(): { readonly accepted: true } | Rejection<Kind> | undefined;
+  laneClosure(): { readonly accepted: true } | Rejection<Kind> | undefined;
   preparations(job: WitnessJob<Kind>): Iterable<PreparedSlotKind<Kind>>;
   propagate(): boolean;
   // Whether a recorded rejection of this choice still holds for the current entries.
-  rejects?(job: WitnessJob<Kind>, candidate: SlotCandidate<Kind>): boolean;
-  repairRow?():
+  rejects(job: WitnessJob<Kind>, candidate: SlotCandidate<Kind>): boolean;
+  repairRow():
     { readonly row: number; readonly status: "row" } | { readonly status: "none" | "budget" };
   restore(mark: Mark): void;
-  stopped?(): boolean;
+  stopped(): boolean;
   test(job: WitnessJob<Kind>, candidate: SlotCandidate<Kind>): ConstraintResult<Kind> | undefined;
 }
 export type SlotWitnessConstructResult<Kind extends string> =
@@ -127,7 +127,7 @@ function* construct<Kind extends string, Mark>(
   metadata: WeakMap<WitnessJob<Kind>, JobOrder<Kind>>,
   jobs: readonly WitnessJob<Kind>[],
 ): Generator<void, SlotWitnessConstructResult<Kind>, void> {
-  if (ports.stopped?.()) {
+  if (ports.stopped()) {
     return { status: "budget" };
   }
   const root = ports.checkpoint();
@@ -153,7 +153,7 @@ function* construct<Kind extends string, Mark>(
   let closureChecked = false;
   let fatal: Rejection<Kind>["failure"] | undefined;
   const stopped = () => {
-    budget ||= ports.stopped?.() === true;
+    budget ||= ports.stopped();
     return budget || fatal !== undefined;
   };
   const charge = () => {
@@ -452,12 +452,12 @@ function* construct<Kind extends string, Mark>(
         }
         sourceRows = hinted;
       }
-      const frontiers = ports.motionTiers?.(source);
-      if (frontiers?.status === "budget") {
+      const frontiers = ports.motionTiers(source);
+      if (frontiers.status === "budget") {
         budget = true;
         return;
       }
-      const tiers = frontiers?.status === "tiers" ? frontiers.tiers : [undefined];
+      const tiers = frontiers.status === "tiers" ? frontiers.tiers : [undefined];
       let fallback = false;
       for (let index = 0; index < tiers.length || fallback; index++) {
         const motionTier: number | undefined = fallback ? undefined : tiers[index];
@@ -591,7 +591,7 @@ function* construct<Kind extends string, Mark>(
             }
           }
         },
-        held: (candidate) => ports.rejects?.(job, candidate) === true,
+        held: (candidate) => ports.rejects(job, candidate),
         propagate: ports.propagate,
         stopped,
       },
@@ -655,7 +655,7 @@ function* construct<Kind extends string, Mark>(
         ports.restore(before);
         return "rejected";
       }
-      if (preferClear && ports.laneClosure !== undefined) {
+      if (preferClear) {
         const checked = ports.laneClosure();
         budget ||= checked === undefined;
         if (!stopped() && checked?.accepted === false) {
@@ -720,7 +720,7 @@ function* construct<Kind extends string, Mark>(
         return;
       }
       let repairRow: number | undefined;
-      if (job.fixed && ports.repairRow !== undefined) {
+      if (job.fixed) {
         const advice = ports.repairRow();
         budget ||= advice.status === "budget";
         if (stopped()) {
@@ -852,11 +852,7 @@ function* construct<Kind extends string, Mark>(
           ? remaining[0]
           : (remaining.find((job) => job.laneEffect !== "none") ?? remaining[0]);
       if (selected !== undefined) {
-        if (
-          !closureChecked &&
-          ports.laneClosure !== undefined &&
-          remaining.every((job) => job.laneEffect === "none")
-        ) {
+        if (!closureChecked && remaining.every((job) => job.laneEffect === "none")) {
           const checked = ports.laneClosure();
           budget ||= checked === undefined;
           if (checked?.accepted === false) {
@@ -896,17 +892,6 @@ function* construct<Kind extends string, Mark>(
           break;
         }
         if (pending === undefined) {
-          if (present().size === jobs.length && complete()) {
-            const witness = [...ports.entries()];
-            const coverageKey = frames.find((frame) => frame.covering)?.selected?.job.key;
-            if (!stopped()) {
-              return {
-                ...(coverageKey === undefined ? {} : { coverageKey }),
-                status: "compatible",
-                witness,
-              };
-            }
-          }
           // Native stretch failure is unchanged by these trailing nonblocking owners.
           if (completionRule === "open-stretches") {
             while (!stopped()) {

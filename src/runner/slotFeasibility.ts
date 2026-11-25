@@ -1,9 +1,4 @@
-import {
-  type PlacementRejection,
-  type PlacementResult,
-  SpawnBoard,
-  type SpawnPlacement,
-} from "./spawnBoard.ts";
+import { type PlacementResult, SpawnBoard, type SpawnPlacement } from "./spawnBoard.ts";
 import type { PlannedSpawns, SpawnPlan, SpawnQuota } from "./spawning.ts";
 
 export interface SlotPlacement<Kind extends string> extends SpawnPlacement<Kind> {
@@ -28,20 +23,8 @@ export function createSlotFeasibility<Kind extends string>(
     entries,
   );
   const probe = (entry: SlotPlacement<Kind>): PlacementResult => {
-    let failure: PlacementRejection | undefined;
-    const accepted = board.probe(entry, (reason) => {
-      failure ??= reason;
-    });
-    return accepted
-      ? { accepted: true }
-      : {
-          accepted: false,
-          failure: failure ?? {
-            classification: "unattributed",
-            conflicts: [],
-            rule: "unattributed",
-          },
-        };
+    const failure = board.refusal(entry);
+    return failure === undefined ? { accepted: true } : { accepted: false, failure };
   };
   return {
     commit(entry: SlotPlacement<Kind>): PlacementResult {

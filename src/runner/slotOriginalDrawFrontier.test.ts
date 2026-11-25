@@ -99,6 +99,7 @@ function fixture() {
     checkpoint: state.checkpoint,
     complete: state.checkComplete,
     entries: state.entries,
+    laneClosure: () => ({ accepted: true }),
     minimumDelivery: 1,
     motionTiers: (source) => domains.motionTiers(work, source),
     omissionAttempts: SLOT_OMISSION_ATTEMPTS.reserve,
@@ -106,7 +107,10 @@ function fixture() {
     partial: () => false,
     preparations: (owner) => owner.preparations(),
     propagate: work.propagate,
+    rejects: () => false,
+    repairRow: () => ({ status: "none" }),
     restore: state.restore,
+    stopped: () => false,
     test: (owner, candidate) => state.commit(owner, candidate.entry),
   };
   return { compile, domains, job, movers, path, ports, prepared, spawns, state, work };

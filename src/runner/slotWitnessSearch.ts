@@ -55,8 +55,17 @@ export type WitnessResult<Kind extends string> =
       readonly selections: readonly WitnessSelection<Kind>[];
       readonly omissions: readonly WitnessOmission<Kind>[];
     }
-  | { readonly status: "blocked"; readonly failure?: Failure<Kind> }
+  | { readonly status: "blocked"; readonly failure: WitnessFailure<Kind> }
   | { readonly status: "budget" };
+// Why a search is blocked: a native rejection, or a search that tried every value its domains
+// hold, within its allowance, without a certified layout.
+export type WitnessFailure<Kind extends string> =
+  | Failure<Kind>
+  | {
+      readonly classification: "exhausted";
+      readonly owners: readonly [];
+      readonly rule: "bounded-joint-construction";
+    };
 export interface WitnessWork<Kind extends string> {
   readonly anchor: () => boolean;
   readonly check: () => boolean;
@@ -71,9 +80,9 @@ export interface WitnessWork<Kind extends string> {
   readonly reserveRestarted?: () => void;
   // Share of the current attempt's work allowance already used, from 0 to 1.
   readonly progress: () => number;
-  readonly propagate?: () => boolean;
+  readonly propagate: () => boolean;
   readonly rejected?: (candidate: SlotCandidate<Kind>, failure: Failure<Kind>) => void;
-  readonly stopped?: () => boolean;
+  readonly stopped: () => boolean;
 }
 
 // One native transaction selects entries before independent materialisation audits.
@@ -95,7 +104,7 @@ export function createSlotWitnessSearch<Kind extends string>(
       !reserving &&
       incumbent === undefined &&
       work.progress() * SLOT_OMISSION_RESERVE.denominator >= SLOT_OMISSION_RESERVE.numerator;
-    const halted = () => partialFailure !== undefined || work.stopped?.() === true;
+    const halted = () => partialFailure !== undefined || work.stopped();
     const stopped = () => halted() || reserveDue();
     if (halted()) {
       return { status: "budget" };
@@ -125,7 +134,7 @@ export function createSlotWitnessSearch<Kind extends string>(
       Map<SlotCandidate<Kind>, { blockers: ConflictBlockers<Kind>; failure: Failure<Kind> }>
     >();
     const charge = () => !stopped() && work.check() && !stopped();
-    const propagate = () => !stopped() && (work.propagate?.() ?? true) && !stopped();
+    const propagate = () => !stopped() && work.propagate() && !stopped();
     const selections = (
       entries: readonly ConstraintEntry<Kind>[],
     ): readonly WitnessSelection<Kind>[] | undefined => {
@@ -368,7 +377,10 @@ export function createSlotWitnessSearch<Kind extends string>(
         return result;
       }
       if (result.status !== "compatible") {
-        return { status: "blocked" };
+        return {
+          failure: { classification: "exhausted", owners: [], rule: "bounded-joint-construction" },
+          status: "blocked",
+        };
       }
       const selected = selections(result.witness);
       if (selected !== undefined && incumbent === undefined) {

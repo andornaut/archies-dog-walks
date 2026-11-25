@@ -1,5 +1,6 @@
 import { vi } from "vitest";
 
+import { ZonePlanningError } from "../runner/session.ts";
 import type { WalkItemKind } from "../runner/walkItems.ts";
 import { planZoneWithContext } from "../runner/zonePlan.ts";
 import * as slotInput from "../runner/zoneSlotInput.ts";
@@ -13,13 +14,17 @@ export function planZoneForSeed(
   seed: number,
   walk: PlanArguments[4],
 ) {
-  return planZoneWithContext(
+  const outcome = planZoneWithContext(
     data,
     geometry,
     { seed, zoneIndex: walk.run.zoneIndex },
     plannerStreams(seed),
     walk,
   );
+  if (outcome.status === "failed") {
+    throw new ZonePlanningError(outcome.failure);
+  }
+  return outcome.walk;
 }
 
 // Capture the actual adapter's frozen requests without constructing a complete zone.

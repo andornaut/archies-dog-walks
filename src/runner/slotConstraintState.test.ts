@@ -318,9 +318,7 @@ describe("native slot constraint transactions", () => {
       undefined,
       [wide],
     );
-    const rejected = vi.fn();
-    expect(otherFailure.checkComplete(rejected)).toBe(false);
-    expect(rejected).toHaveBeenCalledWith(expect.objectContaining({ rule: "open-lanes" }));
+    expect(otherFailure.completeRefusal()).toMatchObject({ rule: "open-lanes" });
     expect(otherFailure.openStretchRow()).toBeUndefined();
     const native = createSlotConstructionState(road, path);
     expect(native.commit(owners[0]!, entries[0]!).accepted).toBe(true);
@@ -558,11 +556,8 @@ describe("native slot constraint transactions", () => {
   });
   it("keeps unknown native owner references unattributed", () => {
     const observed = vi
-      .spyOn(SpawnBoard.prototype, "probe")
-      .mockImplementation((_entry, reject) => {
-        reject({ classification: "conflict", conflicts: ["999:0"], rule: "cells" });
-        return false;
-      });
+      .spyOn(SpawnBoard.prototype, "refusal")
+      .mockReturnValue({ classification: "conflict", conflicts: ["999:0"], rule: "cells" });
     try {
       const state = createSlotConstraintState(geometry, path);
       expect(state.probe({ key: "candidate" }, fixed("candidate", 2, 4))).toEqual({
