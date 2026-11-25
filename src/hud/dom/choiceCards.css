@@ -25,8 +25,9 @@
 }
 
 /* A refusal's red phases on the group (refusal.ts): the label band fills dark red under a white
-   label. */
-.adw-choice-group[data-refusal-red] .adw-choice-press-band {
+   label, over a focused option's band. */
+.adw-choice-group[data-refusal-red]:is(*, :has(.adw-choice-option:focus-visible))
+  .adw-choice-press-band {
   display: block;
   background: var(--adw-darkRed);
 }

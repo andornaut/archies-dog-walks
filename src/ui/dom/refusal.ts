@@ -18,9 +18,10 @@ export const REFUSAL_CUE: RefusalCue = {
 // (refuseShakeSteps), so it never passes through a blended sub-pixel place; adw-refusing-still
 // holds it still under reduced motion. Through the red phases (refusalRed) the control holds
 // data-refusal-red, which fills its face dark red under a white label and, on a row, its icon as
-// a white silhouette (REFUSAL_STYLE and each control's skin). In forced colours the face fills
-// ButtonText under a ButtonFace label and icon, the inverse of the resting face, so a refusal
-// stays distinct from Highlight focus; a row's icon is masked from its frame (paintSheetArt).
+// a white silhouette (REFUSAL_STYLE and each control's skin), over any focus or press fill. In
+// forced colours the face fills ButtonText under a ButtonFace label and icon, the inverse of the
+// resting face, so a refusal stays distinct from Highlight focus; a row's icon is masked from its
+// frame (paintSheetArt).
 const SHAKE_KEYFRAMES = refuseShakeSteps()
   .map(
     ({ at, offset }) =>
@@ -31,8 +32,8 @@ const SHAKE_KEYFRAMES = refuseShakeSteps()
 const MOVING = "adw-refusing";
 const STILL = "adw-refusing-still";
 export const REFUSAL_RED = "data-refusal-red";
-// A row in a red phase, focused or pressed alike: outranks the forced-colours focus and press
-// fills (SETTINGS_STYLE).
+// A row in a red phase, focused or pressed alike: outranks the focus and press fills
+// (SETTINGS_STYLE), in forced colours too.
 const ROW_RED_STATES =
   `.adw-row:not(.adw-standard-button):is([${REFUSAL_RED}],[data-ui-refusal-red])` +
   ":is(*,:focus-visible,[data-ui-pressed]:not([role=slider]))";
@@ -40,9 +41,8 @@ const ROW_RED_STATES =
 export const REFUSAL_STYLE = `
 .${MOVING}{animation:adw-shake ${2 * REFUSE.shakeMs}ms step-end ${REFUSE_SHAKES}}
 @keyframes adw-shake{${SHAKE_KEYFRAMES}}
-.adw-row:is([${REFUSAL_RED}],[data-ui-refusal-red])>.adw-row-face{background-color:var(--adw-darkRed)!important}
-.adw-row:is([${REFUSAL_RED}],[data-ui-refusal-red]):is(*,[data-ui-pressed],:focus-visible) .adw-text{
-  color:var(--adw-white)!important}
+${ROW_RED_STATES}>.adw-row-face{background-color:var(--adw-darkRed)!important}
+${ROW_RED_STATES} .adw-text{color:var(--adw-white)!important}
 .adw-row:is([${REFUSAL_RED}],[data-ui-refusal-red]) .ui-form-row-icon>*{filter:brightness(0) invert(1)}
 .adw-row[data-ui-refusal-shake]{translate:none;transition:none;
   animation:adw-shake ${2 * REFUSE.shakeMs}ms step-end ${REFUSE_SHAKES}}

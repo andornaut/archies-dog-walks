@@ -96,8 +96,12 @@
   --adw-button-text: var(--adw-cream);
 }
 /* A refusal's red phases (refusal.ts): a dark red face, red bevel and plum lip under a white
-   label (7.34:1), whatever its state. */
-.adw-standard-button.ui-standard-button[data-refusal-red] {
+   label (7.34:1), over its focus, press or disabled fill. */
+.adw-standard-button.ui-standard-button[data-refusal-red]:is(
+    *,
+    :focus-visible,
+    [aria-disabled="true"]
+  ) {
   --adw-button-fill: var(--adw-darkRed);
   --adw-button-highlight: var(--adw-red);
   --adw-button-lip: var(--adw-plum);

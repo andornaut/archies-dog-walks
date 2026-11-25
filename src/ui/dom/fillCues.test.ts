@@ -33,25 +33,37 @@ const SHEETS = {
   top: squeeze(css("./nativeTopSection.css")),
   ui: squeeze(UI_STYLE),
 } as const;
-// The rules inside a sheet's forced-colours blocks, in order.
-function forced(sheet: string): string {
+// A sheet's forced-colours blocks: where each starts and ends, and the rules inside it.
+function forcedBlocks(sheet: string): { end: number; rules: string; start: number }[] {
   const head = "@media(forced-colors:active){";
-  const blocks: string[] = [];
-  for (let at = sheet.indexOf(head); at >= 0; at = sheet.indexOf(head, at + 1)) {
-    let end = at + head.length;
+  const blocks = [];
+  for (let start = sheet.indexOf(head); start >= 0; start = sheet.indexOf(head, start + 1)) {
+    let end = start + head.length;
     for (let depth = 1; depth > 0; end += 1) {
       depth += sheet[end] === "{" ? 1 : sheet[end] === "}" ? -1 : 0;
     }
-    blocks.push(sheet.slice(at + head.length, end - 1));
+    blocks.push({ end, rules: sheet.slice(start + head.length, end - 1), start });
   }
-  return blocks.join("");
+  return blocks;
 }
+// The rules inside a sheet's forced-colours blocks, in order, and the rules outside them.
+const forced = (sheet: string) =>
+  forcedBlocks(sheet)
+    .map(({ rules }) => rules)
+    .join("");
+const unforced = (sheet: string) =>
+  forcedBlocks(sheet)
+    .reverse()
+    .reduce((rest, { end, start }) => rest.slice(0, start) + rest.slice(end), sheet);
 const CUE_SHEETS = {
   ...SHEETS,
+  choiceNormal: unforced(SHEETS.choice),
   gameForced: forced(SHEETS.game),
+  gameNormal: unforced(SHEETS.game),
   tileForced: forced(SHEETS.tile),
   topForced: forced(SHEETS.top),
   uiForced: forced(SHEETS.ui),
+  uiNormal: unforced(SHEETS.ui),
 };
 
 const FORCED_TOP_ARTWORK =
@@ -64,12 +76,15 @@ const STANDARD_FOCUSED_LABEL =
 const KIT_FOCUSED_ARTWORK =
   'button.ui-standard-button:focus-visible > .ui-button-face > [aria-hidden="true"]';
 
-// A refusal's red phase on a standard button and on a Settings or Cheats row, whatever its state.
+// A refusal's red phase on a standard button, a Settings or Cheats row and a choice card,
+// whatever its state.
 const REFUSING_BUTTON =
   '.adw-standard-button.ui-standard-button[data-refusal-red]:is(*, :focus-visible, [aria-disabled="true"])';
 const REFUSING_ROW =
   ".adw-row:not(.adw-standard-button):is([data-refusal-red],[data-ui-refusal-red])" +
   ":is(*,:focus-visible,[data-ui-pressed]:not([role=slider]))";
+const REFUSING_CHOICE =
+  ".adw-choice-group[data-refusal-red]:is(*, :has(.adw-choice-option:focus-visible)) .adw-choice-press-band";
 
 // A focused or pressed Pet shop row, by Tab or by the Start picker.
 const PLATE_STATES =
@@ -224,6 +239,24 @@ describe("control state cues", () => {
       "ui",
       ".adw-row:not(.adw-standard-button):is(:focus-visible,[data-ui-pressed]:not([role=slider]))>.adw-row-face",
       "background-color:Highlight!important",
+    ],
+    [
+      "a refusing standard button's dark red face over its focus",
+      "gameNormal",
+      REFUSING_BUTTON,
+      "--adw-button-fill:var(--adw-darkRed)",
+    ],
+    [
+      "a refusing row's dark red face over its focus",
+      "uiNormal",
+      `${REFUSING_ROW}>.adw-row-face`,
+      "background-color:var(--adw-darkRed)!important",
+    ],
+    [
+      "a refusing choice card's dark red band over its focus",
+      "choiceNormal",
+      REFUSING_CHOICE,
+      "display:block;background:var(--adw-darkRed)",
     ],
     [
       "a refusing standard button's inverse face in forced colours",
@@ -392,20 +425,37 @@ describe("control state cues", () => {
     ).toBeGreaterThan(0);
   });
 
-  // Each other forced-colours rule that sets the declaration on the part the selector ends with
-  // (a focus, press, selection or disabled state) ranks below the red phase's rule or precedes it.
+  // Each other rule, in normal or forced colours alike, that sets the declaration on the part the
+  // selector ends with (a focus, press, selection or disabled state) ranks below the red phase's
+  // rule or precedes it.
   it.each([
-    ["standard button's face", "gameForced", REFUSING_BUTTON, "", "--adw-button-fill:"],
+    ["standard button's face", "gameNormal", REFUSING_BUTTON, "", "--adw-button-fill:"],
     [
       "row's face",
+      "uiNormal",
+      `${REFUSING_ROW}>.adw-row-face`,
+      ".adw-row-face",
+      "background-color:",
+    ],
+    ["row's label", "uiNormal", `${REFUSING_ROW} .adw-text`, ".adw-text", ";color:"],
+    [
+      "choice card's band",
+      "choiceNormal",
+      REFUSING_CHOICE,
+      ".adw-choice-press-band",
+      "background:",
+    ],
+    ["standard button's forced face", "gameForced", REFUSING_BUTTON, "", "--adw-button-fill:"],
+    [
+      "row's forced face",
       "uiForced",
       `${REFUSING_ROW}>.adw-row-face`,
       ".adw-row-face",
       "background-color:",
     ],
-    ["row's label", "uiForced", `${REFUSING_ROW} .adw-text`, ".adw-text", ";color:"],
+    ["row's forced label", "uiForced", `${REFUSING_ROW} .adw-text`, ".adw-text", ";color:"],
   ] as const)(
-    "keeps a refusing %s inverse over its other forced-colours states",
+    "keeps a refusing %s over its other states",
     (_what, sheet, refusal, part, declaration) => {
       const all = rules(CUE_SHEETS[sheet]);
       const own = all.find(({ selector }) => selector === squeeze(refusal));
