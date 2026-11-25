@@ -182,20 +182,12 @@ function rowParts(i: number): [string, Rect][] {
   }
   const { icon, label } = SETTINGS_ROW;
   const inline = row.kind === "switch" && row.note === undefined;
+  const labelTop =
+    rect.y + (inline ? Math.floor((rect.height - titleFont.capHeight * 2) / 2) : label.dy);
   const parts: [string, Rect][] = [
-    [
-      "label",
-      labelInk(
-        "font-title",
-        row.label,
-        rect.x + label.dx,
-        rect.y + (inline ? Math.floor((rect.height - titleFont.capHeight * 2) / 2) : label.dy),
-      ),
-    ],
+    ["label", labelInk("font-title", row.label, rect.x + label.dx, labelTop)],
+    ["icon", { height: 16, width: 16, x: rect.x + icon.dx, y: labelTop - (label.dy - icon.dy) }],
   ];
-  if (!inline) {
-    parts.push(["icon", { height: 16, width: 16, x: rect.x + icon.dx, y: rect.y + icon.dy }]);
-  }
   if (row.kind === "slider") {
     const { track } = layout;
     const percent = fillLine(MENU_TEXT_FIELDS.settings, words, "volume", { percent: "100" });

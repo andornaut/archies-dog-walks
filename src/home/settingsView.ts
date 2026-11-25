@@ -55,8 +55,9 @@ export interface SwitchStates {
 const BEHAVIOUR_STATES: SwitchStates = { off: "off", on: "on" };
 const DISPLAY_STATES: SwitchStates = { off: "hidden", on: "shown" };
 
-// Each row carries a 16x16 -panel icon with on and off tags, and the menuText.settings keys
-// of its label, its note, its button's label and its switch's state words.
+// Each row carries a 16x16 -panel icon, one frame tagged idle (its switch and state word, or its
+// slider, show the state), and the menuText.settings keys of its label, its note, its button's
+// label and its switch's state words.
 export type SettingsRow =
   | {
       icon: string;
@@ -273,7 +274,7 @@ function controlRow(
       face: undefined,
       icon: {
         key: row.icon,
-        tag: "on",
+        tag: "idle",
         x: control.x + (control.width - prefix - ink) / 2,
         y: control.y + (control.height - INSTALL_ICON_SIZE) / 2,
       },
@@ -304,7 +305,15 @@ function controlRow(
     face: { colour: PALETTE[look.face], rect: { ...rect, y: y + dip } },
     ...(row.icon === undefined
       ? {}
-      : { icon: { key: row.icon, tag: on ? "on" : "off", x: x + ICON.dx, y: y + ICON.dy + dip } }),
+      : {
+          // The icon keeps its rise over its label's capitals on every row, inline or noted.
+          icon: {
+            key: row.icon,
+            tag: "idle",
+            x: x + ICON.dx,
+            y: labelTop + ICON.dy - LABEL.dy + dip,
+          },
+        }),
     key: row.key,
     kind: row.kind,
     label: words[row.label],
@@ -387,7 +396,7 @@ function sliderRow(
     face: undefined,
     icon: {
       key: row.icon,
-      tag: active && steps > 0 ? "on" : "off",
+      tag: "idle",
       x: x + ICON.dx,
       y: y + ICON.dy,
     },

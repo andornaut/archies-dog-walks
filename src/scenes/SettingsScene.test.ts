@@ -83,7 +83,7 @@ function fixture(install = false, width = 360, dpr = 1) {
       Promise.resolve({
         frames: { first: { frame: { h: 16, w: 16, x: 0, y: 0 } } },
         meta: {
-          frameTags: ["normal", "disabled", "off", "on"].map((name) => ({ from: 0, name })),
+          frameTags: ["normal", "disabled", "idle", "off", "on"].map((name) => ({ from: 0, name })),
           size: { h: 16, w: 16 },
         },
       }),

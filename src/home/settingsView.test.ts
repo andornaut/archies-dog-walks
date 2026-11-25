@@ -91,7 +91,7 @@ describe("settingsView", () => {
       const current = view({ settings: { ...DEFAULT_SETTINGS, fpsCounter, muted, reducedMotion } });
       expect(current.rows.at(-1)).toMatchObject({
         description: "",
-        icon: { key: "icon-fps-counter-panel", tag: fpsCounter ? "on" : "off" },
+        icon: { key: "icon-fps-counter-panel", tag: "idle" },
         key: "fpsCounter",
         switch: { on: fpsCounter },
         texts: [
@@ -142,7 +142,7 @@ describe("settingsView", () => {
       expect(fps.icon).toMatchObject({
         key: "icon-fps-counter-panel",
         x: sound.icon?.x,
-        y: fps.rect.y + SETTINGS_CARD.row.icon.dy,
+        y: fps.texts[0]!.capTop - (SETTINGS_CARD.row.label.dy - SETTINGS_CARD.row.icon.dy),
       });
       expect(fps.texts[0]!.x - fps.rect.x).toBe(SETTINGS_CARD.row.label.dx);
       expect(fps.texts[0]!.x).toBe(sound.texts[0]!.x);
