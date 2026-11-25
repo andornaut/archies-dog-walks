@@ -15,7 +15,8 @@ import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { effectItems, hudEffectIconKey, spareTreatWell } from "../effectIcons.ts";
 import {
-  debuffBarFill,
+  debuffTrackLayout,
+  debuffTrackStyle,
   spareTreatPipAt,
   WALK_BAR,
   walkBarLayout,
@@ -186,7 +187,9 @@ it("reserves every current full-size effect name and centres actual body ink abo
     debuffs: [{ debuff: "muddy", secondsLeft: 1, untilZone: run.zoneIndex }],
   });
   const only = chrome.bars()[0]!;
-  const fill = debuffBarFill(widest, only.rect);
+  const trackOf = (rect: typeof only.rect) =>
+    debuffTrackLayout(debuffTrackStyle({ fill: 0, shade: 0 }), widest, rect, 0).track;
+  const fill = trackOf(only.rect);
   expect(views.flatMap((view) => vi.mocked(view.panel).mock.calls)).toContainEqual([
     fill,
     undefined,
@@ -218,7 +221,7 @@ it("reserves every current full-size effect name and centres actual body ink abo
     expect(text.scale).toBe(TEXT_SCALE);
     expect(top - rect.y).toBe((DEBUFF_BAR.faceHeight - (bottom - top)) / 2);
     expect(bottom).toBeLessThanOrEqual(rect.y + DEBUFF_BAR.faceHeight);
-    const track = debuffBarFill(widest, rect);
+    const track = trackOf(rect);
     expect(text.x + width.right - width.left + DEBUFF_BAR.name.gap).toBeLessThanOrEqual(track.x);
     expect(track.x + track.width).toBe(rect.x + rect.width - DEBUFF_BAR.fill.right);
   }

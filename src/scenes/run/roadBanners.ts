@@ -1,11 +1,11 @@
 import { type Point, type Rect, rectAboveIn, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 import { Core, type GameObjects, type Scene, Scenes } from "phaser";
 
-import { domArtPath } from "../../assets/domArt.ts";
 import { domArtUrl } from "../../assets/domArtFiles.ts";
 import { debuffIconKey } from "../../assets/iconKeys.ts";
 import { gearIconKey } from "../../assets/spriteKeys.ts";
 import { gameData } from "../../data/index.ts";
+import { ZONE_BANNER } from "../../data/layout.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import type { DebuffId, EncounterId, GearId } from "../../data/types.ts";
 import { zoneBannerHeading } from "../../hud/zoneCelebration.ts";
@@ -25,7 +25,9 @@ import { DEPTH, LAYOUT } from "./stage.ts";
 // floats rise pixels up as it fades.
 const POPUP = { fadeMs: 1800, lift: 4, rise: 16 };
 const GEAR_POPUP_SCALE = 2;
-const BANNER = { holdMs: 1800, key: "ui-zone-banner", slideMs: 300, width: 248, y: 70 };
+const BANNER = { holdMs: 1800, key: "ui-zone-banner", slideMs: 300 };
+const { plate: PLATE } = ZONE_BANNER;
+const ART_SOURCE = { artUrl: domArtUrl, loadSheet };
 
 // How long the zone banner shows, from sliding in to leaving.
 export function zoneBannerMs(still: boolean): number {
@@ -172,25 +174,25 @@ export class ZoneBanner {
     this.banner?.destroy();
     const zone = currentZone(gameData, run);
     const { road } = LAYOUT;
-    const x = road.x + Math.floor((road.width - BANNER.width) / 2);
-    const banner = scene.add.container(x, road.y + BANNER.y).setDepth(DEPTH.banner);
+    const x = road.x + Math.floor((road.width - PLATE.width) / 2);
+    const banner = scene.add.container(x, road.y + ZONE_BANNER.y).setDepth(DEPTH.banner);
     if (scene.textures.exists(BANNER.key)) {
       banner.add(scene.add.image(0, 0, BANNER.key).setOrigin(0));
     } else {
       const g = scene.add.graphics();
-      fillRect(g, PALETTE.cream, { height: 48, width: BANNER.width, x: 0, y: 0 });
+      fillRect(g, PALETTE.cream, { ...PLATE, x: 0, y: 0 });
       banner.add(g);
     }
     const heading = zoneBannerHeading(gameData, run);
     banner.add(
-      addPixelText(scene, BANNER.width / 2, 11, heading, {
+      addPixelText(scene, PLATE.width / 2, 11, heading, {
         colour: PALETTE.plum,
         font: "title",
         originX: 0.5,
       }),
     );
     banner.add(
-      addDisplayText(scene, BANNER.width / 2, 27, zone.name, {
+      addDisplayText(scene, PLATE.width / 2, 27, zone.name, {
         colour: PALETTE.plum,
         font: "title",
         originX: 0.5,
@@ -224,10 +226,8 @@ export class ZoneBanner {
       return;
     }
     const display = hasDisplayFont(scene, name) ? displayBitmapFont(scene) : undefined;
-    const view = mountRoadBanner(layer, {
-      frames: loadSheet(domArtUrl(domArtPath("image", BANNER.key, "json"))),
+    const view = mountRoadBanner(layer, ART_SOURCE, {
       heading,
-      image: domArtUrl(domArtPath("image", BANNER.key, "png")),
       name,
       nameFont: {
         bitmap: display ?? title,

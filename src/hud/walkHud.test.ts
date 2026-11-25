@@ -28,9 +28,9 @@ import { maxEffects } from "./effectIcons.ts";
 import {
   cardHearts,
   DEBUFF_BAR,
-  debuffBarFill,
   debuffBarRects,
-  debuffFillWidth,
+  debuffTrackLayout,
+  debuffTrackStyle,
   DOG_CARD,
   dogCardEmptyFace,
   EFFECT_WELLS,
@@ -291,22 +291,42 @@ describe("the debuff bars", () => {
       return ink.right - ink.left;
     }),
   );
-  const fill = debuffBarFill(nameWidth, {
-    height: DEBUFF_BAR.height,
-    width: LAYOUT.topBar.width,
-    x: 0,
-    y: 0,
+  const bar = { height: DEBUFF_BAR.height, width: LAYOUT.topBar.width, x: 0, y: 0 };
+  const style = debuffTrackStyle({ fill: 1, shade: 2 });
+  const track = (share: number) => debuffTrackLayout(style, nameWidth, bar, share);
+  const full = track(1).track.width;
+
+  it("rims the track inside the face, a rim round its shade, and ends it fill.right in", () => {
+    const { fills, frame, track: shade } = track(1);
+    const { rim } = DEBUFF_BAR;
+    expect(shade.x).toBe(DEBUFF_BAR.name.x + nameWidth + DEBUFF_BAR.name.gap);
+    expect(shade.x + shade.width).toBe(bar.width - DEBUFF_BAR.fill.right);
+    expect(shade.height).toBe(DEBUFF_BAR.fill.height);
+    expect(frame).toEqual({
+      height: shade.height + 2 * rim,
+      width: shade.width + 2 * rim,
+      x: shade.x - rim,
+      y: shade.y - rim,
+    });
+    expect(frame.y + frame.height).toBeLessThanOrEqual(DEBUFF_BAR.faceHeight);
+    expect(fills).toEqual([shade]);
   });
-  const full = fill.width;
-  it.each<[string, number, number, number]>([
-    ["full as it starts", 20, 20, full],
-    ["half way through", 10, 20, Math.round(full / 2)],
-    ["empty as it ends", 0, 20, 0],
-    ["full when it lasts longer than its seconds", 25, 20, full],
-    ["empty when a fraction rounds to nothing", 0.01, 20, 0],
-    ["empty for a debuff of no seconds", 3, 0, 0],
-  ])("draws the fill %s", (_name, left, seconds, expected) => {
-    expect(debuffFillWidth(fill, left, seconds)).toBe(expected);
+
+  it("fills each whole pixel's share to that pixel", () => {
+    const shares = Array.from({ length: full + 1 }, (_, n) => n / full);
+    expect(shares.map((share) => track(share).fills[0]!.width)).toEqual(shares.map((_, n) => n));
+  });
+
+  it.each<[string, number, number]>([
+    ["full as it starts", 1, full],
+    ["half way through", 0.5, Math.round(full / 2)],
+    ["at the nearest pixel just past a half", (7.5 + 1e-6) / full, 8],
+    ["at the nearest pixel just short of a half", (7.5 - 1e-6) / full, 7],
+    ["empty as it ends", 0, 0],
+    ["full when it lasts longer than its seconds", 1.25, full],
+    ["empty for a share that is not a number", Number.NaN, 0],
+  ])("draws the fill %s", (_name, share, expected) => {
+    expect(track(share).fills[0]!.width).toBe(expected);
   });
 });
 

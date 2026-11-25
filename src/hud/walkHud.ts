@@ -1,6 +1,10 @@
 import { fillNames } from "@andornaut/game-kit/runtime/lines";
 import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
-import { progressBarLayout } from "@andornaut/game-kit/runtime/progress";
+import {
+  type ProgressBarLayout,
+  progressBarLayout,
+  type ProgressBarStyle,
+} from "@andornaut/game-kit/runtime/progress";
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
@@ -21,6 +25,7 @@ import { walkLength } from "../rules/route.ts";
 import { zoneLength } from "../runner/walkMotion.ts";
 import type { RunState } from "../state/runState.ts";
 import { lineInk } from "../ui/lineInk.ts";
+import { PALETTE } from "../ui/palette.ts";
 import { GAME_PROGRESS, GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
 import { TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { TOP_BAR_FACE, wellCapsTop } from "../ui/topBarTrim.ts";
@@ -154,26 +159,38 @@ export function debuffBarRects(bar: Rect, count: number): Rect[] {
   }));
 }
 
-// Every current name reserves its full ink width before the duration track, including inactive kinds.
-export function debuffBarFill(nameWidth: number, bar: Rect): Rect {
-  const x = DEBUFF_BAR.name.x + nameWidth + DEBUFF_BAR.name.gap;
-  const trackHeight = DEBUFF_BAR.fill.height + 2 * DEBUFF_BAR.rim;
+// A debuff's duration track: an ink rim round its shade, the debuff's fill over it. Every current
+// name reserves its full ink width before the track, including inactive kinds.
+export function debuffTrackStyle(colours: { fill: number; shade: number }): ProgressBarStyle {
   return {
-    height: DEBUFF_BAR.fill.height,
-    width: Math.max(0, bar.width - x - DEBUFF_BAR.fill.right),
-    x: bar.x + x,
-    y: bar.y + Math.round((DEBUFF_BAR.faceHeight - trackHeight) / 2) + DEBUFF_BAR.rim,
+    border: DEBUFF_BAR.rim,
+    fills: [colours.fill],
+    frame: PALETTE.ink,
+    track: colours.shade,
   };
 }
 
-// The fill's width with secondsLeft of seconds to go; geometry is owned by the measured track.
-export function debuffFillWidth(
-  fill: Pick<Rect, "width">,
-  secondsLeft: number,
-  seconds: number,
-): number {
-  const share = seconds > 0 ? clamp01(secondsLeft / seconds) : 0;
-  return Math.round(fill.width * share);
+// The track in bar, a share of its seconds to go: the fill as wide as the nearest whole pixels of
+// the track that share covers. progressBarLayout floors the share's pixels, so it takes the
+// share at the middle of the rounded pixel.
+export function debuffTrackLayout(
+  style: ProgressBarStyle,
+  nameWidth: number,
+  bar: Rect,
+  share: number,
+): ProgressBarLayout {
+  const x = DEBUFF_BAR.name.x + nameWidth + DEBUFF_BAR.name.gap;
+  const { rim } = DEBUFF_BAR;
+  const height = DEBUFF_BAR.fill.height + 2 * rim;
+  const width = Math.max(0, bar.width - x - DEBUFF_BAR.fill.right);
+  const frame = {
+    height,
+    width: width + 2 * rim,
+    x: bar.x + x - rim,
+    y: bar.y + Math.round((DEBUFF_BAR.faceHeight - height) / 2),
+  };
+  const whole = Math.round(width * (Number.isFinite(share) ? clamp01(share) : 0));
+  return progressBarLayout(style, frame, width > 0 ? (whole + 0.5) / width : 0);
 }
 
 // The neighbourhood's progress line on the screen's last rows, under the dog cards (the

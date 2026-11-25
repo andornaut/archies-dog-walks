@@ -320,6 +320,16 @@ export const ZONE_PILL_SIZES = {
   textGap: 8,
 } as const;
 
+// art: the zone banner (ui-zone-banner) over the road at a neighbourhood's start: its plate, its
+// top's rows under the road's top, and the rows of its face above and below the dotted rule across
+// it, on which the heading's and the name's ink are each centred.
+export const ZONE_BANNER = {
+  headingFace: { height: 19, y: 2 },
+  nameFace: { height: 23, y: 22 },
+  plate: { height: 48, width: 248 },
+  y: 70,
+} as const;
+
 // The walk HUD's lanes.
 export const HUD_LANES = {
   // A heart label's lane on its card: its rows over the card's bottom, its height, and the

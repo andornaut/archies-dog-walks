@@ -1,11 +1,12 @@
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
+import { ZONE_BANNER } from "../../data/layout.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
-import { deviceX, deviceY, frameRect, gridTransform } from "../domScale.ts";
+import { deviceX, deviceY, gridTransform } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
-import { createTextLine, type DomTextLine, placeBackedText, setBox } from "./pixelLine.ts";
+import { type DomArtSource, imageArt } from "./artElements.ts";
+import { createTextLine, type DomTextLine, placeBackedText } from "./pixelLine.ts";
 import { followModalUnderlay } from "./rampDim.ts";
-import { type SheetFrame, sheetFrame } from "./sheetFrames.ts";
 import type { UiLayer } from "./uiLayer.ts";
 
 interface BannerPose {
@@ -15,21 +16,17 @@ interface BannerPose {
   readonly y: number;
 }
 
-// art: ui-zone-banner's plate, and the rows of its face above and below the dotted rule across
-// it, on which the heading's and the name's ink are each centred: the glyph body, without the
-// display font's drop shadow.
-const PLATE = { height: 48, width: 248 } as const;
-const HEADING_FACE = { height: 19, y: 2 } as const;
-const NAME_FACE = { height: 23, y: 22 } as const;
+// The banner's art key; each line's ink is centred on its face's rows: the glyph body, without
+// the display font's drop shadow.
+const KEY = "ui-zone-banner";
+const { headingFace: HEADING_FACE, nameFace: NAME_FACE, plate: PLATE } = ZONE_BANNER;
 
 // A passive view follows the scene's existing tween. It takes no input and never owns time.
 export function mountRoadBanner(
   layer: UiLayer,
+  source: DomArtSource,
   view: {
-    // The plate's frames on its sheet (loadSheet), and the sheet's image.
-    readonly frames: Promise<unknown>;
     readonly heading: string;
-    readonly image: string;
     readonly name: string;
     readonly nameFont: {
       readonly bitmap: BitmapFont;
@@ -44,14 +41,8 @@ export function mountRoadBanner(
   const doc = layer.element.ownerDocument;
   const root = doc.createElement("div");
   root.className = "adw-dialog adw-passive";
-  const plate = doc.createElement("span");
-  plate.setAttribute("aria-hidden", "true");
-  Object.assign(plate.style, {
-    backgroundImage: `url("${view.image}")`,
-    backgroundRepeat: "no-repeat",
-    imageRendering: "pixelated",
-    position: "absolute",
-  });
+  const plate = imageArt(doc, source, KEY);
+  plate.element.setAttribute("aria-hidden", "true");
   const line = (font: "display" | "title", text: string, scale: number): DomTextLine => ({
     capTop: 0,
     centre: "ink",
@@ -77,12 +68,11 @@ export function mountRoadBanner(
   status.setAttribute("role", "status");
   status.setAttribute("aria-live", "polite");
   status.setAttribute("aria-atomic", "true");
-  root.append(plate, ...lines.map(({ element }) => element), status);
+  root.append(plate.element, ...lines.map(({ element }) => element), status);
   // New zones stay under existing HUD and modal layers, not above their shade.
   layer.element.insertBefore(root, layer.element.firstElementChild);
   let disposed = false;
   let decoded = false;
-  let frame: SheetFrame | undefined;
   let announced = false;
   const update = () => {
     if (disposed) {
@@ -107,14 +97,7 @@ export function mountRoadBanner(
       transform: gridTransform(scale),
       width: `${deviceX(scale, SCREEN_CONFIG.width)}px`,
     });
-    const box = frameRect(scale, { ...PLATE, x: pose.x, y: pose.y });
-    setBox(plate, box);
-    if (frame !== undefined) {
-      const across = box.width / frame.width;
-      const down = box.height / frame.height;
-      plate.style.backgroundSize = `${frame.sheet.width * across}px ${frame.sheet.height * down}px`;
-      plate.style.backgroundPosition = `${-frame.x * across}px ${-frame.y * down}px`;
-    }
+    plate.place(scale, { x: 0, y: 0 }, { ...PLATE, projection: "frame", x: pose.x, y: pose.y });
     for (const { bitmap, element, face, line } of lines) {
       placeBackedText(
         bitmap,
@@ -129,13 +112,7 @@ export function mountRoadBanner(
   const offReady = layer.onReady(update);
   const offUnderlay = followModalUnderlay(layer.input, root);
   const offInput = layer.input.subscribe(update);
-  const reveal = layer.reveal(
-    view.frames.then((json) => {
-      frame = sheetFrame(json, undefined);
-      return [view.image];
-    }),
-    root,
-  );
+  const reveal = layer.reveal(plate.ready, root);
   void reveal.revealed.then((success) => {
     if (!disposed) {
       decoded = success;

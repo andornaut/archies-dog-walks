@@ -2,7 +2,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { debuffIconKey } from "../../assets/iconKeys.ts";
 import { gameData } from "../../data/index.ts";
-import { BUTTON_SIZE, SLICES } from "../../data/layout.ts";
+import { SLICES } from "../../data/layout.ts";
 import { SCREEN_LAYOUT } from "../../data/screen.ts";
 import type { DebuffId } from "../../data/types.ts";
 import { debuffLasting } from "../../rules/durations.ts";
@@ -12,6 +12,7 @@ import type { RunState } from "../../state/runState.ts";
 import { lineInk } from "../../ui/lineInk.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
+import { pressedEffectWells } from "../../ui/topSection.ts";
 import {
   effectIconFallback,
   type EffectItem,
@@ -22,9 +23,9 @@ import {
 } from "../effectIcons.ts";
 import {
   DEBUFF_BAR,
-  debuffBarFill,
   debuffBarRects,
-  debuffFillWidth,
+  debuffTrackLayout,
+  debuffTrackStyle,
   spareTreatPipAt,
   WALK_BAR,
   walkBarLayout,
@@ -115,7 +116,8 @@ export function createHudChrome(
         replace("bars", 0, (group) =>
           bars.forEach(({ debuff, rect }) => {
             const rim = DEBUFF_BAR.rim;
-            const fill = debuffBarFill(nameWidth, rect);
+            const style = debuffTrackStyle(colours[debuff]);
+            const { frame, track } = debuffTrackLayout(style, nameWidth, rect, 0);
             solid(group, colours[debuff].face, { ...rect, height: DEBUFF_BAR.faceHeight });
             solid(group, colours[debuff].shade, {
               ...rect,
@@ -123,9 +125,10 @@ export function createHudChrome(
               y: rect.y + DEBUFF_BAR.faceHeight,
             });
             solid(group, PALETTE.ink, { ...rect, height: rim, y: rect.y + rect.height - rim });
-            solid(group, PALETTE.ink, { ...fill, height: fill.height + 2 * rim, y: fill.y - rim });
-            solid(group, PALETTE.ink, { ...fill, width: fill.width + 2 * rim, x: fill.x - rim });
-            solid(group, colours[debuff].shade, fill);
+            // The track's rim leaves its corners out.
+            solid(group, style.frame, { ...track, height: frame.height, y: frame.y });
+            solid(group, style.frame, { ...track, width: frame.width, x: frame.x });
+            solid(group, style.track, track);
             group.art({
               at: { x: rect.x + DEBUFF_BAR.icon.x, y: rect.y + DEBUFF_BAR.icon.y },
               image: { height: DEBUFF_BAR.icon.size, width: DEBUFF_BAR.icon.size },
@@ -144,31 +147,28 @@ export function createHudChrome(
           }),
         );
       }
-      const widths = bars.map(({ debuff, rect }) => {
+      const tracks = bars.map(({ debuff, rect }) => {
         const active = run.debuffs.find((entry) => entry.debuff === debuff)!;
         const { seconds } = gameData.debuffs[debuff];
-        return debuffFillWidth(
-          debuffBarFill(nameWidth, rect),
-          active.secondsLeft,
-          Math.max(
-            read(gameData.tuning, "seconds", seconds),
-            debuffLasting(gameData.tuning, seconds, run).secondsLeft,
-          ),
+        const lasting = Math.max(
+          read(gameData.tuning, "seconds", seconds),
+          debuffLasting(gameData.tuning, seconds, run).secondsLeft,
         );
+        const style = debuffTrackStyle(colours[debuff]);
+        const share = lasting > 0 ? active.secondsLeft / lasting : 0;
+        return { layout: debuffTrackLayout(style, nameWidth, rect, share), style };
       });
-      const fillKey = `${barsKey}:${widths.join()}`;
+      const fillKey = `${barsKey}:${tracks.map(({ layout }) => layout.fills[0]?.width).join()}`;
       if (fillsKey !== fillKey) {
         fillsKey = fillKey;
         replace("fills", 1, (group) =>
-          bars.forEach(({ debuff, rect }, i) => {
-            const width = widths[i] ?? 0;
-            if (width > 0) {
-              solid(group, colours[debuff].fill, {
-                ...debuffBarFill(nameWidth, rect),
-                width,
-              });
-            }
-          }),
+          tracks.forEach(({ layout, style }) =>
+            layout.fills.forEach((fill, i) => {
+              if (fill.width > 0) {
+                solid(group, style.fills[i]!, fill);
+              }
+            }),
+          ),
         );
       }
       // Keyed on the texts drawn, so a live neighbourhood switch, which keeps the slot, renames it.
@@ -243,9 +243,9 @@ export function createHudChrome(
           "effects",
           0,
           (group) => {
-            const effectWells = walkBarLayout(SCREEN_LAYOUT.topBar, effects.length).effectWells.map(
-              (well, index) =>
-                index === pressedEffect ? { ...well, y: well.y + BUTTON_SIZE.press } : well,
+            const effectWells = pressedEffectWells(
+              walkBarLayout(SCREEN_LAYOUT.topBar, effects.length).effectWells,
+              pressedEffect,
             );
             effects.forEach((item: EffectItem, index) => {
               const well = effectWells[index];

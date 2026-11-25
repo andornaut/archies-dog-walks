@@ -108,6 +108,14 @@ export function topBarGlyphRect(face: Point, pressed = false): Rect {
   };
 }
 
+// The effect wells as drawn while a press is down on the one at pressed, if any: that well sunk
+// with its press, its frame, press fill, icon and spare treat pip with it.
+export function pressedEffectWells(wells: readonly Rect[], pressed: number | undefined): Rect[] {
+  return wells.map((well, index) =>
+    index === pressed ? { ...well, y: well.y + BUTTON_SIZE.press } : well,
+  );
+}
+
 // Currency follows the same full-size metrics with or without an effects section.
 export function topSectionCurrency(layout: { currency: Rect | undefined }, inkWidth: number) {
   const cash = WALK_BAR_PARTS.cash;

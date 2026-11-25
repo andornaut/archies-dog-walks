@@ -24,6 +24,7 @@ import {
 import { PALETTE } from "../palette.ts";
 import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL, topBarRects } from "../topBarTrim.ts";
 import {
+  pressedEffectWells,
   topBarGlyphRect,
   type TopSectionButton,
   topSectionCurrency,
@@ -32,7 +33,7 @@ import {
   topSectionStateCapTop,
 } from "../topSection.ts";
 import { containGameButtonClicks } from "./actionBinding.ts";
-import { type DomArtSource, imageArt, sheetArt } from "./artElements.ts";
+import { type DomArtSource, imageArt, imageThreeSlice, sheetArt } from "./artElements.ts";
 import { createGameButton } from "./gameButton.ts";
 import { guardNativeInput, revealPaint } from "./modalLifecycle.ts";
 import { colourBox, gridFillPart } from "./parts.ts";
@@ -130,13 +131,15 @@ export function createNativeTopSection(
   wellPress.classList.add("adw-top-section-well-press");
   underlayElement.append(wellPress);
   const placeEffects = (scale: DomScale) => {
-    const wells = topSectionLayout(config.buttons, { ...config, effects: effectCount }).effectWells;
+    const wells = pressedEffectWells(
+      topSectionLayout(config.buttons, { ...config, effects: effectCount }).effectWells,
+      effectPressed,
+    );
     effectArt.forEach((art, index) => {
       const rect = wells[index];
       art.element.hidden = rect === undefined;
       if (rect !== undefined) {
-        const dip = index === effectPressed ? BUTTON_SIZE.press : 0;
-        art.place(scale, ORIGIN, { ...rect, projection: "layout", y: rect.y + dip });
+        art.place(scale, ORIGIN, { ...rect, projection: "layout" });
       }
     });
     const pressed = effectPressed === undefined ? undefined : wells[effectPressed];
@@ -146,7 +149,7 @@ export function createNativeTopSection(
         height: pressed.height - 2,
         width: pressed.width - 2,
         x: pressed.x + 1,
-        y: pressed.y + BUTTON_SIZE.press + 1,
+        y: pressed.y + 1,
       });
     }
   };
@@ -434,11 +437,24 @@ export function createNativeTopSection(
   const money = doc.createElement("div");
   money.className = "adw-lines";
   underlayElement.append(money);
+  // art: the cash well's ends, a column each, and its middle column, which stretches.
   const cashArt =
     layout.currency === undefined
-      ? []
-      : ["left", "mid", "right"].map((key) => image(`ui-home-cash-well-${key}`));
-  cashArt.forEach((art) => money.append(art.element));
+      ? undefined
+      : imageThreeSlice(
+          doc,
+          source,
+          {
+            left: "ui-home-cash-well-left",
+            middle: "ui-home-cash-well-mid",
+            right: "ui-home-cash-well-right",
+          },
+          { left: 1, right: 1 },
+        );
+  if (cashArt !== undefined) {
+    artReady.push(cashArt.ready);
+    money.append(cashArt.element);
+  }
   const moneyLine = {
     capTop: 0,
     centre: "left",
@@ -463,17 +479,7 @@ export function createNativeTopSection(
     const { scale: moneyScale } = topSectionCurrency(layout, 0);
     const placement = topSectionCurrency(layout, measure(moneyScale, `$${text}`));
     const rect = placement.well;
-    const cashRects = [
-      { ...rect, width: 1 },
-      { ...rect, width: rect.width - 2, x: rect.x + 1 },
-      { ...rect, width: 1, x: rect.x + rect.width - 1 },
-    ];
-    cashArt.forEach((art, index) => {
-      const at = cashRects[index];
-      if (at !== undefined) {
-        art.place(scale, ORIGIN, { ...at, projection: "layout" });
-      }
-    });
+    cashArt?.place(scale, ORIGIN, rect);
     const dollar = {
       ...moneyLine,
       capTop: placement.top,

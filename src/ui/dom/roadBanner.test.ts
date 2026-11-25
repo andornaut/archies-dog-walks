@@ -5,11 +5,15 @@ import { gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../domScale.ts";
 import { mountRoadBanner } from "./roadBanner.ts";
 
-// The plate's one frame on its sheet.
-const FRAMES = Promise.resolve({
-  frames: { "ui-zone-banner 0.aseprite": { frame: { h: 48, w: 248, x: 4, y: 8 } } },
-  meta: { size: { h: 100, w: 300 } },
-});
+// The plate's one frame on its sheet, whose image is at /banner.png.
+const SOURCE = {
+  artUrl: (path: string) => (path.endsWith(".png") ? "/banner.png" : `/${path}`),
+  loadSheet: () =>
+    Promise.resolve({
+      frames: { "ui-zone-banner 0.aseprite": { frame: { h: 48, w: 248, x: 4, y: 8 } } },
+      meta: { size: { h: 100, w: 300 } },
+    }),
+};
 
 it("keeps canvas fallback until decoding, follows the existing pose and announces a zone once", async () => {
   const doc = new FakeDocument();
@@ -26,10 +30,8 @@ it("keeps canvas fallback until decoding, follows the existing pose and announce
   });
   const pose = { active: true, alpha: 1, x: -240, y: 110 };
   const shown = vi.fn();
-  const view = mountRoadBanner(layer, {
-    frames: FRAMES,
+  const view = mountRoadBanner(layer, SOURCE, {
     heading: "Toronto, neighbourhood 1",
-    image: "/banner.png",
     name: "The Beach",
     nameFont: { bitmap: gameFont("font-title"), font: "title", scale: 2 },
     pose: () => pose,
@@ -83,10 +85,8 @@ it("does not reveal or announce a destroyed banner when a late image settles", a
     }),
   });
   const shown = vi.fn();
-  const view = mountRoadBanner(layer, {
-    frames: FRAMES,
+  const view = mountRoadBanner(layer, SOURCE, {
     heading: "Toronto",
-    image: "/banner.png",
     name: "The Beach",
     nameFont: { bitmap: gameFont("font-title"), font: "title", scale: 2 },
     pose: () => ({ active: true, alpha: 1, x: 50, y: 110 }),

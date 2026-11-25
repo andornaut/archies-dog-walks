@@ -515,11 +515,18 @@ it.each([
       const segments = element
         .all()
         .filter((node) => node.style.backgroundImage?.includes("ui-home-cash-well"));
-      expect(segments[0]!.style.left).toBe(`${wellBox.left}px`);
+      // The three-slice's box is the well's, its parts placed from its corner.
+      const slice = segments[0]!.parentElement!;
+      expect(slice.style).toMatchObject({
+        left: `${wellBox.left}px`,
+        top: `${wellBox.top}px`,
+        width: `${wellBox.width}px`,
+      });
+      expect(segments[0]!.style.left).toBe("0px");
       expect(
         Number.parseFloat(segments[2]!.style.left ?? "") +
           Number.parseFloat(segments[2]!.style.width ?? ""),
-      ).toBe(wellBox.left + wellBox.width);
+      ).toBe(wellBox.width);
       for (let i = 0; i < segments.length; i += 1) {
         expect(segments[i]!.style.height).toBe(`${wellBox.height}px`);
         if (i > 0) {

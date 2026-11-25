@@ -1,7 +1,7 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { domArtPath } from "../../assets/domArt.ts";
-import { artPixel, type DomScale, gridRect, gridX, gridY } from "../domScale.ts";
+import { artPixel, type DomScale, frameRect, gridRect, gridX, gridY } from "../domScale.ts";
 import { setBox } from "./pixelLine.ts";
 import { type SheetFrame, sheetFrame, sheetFrameNamed } from "./sheetFrames.ts";
 import { sliceParts } from "./sliceParts.ts";
@@ -248,7 +248,9 @@ export function sheetThreeSlice(
   };
 }
 
-// An image whole, at its size in art pixels, from its top-left at a game point.
+// An image whole, at its size in art pixels, from its top-left at a game point. Frame
+// projection, as a frame's rect (frameRect) is, puts its corner on the grid and its sides the
+// nearest whole art pixels to the rect's.
 export function imageArt(
   doc: Document,
   source: DomArtSource,
@@ -260,7 +262,7 @@ export function imageArt(
   readonly place: (
     scale: DomScale,
     origin: Point,
-    art: Rect & Pick<SheetArtPlace, "projection">,
+    art: Rect & { readonly projection?: "art" | "frame" | "layout" },
   ) => void;
 } {
   const element = doc.createElement("span");
@@ -274,12 +276,14 @@ export function imageArt(
       const box =
         art.projection === "layout"
           ? gridRect(scale, art)
-          : {
-              height: art.height * pixel,
-              left: gridX(scale, art.x),
-              top: gridY(scale, art.y),
-              width: art.width * pixel,
-            };
+          : art.projection === "frame"
+            ? frameRect(scale, art)
+            : {
+                height: art.height * pixel,
+                left: gridX(scale, art.x),
+                top: gridY(scale, art.y),
+                width: art.width * pixel,
+              };
       setBox(element, {
         ...box,
         left: box.left - gridX(scale, origin.x),
@@ -294,6 +298,47 @@ export function imageArt(
       });
     },
     ready: loaded.ready,
+  };
+}
+
+// Three images as one three-slice across a rect: the left and right images whole, slices.left and
+// slices.right columns wide, and the middle image stretched across the columns between them, each
+// following the rect's logical edges.
+export function imageThreeSlice(
+  doc: Document,
+  source: DomArtSource,
+  keys: { readonly left: string; readonly middle: string; readonly right: string },
+  slices: { readonly left: number; readonly right: number },
+): {
+  readonly element: HTMLElement;
+  readonly ready: Promise<readonly string[]>;
+  readonly place: (scale: DomScale, origin: Point, art: Rect) => void;
+} {
+  const element = doc.createElement("span");
+  element.className = "adw-art";
+  const parts = [keys.left, keys.middle, keys.right].map((key) => imageArt(doc, source, key));
+  element.append(...parts.map((part) => part.element));
+  const [start, middle, end] = parts as [(typeof parts)[0], (typeof parts)[0], (typeof parts)[0]];
+  return {
+    element,
+    place: (scale, origin, art) => {
+      const box = gridRect(scale, art);
+      setBox(element, {
+        ...box,
+        left: box.left - gridX(scale, origin.x),
+        top: box.top - gridY(scale, origin.y),
+      });
+      const right = art.x + art.width - slices.right;
+      start.place(scale, art, { ...art, projection: "layout", width: slices.left });
+      middle.place(scale, art, {
+        ...art,
+        projection: "layout",
+        width: right - art.x - slices.left,
+        x: art.x + slices.left,
+      });
+      end.place(scale, art, { ...art, projection: "layout", width: slices.right, x: right });
+    },
+    ready: Promise.all(parts.map((part) => part.ready)).then((urls) => urls.flat()),
   };
 }
 
