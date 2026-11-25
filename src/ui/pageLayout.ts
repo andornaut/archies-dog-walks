@@ -1,4 +1,9 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import {
+  type ModalFrameContext,
+  type ModalTitleSize,
+  placeModalFrame,
+} from "@andornaut/game-kit/runtime/ui/modalFrame";
 
 import { PAGE, SHOP_PAGE, TOP_BAR_HEIGHT } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
@@ -6,13 +11,37 @@ import { BUTTON_SIZE } from "./buttonGeometry.ts";
 import { arrangePanelActions } from "./modal/actionGroup.ts";
 import type { PanelButton, PanelMeasure } from "./modal/types.ts";
 import { panelButton } from "./modal/view.ts";
+import { MODAL } from "./modalGeometry.ts";
 
 const { height, width } = SCREEN_CONFIG;
 const RECT = { height: height - TOP_BAR_HEIGHT, width, x: 0, y: TOP_BAR_HEIGHT } as const;
+
+// The pages' frame, the kit's page variant (placeModalFrame): the screen under the top bar, a
+// card's title row, and Back's room inset columns in from each side and backFoot rows over the
+// screen's foot. Each page places and scrolls its own list, so the frame's body holds no content
+// height of its own.
+export const PAGE_FRAME: {
+  readonly context: ModalFrameContext;
+  readonly footer: number;
+  readonly title: ModalTitleSize;
+} = {
+  context: { content: RECT, insets: { bottom: PAGE.backFoot, side: PAGE.inset }, variant: "page" },
+  footer: BUTTON_SIZE.compact.height,
+  title: { height: MODAL.header - 2 * MODAL.titleTop, inset: MODAL.titleTop },
+};
+const FRAME = placeModalFrame(PAGE_FRAME.context, {
+  body: 0,
+  footer: PAGE_FRAME.footer,
+  title: PAGE_FRAME.title,
+});
+
+// A titled page's title row.
+export const PAGE_TITLE_ROW: Rect = FRAME.title;
+
 const BACK = {
   ...BUTTON_SIZE.compact,
   x: (width - BUTTON_SIZE.compact.width) / 2,
-  y: height - PAGE.backFoot - BUTTON_SIZE.compact.height,
+  y: FRAME.footer!.y,
 } as const;
 
 // The Help, Logbook and Pet shop pages share this geometry. Each page fills the screen under the

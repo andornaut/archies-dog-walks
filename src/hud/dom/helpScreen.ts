@@ -372,7 +372,6 @@ export function showHelpScreen(layer: UiLayer, input: DomHelpInput): DomQuestion
     chrome: { back: view.footer },
     describedBy: page.id,
     fonts: input.fonts,
-    gestureOnActions: true,
     ...(gesture === undefined ? {} : { gesture }),
     label: view.label,
     list: {

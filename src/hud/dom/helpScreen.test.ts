@@ -65,8 +65,7 @@ describe("the HTML help screen", () => {
     const { dialog, doc, nodes, presses, shown } = helpScreen(0, undefined);
     await vi.waitFor(() => expect(shown.accepts()).toBe(true));
     expect(dialog?.className).not.toContain("adw-passive");
-    const title = nodes.find((node) => node.id === dialog?.getAttribute("aria-labelledby"));
-    expect(title?.getAttribute("aria-label")).toBe(gameData.menuText.help.heading);
+    expect(dialog?.getAttribute("aria-label")).toBe(gameData.menuText.help.heading);
     const controls = nodes.filter((node) => node.tagName === "button");
     expect(controls).toHaveLength(3);
     dialog?.fire("keydown", { code: "Tab", preventDefault: () => undefined, shiftKey: false });

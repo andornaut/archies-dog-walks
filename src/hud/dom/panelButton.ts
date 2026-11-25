@@ -1,3 +1,4 @@
+import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { ButtonView } from "@andornaut/game-kit/runtime/web/ui/dom/button";
 
@@ -57,7 +58,13 @@ export function createPanelButton(
     readonly press: PanelPress;
   },
   button: PanelButton,
-): { readonly element: HTMLElement; dispose(): void; place(scale: DomScale): void } {
+): {
+  readonly element: HTMLElement;
+  dispose(): void;
+  // Places the button in device pixels from its container's corner at origin, the screen's by
+  // default.
+  place(scale: DomScale, origin?: Point): void;
+} {
   const content = doc.createElement("span");
   content.className = "adw-lines";
   const className = [
@@ -109,8 +116,8 @@ export function createPanelButton(
       view.dispose();
     },
     element,
-    place(scale) {
-      placeBox(scale, ORIGIN, element, button.hit);
+    place(scale, origin = ORIGIN) {
+      placeBox(scale, origin, element, button.hit);
       placeFrame(scale, button.hit, face, button.rect);
       for (const { line, text } of lines) {
         placeText(input.fonts[line.font], scale, button.rect, text, line);

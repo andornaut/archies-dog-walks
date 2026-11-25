@@ -99,6 +99,10 @@ export const UI_STYLE = `
 .adw-plate{background:var(--adw-tan)}
 /* A panel that takes no presses: every press goes through to the canvas. */
 .adw-dialog.adw-passive *,.adw-dialog.adw-inert *{pointer-events:none}
+/* A page's frame (src/hud/dom/page.ts) takes presses only on its controls, and leaves touch panning
+   to them, as a dialog does. */
+.adw-page{pointer-events:none;touch-action:auto}
+.adw-page.adw-inert *{pointer-events:none}
 /* A detail card's framed boxes, art and name pills; --adw-cut is a pill's snapped corner. */
 .adw-framed,.adw-art,.adw-pill{position:absolute;box-sizing:border-box;pointer-events:none}
 .adw-framed{left:0;top:0}

@@ -71,8 +71,6 @@ export interface DomQuestionPanelInput {
   readonly label?: string;
   readonly fonts: Readonly<Record<PanelText["font"], BitmapFont>>;
   readonly gesture?: NativeGesture;
-  // Page actions may use content swipes; corner and footer dismissal controls never do.
-  readonly gestureOnActions?: boolean;
   readonly onPaint?: () => void;
   // Whether keys 1 to n press the buttons, as on the pause menu and the questions.
   readonly numberKeys: boolean;
@@ -371,41 +369,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     const at = focusables().indexOf(event.target as HTMLElement);
     input.onFocus?.(at === -1 ? undefined : at);
   });
-  dialog.addEventListener("keydown", (event) => {
-    if (!accepts()) {
-      return;
-    }
-    // Enter and Space press the focused control natively; the scene under never hears them.
-    if (
-      isConfirmKey(event.code) &&
-      focusables().some(
-        (control) =>
-          control.tagName.toLowerCase() === "button" && control.contains(event.target as Node),
-      )
-    ) {
-      if (event.repeat) {
-        event.preventDefault();
-      }
-      event.stopPropagation();
-      return;
-    }
-    if (event.code !== "Tab") {
-      return;
-    }
-    const visible = focusables().filter(
-      (control) =>
-        (control.tagName.toLowerCase() !== "button" || control.tabIndex >= 0) &&
-        !control.hidden &&
-        control.closest?.("[hidden]") == null,
-    );
-    const at = visible.indexOf(doc.activeElement as HTMLElement);
-    const step = event.shiftKey ? visible.length - 1 : 1;
-    // From the dialog itself, Tab enters at the first button and Shift+Tab at the close control.
-    const next =
-      at === -1 ? (event.shiftKey ? visible.length - 1 : 0) : (at + step) % visible.length;
-    event.preventDefault();
-    (visible[next] ?? dialog).focus();
-  });
+  bindDialogKeys({ accepts, focusables }, dialog);
   if (input.dismiss !== undefined) {
     const dismiss = input.dismiss;
     bindGameAction(
@@ -454,20 +418,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   place(layer.scale());
   const stopScale = layer.onScale(place);
   layer.element.append(dialog);
-  const urls = new Set<string>();
-  const artUrls = (element: HTMLElement) => {
-    const background =
-      doc.defaultView?.getComputedStyle?.(element).backgroundImage ??
-      element.style.backgroundImage ??
-      "";
-    for (const match of background.matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
-      urls.add(match[1]!);
-    }
-    for (const child of element.children) {
-      artUrls(child as HTMLElement);
-    }
-  };
-  artUrls(dialog);
+  const urls = artUrls(dialog);
   // Scene gestures own custom content, not the panel's own action and close buttons.
   // Their accepted release must not consume the browser click of a native control.
   let sceneGesture = false;
@@ -480,12 +431,9 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
             input.gesture?.cancel?.();
           },
           down: (event) => {
-            sceneGesture = ![
-              ...(input.gestureOnActions === true
-                ? actions.flatMap((action, i) => (action.index === -1 ? [buttons[i]!] : []))
-                : buttons),
-              ...(close === undefined ? [] : [close]),
-            ].some((control) => control.contains(event.target as Node));
+            sceneGesture = ![...buttons, ...(close === undefined ? [] : [close])].some((control) =>
+              control.contains(event.target as Node),
+            );
             if (sceneGesture) {
               input.gesture?.down?.(event);
             }
@@ -563,4 +511,68 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     setInert: (inert) => lifecycle.setInert(inert),
     setShown: (shown) => lifecycle.setShown(shown),
   };
+}
+
+// Enter and Space press the focused button natively, and the scene under never hears them; Tab and
+// Shift+Tab move the focus among the visible focusables in order, round from the last to the
+// first, and from the dialog itself enter at the first or the last.
+export function bindDialogKeys(
+  input: { readonly accepts: () => boolean; readonly focusables: () => readonly HTMLElement[] },
+  dialog: HTMLElement,
+): void {
+  const doc = dialog.ownerDocument;
+  const { accepts, focusables } = input;
+  dialog.addEventListener("keydown", (event) => {
+    if (!accepts()) {
+      return;
+    }
+    // Enter and Space press the focused control natively; the scene under never hears them.
+    if (
+      isConfirmKey(event.code) &&
+      focusables().some(
+        (control) =>
+          control.tagName.toLowerCase() === "button" && control.contains(event.target as Node),
+      )
+    ) {
+      if (event.repeat) {
+        event.preventDefault();
+      }
+      event.stopPropagation();
+      return;
+    }
+    if (event.code !== "Tab") {
+      return;
+    }
+    const visible = focusables().filter(
+      (control) =>
+        (control.tagName.toLowerCase() !== "button" || control.tabIndex >= 0) &&
+        !control.hidden &&
+        control.closest?.("[hidden]") == null,
+    );
+    const at = visible.indexOf(doc.activeElement as HTMLElement);
+    const step = event.shiftKey ? visible.length - 1 : 1;
+    // From the dialog itself, Tab enters at the first button and Shift+Tab at the close control.
+    const next =
+      at === -1 ? (event.shiftKey ? visible.length - 1 : 0) : (at + step) % visible.length;
+    event.preventDefault();
+    (visible[next] ?? dialog).focus();
+  });
+}
+
+// The art URLs every element in root draws as a background image, so its reveal waits for them.
+export function artUrls(root: HTMLElement): Set<string> {
+  const view = root.ownerDocument.defaultView;
+  const urls = new Set<string>();
+  const visit = (element: HTMLElement) => {
+    const background =
+      view?.getComputedStyle?.(element).backgroundImage ?? element.style.backgroundImage ?? "";
+    for (const match of background.matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
+      urls.add(match[1]!);
+    }
+    for (const child of element.children) {
+      visit(child as HTMLElement);
+    }
+  };
+  visit(root);
+  return urls;
 }

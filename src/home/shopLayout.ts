@@ -10,8 +10,7 @@ import { DOG_SLOTS } from "../data/dogSlots.ts";
 import { BODY_PITCH, LABEL_VALUE_GAP, SHOP_PAGE } from "../data/layout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { MODAL } from "../ui/modal/layout.ts";
-import { cardTitleRow } from "../ui/modal/titleRow.ts";
-import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
+import { PAGE_LAYOUT, PAGE_TITLE_ROW } from "../ui/pageLayout.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { SELECT_OUTSET } from "../ui/selection.ts";
 import { TEXT_SCALE, TEXT_STYLE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
@@ -24,7 +23,6 @@ import { FEEDBACK } from "./feedback.ts";
 // the top. The Logbook wears the same page (src/home/statsLayout.ts).
 const SHOP = SHOP_PAGE;
 const PANEL = PAGE_LAYOUT.rect;
-const PAGE_TITLE = cardTitleRow(PANEL);
 const BACK = PAGE_LAYOUT.back;
 const TRACK_X = PAGE_LAYOUT.scrollbar.x;
 // The tabs span the page's inset. Rows start at the inset and stop scrollGap short of the
@@ -136,7 +134,7 @@ export const SHOP_LAYOUT = {
   // The tabs split span, the rows' width from x, their faces gap apart, each a hit area height
   // tall at y with its face drawHeight tall at drawY (shopTabRects, shopTabFace).
   tab: TAB,
-  title: { capTop: PAGE_TITLE.y, row: PAGE_TITLE },
+  title: { capTop: PAGE_TITLE_ROW.y, row: PAGE_TITLE_ROW },
 } as const;
 
 // The message at 2x on one line inside its plate.

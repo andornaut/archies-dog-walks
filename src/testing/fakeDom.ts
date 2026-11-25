@@ -333,12 +333,14 @@ export class FakeDocument extends FakeTarget {
 }
 
 // The views mounted in a layer element, in order: a modal view in place of the host that holds
-// its backdrop and companions.
+// its backdrop and companions, and a page's dialog in place of the kit frame that holds it.
 export function layerViews(element: FakeElement): FakeElement[] {
   return element.children.flatMap((child) =>
     child.className === "adw-modal-host"
       ? (child.children[1]?.children.slice(0, 1) ?? [])
-      : [child],
+      : child.classList.contains("ui-modal-frame")
+        ? child.children.filter((view) => view.getAttribute("role") === "dialog")
+        : [child],
   );
 }
 

@@ -492,7 +492,7 @@ it("keeps the row and first pointer alive across dip, focus and scroll painting"
     row,
   );
   expect(row.style).toMatchObject({ height: "144px", left: "72px", top: "540px", width: "900px" });
-  expect(root.style.transform).toBe("translate(0px, 0px) scale(0.3333333333333333)");
+  expect(root.parentElement?.style.transform).toBe("translate(0px, 0px) scale(0.3333333333333333)");
   expect(down).toHaveBeenCalledOnce();
   expect(up).toHaveBeenCalledOnce();
   expect(up).toHaveBeenCalledWith({ x: 40, y: 190 }, false);
