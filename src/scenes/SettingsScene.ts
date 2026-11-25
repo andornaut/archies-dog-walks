@@ -4,7 +4,7 @@ import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import { Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { FEEDBACK } from "../home/feedback.ts";
 import { type Focus, focusDirectionForKey, moveFocus } from "../home/focus.ts";
 import { type OverlayRegion, overlayRegion } from "../home/homeBar.ts";
@@ -157,7 +157,7 @@ export class SettingsScene extends Scene {
   private dim: Rect = SCREEN_LAYOUT.screen;
   private focus: Focus | null = null;
   // No rows until create measures their notes, so no font is read.
-  private layout: SettingsLayout = settingsLayout(NO_FONTS, SCREEN_CONFIG, []);
+  private layout: SettingsLayout = settingsLayout(NO_FONTS, SCREEN_LAYOUT.screen, []);
   private pressed: Target | undefined;
   private resumeKey: SceneKey | undefined;
   private rows: readonly Row[] = SETTING_ROWS;
@@ -178,7 +178,7 @@ export class SettingsScene extends Scene {
     this.resumeKey = data.resume;
     this.dim = overlayRegion(data.region);
     this.rows = settingsRows(offersInstall(installState()));
-    this.layout = settingsLayout(settingsFonts(this), SCREEN_CONFIG, rowShapes(this, this.rows));
+    this.layout = settingsLayout(settingsFonts(this), this.dim, rowShapes(this, this.rows));
     this.focus = null;
     this.pressed = undefined;
     this.steps = undefined;
@@ -343,14 +343,14 @@ export class SettingsScene extends Scene {
       steps: modalTextWidth(this, "body", lines),
       title: modalTextWidth(this, "title", [words.title]),
     };
-    const preview = installStepsLayout(SCREEN_CONFIG, lines.length, ink);
+    const preview = installStepsLayout(this.dim, lines.length, ink);
     const { extraHeight } = measureModalTitle(
       this,
       barTitleRoom(cardTitleRow(preview.card), preview.close),
       words.title,
     );
     this.steps = {
-      ...installStepsLayout(SCREEN_CONFIG, lines.length, {
+      ...installStepsLayout(this.dim, lines.length, {
         ...ink,
         titleExtraHeight: extraHeight,
       }),

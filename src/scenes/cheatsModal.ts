@@ -4,7 +4,7 @@ import type { Scene } from "phaser";
 
 import { domArtUrl } from "../assets/domArtFiles.ts";
 import { gameData } from "../data/index.ts";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { ZoneId } from "../data/types.ts";
 import {
   addToBank,
@@ -20,6 +20,7 @@ import { type CheatAction, type CheatsState, cheatsView } from "../dev/cheatsVie
 import { stripDevParams } from "../dev/devStart.ts";
 import { pageRunSetup } from "../dev/pageRunSetup.ts";
 import { randomSeed } from "../dev/runSetup.ts";
+import { overlayRegion } from "../home/homeBar.ts";
 import { showCheats } from "../hud/dom/cheats.ts";
 import { type DomQuestionPanel, showQuestionPanel } from "../hud/dom/questionPanel.ts";
 import { homeQuestionLayout } from "../hud/pauseMenu.ts";
@@ -123,10 +124,11 @@ export function openCheatsModal(
         walk === undefined || switching === undefined ? walk : { ...walk, zone: switching.zone },
     };
   };
+  const area = overlayRegion(inWalk ? "walk" : "home");
   const view = () =>
     cheatsView(
       canvasPanelMeasure(scene),
-      { data: gameData, screen: SCREEN_CONFIG, words: gameData.menuText },
+      { area, data: gameData, words: gameData.menuText },
       state(),
     );
   const render = () => dom.update(view());
@@ -174,7 +176,7 @@ export function openCheatsModal(
         }
       });
     };
-    const panel = questionView(scene, SCREEN_LAYOUT.screen, {
+    const panel = questionView(scene, area, {
       close: closeQuestion,
       entries: [
         { label: words.cancel, press: closeQuestion },

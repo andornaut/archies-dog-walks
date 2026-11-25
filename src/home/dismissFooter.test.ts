@@ -4,7 +4,7 @@ import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
@@ -14,6 +14,7 @@ import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
 import { badgeCardView } from "./badgeCardView.ts";
 import { badgeWall } from "./badgesView.ts";
 import { detailCardView, type DetailMeasure } from "./detailCardView.ts";
+import { overlayRegion } from "./homeBar.ts";
 import { installStepsLayout, settingsLayout } from "./settings.ts";
 import { SETTING_ROWS, type SettingsMeasure, settingsView } from "./settingsView.ts";
 import { SHOP_LAYOUT } from "./shopLayout.ts";
@@ -49,12 +50,12 @@ function footer(panel: Rect, action: PanelButton | undefined, primary: boolean):
 it("keeps settings rows, build text and install steps above their centred dismiss controls", () => {
   const layout = settingsLayout(
     fonts,
-    SCREEN_CONFIG,
+    overlayRegion("home"),
     SETTING_ROWS.map((row) =>
       row.kind === "slider" ? { kind: "slider" } : { kind: row.kind, noteLines: 1 },
     ),
   );
-  const steps = installStepsLayout(SCREEN_CONFIG, 3);
+  const steps = installStepsLayout(overlayRegion("home"), 3);
   const view = settingsView(
     measure,
     {

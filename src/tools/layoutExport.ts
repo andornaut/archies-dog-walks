@@ -12,13 +12,7 @@ import {
 } from "../assets/spriteKeys.ts";
 import { LOADING_WALKER_START } from "../data/layout.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
-import {
-  LANE_COUNT,
-  ROAD_CAMERA,
-  ROAD_FAR_SCALE,
-  SCREEN_CONFIG,
-  SCREEN_LAYOUT,
-} from "../data/screen.ts";
+import { LANE_COUNT, ROAD_CAMERA, ROAD_FAR_SCALE, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { GameData } from "../data/types.ts";
 import { dotRects, HELP_LAYOUT, helpPager } from "../help/helpLayout.ts";
 import { END_LAYOUT } from "../home/endLayout.ts";
@@ -391,7 +385,7 @@ export function layoutExport(
           ),
         }),
       },
-      settings: settingsLayout({ body, title }, SCREEN_CONFIG, SETTINGS_EXPORT_ROWS),
+      settings: settingsLayout({ body, title }, overlayRegion("home"), SETTINGS_EXPORT_ROWS),
       shop: { ...SHOP_LAYOUT, tabRects: shopTabRects(SHOP_TABS.length) },
       stats: { ...STATS_LAYOUT, tabRects: statsTabRects() },
     },

@@ -1,9 +1,10 @@
-import { rectsOverlap } from "@andornaut/game-kit/runtime/rect";
+import { type Rect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { MODAL_WIDTHS, SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
+import { overlayRegion } from "../home/homeBar.ts";
 import { SWITCH_STATE_GAP } from "../home/settings.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
@@ -34,8 +35,8 @@ const WALK: CheatsState = {
   ...HOME,
   walk: { invincible: false, zone: startZones(gameData)[0]! },
 };
-const view = (state: CheatsState, screen: { height: number; width: number } = SCREEN_CONFIG) =>
-  cheatsView(MEASURE, { data: gameData, screen, words }, state);
+const view = (state: CheatsState, area: Rect = overlayRegion("home")) =>
+  cheatsView(MEASURE, { area, data: gameData, words }, state);
 const buttons = (state: CheatsState) => view(state).rows.flatMap((row) => row.buttons);
 
 describe("Cheats actions", () => {
@@ -132,28 +133,33 @@ describe("Cheats actions", () => {
 describe("Cheats layout", () => {
   const current = view(HOME);
 
-  it("takes the Large width, clamps to safe sides, and caps measured height only for overflow", () => {
-    const { layout } = current;
-    expect(layout.panel).toMatchObject({
-      height: SCREEN_CONFIG.height - 2 * MODAL.margin,
-      width: MODAL_WIDTHS.large,
-      x: MODAL.margin,
-    });
+  // The overflowing body fills its caller's protected room, under the top bar's press rows.
+  it.each([
+    ["home", HOME, 544],
+    ["walk", WALK, 466],
+  ] as const)("fills the %s protected room at the Large width", (region, state, bottom) => {
+    const { layout } = view(state, overlayRegion(region));
+    expect(layout.panel).toEqual({ height: bottom - 56, width: MODAL_WIDTHS.large, x: 16, y: 56 });
     expect(layout.contentHeight).toBeGreaterThan(layout.viewport.height);
+  });
+
+  it("clamps to safe sides and caps measured height only for overflow", () => {
+    const { layout } = current;
     const footer = current.card.footer!;
     expect(footer).toMatchObject({ label: words.pageBack, primary: true });
     expect(footer.rect.x + footer.rect.width / 2).toBe(SCREEN_CONFIG.width / 2);
     expect(layout.viewport.y + layout.viewport.height).toBeLessThanOrEqual(footer.rect.y);
     expect(layout.viewport.y).toBe(layout.panel.y + MODAL.header);
     expect(current.card.close?.hit.x).toBeGreaterThan(footer.rect.x);
-    expect(view(HOME, { ...SCREEN_CONFIG, width: 352 }).layout.panel).toMatchObject({
+    expect(view(HOME, { ...overlayRegion("home"), width: 352 }).layout.panel).toMatchObject({
       width: 352 - 2 * MODAL.margin,
       x: MODAL.margin,
     });
-    const tall = view(HOME, { height: 3000, width: SCREEN_CONFIG.width }).layout;
+    const tall = view(HOME, { height: 3000, width: SCREEN_CONFIG.width, x: 0, y: 0 }).layout;
     expect(tall.contentHeight).toBe(tall.viewport.height);
     expect(tall.panel.height).toBeLessThan(3000 - 2 * MODAL.margin);
-    expect(tall.panel.y + tall.panel.height / 2).toBeCloseTo(1500, 0);
+    // Taller than the viewport, it cannot centre on its middle, so it starts at the area's top.
+    expect(tall.panel.y).toBe(MODAL.margin);
   });
 
   it("lays the invincible switch row out as Settings' switch rows in a 48px target", () => {

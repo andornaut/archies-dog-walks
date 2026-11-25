@@ -30,8 +30,7 @@ import { MODAL, modalTitleLayout } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { SEPARATOR } from "../ui/separator.ts";
-import { topSectionButtonBacking, topSectionLayout } from "../ui/topSection.ts";
-import { HOME_BAR_BUTTONS } from "./homeLayout.ts";
+import { overlayRegion } from "./homeBar.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import {
   INSTALL_STEPS,
@@ -118,7 +117,7 @@ const shapes: SettingsRowShape[] = SHIPPED_ROWS.map((row) =>
 );
 const bodyFont = fontFileMetrics("font-body");
 const titleFont = fontFileMetrics("font-title");
-const layout = settingsLayout({ body: bodyFont, title: titleFont }, SCREEN_CONFIG, shapes);
+const layout = settingsLayout({ body: bodyFont, title: titleFont }, overlayRegion("home"), shapes);
 const screen: Rect = { ...SCREEN_CONFIG, x: 0, y: 0 };
 const TWO_X = { scale: 2 };
 // art: ui-detail-card's frame columns along its right edge.
@@ -324,7 +323,11 @@ describe.each([
   ["with the Install row", shapes],
   ["without the Install row", shapes.filter((_, i) => SHIPPED_ROWS[i]?.kind !== "button")],
 ])("the build label %s", (_, rowShapes) => {
-  const placed = settingsLayout({ body: bodyFont, title: titleFont }, SCREEN_CONFIG, rowShapes);
+  const placed = settingsLayout(
+    { body: bodyFont, title: titleFont },
+    overlayRegion("home"),
+    rowShapes,
+  );
   const { buildLabelY, panel } = placed;
   const last = defined(placed.rows.at(-1));
   const lastShape = defined(rowShapes.at(-1));
@@ -377,7 +380,7 @@ describe.each(keysOf(gameData.menuText.settings.installSteps))(
       steps: stepsInk,
       title: inkWidth("font-title", TWO_X, title),
     };
-    const preview = installStepsLayout(SCREEN_CONFIG, fitted.lines.length, ink);
+    const preview = installStepsLayout(overlayRegion("home"), fitted.lines.length, ink);
     const header = modalTitleLayout(
       {
         font: fontFileMetrics("font-title"),
@@ -387,10 +390,14 @@ describe.each(keysOf(gameData.menuText.settings.installSteps))(
       barTitleRoom(cardTitleRow(preview.card), preview.close),
       title,
     );
-    const { card, close, icon, steps } = installStepsLayout(SCREEN_CONFIG, fitted.lines.length, {
-      ...ink,
-      titleExtraHeight: header.extraHeight,
-    });
+    const { card, close, icon, steps } = installStepsLayout(
+      overlayRegion("home"),
+      fitted.lines.length,
+      {
+        ...ink,
+        titleExtraHeight: header.extraHeight,
+      },
+    );
     const body = fontFileMetrics("font-body");
     // From the first line's capitals to the last line's lowest ink, at 2x.
     const stepsHeight =
@@ -432,26 +439,18 @@ describe.each(keysOf(gameData.menuText.settings.installSteps))(
   },
 );
 
-it("bounds centred Settings under the shared top bar and scrolls only its full-size rows", () => {
+// The overflowing rows fill the caller's protected room, under the top bar's press rows.
+it.each([
+  ["home", 544],
+  ["walk", 466],
+] as const)("fills the %s protected room and scrolls only its full-size rows", (region, bottom) => {
   const placed = settingsLayout(
     { body: bodyFont, title: titleFont },
-    SCREEN_CONFIG,
+    overlayRegion(region),
     SETTINGS_EXPORT_ROWS,
   );
-  const top = topSectionLayout(HOME_BAR_BUTTONS, { currency: true });
-  const protectedBottom = Math.max(
-    top.bar.y + top.bar.height,
-    top.currency!.y + top.currency!.height,
-    ...top.controls.flatMap(([, { face, hit }]) => {
-      const backing = topSectionButtonBacking(face);
-      return [hit.y + hit.height, backing.y + backing.height];
-    }),
-  );
-  expect(placed.panel.y).toBeGreaterThanOrEqual(protectedBottom);
-  expect(placed.panel.y + placed.panel.height / 2).toBe(SCREEN_CONFIG.height / 2);
-  expect(placed.panel.height).toBe(
-    SCREEN_CONFIG.height - 2 * Math.max(MODAL.margin, protectedBottom),
-  );
+  expect(placed.panel.y).toBe(56);
+  expect(placed.panel.y + placed.panel.height).toBe(bottom);
   const first = placed.rows[0]!.rect;
   const last = placed.rows.at(-1)!.rect;
   expect(placed.rowsViewport).toMatchObject({ width: SETTINGS_ROW.width, x: last.x, y: first.y });
@@ -472,10 +471,10 @@ it("bounds centred Settings under the shared top bar and scrolls only its full-s
 
 it("keeps shorter Settings rows unscrolled and honours a tighter caller capacity", () => {
   const fonts = { body: bodyFont, title: titleFont };
-  const shorter = settingsLayout(fonts, SCREEN_CONFIG, SETTINGS_EXPORT_ROWS.slice(0, -3));
+  const shorter = settingsLayout(fonts, overlayRegion("home"), SETTINGS_EXPORT_ROWS.slice(0, -3));
   expect(shorter.rowsViewport.height).toBe(shorter.rowsContentHeight);
-  const screen = { ...SCREEN_CONFIG, height: shorter.panel.height };
-  const bounded = settingsLayout(fonts, screen, SETTINGS_EXPORT_ROWS);
-  expect(bounded.panel.height).toBeLessThanOrEqual(screen.height - 2 * MODAL.margin);
-  expect(inside(bounded.panel, { x: 0, y: 0, ...screen })).toBe(true);
+  const area = { ...overlayRegion("home"), height: shorter.panel.height };
+  const bounded = settingsLayout(fonts, area, SETTINGS_EXPORT_ROWS);
+  expect(bounded.panel.height).toBeLessThanOrEqual(area.height - 2 * MODAL.margin);
+  expect(inside(bounded.panel, area)).toBe(true);
 });

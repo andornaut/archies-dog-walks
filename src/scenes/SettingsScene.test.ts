@@ -1,7 +1,8 @@
 import { expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
+import { overlayRegion } from "../home/homeBar.ts";
 import { installStepsLayout, settingsLayout } from "../home/settings.ts";
 import {
   type SettingsMeasure,
@@ -38,7 +39,7 @@ function fixture(install = false, width = 360, dpr = 1) {
   };
   const layout = settingsLayout(
     fonts,
-    SCREEN_CONFIG,
+    overlayRegion("home"),
     configuredRows.map((row) =>
       row.kind === "slider"
         ? { kind: "slider" }
@@ -59,7 +60,7 @@ function fixture(install = false, width = 360, dpr = 1) {
         focus: null,
         pressed: undefined,
         settings: DEFAULT_SETTINGS,
-        steps: steps ? { ...installStepsLayout(SCREEN_CONFIG, 1), kind: "ios" } : undefined,
+        steps: steps ? { ...installStepsLayout(overlayRegion("home"), 1), kind: "ios" } : undefined,
       },
     );
   const doc = new FakeDocument();

@@ -12,6 +12,7 @@ import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { FEEDBACK } from "./feedback.ts";
+import { overlayRegion } from "./homeBar.ts";
 import {
   installStepsLayout,
   SETTINGS_ROW,
@@ -39,7 +40,7 @@ const MEASURE: SettingsMeasure = {
 const rows = settingsRows(true);
 const layout = settingsLayout(
   fonts,
-  SCREEN_CONFIG,
+  overlayRegion("home"),
   rows.map((row) =>
     row.kind === "slider"
       ? { kind: "slider" }
@@ -231,7 +232,7 @@ describe("settingsView", () => {
   });
 
   it("draws the install steps' glyph over the card", () => {
-    const steps = { ...installStepsLayout(SCREEN_CONFIG, 1), kind: "ios" } as const;
+    const steps = { ...installStepsLayout(overlayRegion("home"), 1), kind: "ios" } as const;
     expect(view({ focus: 2, steps }).steps?.icon?.key).toBe("icon-share");
   });
 

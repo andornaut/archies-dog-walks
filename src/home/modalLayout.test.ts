@@ -2,6 +2,7 @@ import { insetRect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
+import { MIN_PRESS } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
@@ -51,6 +52,16 @@ it.each([
   expect(inside(placed, insetRect(MODAL.margin, region))).toBe(true);
   expect(placed.y + placed.height / 2).toBe(SCREEN_CONFIG.height / 2);
   expect(placed).toMatchObject(body);
+});
+
+// The protected top is the top bar's press rows plus the stacked gap in every caller.
+it.each([
+  ["home", 544],
+  ["walk", 466],
+] as const)("protects y 56 to %s's bottom at %i", (region, bottom) => {
+  const bounds = insetRect(MODAL.margin, overlayRegion(region));
+  expect(bounds.y).toBe(MIN_PRESS + BUTTON_SIZE.stackGap);
+  expect(bounds.y + bounds.height).toBe(bottom);
 });
 
 it("clamps a tall full-size panel inside the protected walk region", () => {

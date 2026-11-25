@@ -5,7 +5,6 @@ import { fittingText, type TextFitStyle } from "@andornaut/game-kit/runtime/text
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { DogId, GearId, WalkerId } from "../data/types.ts";
 import {
   GREETING_FIT,
@@ -31,6 +30,7 @@ import {
   walkerDetail,
 } from "./detail.ts";
 import { quipCapsTop, quipTextY } from "./endLayout.ts";
+import { overlayRegion } from "./homeBar.ts";
 import { CARD_TEXT_ROOM, detailCardLayout, detailOwner, type DetailRow } from "./homeLayout.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import { SETTINGS_ROW, settingsLayout } from "./settings.ts";
@@ -79,7 +79,7 @@ const SETTINGS_WORDS = gameData.menuText.settings;
 const settingsPairs: Pair[] = (["sound", "motion", "install"] as const).map((key) => {
   const label = SETTINGS_WORDS[key];
   const shape = { kind: "switch", noteLines: 1 } as const;
-  const [row] = settingsLayout(FONTS, SCREEN_CONFIG, [shape]).rows;
+  const [row] = settingsLayout(FONTS, overlayRegion("home"), [shape]).rows;
   const top = row?.rect.y ?? 0;
   return {
     font: "font-title",

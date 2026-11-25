@@ -534,6 +534,7 @@ interface CardTitles {
 
 export function cardTitles(): CardTitles[] {
   const screen = SCREEN_LAYOUT.screen;
+  const home = overlayRegion("home");
   const { installSteps, title } = gameData.menuText.settings;
   const questions = pauseMenuLayout(BODY, screen, {
     buttonCount: PAUSE_MENU_ITEMS.length,
@@ -559,7 +560,7 @@ export function cardTitles(): CardTitles[] {
       ],
     },
     {
-      card: detailCardRect(screen, screen.height),
+      card: detailCardRect(home, home.height - 2 * MODAL.margin),
       role: "detail card's title",
       titles: [gameData.dogs, gameData.shopGear, gameData.walkers].flatMap((items) =>
         Object.values(items).map(({ name }) => name),
@@ -572,7 +573,7 @@ export function cardTitles(): CardTitles[] {
         steps: Math.max(0, ...fitted.lines.map((line) => inkWidth("font-body", style, line))),
         title: inkWidth("font-title", TEXT_STYLE, shownIn("font-title", title)),
       };
-      const preview = installStepsLayout(screen, fitted.lines.length, ink);
+      const preview = installStepsLayout(home, fitted.lines.length, ink);
       const header = modalTitleLayout(
         {
           font: TITLE,
@@ -583,7 +584,7 @@ export function cardTitles(): CardTitles[] {
         title,
       );
       return {
-        card: installStepsLayout(screen, fitted.lines.length, {
+        card: installStepsLayout(home, fitted.lines.length, {
           ...ink,
           titleExtraHeight: header.extraHeight,
         }).card,
@@ -592,7 +593,7 @@ export function cardTitles(): CardTitles[] {
       };
     }),
     {
-      card: settingsLayout({ body: BODY, title: TITLE }, screen, []).panel,
+      card: settingsLayout({ body: BODY, title: TITLE }, home, []).panel,
       role: "settings title",
       titles: [title],
     },

@@ -580,11 +580,11 @@ function cardRows(
   return { bottom, tops };
 }
 
-// A detail card height tall, centred on the screen.
-export function detailCardRect(screen: { height: number; width: number }, height: number): Rect {
-  return modalRect({ ...screen, x: 0, y: 0 }, undefined, {
+// A detail card height tall, placed by the modal rule in its caller's area.
+export function detailCardRect(area: Rect, height: number): Rect {
+  return modalRect(area, undefined, {
     height,
-    width: modalFamilyWidth(screen.width - 2 * MODAL.margin, "large"),
+    width: modalFamilyWidth(area.width - 2 * MODAL.margin, "large"),
   });
 }
 

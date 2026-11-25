@@ -20,8 +20,7 @@ import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/moda
 import type { ScrollbarSpec } from "../ui/scrollbar.ts";
 import { SEPARATOR_BAND, separatorBetween } from "../ui/separator.ts";
 import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
-import { topSectionButtonBacking, topSectionLayout } from "../ui/topSection.ts";
-import { HOME_BAR_BUTTONS, HOME_LAYOUT } from "./homeLayout.ts";
+import { HOME_LAYOUT } from "./homeLayout.ts";
 
 // The settings screen moves a volume in 5% steps, from 0 to 1.
 export const VOLUME_STEPS = 20;
@@ -167,15 +166,6 @@ const PANEL = { width: modalFamilyWidth(SCREEN_CONFIG.width - 2 * MODAL.margin, 
 // The leading icon begins at the shared body boundary; row-internal offsets remain fixed.
 const ROWS_TOP = MODAL.header - SETTINGS_ROW.icon.dy;
 export const SWITCH_STATE_GAP = BUTTON_SIZE.stackGap;
-const TOP_SECTION = topSectionLayout(HOME_BAR_BUTTONS, { currency: true });
-const TOP_SECTION_BOTTOM = Math.max(
-  TOP_SECTION.bar.y + TOP_SECTION.bar.height,
-  ...TOP_SECTION.controls.flatMap(([, { face, hit }]) => {
-    const backing = topSectionButtonBacking(face);
-    return [hit.y + hit.height, backing.y + backing.height];
-  }),
-  TOP_SECTION.currency === undefined ? 0 : TOP_SECTION.currency.y + TOP_SECTION.currency.height,
-);
 
 // The build label (BUILD_LABEL) uses the standard body role, centred across the
 // panel with no separator over it: its capitals LABEL_HELP_GAP clear rows under the last row's
@@ -252,11 +242,12 @@ function rowInkBottom(fonts: SettingsFonts, shape: SettingsRowShape): number {
   );
 }
 
-// The rows on a card centred on the screen, under its title row with the close control in it,
-// and the build label under them. Settings covers the screen wherever it opens from.
+// The rows on a card placed by the modal rule in its caller's area (overlayRegion), under its
+// title row with the close control in it, and the build label under them. The card is no taller
+// than the area's protected room; rows past it scroll.
 export function settingsLayout(
   fonts: SettingsFonts,
-  screen: { height: number; width: number },
+  area: Rect,
   shapes: readonly SettingsRowShape[],
 ): SettingsLayout {
   const lastShape = shapes.at(-1);
@@ -274,18 +265,13 @@ export function settingsLayout(
   const labelInk = fonts.body.capHeight * SETTINGS_BUILD_LABEL.style.scale;
   const naturalHeight =
     labelDy + labelInk + BUILD_LABEL_FOOT + CARD_FRAME_BOTTOM + DISMISS_FOOTER_SPACE;
-  const safeInset = Math.max(MODAL.margin, TOP_SECTION_BOTTOM);
-  const height = Math.min(
-    naturalHeight,
-    screen.height - 2 * MODAL.margin,
-    SCREEN_CONFIG.height - 2 * safeInset,
-  );
+  const height = Math.min(naturalHeight, area.height - 2 * MODAL.margin);
   const clippedHeight = naturalHeight - height;
   const rowsContentHeight = heights.reduce(
     (sum, rowHeight, i) => sum + rowHeight + (i > 0 ? SEPARATOR_BAND : 0),
     0,
   );
-  const { x, y } = modalRect({ ...screen, x: 0, y: 0 }, undefined, { ...PANEL, height });
+  const { x, y } = modalRect(area, undefined, { ...PANEL, height });
   const rowX = x + (PANEL.width - SETTINGS_ROW.width) / 2;
   let rowY = y + ROWS_TOP;
   const separators: Rect[] = [];
@@ -360,7 +346,7 @@ export interface InstallStepsLayout {
 
 // The card for steps wrapped onto lines lines.
 export function installStepsLayout(
-  screen: { height: number; width: number },
+  area: Rect,
   lines: number,
   ink?: { steps: number; title: number; titleExtraHeight?: number },
 ): InstallStepsLayout {
@@ -371,8 +357,8 @@ export function installStepsLayout(
     lines * INSTALL_STEPS.linePitch +
     INSTALL_STEPS.foot +
     DISMISS_FOOTER_SPACE;
-  const width = modalFamilyWidth(screen.width - 2 * MODAL.margin, "large");
-  const card = modalRect({ ...screen, x: 0, y: 0 }, undefined, { height, width });
+  const width = modalFamilyWidth(area.width - 2 * MODAL.margin, "large");
+  const card = modalRect(area, undefined, { height, width });
   const { icon, pad } = INSTALL_STEPS;
   const stepsY = card.y + MODAL.header + titleExtraHeight - icon.dy;
   return {

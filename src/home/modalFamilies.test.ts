@@ -27,6 +27,7 @@ import { cents } from "../units.ts";
 import { CELEBRATION_PANEL } from "./badgesView.ts";
 import { dogDetail, gearDetail, walkerDetail } from "./detail.ts";
 import { detailCardView, type DetailMeasure } from "./detailCardView.ts";
+import { overlayRegion } from "./homeBar.ts";
 import { updateModalLayout } from "./homeLayout.ts";
 import { logbookView } from "./logbookView.ts";
 import { installStepsLayout, settingsLayout } from "./settings.ts";
@@ -76,8 +77,8 @@ it("uses the selected client family without changing title exclusion or safe are
 
 it("selects Medium navigation and confirmations, Large settings and steps", () => {
   expect(navigationMenuWidth(gameData, measure, 328)).toBe(264);
-  expect(settingsLayout(fonts, SCREEN_CONFIG, []).panel.width).toBe(328);
-  expect(installStepsLayout(SCREEN_CONFIG, 3).card.width).toBe(328);
+  expect(settingsLayout(fonts, overlayRegion("home"), []).panel.width).toBe(328);
+  expect(installStepsLayout(overlayRegion("home"), 3).card.width).toBe(328);
 });
 
 it("stacks full-size paired actions against the selected Medium inner width", () => {

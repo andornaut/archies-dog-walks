@@ -11,7 +11,7 @@ import { SWITCH_STATE_GAP } from "../home/settings.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { BUTTON_SIZE, raisedLabelCapTop } from "../ui/buttonGeometry.ts";
 import { dismissFooter } from "../ui/modal/dismissFooter.ts";
-import { MODAL, modalActionWidth, modalFamilyWidth } from "../ui/modal/layout.ts";
+import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 import type { PanelButton, PanelMeasure, PanelText, QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView, panelButton, titleLabelInk } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -305,24 +305,25 @@ function placeRows(
   return { contentHeight: Math.max(0, y - stackGap - area.y), rows: placed };
 }
 
+// The card placed by the modal rule in its caller's area (overlayRegion), no taller than the
+// area's protected room; rows past it scroll.
 function layoutCheats(
   measure: PanelMeasure,
-  screen: { readonly height: number; readonly width: number },
+  area: Rect,
   rows: readonly CheatRow[],
 ): { layout: CheatsLayout; rows: readonly CheatRowView[] } {
-  const width = modalFamilyWidth(screen.width - 2 * MODAL.margin, "large");
-  const x = Math.round((screen.width - width) / 2);
-  const left = x + MODAL.pad;
+  const width = modalFamilyWidth(area.width - 2 * MODAL.margin, "large");
   const rowWidth = width - 2 * MODAL.pad;
-  // The scrollbar sits in the right padding, so the rows keep the body's whole room.
-  const trackX = left + rowWidth + MODAL.scrollGap;
-  const maxHeight = screen.height - 2 * MODAL.margin;
+  const maxHeight = area.height - 2 * MODAL.margin;
   const chrome = MODAL.header + MODAL.gap + compact.height + MODAL.pad;
   const available = maxHeight - chrome;
-  const natural = placeRows(measure, { width: rowWidth, x: left, y: 0 }, rows);
+  const natural = placeRows(measure, { width: rowWidth, x: 0, y: 0 }, rows);
   const scrolls = natural.contentHeight > available;
   const height = Math.min(maxHeight, chrome + natural.contentHeight);
-  const y = Math.round((screen.height - height) / 2);
+  const { x, y } = modalRect(area, undefined, { height, width });
+  const left = x + MODAL.pad;
+  // The scrollbar sits in the right padding, so the rows keep the body's whole room.
+  const trackX = left + rowWidth + MODAL.scrollGap;
   const top = y + MODAL.header;
   const placed = placeRows(measure, { width: rowWidth, x: left, y: top }, rows);
   return {
@@ -468,14 +469,14 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
 export function cheatsView(
   measure: PanelMeasure,
   context: {
+    readonly area: Rect;
     readonly data: CheatsData;
-    readonly screen: { readonly height: number; readonly width: number };
     readonly words: Pick<MenuText, "cheats" | "pageBack" | "settings">;
   },
   state: CheatsState,
 ): CheatsView {
-  const { data, screen, words } = context;
-  const { layout, rows } = layoutCheats(measure, screen, cheatRows(data, words, state));
+  const { area, data, words } = context;
+  const { layout, rows } = layoutCheats(measure, area, cheatRows(data, words, state));
   return {
     card: {
       ...modalCardView(measure, layout.panel, words.cheats.title, []),

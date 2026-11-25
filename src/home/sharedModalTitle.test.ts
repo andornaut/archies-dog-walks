@@ -3,7 +3,7 @@ import { expect, it } from "vitest";
 
 import { gearSmallIconKey } from "../assets/iconKeys.ts";
 import { gameData } from "../data/index.ts";
-import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
+import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { pauseMenuLayout } from "../hud/pauseMenu.ts";
 import { questionPanelView } from "../hud/questionPanelView.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
@@ -18,6 +18,7 @@ import { navigationMenuWidth } from "../ui/navigationMenu.ts";
 import { MODAL_TITLE_SCALE } from "../ui/textFit.ts";
 import { BADGE_STRIP, celebrationTitle, stripUnderClose } from "./badgesView.ts";
 import { detailCardView, type DetailMeasure } from "./detailCardView.ts";
+import { overlayRegion } from "./homeBar.ts";
 import { updateModalLayout } from "./homeLayout.ts";
 import { installStepsLayout, SETTINGS_ROW, settingsLayout } from "./settings.ts";
 import { shopPageView } from "./shopPageView.ts";
@@ -70,7 +71,7 @@ it.each([gameData.homeText.shop.title, gameData.menuText.stats.title])(
   },
 );
 it("compensates the Settings first visible icon inset without changing row contents", () => {
-  const layout = settingsLayout(measure, SCREEN_CONFIG, [{ kind: "slider" }]);
+  const layout = settingsLayout(measure, overlayRegion("home"), [{ kind: "slider" }]);
   const view = modalCardView(measure, layout.panel, gameData.menuText.settings.title, []);
   balanced(layout.panel.y, view.title, layout.rows[0]!.rect.y + SETTINGS_ROW.icon.dy);
 });
@@ -151,7 +152,7 @@ it.each([
   gameData.menuText.settings.installSteps.firefoxDesktop,
 ])("keeps long install headings clear of the first instruction icon: $title", ({ title }) => {
   const sizes = { steps: 180, title: measure.inkWidth("title", title) };
-  const preview = installStepsLayout(SCREEN_CONFIG, 3, sizes);
+  const preview = installStepsLayout(overlayRegion("home"), 3, sizes);
   const heading = modalTitleLayout(
     {
       font: measure.title,
@@ -161,7 +162,7 @@ it.each([
     barTitleRoom(cardTitleRow(preview.card), preview.close),
     title,
   );
-  const layout = installStepsLayout(SCREEN_CONFIG, 3, {
+  const layout = installStepsLayout(overlayRegion("home"), 3, {
     ...sizes,
     titleExtraHeight: heading.extraHeight,
   });
