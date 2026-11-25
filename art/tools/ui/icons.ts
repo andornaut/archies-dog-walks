@@ -16,15 +16,19 @@ import { rows, SIDES } from "./chrome.ts";
 // icon-pause, icon-play, icon-home, icon-help, icon-close, icon-menu, icon-logbook, icon-settings, icon-exit and
 // icon-sound sit on ui-icon-button's navy face, so they have no outline: cream holds 9.6:1 there, tan
 // 6.6:1, amber 7.5:1, orange 5.0:1 and pink 5.1:1. The -panel icons sit on the Settings panel's cream,
-// and icon-share and icon-browser-menu on the install steps card's: dbrown holds 5.85:1 there, plum
-// 9.42:1 and dred 5.07:1.
+// and icon-share and icon-browser-menu on the install steps card's: dbrown holds 5.85:1 there and
+// plum 9.42:1. The -panel icons have one frame each: the Settings row's switch, state word and
+// slider show its state.
 
-// The speaker, note and effects inks: face, shade on the lower-right edges, and the mute X.
-type Ink = readonly [face: string, shade: string, x: string];
+// An icon's inks: face, and shade on the lower-right edges.
+type Ink = readonly [face: string, shade: string];
 
-export const NAVY_FACE: Ink = ["cream", "tan", "pink"];
+export const NAVY_FACE: Ink = ["cream", "tan"];
 
-export const CREAM_PANEL: Ink = ["dbrown", "plum", "dred"];
+export const CREAM_PANEL: Ink = ["dbrown", "plum"];
+
+// The X on the top bar's muted icon-sound.
+const NAVY_MUTE = "pink";
 
 // Three equally spaced flat bars, centred on the chrome face.
 export function menuIcon(): Grid {
@@ -187,39 +191,11 @@ function muteX(g: Drawable, x: number, y: number, col: string): void {
   }
 }
 
-// The states differ by shape: the speaker has two sound waves for on and an X in their place for off;
-// the music note (an eighth note, its flag curling right) is bare for on and has the same X below its
-// flag for off. Neither has an outline, which would fill the gaps between the waves. ink is NAVY_FACE
-// or CREAM_PANEL.
-export function speaker(ink: Ink, on: boolean, note = false): Grid {
-  const [face, shade, xCol] = ink;
+// A speaker with two sound waves. Muted, the top bar's icon-sound has an X in the waves' place.
+// It has no outline, which would fill the gaps between the waves.
+export function speaker(ink: Ink, on: boolean): Grid {
+  const [face, shade] = ink;
   const g = new Grid(16, 16);
-  if (note) {
-    g.ell(4.5, 12, 3.5, 2.6, face, shade);
-    g.rect(7, 2, 1, 10, face);
-    g.rect(8, 2, 1, 9, shade);
-    for (const [x, y] of [
-      [9, 2],
-      [10, 2],
-      [9, 3],
-      [10, 3],
-      [11, 3],
-      [10, 4],
-      [11, 4],
-      [12, 4],
-      [11, 5],
-      [12, 5],
-      [12, 6],
-      [12, 7],
-      [11, 7],
-    ] as const) {
-      g.p(x, y, face);
-    }
-    if (!on) {
-      muteX(g, 10, 9, xCol);
-    }
-    return g;
-  }
   g.rect(1, 5, 4, 6, face);
   for (let i = 0; i < 4; i++) {
     g.rect(5 + i, 4 - i, 1, 8 + 2 * i, face);
@@ -240,15 +216,41 @@ export function speaker(ink: Ink, on: boolean, note = false): Grid {
     g.rect(11, 6, 1, 4, face);
     g.rect(14, 5, 1, 6, face);
   } else {
-    muteX(g, 10, 5, xCol);
+    muteX(g, 10, 5, NAVY_MUTE);
   }
   return g;
 }
 
-// The Settings Effects row: a four-point sparkle with two small ones in the waves' place for on, and
-// the speaker's X there instead for off.
-export function effects(ink: Ink, on: boolean): Grid {
-  const [face, shade, xCol] = ink;
+// The Settings Music row: an eighth note, its flag curling right, with no outline.
+export function note(ink: Ink): Grid {
+  const [face, shade] = ink;
+  const g = new Grid(16, 16);
+  g.ell(4.5, 12, 3.5, 2.6, face, shade);
+  g.rect(7, 2, 1, 10, face);
+  g.rect(8, 2, 1, 9, shade);
+  for (const [x, y] of [
+    [9, 2],
+    [10, 2],
+    [9, 3],
+    [10, 3],
+    [11, 3],
+    [10, 4],
+    [11, 4],
+    [12, 4],
+    [11, 5],
+    [12, 5],
+    [12, 6],
+    [12, 7],
+    [11, 7],
+  ] as const) {
+    g.p(x, y, face);
+  }
+  return g;
+}
+
+// The Settings Effects row: a four-point sparkle with two small ones to its right.
+export function effects(ink: Ink): Grid {
+  const [face, shade] = ink;
   const g = new Grid(16, 16);
   rows(
     g,
@@ -269,45 +271,30 @@ export function effects(ink: Ink, on: boolean): Grid {
     ],
     (ch) => (ch === "f" ? face : shade),
   );
-  if (on) {
-    g.rect(12, 2, 1, 5, face);
-    g.rect(10, 4, 5, 1, face);
-    g.p(13, 4, shade);
-    g.rect(13, 9, 1, 3, face);
-    g.rect(12, 10, 3, 1, face);
-    g.p(10, 13, face);
-  } else {
-    muteX(g, 10, 5, xCol);
-  }
+  g.rect(12, 2, 1, 5, face);
+  g.rect(10, 4, 5, 1, face);
+  g.p(13, 4, shade);
+  g.rect(13, 9, 1, 3, face);
+  g.rect(12, 10, 3, 1, face);
+  g.p(10, 13, face);
   return g;
 }
 
-// Reduced motion: a large ball resting on a line when on, travelling past three trails when off.
-export function motion(ink: Ink, on: boolean): Grid {
+// The Settings Reduced motion row: a large ball resting on a line.
+export function motion(ink: Ink): Grid {
   const [face, shade] = ink;
   const g = new Grid(16, 16);
-  g.ell(11.5, on ? 7 : 8, 4.2, 4.2, face, shade);
-  if (on) {
-    g.rect(1, 11, 15, 1, face);
-    g.rect(1, 12, 15, 1, shade);
-  } else {
-    for (const [x, y, w] of [
-      [2, 3, 4],
-      [0, 7, 6],
-      [2, 11, 4],
-    ] as const) {
-      g.rect(x, y, w, 2, face);
-    }
-  }
+  g.ell(11.5, 7, 4.2, 4.2, face, shade);
+  g.rect(1, 11, 15, 1, face);
+  g.rect(1, 12, 15, 1, shade);
   return g;
 }
 
 // The Settings FPS Counter row: a rounded frame with three bars rising left to right, in the
 // -panel icons' face with the shade on the lower-right edges. Its top is on frame row 3, the
-// label's cap line, as the sparkle's is. Off clears the bars and puts the speaker's X inside the
-// frame, as Install does.
-export function fpsCounter(ink: Ink, on: boolean): Grid {
-  const [face, shade, xCol] = ink;
+// label's cap line, as the sparkle's is.
+export function fpsCounter(ink: Ink): Grid {
+  const [face, shade] = ink;
   const g = new Grid(16, 16);
   rows(
     g,
@@ -328,17 +315,13 @@ export function fpsCounter(ink: Ink, on: boolean): Grid {
     ],
     (ch) => (ch === "f" ? face : shade),
   );
-  if (!on) {
-    g.rect(2, 4, 11, 8, null);
-    muteX(g, 5, 5, xCol);
-  }
   return g;
 }
 
 // The Settings Install app row: a phone, its screen a gap the panel shows through, with a down arrow
-// into the screen for on and the speaker's X in the arrow's place for off.
-export function install(ink: Ink, on: boolean): Grid {
-  const [face, shade, xCol] = ink;
+// into the screen.
+export function install(ink: Ink): Grid {
+  const [face, shade] = ink;
   const g = new Grid(16, 16);
   rows(
     g,
@@ -364,10 +347,6 @@ export function install(ink: Ink, on: boolean): Grid {
     ],
     (ch) => (ch === "f" ? face : shade),
   );
-  if (!on) {
-    g.rect(4, 4, 8, 7, null);
-    muteX(g, 5, 5, xCol);
-  }
   return g;
 }
 

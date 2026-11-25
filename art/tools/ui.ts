@@ -41,10 +41,10 @@
 // normal, pressed), ui-switch (32x16; tags on, off), ui-slider (24x10 three-slice, 4px caps; tags
 // filled, empty, filled-disabled, empty-disabled), ui-slider-knob (10x16; tags normal, pressed,
 // disabled), icon-sound (tags on, off), icon-sound-panel, icon-music-panel, icon-effects-panel,
-// icon-motion-panel, icon-fps-counter-panel and icon-install-panel (tags on, off), ui-zone-pips
-// (18x8; tags todo, and <zone> and <zone>-done for each zone in pixel.ts's ZONE_ROAD_COLOURS),
-// ui-tile (24x24 nine-slice, 4px on every side; normal frame 0, selected-static 1, disabled 2,
-// selected 3 to 4 at 180ms),
+// icon-motion-panel, icon-fps-counter-panel and icon-install-panel (one frame, tag idle),
+// ui-zone-pips (18x8; tags todo, and <zone> and <zone>-done for each zone in pixel.ts's
+// ZONE_ROAD_COLOURS), ui-tile (24x24 nine-slice, 4px on every side; normal frame 0,
+// selected-static 1, disabled 2, selected 3 to 4 at 180ms),
 // ui-touch-drag (104x40, the help screen's swipe, a white glove dragging one lane-width; tags right
 // and left, each a whole swipe of 15 frames timed per frame (TOUCH_MS) and ending on an empty frame,
 // and still (one frame for reduced motion)).
@@ -100,6 +100,7 @@ import {
   menuIcon,
   motion,
   NAVY_FACE,
+  note,
   pause,
   play,
   settingsIcon,
@@ -1666,17 +1667,13 @@ function* sprites(): Generator<Sprite> {
   yield ["ui-slider-knob", ["normal", "pressed", "disabled"].map((s) => still(s, sliderKnob(s)))];
   const onOff = (draw: (on: boolean) => Drawable): Tag[] =>
     ["on", "off"].map((t) => still(t, draw(t === "on")));
-  for (const [suffix, ink] of [
-    ["", NAVY_FACE],
-    ["-panel", CREAM_PANEL],
-  ] as const) {
-    yield [`icon-sound${suffix}`, onOff((on) => speaker(ink, on))];
-  }
-  yield ["icon-music-panel", onOff((on) => speaker(CREAM_PANEL, on, true))];
-  yield ["icon-effects-panel", onOff((on) => effects(CREAM_PANEL, on))];
-  yield ["icon-motion-panel", onOff((on) => motion(CREAM_PANEL, on))];
-  yield ["icon-fps-counter-panel", onOff((on) => fpsCounter(CREAM_PANEL, on))];
-  yield ["icon-install-panel", onOff((on) => install(CREAM_PANEL, on))];
+  yield ["icon-sound", onOff((on) => speaker(NAVY_FACE, on))];
+  yield ["icon-sound-panel", [still("idle", speaker(CREAM_PANEL, true))]];
+  yield ["icon-music-panel", [still("idle", note(CREAM_PANEL))]];
+  yield ["icon-effects-panel", [still("idle", effects(CREAM_PANEL))]];
+  yield ["icon-motion-panel", [still("idle", motion(CREAM_PANEL))]];
+  yield ["icon-fps-counter-panel", [still("idle", fpsCounter(CREAM_PANEL))]];
+  yield ["icon-install-panel", [still("idle", install(CREAM_PANEL))]];
   yield [
     "ui-zone-pips",
     [
