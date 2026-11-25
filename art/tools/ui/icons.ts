@@ -1,7 +1,3 @@
-import { readFileSync } from "node:fs";
-
-import { Canvas, loadImage } from "skia-canvas";
-
 import {
   bitmap,
   type Drawable,
@@ -306,27 +302,37 @@ export function motion(ink: Ink, on: boolean): Grid {
   return g;
 }
 
-// Draw Ada's original FPS glyph on the native panel grid with whole palette pixels.
-export async function fpsCounter(ink: Ink): Promise<(on: boolean) => Grid> {
-  const [face, , off] = ink;
-  const size = 16;
-  const svg = readFileSync(new URL("./fps-counter.svg", import.meta.url));
-  const glyph = await loadImage(svg);
-  const canvas = new Canvas(size, size);
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(glyph, 0, 0, size, size);
-  const { data } = ctx.getImageData(0, 0, size, size);
-  return (on) => {
-    const g = new Grid(size, size);
-    for (let y = 0; y < size; y++) {
-      for (let x = 0; x < size; x++) {
-        if (data[(y * size + x) * 4 + 3]! >= 128) {
-          g.p(x, y, on ? face : off);
-        }
-      }
-    }
-    return g;
-  };
+// The Settings FPS Counter row: a rounded frame with three bars rising left to right, in the
+// -panel icons' face with the shade on the lower-right edges. Its top is on frame row 3, the
+// label's cap line, as the sparkle's is. Off clears the bars and puts the speaker's X inside the
+// frame, as Install does.
+export function fpsCounter(ink: Ink, on: boolean): Grid {
+  const [face, shade, xCol] = ink;
+  const g = new Grid(16, 16);
+  rows(
+    g,
+    0,
+    3,
+    [
+      "..fffffffffff...",
+      ".f...........fs.",
+      ".f........fs.fs.",
+      ".f........fs.fs.",
+      ".f.....fs.fs.fs.",
+      ".f.....fs.fs.fs.",
+      ".f..fs.fs.fs.fs.",
+      ".f..fs.fs.fs.fs.",
+      ".f...........fs.",
+      "..fffffffffffs..",
+      "...ssssssssss...",
+    ],
+    (ch) => (ch === "f" ? face : shade),
+  );
+  if (!on) {
+    g.rect(2, 4, 11, 8, null);
+    muteX(g, 5, 5, xCol);
+  }
+  return g;
 }
 
 // The Settings Install app row: a phone, its screen a gap the panel shows through, with a down arrow

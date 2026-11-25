@@ -41,9 +41,10 @@
 // normal, pressed), ui-switch (32x16; tags on, off), ui-slider (24x10 three-slice, 4px caps; tags
 // filled, empty, filled-disabled, empty-disabled), ui-slider-knob (10x16; tags normal, pressed,
 // disabled), icon-sound (tags on, off), icon-sound-panel, icon-music-panel, icon-effects-panel,
-// icon-motion-panel and icon-install-panel (tags on, off), ui-zone-pips (18x8; tags todo, and <zone>
-// and <zone>-done for each zone in pixel.ts's ZONE_ROAD_COLOURS), ui-tile (24x24 nine-slice, 4px on
-// every side; normal frame 0, selected-static 1, disabled 2, selected 3 to 4 at 180ms),
+// icon-motion-panel, icon-fps-counter-panel and icon-install-panel (tags on, off), ui-zone-pips
+// (18x8; tags todo, and <zone> and <zone>-done for each zone in pixel.ts's ZONE_ROAD_COLOURS),
+// ui-tile (24x24 nine-slice, 4px on every side; normal frame 0, selected-static 1, disabled 2,
+// selected 3 to 4 at 180ms),
 // ui-touch-drag (104x40, the help screen's swipe, a white glove dragging one lane-width; tags right
 // and left, each a whole swipe of 15 frames timed per frame (TOUCH_MS) and ending on an empty frame,
 // and still (one frame for reduced motion)).
@@ -1600,7 +1601,7 @@ function still(name: string, g: Drawable, outline = false): Tag {
 }
 
 // Every sprite: [key, [[tag, frames, duration ms]]].
-function* sprites(drawFpsCounter: (on: boolean) => Grid): Generator<Sprite> {
+function* sprites(): Generator<Sprite> {
   yield [
     "ui-dog-card",
     [
@@ -1674,7 +1675,7 @@ function* sprites(drawFpsCounter: (on: boolean) => Grid): Generator<Sprite> {
   yield ["icon-music-panel", onOff((on) => speaker(CREAM_PANEL, on, true))];
   yield ["icon-effects-panel", onOff((on) => effects(CREAM_PANEL, on))];
   yield ["icon-motion-panel", onOff((on) => motion(CREAM_PANEL, on))];
-  yield ["icon-fps-counter-panel", onOff(drawFpsCounter)];
+  yield ["icon-fps-counter-panel", onOff((on) => fpsCounter(CREAM_PANEL, on))];
   yield ["icon-install-panel", onOff((on) => install(CREAM_PANEL, on))];
   yield [
     "ui-zone-pips",
@@ -1691,9 +1692,9 @@ function* sprites(drawFpsCounter: (on: boolean) => Grid): Generator<Sprite> {
 // ---------- preview and build ----------
 
 // Every piece in rows that wrap at width, so the 360px walk bar gets a row of its own.
-async function preview(out: string, scale = 3, width = 380): Promise<void> {
+function preview(out: string, scale = 3, width = 380): void {
   const pieces = [...IMAGES.values()].map((draw) => draw());
-  for (const [, tags] of sprites(await fpsCounter(CREAM_PANEL))) {
+  for (const [, tags] of sprites()) {
     pieces.push(...tags.flatMap(([, fs]) => fs.map(toImage)));
   }
   const rowsOf: RgbaImage[][] = [];
@@ -1727,7 +1728,7 @@ async function build(): Promise<void> {
     const png = `public/art/images/${key}.png`;
     writeFileSync(png, savePng(draw()));
   }
-  await buildSprites({}, sprites(await fpsCounter(CREAM_PANEL)));
+  await buildSprites({}, sprites());
   console.log("built", [...IMAGES.keys()].join(", "));
 }
 
