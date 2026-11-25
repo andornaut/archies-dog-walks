@@ -729,6 +729,13 @@ export const BADGE_NAME_PAD = 2;
 
 // Pages
 
+// Every independently placed 2x body line on the pages (Help, the Logbook, the badge wall and the
+// Pet shop's wrapped descriptions): the pitch between lines.
+export const BODY_PITCH = 18;
+
+// The least clear ink between a page row's label and the value or note on its line.
+export const LABEL_VALUE_GAP = 8;
+
 // The Help, Logbook and Pet shop pages under the top bar: Back's rows over the screen's foot, and
 // the content's side inset, which the scrollbar's track keeps from the screen's right edge too.
 export const PAGE = { backFoot: 12, inset: 8 } as const;
@@ -758,10 +765,8 @@ export const SHOP_PAGE = {
     plateInset: 6,
     // The row's gap from the scrollbar's track.
     scrollGap: 6,
-    // The text's left edge.
-    textDx: 46,
-    // The text's gap from the price plate.
-    textGap: 6,
+    // The text's left edge, 8 right of the art box.
+    textDx: 48,
   },
   // The scrollbar: the thumb's inset and least height, and the thumb's and track's widths.
   scrollbar: { thumbInset: 1, thumbMin: 16, thumbWidth: 6, trackWidth: 8 },
@@ -795,9 +800,9 @@ export const LOGBOOK_PAGE = {
   },
   // The Dogs tab's block: the face's side, the name's left edge and capitals' top, the rows' top,
   // and the rule's rows over the block and reach past the rows.
-  dogs: { faceSize: 32, nameDx: 40, nameY: 12, rowsY: 38, ruleAbove: 6, ruleDx: 2 },
+  dogs: { faceSize: 32, nameDx: 40, nameY: 14, rowsY: 38, ruleAbove: 6, ruleDx: 2 },
   // The pitch between label and value rows.
-  pitch: 17,
+  pitch: BODY_PITCH,
   // A Walks tab section's rows under its heading.
   walks: { rowsY: 20 },
   // The badge wall.
@@ -815,7 +820,7 @@ export const LOGBOOK_PAGE = {
   },
   // A wall row's text: its line pitch, most lines, padding under the last, left edge and first
   // capitals' top.
-  wallText: { lineHeight: 16, lines: 3, pad: 4, x: 38, y: 4 },
+  wallText: { lineHeight: BODY_PITCH, lines: 3, pad: 4, x: 40, y: 4 },
 } as const;
 
 // The settings card.
@@ -859,7 +864,7 @@ export const SETTINGS_CARD = {
 export const HELP_SCREEN = {
   // The body: its line pitch, most lines, scale and left edge, and its lines' gap from the
   // scrollbar's track.
-  body: { lineHeight: 18, maxLines: 6, scale: 2, scrollGap: 6, x: 8 },
+  body: { lineHeight: BODY_PITCH, maxLines: 6, scale: 2, scrollGap: 6, x: 8 },
   // The pager's page dots: their side and the gap between them.
   dots: { gap: 4, size: 8 },
   // The picture's frame: its top under the top bar, the cream pad round the picture's well, and

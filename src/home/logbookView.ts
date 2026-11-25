@@ -1,4 +1,5 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { dogFaceKey } from "../assets/spriteKeys.ts";
 import type { GameData } from "../data/types.ts";
@@ -241,8 +242,13 @@ function badgesTab(
         rect: earnedBand(rect),
       });
     }
+    // The badge and the text block each centred on the row's height.
     const half = BADGE_SIZE / 2;
-    const centre = { x: Math.round(rect.x + half), y: Math.round(rect.y + WALL.badgeTop + half) };
+    const centre = { x: Math.round(rect.x + half), y: Math.round(rect.y + rect.height / 2) };
+    const lineTops = tops[i] ?? [];
+    const inkTop = lineTops[0] ?? 0;
+    const inkBottom = (lineTops.at(-1) ?? 0) + inkRowsFromCapTop(measure.body) * TEXT_SCALE;
+    const textDy = Math.floor((rect.height - (inkBottom - inkTop)) / 2) - inkTop;
     const tag = badge.earned ? "earned" : "locked";
     const size = measure.art(badge.art);
     if (size !== undefined && measure.hasTag(badge.art, tag)) {
@@ -260,7 +266,9 @@ function badgesTab(
         rect: { height: BADGE_SIZE, width: BADGE_SIZE, x: centre.x - half, y: centre.y - half },
       });
     }
-    const check = earnedCheck(rect);
+    // The tick keeps its place on the badge's top-right corner.
+    const placed = earnedCheck(rect);
+    const check = { ...placed, y: placed.y + centre.y - half - rect.y - WALL.badgeTop };
     const tick = measure.art("ui-check");
     if (badge.earned && tick !== undefined && measure.hasTag("ui-check", "tick")) {
       parts.art.push({ key: "ui-check", scale: 1, sheet: { tag: "tick" }, size: tick, ...check });
@@ -272,7 +280,7 @@ function badgesTab(
       ...[...cell.goal, ...cell.progress].map((line) => [line, colours.goal, focusedGoal] as const),
     ];
     lines.forEach(([line, colour, focus], n) => {
-      const at = { x: rect.x + WALL_TEXT.x, y: rect.y + (tops[i]?.[n] ?? 0) };
+      const at = { x: rect.x + WALL_TEXT.x, y: rect.y + (lineTops[n] ?? 0) + textDy };
       text(parts, at, line, {
         colour: PALETTE[colour],
         ...(focus === undefined ? {} : { focusColour: PALETTE[focus] }),

@@ -2690,8 +2690,8 @@
         },
         "ownedDx": 20,
         "plateInset": 6,
-        "textDx": 46,
-        "textGap": 6,
+        "textDx": 48,
+        "textGap": 8,
         "width": 330,
         "x": 8
       },
@@ -2743,7 +2743,7 @@
         "faceSize": 32,
         "gap": 12,
         "nameDx": 40,
-        "nameY": 12,
+        "nameY": 14,
         "rowsY": 38,
         "ruleAbove": 6,
         "ruleDx": 2,
@@ -2756,13 +2756,13 @@
         "y": 40
       },
       "rows": {
-        "gap": 4,
+        "gap": 8,
         "left": 8,
-        "pitch": 17,
+        "pitch": 18,
         "right": 338
       },
       "scroll": {
-        "keyStep": 34,
+        "keyStep": 36,
         "padBottom": 8,
         "pageOverlap": 48
       },
@@ -2797,12 +2797,12 @@
         "y": 173
       },
       "wallText": {
-        "lineHeight": 16,
+        "lineHeight": 18,
         "lines": 3,
         "pad": 4,
-        "x": 38,
+        "x": 40,
         "y": 4,
-        "width": 292
+        "width": 290
       },
       "tabRects": [
         {

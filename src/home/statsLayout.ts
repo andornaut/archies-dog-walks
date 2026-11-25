@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { LOGBOOK_PAGE, MIN_PRESS } from "../data/layout.ts";
+import { LABEL_VALUE_GAP, LOGBOOK_PAGE, MIN_PRESS } from "../data/layout.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { BADGE_STRIP, type WallCellLines } from "./badgesView.ts";
@@ -31,7 +31,7 @@ const BLOCK_GAP = STATS.blockGap;
 // Label and value rows run across the shop's rows: from the headings' left edge to the rows'
 // right edge, clear of the scrollbar's room (statsListFrame).
 const ROWS = {
-  gap: 4,
+  gap: LABEL_VALUE_GAP,
   left: SHOP_LAYOUT.headingX,
   pitch: PITCH,
   right: SHOP_LAYOUT.row.x + SHOP_LAYOUT.row.width,

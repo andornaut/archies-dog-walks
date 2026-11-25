@@ -3,6 +3,7 @@ import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
+import { BODY_PITCH } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import {
   GREETING_FIT,
@@ -284,8 +285,8 @@ it("reserves reflowed Shop descriptions and messages before following content", 
   );
   expect(shopNextHeading(slots, slotRects)).toBe(SHOP_LAYOUT.dogs.dogHeadingY);
   const descriptions = layout(3).descriptions;
-  expect(descriptions[1]! - descriptions[0]!).toBe(pitch);
-  expect(descriptions[2]! - descriptions[1]!).toBe(pitch);
+  expect(descriptions[1]! - descriptions[0]!).toBe(BODY_PITCH);
+  expect(descriptions[2]! - descriptions[1]!).toBe(BODY_PITCH);
   const message = shopMessageLayout(fonts.body, 2);
   expect(message.plate.height).toBe(SHOP_LAYOUT.message.plate.height + pitch);
   expect(message.extraHeight).toBe(pitch);

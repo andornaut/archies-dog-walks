@@ -7,7 +7,7 @@ import {
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { DOG_SLOTS } from "../data/dogSlots.ts";
-import { SHOP_PAGE } from "../data/layout.ts";
+import { BODY_PITCH, LABEL_VALUE_GAP, SHOP_PAGE } from "../data/layout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
@@ -129,7 +129,7 @@ export const SHOP_LAYOUT = {
     ownedDx: SHOP.row.ownedDx,
     plateInset: SHOP.row.plateInset,
     textDx: SHOP.row.textDx,
-    textGap: SHOP.row.textGap,
+    textGap: LABEL_VALUE_GAP,
     width: ROW_WIDTH,
     x: ROW_X,
   },
@@ -249,7 +249,7 @@ export function shopRowTextLayout(
   { descriptions, name }: { readonly descriptions: readonly string[]; readonly name: string },
 ): { descriptions: readonly number[]; height: number; name: number } {
   const label = shopInkRows(font, name);
-  const pitch = font.lineHeight * TEXT_SCALE;
+  const pitch = BODY_PITCH;
   const lines = descriptions.map((text, index) => {
     const ink = shopInkRows(font, text);
     return { bottom: ink.bottom + index * pitch, top: ink.top + index * pitch };
