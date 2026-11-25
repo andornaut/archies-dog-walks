@@ -382,13 +382,14 @@ export function showShopScreen(
           place: (at) => placeBox(at, row.rect, part.element, fill.rect),
         };
       });
-      // A row the bank does not cover keeps its greyed text on the focus and press fills.
+      // A row the bank does not cover keeps its greyed text on the focus fill and turns ink, as
+      // any row's does, on the press fill.
       parts.push(
         ...row.texts.map((line) => {
           const part = textPart(line, row.rect);
-          if (row.selectable) {
-            part.element.classList.add("adw-selection-focus-ink");
-          }
+          part.element.classList.add(
+            row.selectable ? "adw-selection-focus-ink" : "adw-selection-press-ink",
+          );
           return part;
         }),
       );

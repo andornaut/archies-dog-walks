@@ -37,12 +37,14 @@ function fixture({
   selectable = true,
   source = SOURCE,
   tabs = false,
+  texts = [],
 }: {
   readonly beforeMount?: (doc: FakeDocument) => void;
   readonly tabs?: boolean;
   readonly scale?: DomScale;
   readonly selectable?: boolean;
   readonly source?: ShopScreenInput["source"];
+  readonly texts?: ShopScreenView["rows"][number]["texts"];
 } = {}) {
   const doc = new FakeDocument();
   const { layer } = fakeLayer(doc, scale);
@@ -88,7 +90,7 @@ function fixture({
         rect: RECT,
         selectable,
         state: "disabled",
-        texts: [],
+        texts,
       },
     ],
   };
@@ -130,6 +132,31 @@ function fixture({
   };
 }
 const settle = () => setImmediate();
+
+// A row the bank does not cover keeps its greyed text under focus and inks it under press.
+it.each([
+  [true, "adw-selection-focus-ink"],
+  [false, "adw-selection-press-ink"],
+])("marks a row's text for its fills when selectable is %s", async (selectable, ink) => {
+  const line = {
+    capTop: RECT.y + 4,
+    centre: "left",
+    centreX: RECT.x + 4,
+    colour: 0x4a4a4a,
+    font: "body",
+    line: 0,
+    scale: TEXT_SCALE,
+    text: gameData.dogs.kilo.name,
+  } as const;
+  const f = fixture({ selectable, texts: [line] });
+  await settle();
+  const inks = f.root
+    .all()
+    .flatMap((node) => node.className.split(" "))
+    .filter((name) => name.startsWith("adw-selection-") && name.endsWith("-ink"));
+  expect(inks).toEqual([ink]);
+  f.screen.destroy();
+});
 
 it("restores a held item's retained row only when the native page accepts input", async () => {
   const f = fixture({ selectable: false });

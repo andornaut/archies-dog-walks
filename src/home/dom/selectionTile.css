@@ -52,10 +52,11 @@
 .adw-selection-tile[data-ui-pressed] .adw-selection-focus-fill {
   background-color: var(--adw-selection-focus-fill) !important;
 }
+/* A pressed row's text turns ink, the greyed text of a row the bank does not cover included. */
 .adw-selection-tile[data-ui-pressed]:not([data-picker-refusing]):not(.adw-refusing):not(
     .adw-refusing-still
   )
-  .adw-selection-focus-ink {
+  :is(.adw-selection-focus-ink, .adw-selection-press-ink) {
   color: var(--adw-selection-focus-ink) !important;
 }
 @media (forced-colors: active) {
@@ -77,7 +78,8 @@
   }
   .adw-selection-face,
   .adw-selection-focus-fill,
-  .adw-selection-focus-ink {
+  .adw-selection-focus-ink,
+  .adw-selection-tile[data-ui-pressed] .adw-selection-press-ink {
     forced-color-adjust: none;
   }
   .adw-selection-focus-fill {

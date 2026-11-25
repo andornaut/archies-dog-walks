@@ -126,15 +126,12 @@ export function createNativeTopSection(
   let effectPressed: number | undefined;
   const effectArt = layout.effectWells.map(() => image("ui-hud-effect-well"));
   effectArt.forEach((art) => underlayElement.append(art.element));
-  // A pressed well takes a top-bar face's press: it dips and its face is ink to the edge, its
-  // lip (the bottom row and right column) covered.
-  const lip = ["bottom", "right"].map(() => {
-    const element = doc.createElement("span");
-    element.className = "adw-framed adw-top-section-well-lip";
-    element.style.backgroundColor = hex(PALETTE.ink);
-    underlayElement.append(element);
-    return element;
-  });
+  // A pressed well fills forest inside its frame, as every pressed button does, and dips with
+  // its icon.
+  const wellPress = doc.createElement("span");
+  wellPress.className = "adw-framed adw-top-section-well-press";
+  wellPress.style.backgroundColor = hex(PALETTE.forest);
+  underlayElement.append(wellPress);
   const placeEffects = (scale: DomScale) => {
     const wells = topSectionLayout(config.buttons, { ...config, effects: effectCount }).effectWells;
     effectArt.forEach((art, index) => {
@@ -146,20 +143,15 @@ export function createNativeTopSection(
       }
     });
     const pressed = effectPressed === undefined ? undefined : wells[effectPressed];
-    lip.forEach((element, side) => {
-      element.hidden = pressed === undefined;
-      if (pressed !== undefined) {
-        const y = pressed.y + BUTTON_SIZE.press;
-        placeBox(
-          scale,
-          ORIGIN,
-          element,
-          side === 0
-            ? { height: 1, width: pressed.width - 2, x: pressed.x + 1, y: y + pressed.height - 1 }
-            : { height: pressed.height - 2, width: 1, x: pressed.x + pressed.width - 1, y: y + 1 },
-        );
-      }
-    });
+    wellPress.hidden = pressed === undefined;
+    if (pressed !== undefined) {
+      placeBox(scale, ORIGIN, wellPress, {
+        height: pressed.height - 2,
+        width: pressed.width - 2,
+        x: pressed.x + 1,
+        y: pressed.y + BUTTON_SIZE.press + 1,
+      });
+    }
   };
   placed.push(placeEffects);
   const controls = new Map<
@@ -209,8 +201,8 @@ export function createNativeTopSection(
       content.append(art.element);
       return art;
     });
-    // The face's state fill over its art and under its glyph: ink while pressed, Highlight in
-    // forced colours while focused or pressed.
+    // The face's state fill over its art and under its glyph: ink while pressed; in forced
+    // colours ButtonFace, Highlight while focused or pressed.
     const fill = doc.createElement("span");
     fill.className = "adw-framed adw-top-section-fill";
     content.append(fill);

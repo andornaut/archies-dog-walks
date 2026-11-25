@@ -15,6 +15,7 @@ import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
 import { BUTTON_SIZE } from "../buttonGeometry.ts";
 import { domScale, fontPixel, gridRect } from "../domScale.ts";
+import { PALETTE } from "../palette.ts";
 import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL } from "../topBarTrim.ts";
 import { topSectionLayout } from "../topSection.ts";
 import { createNativeTopSection, type NativeTopSection } from "./nativeTopSection.ts";
@@ -287,26 +288,27 @@ describe("native top section integration", () => {
     expect(wells.every((node) => node.hidden)).toBe(true);
     expect(() => view.setEffectCount(7)).toThrow("configured top section");
   });
-  it("dips a pressed effect well and covers its lip in ink, as a pressed top-bar face", () => {
+  it("dips a pressed effect well and fills it forest inside its frame, as a pressed button", () => {
     const { element, view } = fixture(6);
     const wells = element
       .all()
       .filter((node) => node.style.backgroundImage?.includes("ui-hud-effect-well"));
-    const lip = element.all().filter((node) => node.className.includes("adw-top-section-well-lip"));
+    const [press] = element
+      .all()
+      .filter((node) => node.className.includes("adw-top-section-well-press"));
     const shown = () => [
       wells.filter((node) => !node.hidden).map((node) => node.style.top),
-      lip.filter((node) => !node.hidden).map((node) => [node.style.left, node.style.top]),
+      press!.hidden
+        ? []
+        : [press!.style.left, press!.style.top, press!.style.width, press!.style.height],
     ];
     view.setEffectCount(2);
     expect(shown()).toEqual([["5px", "5px"], []]);
     view.setEffectPressed(0);
-    expect(lip.map((node) => node.style.backgroundColor)).toEqual(["#181425", "#181425"]);
+    expect(press!.style.backgroundColor).toBe(`#${PALETTE.forest.toString(16)}`);
     expect(shown()).toEqual([
       ["7px", "5px"],
-      [
-        ["158px", "32px"],
-        ["182px", "8px"],
-      ],
+      ["158px", "8px", "24px", "24px"],
     ]);
     view.setEffectPressed(undefined);
     expect(shown()).toEqual([["5px", "5px"], []]);

@@ -17,9 +17,13 @@ const SHEETS = {
   focus: squeeze(css("./focusStyle.css")),
   game: squeeze(css("./gameButton.css")),
   logbook: squeeze(css("../../hud/dom/logbook.css")),
+  tile: squeeze(css("../../home/dom/selectionTile.css")),
   top: squeeze(css("./nativeTopSection.css")),
   ui: squeeze(UI_STYLE),
 } as const;
+// A sheet's rules from its forced-colours block on.
+const forced = (sheet: string) => sheet.slice(sheet.indexOf("@media(forced-colors:active)"));
+const CUE_SHEETS = { ...SHEETS, tileForced: forced(SHEETS.tile), topForced: forced(SHEETS.top) };
 
 const FORCED_TOP_ARTWORK =
   "button.adw-top-section-button.ui-standard-button:is(:focus-visible, [data-ui-pressed])" +
@@ -127,12 +131,37 @@ describe("control state cues", () => {
       "var(--adw-ink)6.25%",
     ],
     [
+      "a top-bar face in forced colours",
+      "topForced",
+      ".adw-top-section-fill",
+      "display:block;forced-color-adjust:none;background:ButtonFace",
+    ],
+    [
       "a focused or pressed top-bar face in forced colours",
-      "top",
+      "topForced",
       ".adw-top-section-button:is(:focus-visible, [data-ui-pressed]) .adw-top-section-fill",
       "background:Highlight",
     ],
     ["the forced-colours top-bar artwork", "top", FORCED_TOP_ARTWORK, "opacity:1"],
+    [
+      "a pressed Pet shop row's text colour",
+      "tile",
+      ".adw-selection-tile[data-ui-pressed]",
+      "--adw-selection-focus-ink:var(--adw-ink)",
+    ],
+    [
+      "a pressed Pet shop row's text, an unaffordable one's included",
+      "tile",
+      ".adw-selection-tile[data-ui-pressed]:not([data-picker-refusing]):not(.adw-refusing)" +
+        ":not(.adw-refusing-still) :is(.adw-selection-focus-ink, .adw-selection-press-ink)",
+      "color:var(--adw-selection-focus-ink)!important",
+    ],
+    [
+      "a pressed unaffordable Pet shop row's text in forced colours",
+      "tileForced",
+      ".adw-selection-tile[data-ui-pressed] .adw-selection-press-ink",
+      "forced-color-adjust:none",
+    ],
     [
       "a pressed primary button's label",
       "ui",
@@ -158,7 +187,7 @@ describe("control state cues", () => {
       "transform:translateY",
     ],
   ] as const)("shows %s as a fill", (_what, sheet, selector, declaration) => {
-    expect(rule(SHEETS[sheet], selector)).toContain(squeeze(declaration));
+    expect(rule(CUE_SHEETS[sheet], selector)).toContain(squeeze(declaration));
   });
 
   it("outranks Kit's focused artwork opacity with the forced-colours top-bar artwork", () => {
