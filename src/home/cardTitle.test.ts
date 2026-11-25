@@ -14,8 +14,8 @@ import { TEXT_STYLE } from "../ui/textFit.ts";
 // The clear space on either side of title ink, after the correct corner-control reservation.
 function clearSpace(bar: Rect, close: CloseControl, width: number) {
   const left = barTitleLeft(bar, close, width);
-  const end = (close.titleExclusion === "hit" ? close.hit.x : close.x) - BAR_TITLE.closeGap;
-  const start = close.titleExclusion === "hit" ? 2 * bar.x + bar.width - end : bar.x;
+  const end = close.hit.x - BAR_TITLE.closeGap;
+  const start = 2 * bar.x + bar.width - end;
   return { left: left - start, right: end - (left + width) };
 }
 
@@ -67,11 +67,9 @@ describe.each(cardTitles())("the $role", ({ card, close = closeControl(card), ti
     header.lines.forEach((line) => {
       const width = modalTitleWidthAtScale(widthOf(line));
       expectPlaced(bar, close, width);
-      if (close.titleExclusion === "hit") {
-        expect(
-          Math.abs(2 * barTitleLeft(bar, close, width) + width - (2 * card.x + card.width)),
-        ).toBeLessThanOrEqual(1);
-      }
+      expect(
+        Math.abs(2 * barTitleLeft(bar, close, width) + width - (2 * card.x + card.width)),
+      ).toBeLessThanOrEqual(1);
     });
   });
 });

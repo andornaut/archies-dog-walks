@@ -10,10 +10,10 @@ import {
 import { FEEDBACK } from "../../home/feedback.ts";
 import { SHOP_LAYOUT, shopTabRects } from "../../home/shopLayout.ts";
 import type { ShopPageView } from "../../home/shopPageView.ts";
+import { isConfirmKey } from "../../input/keyBindings.ts";
 import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
-import { type ModalLifecycle, mountModalLifecycle } from "../../ui/dom/modalLifecycle.ts";
-import { type DomPart, fillPart, gridFillPart } from "../../ui/dom/parts.ts";
+import { type DomPart, gridFillPart } from "../../ui/dom/parts.ts";
 import {
   backedTextPlaces,
   createTextLine,
@@ -24,25 +24,15 @@ import {
   setBox,
   shownText,
 } from "../../ui/dom/pixelLine.ts";
-import { dimDrawn, followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import {
-  fontPixel,
-  gridRect,
-  gridTransform,
-  gridX,
-  gridY,
-  scrollbarBoxes,
-} from "../../ui/domScale.ts";
+import { fontPixel, gridRect, gridX } from "../../ui/domScale.ts";
 import type { TileState } from "../../ui/interaction.ts";
 import type { PanelText } from "../../ui/modal/types.ts";
 import { PALETTE } from "../../ui/palette.ts";
-import type { ScrollbarRects } from "../../ui/scrollbar.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { scrollPlace } from "./logbook.ts";
-import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
-import { addTapBurst } from "./questionPanel.ts";
-import { createPageTab } from "./shopPage.ts";
+import { type DomPage, showPage } from "./page.ts";
+import { bindPanelFeedback } from "./panelButton.ts";
 
 export interface ShopScreenArt {
   readonly key: string;
@@ -86,7 +76,6 @@ export interface ShopScreenView {
 export interface ShopScreenMotion {
   readonly pressed?: string;
   readonly scroll: { readonly max: number; readonly settled: boolean; readonly y: number };
-  readonly scrollbar: ScrollbarRects | null;
   readonly rows: ReadonlyMap<
     string,
     {
@@ -133,20 +122,15 @@ export interface ShopScreenInput {
 
 const ORIGIN = { x: 0, y: 0 };
 
-// The scene owns purchases and gestures. This persistent surface owns only native painting.
+// The scene owns purchases and gestures. This surface owns only native painting, on the page
+// template (showPage), which it mounts again whenever the page's chrome changes or new art must
+// load before the page shows.
 export function showShopScreen(
   layer: UiLayer,
   input: ShopScreenInput,
   initial: ShopScreenView,
 ): NativeShopScreen {
   const doc = layer.element.ownerDocument;
-  const root = doc.createElement("section");
-  root.className = "adw-lines adw-picker-surface";
-  root.style.transformOrigin = "0 0";
-  root.tabIndex = -1;
-  root.setAttribute("aria-label", initial.page.title.map((line) => line.text).join(" "));
-  const chrome = doc.createElement("div");
-  chrome.className = "adw-lines";
   const clip = doc.createElement("div");
   clip.className = "adw-clip";
   clip.style.pointerEvents = "auto";
@@ -158,45 +142,19 @@ export function showShopScreen(
   clip.append(scrolled);
   const message = doc.createElement("div");
   message.className = "adw-lines";
-  const bar = doc.createElement("div");
-  bar.className = "adw-lines";
-  const track = doc.createElement("div"),
-    thumb = doc.createElement("div");
-  track.className = "adw-scroll-track";
-  thumb.className = "adw-scroll-thumb";
-  bar.append(track, thumb);
-  root.append(chrome, clip, bar, message);
-  layer.element.append(root);
   let alive = true,
     shown = true,
     enabled = true,
     inert = false,
     dimmed = false;
   let view = initial;
-  let footer: HTMLElement | undefined;
-  let footerGesture = false;
   let tabGesture: Rect | undefined;
   let rowGesture: string | undefined;
-  let tabs: ReturnType<typeof createPageTab>[] = [];
   let scale = layer.scale();
   let motion: ShopScreenMotion | undefined;
-  let lifecycle: ModalLifecycle | undefined;
-  const dimListeners = new Set<() => void>();
-  const coverage = {
-    accepts: () => !dimmed && layer.input.accepts(),
-    subscribe: (listener: () => void) => {
-      dimListeners.add(listener);
-      const stop = layer.input.subscribe(listener);
-      return () => {
-        dimListeners.delete(listener);
-        stop();
-      };
-    },
-  };
-  let chromeParts: DomPart[] = [],
-    headingParts: DomPart[] = [],
+  let page: DomPage | undefined;
+  let headingParts: DomPart[] = [],
     messageParts: DomPart[] = [];
-  let disposeFooter: (() => void) | undefined;
   const rows = new Map<
     string,
     { dispose(): void; key: string; tile: NativeSelectionTile; parts: DomPart[] }
@@ -248,17 +206,14 @@ export function showShopScreen(
       },
     };
   };
-  const accepts = () => alive && input.active() && lifecycle?.accepts() === true;
+  const accepts = () => alive && input.active() && page?.accepts() === true;
   const capture = () => {
     const admitted = accepts();
-    const check = lifecycle?.capture() ?? (() => false);
+    const check = page?.capture() ?? (() => false);
     return () => admitted && check() && accepts();
   };
-  const syncDim = () => dimDrawn(root, !coverage.accepts());
-  const redraw = () => {
-    root.style.transform = gridTransform(scale);
-    chromeParts.forEach((part) => part.place(scale));
-    messageParts.forEach((part) => part.place(scale));
+  // The headings and rows at the list's scroll.
+  const placeList = () => {
     setBox(clip, gridRect(scale, view.clip));
     const scrolling = scrollPlace(scale, motion?.scroll ?? { settled: true, y: 0 });
     const corner = gridRect(scale, view.clip);
@@ -275,71 +230,137 @@ export function showShopScreen(
       });
       row.parts.forEach((part) => part.place(scrolling.scale));
     }
-    const scrollbar = motion?.scrollbar;
-    bar.hidden = scrollbar === null || scrollbar === undefined;
-    if (scrollbar !== null && scrollbar !== undefined) {
-      const boxes = scrollbarBoxes(
-        scale,
-        { left: gridX(scale, scrollbar.track.x), top: gridY(scale, scrollbar.track.y) },
-        scrollbar,
-      );
-      setBox(track, boxes.track);
-      setBox(thumb, boxes.thumb);
-    }
+  };
+  // The rows' controls in the list's order, for the page's focus.
+  const tileElements = () => {
+    const tiles = new Set<HTMLElement>([...rows.values()].map((row) => row.tile.element));
+    return [...scrolled.children].filter((child) =>
+      tiles.has(child as HTMLElement),
+    ) as HTMLElement[];
+  };
+  const point = (event: MouseEvent) => input.toGame({ x: event.clientX, y: event.clientY });
+  const mount = (ready: readonly Promise<readonly string[]>[]) => {
+    page?.destroy();
+    let tabPress = false;
+    const shownPage = showPage(layer, {
+      active: input.active,
+      back: input.close,
+      chrome: view.page,
+      fonts: input.fonts,
+      gesture: {
+        cancel: () => {
+          tabPress = false;
+          tabGesture = undefined;
+          rowGesture = undefined;
+          input.cancel();
+        },
+        down: (event) => {
+          const tab = shownPage.tabAt(event.target as Node);
+          tabGesture = tab === undefined ? undefined : inputTabs(view)[tab];
+          rowGesture = [...rows].find(([, row]) =>
+            row.tile.element.contains(event.target as Node),
+          )?.[0];
+          tabPress = tab !== undefined;
+          if (!tabPress && accepts()) {
+            input.down(point(event));
+          }
+        },
+        move: (event) => {
+          if (!tabPress && accepts()) {
+            input.move(point(event));
+          }
+        },
+        up: (event, cancelled) => {
+          const native = tabPress;
+          const position = point(event);
+          const leftTab =
+            tabGesture !== undefined && !containsPoint(tabGesture, position.x, position.y);
+          const row = view.rows.find((row) => row.id === rowGesture);
+          const leftRow =
+            rowGesture !== undefined &&
+            (row === undefined ||
+              !containsPoint(view.clip, position.x, position.y) ||
+              (view.message !== undefined &&
+                containsPoint(view.message.rect, position.x, position.y)) ||
+              !containsPoint(row.rect, position.x, position.y + (motion?.scroll.y ?? 0)));
+          tabPress = false;
+          tabGesture = undefined;
+          rowGesture = undefined;
+          const handled =
+            !native && (cancelled || accepts()) ? input.up(position, cancelled) : false;
+          return leftTab || leftRow || handled === true;
+        },
+      },
+      list: {
+        clip,
+        part: {
+          get controls() {
+            return tileElements();
+          },
+          element: clip,
+          place: (at) => {
+            scale = at;
+            placeList();
+          },
+          ready: Promise.all(ready).then((all) => all.flat()),
+        },
+        scroll: () => ({
+          contentHeight: (motion?.scroll.max ?? 0) + SHOP_LAYOUT.list.rect.height,
+          viewport: SHOP_LAYOUT.list.rect,
+          y: motion?.scroll.y ?? 0,
+        }),
+      },
+      overlays: [
+        { element: message, place: (at) => messageParts.forEach((part) => part.place(at)) },
+      ],
+      tab: (index) => {
+        const hit = inputTabs(view)[index];
+        if (hit !== undefined) {
+          input.click({ x: hit.x + hit.width / 2, y: hit.y + hit.height / 2 });
+        }
+      },
+      toGame: input.toGame,
+    });
+    const element = shownPage.element;
+    element.addEventListener(
+      "wheel",
+      (event) => {
+        if (accepts()) {
+          event.preventDefault();
+          input.wheel(event.deltaY);
+        }
+      },
+      { passive: false },
+    );
+    // The page's own controls: its tabs, its rows and Back.
+    const onControl = (target: Node) =>
+      shownPage.tabAt(target) !== undefined ||
+      tileElements().some((tile) => tile.contains(target)) ||
+      (target !== element && element.contains(target) && !clip.contains(target));
+    // The page moves focus on Tab and its controls take Enter and Space; every other key is the
+    // scene's.
+    element.addEventListener("keydown", (event) => {
+      if (!accepts() || event.code === "Tab") {
+        return;
+      }
+      if (isConfirmKey(event.code) && onControl(event.target as Node)) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      input.key(event.code, event.repeat);
+    });
+    page = shownPage;
+    page.setDimmed(dimmed);
+    page.setInert(inert);
+    page.setShown(shown);
   };
   const update = (next: ShopScreenView) => {
     view = next;
     const ready: Promise<readonly string[]>[] = [];
     const nextChrome = JSON.stringify(view.page);
-    if (chromeKey !== nextChrome) {
-      disposeFooter?.();
-      tabs.forEach((tab) => tab.dispose());
-      tabs = [];
-      chromeKey = nextChrome;
-      chromeParts = [fillPart(doc, view.page.fill)];
-      chromeParts.push(...view.page.title.map((line) => textPart(line)));
-      // Tabs retain their shared drawn geometry and expose their complete target as controls.
-      view.page.tabs.forEach((tab, i) => {
-        const hit = inputTabs(view)[i];
-        if (hit !== undefined) {
-          const point = { x: hit.x + hit.width / 2, y: hit.y + hit.height / 2 };
-          const control = createPageTab(
-            doc,
-            {
-              font: input.fonts.title,
-              press: {
-                accepts,
-                burst: (event) =>
-                  addTapBurst(layer, input.toGame({ x: event.clientX, y: event.clientY })),
-                press: () => input.click(point),
-              },
-            },
-            hit,
-            tab,
-          );
-          tabs.push(control);
-          chromeParts.push(control);
-        }
-      });
-      const action = createPanelButton(
-        doc,
-        {
-          fonts: input.fonts,
-          press: {
-            accepts,
-            burst: (event) => addTapBurst(layer, point(event)),
-            press: input.close,
-          },
-        },
-        view.page.back,
-      );
-      footer = action.element;
-      disposeFooter = action.dispose;
-      footer.classList.add("adw-footer");
-      chromeParts.push(action);
-      chrome.replaceChildren(...chromeParts.map(({ element }) => element));
-      chrome.style.pointerEvents = "auto";
-    }
+    const remount = chromeKey !== nextChrome;
+    chromeKey = nextChrome;
     const nextHeadings = JSON.stringify(view.headings);
     if (headingsKey !== nextHeadings) {
       headingsKey = nextHeadings;
@@ -483,149 +504,28 @@ export function showShopScreen(
         ready.push(plate.ready);
       }
       message.replaceChildren(...messageParts.map(({ element }) => element));
+      messageParts.forEach((part) => part.place(scale));
     }
-    redraw();
-    syncDim();
-    if (ready.length > 0 || lifecycle === undefined) {
-      lifecycle?.destroy();
-      lifecycle = mountModalLifecycle(
-        layer,
-        {
-          gesture: {
-            cancel: () => {
-              footerGesture = false;
-              tabGesture = undefined;
-              rowGesture = undefined;
-              input.cancel();
-            },
-            down: (event) => {
-              const index = tabs.findIndex((tab) => tab.element.contains(event.target as Node));
-              tabGesture = inputTabs(view)[index];
-              rowGesture = [...rows].find(([, row]) =>
-                row.tile.element.contains(event.target as Node),
-              )?.[0];
-              footerGesture =
-                footer?.contains(event.target as Node) === true ||
-                tabs.some((tab) => tab.element.contains(event.target as Node));
-              if (!footerGesture && accepts()) {
-                input.down(point(event));
-              }
-            },
-            move: (event) => {
-              if (!footerGesture && accepts()) {
-                input.move(point(event));
-              }
-            },
-            up: (event, cancelled) => {
-              const native = footerGesture;
-              const position = point(event);
-              const leftTab =
-                tabGesture !== undefined && !containsPoint(tabGesture, position.x, position.y);
-              const row = view.rows.find((row) => row.id === rowGesture);
-              const leftRow =
-                rowGesture !== undefined &&
-                (row === undefined ||
-                  !containsPoint(view.clip, position.x, position.y) ||
-                  (view.message !== undefined &&
-                    containsPoint(view.message.rect, position.x, position.y)) ||
-                  !containsPoint(row.rect, position.x, position.y + (motion?.scroll.y ?? 0)));
-              footerGesture = false;
-              tabGesture = undefined;
-              rowGesture = undefined;
-              const handled =
-                !native && (cancelled || accepts()) ? input.up(position, cancelled) : false;
-              return leftTab || leftRow || handled === true;
-            },
-          },
-          modal: false,
-          reveal: layer.reveal(
-            Promise.all(ready).then((all) => all.flat()),
-            root,
-          ),
-        },
-        root,
-      );
-      lifecycle.setInert(inert);
-      lifecycle.setShown(shown);
+    placeList();
+    if (ready.length > 0 || remount || page === undefined) {
+      mount(ready);
     }
-    lifecycle.setEnabled(enabled && input.active());
+    page?.follow();
+    page?.setEnabled(enabled && input.active());
   };
-  const stopScale = layer.onScale((next) => {
-    scale = next;
-    redraw();
-  });
-  const stopUnderlay = followModalUnderlay(coverage, root);
-  const point = (event: MouseEvent) => input.toGame({ x: event.clientX, y: event.clientY });
   update(initial);
-  root.addEventListener(
-    "wheel",
-    (event) => {
-      if (accepts()) {
-        event.preventDefault();
-        input.wheel(event.deltaY);
-      }
-    },
-    { passive: false },
-  );
-  root.addEventListener("keydown", (event) => {
-    if (accepts()) {
-      if (
-        (footer?.contains(event.target as Node) ||
-          tabs.some((tab) => tab.element.contains(event.target as Node)) ||
-          [...rows.values()].some((row) => row.tile.element.contains(event.target as Node))) &&
-        (event.code === "Enter" || event.code === "Space")
-      ) {
-        if (event.repeat) {
-          event.preventDefault();
-        }
-        event.stopPropagation();
-        return;
-      }
-      event.preventDefault();
-      event.stopPropagation();
-      if (footer !== undefined && event.code === "Tab") {
-        const controls: HTMLElement[] = [];
-        const collect = (node: HTMLElement) => {
-          if (node.hidden) {
-            return;
-          }
-          if (node.tagName.toLowerCase() === "button") {
-            controls.push(node);
-          }
-          for (const child of node.children) {
-            collect(child as HTMLElement);
-          }
-        };
-        collect(root);
-        const at = controls.indexOf(doc.activeElement as HTMLElement);
-        const next =
-          at < 0
-            ? event.shiftKey
-              ? controls.length - 1
-              : 0
-            : (at + (event.shiftKey ? controls.length - 1 : 1)) % controls.length;
-        (controls[next] ?? root).focus();
-        return;
-      }
-      input.key(event.code, event.repeat);
-    }
-  });
   return {
     accepts,
     capture,
     destroy: () => {
       alive = false;
       rows.forEach((row) => row.dispose());
-      tabs.forEach((tab) => tab.dispose());
-      tabs = [];
-      disposeFooter?.();
-      disposeFooter = undefined;
-      stopUnderlay();
-      stopScale();
-      lifecycle?.destroy();
-      root.remove();
+      page?.destroy();
+      page = undefined;
     },
-    element: root,
+    get element() {
+      return page!.element;
+    },
     focusRow: (id) => {
       if (accepts()) {
         rows.get(id)?.tile.element.focus();
@@ -633,31 +533,30 @@ export function showShopScreen(
     },
     place: (next) => {
       motion = next;
-      redraw();
+      placeList();
+      page?.follow();
     },
     setDimmed: (next) => {
-      if (dimmed !== next) {
-        dimmed = next;
-        dimListeners.forEach((listener) => listener());
-      }
+      dimmed = next;
+      page?.setDimmed(next);
     },
     setEnabled: (next) => {
       enabled = next;
-      lifecycle?.setEnabled(next && input.active());
+      page?.setEnabled(next && input.active());
       if (!next) {
         input.cancel();
       }
     },
     setInert: (next) => {
       inert = next;
-      lifecycle?.setInert(next);
+      page?.setInert(next);
       if (next) {
         input.cancel();
       }
     },
     setShown: (next) => {
       shown = next;
-      lifecycle?.setShown(next);
+      page?.setShown(next);
       if (!next) {
         input.cancel();
       }

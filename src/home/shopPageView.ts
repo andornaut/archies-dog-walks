@@ -2,16 +2,17 @@ import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { MENU_TEXT } from "../data/menuText.ts";
 import { PLAIN_ITEM, tileState } from "../ui/interaction.ts";
-import { modalActionWidth } from "../ui/modal/layout.ts";
 import { type PanelButton, type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
-import { panelButton, panelTitle } from "../ui/modal/view.ts";
+import { panelTitle } from "../ui/modal/view.ts";
+import { pageBack } from "../ui/pageLayout.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { GREYED, SELECT_OUTSET, selectLook } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { FEEDBACK } from "./feedback.ts";
 import { SHOP_LAYOUT, shopTabFace, shopTabRects } from "./shopLayout.ts";
 
-// The native Pet shop and Logbook share this frameless page view beneath the home top bar.
+// The native Pet shop and Logbook share this frameless page view beneath the home top bar, which
+// the page template (src/hud/dom/page.ts) draws.
 // Every rectangle and text origin is in logical game pixels.
 
 // A rect filled in one colour.
@@ -95,20 +96,13 @@ export function shopPageView(
   measure: PanelMeasure,
   page: { tabs: readonly ShopPageTab[]; title: string },
 ): ShopPageView {
-  const { back, title } = SHOP_LAYOUT;
-  const backWidth = modalActionWidth(measure.inkWidth("title", MENU_TEXT.pageBack));
-
+  const { title } = SHOP_LAYOUT;
   const tabs = shopTabRects(page.tabs.length).flatMap((hit, i) => {
     const tab = page.tabs[i];
     return tab === undefined ? [] : [pageTab(measure, shopTabFace(hit), tab)];
   });
   return {
-    back: panelButton(
-      measure,
-      { ...back, width: backWidth, x: back.x + (back.width - backWidth) / 2 },
-      true,
-      MENU_TEXT.pageBack,
-    ),
+    back: pageBack(measure, MENU_TEXT.pageBack),
     fill: { colour: PALETTE.cream, rect: PANEL },
     panel: PANEL,
     tabs,

@@ -1,7 +1,7 @@
-import { expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { HELP_LAYOUT } from "../help/helpLayout.ts";
-import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
+import { PAGE_LAYOUT, stackRows } from "../ui/pageLayout.ts";
 import { SHOP_LAYOUT } from "./shopLayout.ts";
 import { STATS_LAYOUT } from "./statsLayout.ts";
 
@@ -18,11 +18,25 @@ it.each([
   ["the list beside a scrollbar", list.rect, { height: 348, width: 342, x: 0, y: 144 }],
   ["the list without one", list.unscrolledRect, { height: 348, width: 360, x: 0, y: 144 }],
   ["the rows", [row.x, row.width, row.scrollWidth], [8, 344, 330]],
-  ["the scroll track", [SHOP_LAYOUT.scrollbar.x, SHOP_LAYOUT.scrollbar.trackWidth], [344, 8]],
+  ["the scroll track", [PAGE_LAYOUT.scrollbar.x, PAGE_LAYOUT.scrollbar.trackWidth], [344, 8]],
   ["the Logbook's columns", [STATS_LAYOUT.rows.left, STATS_LAYOUT.rows.right], [8, 338]],
   ["Back", PAGE_LAYOUT.back, BACK],
   ["the Pet shop's and Logbook's Back", SHOP_LAYOUT.back, BACK],
   ["Help's Back", HELP_LAYOUT.footer, BACK],
 ])("places %s", (_name, actual, expected) => {
   expect(actual).toEqual(expected);
+});
+
+describe("stackRows", () => {
+  // Each row as tall as its height, gap under the one before; the tap targets are the rows.
+  const spec = { gap: 8, width: 316, x: 16, y: 138 };
+  it.each<[string, number[], number[]]>([
+    ["one row", [36], [138]],
+    ["rows of mixed heights", [36, 56, 40], [138, 182, 246]],
+  ])("lays out %s gap apart from the top", (_, heights, tops) => {
+    const rects = stackRows(spec, heights);
+    expect(rects).toEqual(
+      heights.map((height, i) => ({ height, width: spec.width, x: spec.x, y: tops[i] })),
+    );
+  });
 });

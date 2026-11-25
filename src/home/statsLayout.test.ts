@@ -14,13 +14,14 @@ import { veteranSave } from "../testing/saves.ts";
 import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
+import { PAGE_LAYOUT, stackRows } from "../ui/pageLayout.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
+import { scrollbarRects } from "../ui/scrollbar.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
-import { BADGE_STRIP, badgeWall, earnedText, wallCell, wallRects } from "./badgesView.ts";
+import { BADGE_STRIP, badgeWall, earnedText, wallCell } from "./badgesView.ts";
 import { type LogbookMeasure, logbookView } from "./logbookView.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
-import { shopScrollbar } from "./shopLayout.ts";
 import {
   badgesBottom,
   detailPanelHeight,
@@ -31,7 +32,6 @@ import {
   STATS_LAYOUT,
   STATS_TABS,
   statsListFrame,
-  statsScrollbar,
   statsTabRects,
   wallLineTops,
   wallRowHeight,
@@ -103,7 +103,8 @@ describe("the open badge", () => {
   });
 });
 
-const { dogs, panel, rows, scrollbar, view, wall, wallText } = STATS_LAYOUT;
+const { dogs, panel, rows, view, wall, wallText } = STATS_LAYOUT;
+const { scrollbar } = PAGE_LAYOUT;
 const STYLE = { scale: TEXT_SCALE };
 // The least gap between a label's ink and its value's, and between any ink and the scrollbar.
 const GAP = 4;
@@ -248,9 +249,8 @@ describe("the scrollbar", () => {
     expect(right).toBeLessThanOrEqual(BAR_LEFT);
   });
 
-  it("sits where the shop's does, beside the view and as tall as it", () => {
-    const bar = statsScrollbar(100, 0);
-    expect(bar).toEqual(shopScrollbar(100, 0));
+  it("sits beside the view and as tall as it", () => {
+    const bar = scrollbarRects(scrollbar, view, 100, 0);
     expect(bar?.track).toMatchObject({ height: view.height, y: view.y });
     expect(view.x + view.width).toBeLessThanOrEqual(bar?.track.x ?? 0);
     expect((bar?.track.x ?? 0) + scrollbar.trackWidth).toBeLessThanOrEqual(
@@ -284,7 +284,7 @@ describe("each tab's scroll", () => {
 describe("an earned row", () => {
   const ids = gameData.achievements.map(({ id }) => id);
   const earned = badgeWall(gameData, ids);
-  const earnedRows = wallRects(
+  const earnedRows = stackRows(
     wall,
     earned.map((badge) =>
       wallRowHeight(wallLineTops(BODY, wallCell(wallText, bodyInk, badge, undefined))),

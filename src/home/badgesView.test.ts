@@ -29,7 +29,6 @@ import {
   stripUnderClose,
   wallCell,
   wallCellLines,
-  wallRects,
 } from "./badgesView.ts";
 import { STATS_LAYOUT } from "./statsLayout.ts";
 
@@ -298,20 +297,6 @@ describe("wallCellLines", () => {
   ])("%s", (_, goal, lines) => {
     const cell = wallCellLines(3, wrap, { ...badge, goal }, "1/2");
     expect([...cell.name, ...cell.goal, ...cell.progress]).toEqual(lines);
-  });
-});
-
-describe("wallRects", () => {
-  // Each row as tall as its height, gap under the one before; the tap targets are the rows.
-  const spec = { gap: 8, width: 316, x: 16, y: 138 };
-  it.each<[string, number[], number[]]>([
-    ["one row", [36], [138]],
-    ["rows of mixed heights", [36, 56, 40], [138, 182, 246]],
-  ])("lays out %s gap apart from the top", (_, heights, tops) => {
-    const rects = wallRects(spec, heights);
-    expect(rects).toEqual(
-      heights.map((height, i) => ({ height, width: spec.width, x: spec.x, y: tops[i] })),
-    );
   });
 });
 

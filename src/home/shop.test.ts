@@ -17,6 +17,8 @@ import { TEST_TUNING } from "../testing/tuning.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { MODAL } from "../ui/modalGeometry.ts";
+import { PAGE_LAYOUT, stackRows } from "../ui/pageLayout.ts";
+import { scrollbarRects } from "../ui/scrollbar.ts";
 import { GREYED, pictureBox, SELECT_OUTSET } from "../ui/selection.ts";
 import { cents } from "../units.ts";
 import { FEEDBACK } from "./feedback.ts";
@@ -37,20 +39,21 @@ import {
   slotRows,
 } from "./shop.ts";
 import {
-  rowRects,
   SHOP_LAYOUT,
   SHOP_MESSAGE_FIT,
   shopHeadingBand,
   shopListBottom,
   shopListFrame,
   shopMessageCapTop,
-  shopScrollbar,
   shopTabFace,
   shopTabRects,
 } from "./shopLayout.ts";
 import { STATS_TABS } from "./statsLayout.ts";
 
 const data = { ...gameData, tuning: TEST_TUNING };
+// The pages' scrollbar beside the shop's list.
+const shopScrollbar = (max: number, y: number) =>
+  scrollbarRects(PAGE_LAYOUT.scrollbar, SHOP_LAYOUT.list.rect, max, y);
 const dollars = (amount: number) => cents(amount * 100);
 const starters = keysOf(data.dogs).filter((dog) => data.dogs[dog].unlock === "start");
 const starting = startingDogSlots(data);
@@ -124,9 +127,8 @@ describe("slotRows", () => {
 
   it("puts the dog heading under the last slot row", () => {
     const { dogHeadingY, slotRows: spec } = SHOP_LAYOUT.dogs;
-    const last = rowRects(
-      SHOP_LAYOUT.row.width,
-      spec,
+    const last = stackRows(
+      { ...spec, width: SHOP_LAYOUT.row.width, x: SHOP_LAYOUT.row.x },
       slotRows(data, owned).map(() => spec.height),
     ).at(-1);
     expect(last && last.y + last.height).toBeLessThan(dogHeadingY);
@@ -403,7 +405,7 @@ describe("the shop's list", () => {
     expect(bar).not.toBeNull();
     const { thumb, track } = bar ?? { thumb: rect, track: rect };
     expect(track).toMatchObject({ height: rect.height, y: rect.y });
-    const { thumbInset, thumbMin } = SHOP_LAYOUT.scrollbar;
+    const { thumbInset, thumbMin } = PAGE_LAYOUT.scrollbar;
     expect(thumb.height).toBeGreaterThanOrEqual(thumbMin);
     if (end === "top") {
       expect(thumb.y).toBe(track.y + thumbInset);
@@ -425,9 +427,8 @@ describe("the shop's list", () => {
     const frame = shopListFrame(scrolls);
     const tabsRight = Math.max(...shopTabRects(SHOP_TABS.length).map(({ width, x }) => x + width));
     const track = shopScrollbar(scrolls ? 1 : 0, 0)?.track;
-    for (const row of rowRects(
-      frame.rowWidth,
-      spec,
+    for (const row of stackRows(
+      { ...spec, width: frame.rowWidth, x: SHOP_LAYOUT.row.x },
       Array.from({ length: count }, () => spec.height),
     )) {
       const right = row.x + row.width;
@@ -449,7 +450,8 @@ describe("the shop's list", () => {
   it("puts the scrollbar between the list area and the page's inset", () => {
     expect(shopScrollbar(0, 0)).toBeNull();
     const bar = shopScrollbar(100, 0);
-    const { panel, scrollbar } = SHOP_LAYOUT;
+    const { panel } = SHOP_LAYOUT;
+    const { scrollbar } = PAGE_LAYOUT;
     const { thumb, track } = bar ?? { thumb: rect, track: rect };
     expect(track.x).toBeGreaterThanOrEqual(rect.x + rect.width);
     expect(track.x + track.width).toBeLessThanOrEqual(panel.x + panel.width - 8);

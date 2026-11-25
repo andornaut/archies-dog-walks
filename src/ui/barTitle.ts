@@ -5,19 +5,12 @@ import type { CloseControl } from "./closeControl.ts";
 import { MODAL } from "./modalGeometry.ts";
 
 // Modal titles reserve the full close hit plus its gap symmetrically on both sides.
-// Pages retain their face-only clearance.
 // A title is centred within its available row, or begins at the inset when too wide.
 export const BAR_TITLE = { closeGap: MODAL.gap, inset: BAR_TITLE_INSET } as const;
 
 function titleRange(bar: Rect, close: CloseControl | undefined): { left: number; right: number } {
-  const right =
-    close === undefined
-      ? bar.x + bar.width
-      : (close.titleExclusion === "hit" ? close.hit.x : close.x) - BAR_TITLE.closeGap;
-  return {
-    left: close?.titleExclusion === "hit" ? 2 * bar.x + bar.width - right : bar.x,
-    right,
-  };
+  const right = close === undefined ? bar.x + bar.width : close.hit.x - BAR_TITLE.closeGap;
+  return { left: close === undefined ? bar.x : 2 * bar.x + bar.width - right, right };
 }
 
 // The title's actual ink room after the relevant corner clearance.

@@ -1,6 +1,6 @@
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { HELP_SCREEN, MIN_PRESS, SHOP_PAGE } from "../data/layout.ts";
+import { HELP_SCREEN, MIN_PRESS } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
@@ -8,7 +8,6 @@ import { rectIndexAt } from "../ui/grid.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { MODAL } from "../ui/modalGeometry.ts";
 import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
-import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar.ts";
 import { BODY_ASCENT_ROWS, BODY_INK_ROWS, TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import type { HelpAction } from "./helpPaging.ts";
 
@@ -54,15 +53,14 @@ const DOTS_HIT_TOP = DOTS_Y - (MIN_TAP_SIZE - HELP.dots.size) / 2;
 const BODY_HEIGHT =
   Math.floor((DOTS_HIT_TOP - MODAL.gap - BODY_TOP) / HELP.body.lineHeight) * HELP.body.lineHeight;
 const BODY_VIEWPORT = { height: BODY_HEIGHT, width, x: 0, y: BODY_TOP } as const;
-// The Logbook's and the Pet shop's scrollbar, at the pages' track.
-const SCROLLBAR = { ...SHOP_PAGE.scrollbar, x: PAGE_LAYOUT.trackX } as const;
 
 // The help page's geometry at the render resolution. A text position is its first line's
 // left edge and capitals' top.
 // The page has no heading and no close control: the top bar over it is the screen's own.
 // The framed picture comes first, its caption centred across the well under it, then the page's
 // title and body. The body's lines, at most maxLines of them, are lineHeight apart, its capitals
-// the label gap under the title's actual ink, and stop scrollGap short of the scrollbar's track.
+// the label gap under the title's actual ink, and stop scrollGap short of the pages' scrollbar
+// track.
 // The body scrolls in its viewport, whole lines at a time.
 // The page's own presses (swipes and taps) start under the top bar's press columns, which reach
 // MIN_PRESS rows down.
@@ -70,7 +68,7 @@ export const HELP_LAYOUT = {
   body: {
     ...HELP.body,
     viewport: BODY_VIEWPORT,
-    width: SCROLLBAR.x - HELP.body.scrollGap - HELP.body.x,
+    width: PAGE_LAYOUT.scrollbar.x - HELP.body.scrollGap - HELP.body.x,
     y: BODY_Y,
   },
   caption: { centreX: WELL.x + WELL.width / 2, y: CAPTION_Y },
@@ -99,7 +97,6 @@ export const HELP_LAYOUT = {
     y: BUTTONS_Y,
   },
   screen: SCREEN,
-  scrollbar: SCROLLBAR,
   title: { ...HELP.title, y: TITLE_Y },
   well: WELL,
 } as const;
@@ -115,12 +112,6 @@ export function tapRect(art: Rect): Rect {
   const across = grow(art.x, art.width, width);
   const down = grow(art.y, art.height, height);
   return { height: down.grown, width: across.grown, x: across.from, y: down.from };
-}
-
-// The body's scrollbar for a body max rows taller than its viewport, scrolled y, or null for one
-// that fits.
-export function helpScrollbar(max: number, y: number): ScrollbarRects | null {
-  return scrollbarRects(SCROLLBAR, BODY_VIEWPORT, max, y);
 }
 
 // One dot per page, centred as a row.

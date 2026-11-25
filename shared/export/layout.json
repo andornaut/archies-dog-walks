@@ -1687,13 +1687,6 @@
         "x": 0,
         "y": 0
       },
-      "scrollbar": {
-        "thumbInset": 1,
-        "thumbMin": 16,
-        "thumbWidth": 6,
-        "trackWidth": 8,
-        "x": 344
-      },
       "title": {
         "scale": 2,
         "x": 8,
@@ -2271,6 +2264,28 @@
         "y": 379
       }
     },
+    "page": {
+      "back": {
+        "height": 48,
+        "width": 128,
+        "x": 116,
+        "y": 500
+      },
+      "inset": 8,
+      "rect": {
+        "height": 520,
+        "width": 360,
+        "x": 0,
+        "y": 40
+      },
+      "scrollbar": {
+        "thumbInset": 1,
+        "thumbMin": 16,
+        "thumbWidth": 6,
+        "trackWidth": 8,
+        "x": 344
+      }
+    },
     "pause": {
       "labels": [
         "Cheats",
@@ -2366,7 +2381,6 @@
           "x": 296,
           "y": 48
         },
-        "titleExclusion": "hit",
         "x": 318,
         "y": 54
       },
@@ -2522,12 +2536,14 @@
       "dogs": {
         "dogHeadingY": 353,
         "dogRows": {
+          "gap": 8,
           "height": 48,
           "pitch": 56,
           "y": 378
         },
         "slotHeadingY": 153,
         "slotRows": {
+          "gap": 8,
           "height": 48,
           "pitch": 56,
           "y": 178
@@ -2536,6 +2552,7 @@
       "gear": {
         "headingY": 153,
         "rows": {
+          "gap": 8,
           "height": 50,
           "pitch": 58,
           "y": 178
@@ -2592,13 +2609,6 @@
         "textGap": 6,
         "width": 344,
         "x": 8
-      },
-      "scrollbar": {
-        "thumbInset": 1,
-        "thumbMin": 16,
-        "thumbWidth": 6,
-        "trackWidth": 8,
-        "x": 344
       },
       "tab": {
         "drawHeight": 28,
@@ -2670,13 +2680,6 @@
         "keyStep": 34,
         "padBottom": 8,
         "pageOverlap": 48
-      },
-      "scrollbar": {
-        "thumbInset": 1,
-        "thumbMin": 16,
-        "thumbWidth": 6,
-        "trackWidth": 8,
-        "x": 344
       },
       "view": {
         "height": 348,

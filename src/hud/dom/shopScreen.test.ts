@@ -435,7 +435,7 @@ it("centres Shop heading ink in each strip and mirrors the scrollbar clearance",
 
 it("projects only Shop principal art to the well at fractional fit", async () => {
   const scale = domScale(1, { height: 900, width: 575, x: 0, y: 0 });
-  const { root, screen, view } = fixture({ scale });
+  const { screen, view } = fixture({ scale });
   const rect = { height: 24, width: 24, x: 30, y: 192 };
   screen.update({
     ...view,
@@ -451,6 +451,8 @@ it("projects only Shop principal art to the well at fractional fit", async () =>
     ],
   });
   await settle();
+  // New art mounts the page again.
+  const root = screen.element as unknown as FakeElement;
   const width = (key: string) =>
     root.all().find((node) => node.style.backgroundImage?.includes(key))?.style.width;
   expect(width("face-dog-kilo")).toBe(`${gridRect(scale, rect).width}px`);
@@ -473,7 +475,6 @@ it("keeps the row and first pointer alive across dip, focus and scroll painting"
     pressed: "row",
     rows: new Map([["row", { focused: true, x: 2 }]]),
     scroll: { max: 120, settled: false, y: 8 },
-    scrollbar: null,
   });
   root.fire("pointerdown", pointer(row, 2, "pointerdown"));
   doc.fire("pointerup", pointer(row, 1, "pointerup"));
@@ -532,7 +533,9 @@ it("accepts Shop Back's first touch after an older canceled surface reused its p
   });
   try {
     await settle();
-    const footer = f.root.all().find((node) => node.className.includes("adw-footer"))!;
+    const footer = f.root
+      .all()
+      .find((node) => node.getAttribute("aria-label") === gameData.menuText.pageBack)!;
     const target = footer.children[0]!;
     const touch = (type: string) => ({
       ...pointer(target, 1, type),
@@ -573,8 +576,10 @@ it("leaves Shop by its native Back alone, without activating a list gesture", as
   expect(labels).toContain(gameData.menuText.pageBack);
   expect(labels).not.toContain(gameData.menuText.common.close);
   expect(root.all().some((node) => node.className.includes("adw-card"))).toBe(false);
-  const footer = root.all().find((node) => node.className.includes("adw-footer"))!;
-  expect(footer.getAttribute("aria-label")).toBe(gameData.menuText.pageBack);
+  const footer = root
+    .all()
+    .find((node) => node.getAttribute("aria-label") === gameData.menuText.pageBack)!;
+  expect(footer.tagName.toLowerCase()).toBe("button");
   const target = footer.children[0]!;
   root.fire("pointerdown", pointer(target, 80, "pointerdown"));
   doc.fire("pointerup", pointer(target, 80, "pointerup"));
@@ -603,7 +608,7 @@ it("leaves Shop by its native Back alone, without activating a list gesture", as
 });
 
 it("paints every wrapped shop message line without changing its plate or native ownership", async () => {
-  const { root, screen, view } = fixture();
+  const { screen, view } = fixture();
   await settle();
   const words = [gameData.menuText.common.close, gameData.homeText.shop.title];
   const lines = words.map((text, line) => ({
@@ -615,6 +620,7 @@ it("paints every wrapped shop message line without changing its plate or native 
   }));
   screen.update({ ...view, message: { lines, rect: { height: 50, width: 300, x: 24, y: 160 } } });
   await settle();
+  const root = screen.element as unknown as FakeElement;
   expect(words.every((word) => root.all().some((node) => node.textContent === word))).toBe(true);
   screen.destroy();
 });

@@ -334,13 +334,9 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       const panelBounds = paintedPanel(scale);
       const inset = wholeArtPixels(scale, MODAL.closeInset * scale.unit * scale.dpr);
       const side = closeArt.width * pixel;
-      const modal = view.close.titleExclusion === "hit";
       const left =
-        (modal ? panelBounds.left + panelBounds.width - inset - side : gridX(scale, closeArt.x)) -
-        gridX(scale, view.close.hit.x);
-      const top =
-        (modal ? panelBounds.top + inset : gridY(scale, closeArt.y)) -
-        gridY(scale, view.close.hit.y);
+        panelBounds.left + panelBounds.width - inset - side - gridX(scale, view.close.hit.x);
+      const top = panelBounds.top + inset - gridY(scale, view.close.hit.y);
       setBox(face, { height: side, left, top, width: side });
       const glyphSide = CLOSE_GLYPH_SIZE * pixel;
       // Native content starts inside the persistent one-art-pixel face border.
@@ -365,9 +361,13 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   const native: HTMLElement[] = passive
     ? []
     : [...buttons, ...(close === undefined ? [] : [close])];
-  const focusables = [...(input.parts ?? []).flatMap((part) => part.controls ?? []), ...native];
+  // Read when used, so a part may change its controls.
+  const focusables = () => [
+    ...(input.parts ?? []).flatMap((part) => part.controls ?? []),
+    ...native,
+  ];
   dialog.addEventListener("focusin", (event) => {
-    const at = focusables.indexOf(event.target as HTMLElement);
+    const at = focusables().indexOf(event.target as HTMLElement);
     input.onFocus?.(at === -1 ? undefined : at);
   });
   dialog.addEventListener("keydown", (event) => {
@@ -377,7 +377,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     // Enter and Space press the focused control natively; the scene under never hears them.
     if (
       isConfirmKey(event.code) &&
-      focusables.some(
+      focusables().some(
         (control) =>
           control.tagName.toLowerCase() === "button" && control.contains(event.target as Node),
       )
@@ -391,7 +391,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     if (event.code !== "Tab") {
       return;
     }
-    const visible = focusables.filter(
+    const visible = focusables().filter(
       (control) =>
         (control.tagName.toLowerCase() !== "button" || control.tabIndex >= 0) &&
         !control.hidden &&
@@ -412,7 +412,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
         activate: (origin) => {
           if (
             origin.kind === "hold" ||
-            !focusables.some((control) => control.contains(origin.event.target as Node))
+            !focusables().some((control) => control.contains(origin.event.target as Node))
           ) {
             if (origin.kind === "click") {
               origin.event.stopPropagation();
@@ -536,7 +536,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       if (!accepts()) {
         return;
       }
-      const target = index === undefined ? undefined : focusables[index];
+      const target = index === undefined ? undefined : focusables()[index];
       const control =
         target?.tagName.toLowerCase() === "button" && target.tabIndex < 0 ? undefined : target;
       if (doc.activeElement !== (control ?? dialog)) {

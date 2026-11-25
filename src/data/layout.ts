@@ -122,10 +122,6 @@ export const BAR_TITLE_INSET = 0;
 // The border round every progress bar.
 export const PROGRESS_BORDER = 1;
 
-// A full-screen page's close face: its right edge in from the page's right, its top down from the
-// page's top.
-export const PAGE_CLOSE_FACE = { right: 7, top: 9 } as const;
-
 // Every top bar: the start screen's, the walk bar and Help's.
 export const TOP_BAR_HEIGHT = 40;
 

@@ -34,7 +34,6 @@ function helpScreen(
   const presses = [vi.fn(), vi.fn()];
   const close = vi.fn();
   const shown = showHelpScreen(layer, {
-    closeLabel: gameData.menuText.common.close,
     fonts,
     footerPress: close,
     ...(gesture === undefined ? {} : { gesture }),
@@ -193,8 +192,8 @@ it("hides the scrollbar while the body fits its viewport", () => {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, domScale(2, { height: 560, width: 360, x: 0, y: 0 }));
   const shown = showHelpScreen(layer, {
-    closeLabel: gameData.menuText.common.close,
     fonts,
+    footerPress: vi.fn(),
     presses: [vi.fn(), vi.fn()],
     toGame: (point) => point,
     view: helpView(gameData, MEASURE, 0, undefined),

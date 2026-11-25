@@ -99,6 +99,7 @@ import { gridRects } from "../ui/grid.ts";
 import { type LineInk, lineInk } from "../ui/lineInk.ts";
 import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
 import { navigationMenuWidth, PAUSE_MENU_ITEMS, pauseMenuItemLabel } from "../ui/navigationMenu.ts";
+import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { readBitmapFont } from "./fontFile.ts";
 
@@ -333,6 +334,8 @@ export function layoutExport(
         ),
       },
       loading: { art: LOADING_ART, walker: LOADING_WALKER_START },
+      // The Help, Logbook and Pet shop pages' shared geometry and scrollbar.
+      page: PAGE_LAYOUT,
       pause: {
         labels: PAUSE_MENU_ITEMS.map((item) => pauseMenuItemLabel(data, item)),
         // The note takes a line per sentence at 2x on the plate.

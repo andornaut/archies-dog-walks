@@ -12,15 +12,18 @@ import { inside } from "../testing/rects.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { MODAL } from "../ui/modalGeometry.ts";
+import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
+import { scrollbarRects } from "../ui/scrollbar.ts";
 import { BODY_ASCENT_ROWS, BODY_INK_ROWS, TEXT_SCALE } from "../ui/textFit.ts";
 import { helpBody } from "./helpBody.ts";
-import { dotRects, HELP_LAYOUT, helpActionAt, helpScrollbar, tapRect } from "./helpLayout.ts";
+import { dotRects, HELP_LAYOUT, helpActionAt, tapRect } from "./helpLayout.ts";
 import type { HelpAction } from "./helpPaging.ts";
 
 // Help is a page under the live top bar: the framed picture at full size with its caption, then
 // the title and body, at the rows Art's framed option sets.
 describe("help's page", () => {
-  const { body, caption, frame, illustration, page, presses, scrollbar, title, well } = HELP_LAYOUT;
+  const { body, caption, frame, illustration, page, presses, title, well } = HELP_LAYOUT;
+  const { scrollbar } = PAGE_LAYOUT;
 
   it.each([
     ["the page", page, { height: 520, width: 360, x: 0, y: TOP_BAR_HEIGHT }],
@@ -58,8 +61,8 @@ describe("help's page", () => {
   // The Logbook's scrollbar rule: shown only for a body longer than its viewport, the lines
   // stopping their gap short of its track.
   it("draws the scrollbar only for a body that overflows, clear of the lines", () => {
-    expect(helpScrollbar(0, 0)).toBeNull();
-    const bar = helpScrollbar(body.lineHeight * 3, body.lineHeight * 3);
+    expect(scrollbarRects(scrollbar, body.viewport, 0, 0)).toBeNull();
+    const bar = scrollbarRects(scrollbar, body.viewport, body.lineHeight * 3, body.lineHeight * 3);
     expect(bar?.track).toEqual({ ...body.viewport, width: scrollbar.trackWidth, x: scrollbar.x });
     expect(bar?.thumb.y).toBe(
       body.viewport.y + body.viewport.height - scrollbar.thumbInset - (bar?.thumb.height ?? 0),

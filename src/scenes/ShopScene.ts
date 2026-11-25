@@ -34,7 +34,6 @@ import {
   slotRows,
 } from "../home/shop.ts";
 import {
-  rowRects,
   SHOP_LAYOUT,
   SHOP_MESSAGE_FIT,
   shopHeadingBand,
@@ -44,7 +43,6 @@ import {
   shopRowsBottom,
   shopRowTextLayout,
   shopRowTextRoom,
-  shopScrollbar,
   shopTabRects,
 } from "../home/shopLayout.ts";
 import { shopPageView } from "../home/shopPageView.ts";
@@ -77,6 +75,7 @@ import { shownText } from "../ui/dom/pixelLine.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
 import type { PanelMeasure, PanelText } from "../ui/modal/types.ts";
+import { stackRows } from "../ui/pageLayout.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { GREYED, pictureBox, selectLook } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
@@ -169,7 +168,10 @@ function shopTextLayout(
       readonly lines: readonly string[];
       readonly text: ReturnType<typeof shopRowTextLayout>;
     })[] = [];
-    const add = (spec: Parameters<typeof rowRects>[1], rows: readonly ShopRow[]) => {
+    const add = (
+      spec: { readonly gap: number; readonly height: number; readonly y: number },
+      rows: readonly ShopRow[],
+    ) => {
       const described = rows.map((row) => {
         const right =
           row.price === null
@@ -183,9 +185,8 @@ function shopTextLayout(
           text: shopRowTextLayout(fonts.body, spec.height, { descriptions: lines, name: row.name }),
         };
       });
-      const rects = rowRects(
-        frame.rowWidth,
-        spec,
+      const rects = stackRows(
+        { ...spec, width: frame.rowWidth, x: SHOP_LAYOUT.row.x },
         described.map(({ text }) => text.height),
       );
       rows.forEach((row, index) => placed.push({ ...described[index]!, rect: rects[index]!, row }));
@@ -391,7 +392,6 @@ export class ShopScene extends Scene {
         settled: this.scroll.drag === null && this.scroll.velocity === 0,
         y: this.scroll.y,
       },
-      scrollbar: shopScrollbar(this.scroll.max, this.scroll.y),
     });
   }
 

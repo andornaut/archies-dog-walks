@@ -1,45 +1,28 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { PAGE_CLOSE_FACE } from "../data/layout.ts";
 import { BUTTON_SIZE } from "./buttonGeometry.ts";
 import { MODAL } from "./modalGeometry.ts";
 
-// Modal close faces sit 6px inside the top-right corner, within a MIN_PRESS square corner target.
-// Full pages keep their separate top-right control placement.
+// Modal close faces sit 6px inside the top-right corner, within a MIN_PRESS square corner target,
+// and a title clears the whole target. Pages have no close control.
 const FACE_SIZE = BUTTON_SIZE.icon.face;
-const PAGE_FACE = PAGE_CLOSE_FACE;
 const HIT_SIZE = BUTTON_SIZE.icon.target;
 
 export interface CloseControl {
   readonly hit: Rect;
-  // Modal titles clear the whole target; full-page titles clear only the visible face.
-  readonly titleExclusion: "face" | "hit";
   // The face's top-left corner.
   readonly x: number;
   readonly y: number;
 }
 
-function placeClose(frame: Rect, right: number, top: number): CloseControl {
+// The close control in a card's or panel's top-right corner.
+export function closeControl(frame: Rect): CloseControl {
   const frameRight = frame.x + frame.width;
   return {
     hit: { height: HIT_SIZE, width: HIT_SIZE, x: frameRight - HIT_SIZE, y: frame.y },
-    titleExclusion: "face",
-    x: frameRight - right - FACE_SIZE,
-    y: frame.y + top,
+    x: frameRight - MODAL.closeInset - FACE_SIZE,
+    y: frame.y + MODAL.closeInset,
   };
-}
-
-// The close control in a card's or panel's top-right corner.
-export function closeControl(frame: Rect): CloseControl {
-  return {
-    ...placeClose(frame, MODAL.closeInset, MODAL.closeInset),
-    titleExclusion: "hit",
-  };
-}
-
-// The close control in a full-screen page's top-right corner, its face top px down.
-export function pageCloseControl(screen: Rect, top: number = PAGE_FACE.top): CloseControl {
-  return placeClose(screen, PAGE_FACE.right, top);
 }
 
 // The face's own rect, for a focus ring.

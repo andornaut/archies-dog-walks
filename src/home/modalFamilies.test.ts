@@ -20,6 +20,7 @@ import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { navigationMenuWidth } from "../ui/navigationMenu.ts";
+import { stackRows } from "../ui/pageLayout.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { cents } from "../units.ts";
 import { CELEBRATION_PANEL } from "./badgesView.ts";
@@ -29,7 +30,6 @@ import { updateModalLayout } from "./homeLayout.ts";
 import { logbookView } from "./logbookView.ts";
 import { installStepsLayout, settingsLayout } from "./settings.ts";
 import {
-  rowRects,
   SHOP_LAYOUT,
   SHOP_MESSAGE_FIT,
   shopMessageLayout,
@@ -270,7 +270,10 @@ it("reserves reflowed Shop descriptions and messages before following content", 
       name: gameData.shopGear.fannyPack.name,
     });
   const heights = [1, 3, 1].map((count) => layout(count).height);
-  const rows = rowRects(SHOP_LAYOUT.row.scrollWidth, spec, heights);
+  const rows = stackRows(
+    { ...spec, width: SHOP_LAYOUT.row.scrollWidth, x: SHOP_LAYOUT.row.x },
+    heights,
+  );
   const pitch = fonts.body.lineHeight * 2;
   expect(rows[0]!.height).toBe(spec.height);
   expect(rows[1]!.height).toBeGreaterThan(spec.height);
@@ -278,9 +281,8 @@ it("reserves reflowed Shop descriptions and messages before following content", 
   expect(shopRowsBottom(spec, rows)).toBe(rows[2]!.y + rows[2]!.height);
   expect(shopNextHeading(spec, rows)).toBeGreaterThan(shopRowsBottom(spec, rows));
   const slots = SHOP_LAYOUT.dogs.slotRows;
-  const slotRects = rowRects(
-    SHOP_LAYOUT.row.width,
-    slots,
+  const slotRects = stackRows(
+    { ...slots, width: SHOP_LAYOUT.row.width, x: SHOP_LAYOUT.row.x },
     gameData.dogSlots.map(() => slots.height),
   );
   expect(shopNextHeading(slots, slotRects)).toBe(SHOP_LAYOUT.dogs.dogHeadingY);

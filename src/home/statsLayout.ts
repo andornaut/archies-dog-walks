@@ -4,7 +4,6 @@ import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/te
 import { LOGBOOK_PAGE, MIN_PRESS } from "../data/layout.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { MODAL } from "../ui/modal/layout.ts";
-import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar.ts";
 import { BADGE_STRIP, type WallCellLines } from "./badgesView.ts";
 import { SHOP_LAYOUT, shopListFrame, shopTabRects } from "./shopLayout.ts";
 
@@ -20,10 +19,9 @@ export const DOG_STATS: readonly DogStat[] = ["walks", "zones", "fired"];
 export const STATS_TABS: readonly StatsTab[] = ["badges", "dogs", "runs"];
 
 // The Logbook wears the Pet shop's page: its fill, heading, tab span and Back, and every tab's
-// content scrolling in the shop's list area beside the shop's scrollbar.
+// content scrolling in the shop's list area beside the pages' scrollbar.
 const PANEL = SHOP_LAYOUT.panel;
 const VIEW = SHOP_LAYOUT.list.rect;
-const SCROLLBAR = SHOP_LAYOUT.scrollbar;
 // Each tab's first heading, level with the shop's.
 const TOP = SHOP_LAYOUT.list.firstHeadingY;
 const STATS = LOGBOOK_PAGE;
@@ -82,7 +80,6 @@ export const STATS_LAYOUT = {
     padBottom: SHOP_LAYOUT.list.padBottom,
     pageOverlap: SHOP_LAYOUT.list.pageOverlap,
   },
-  scrollbar: SCROLLBAR,
   view: VIEW,
   // The Walks tab: the first section's heading with its capitals at top, level with the Dogs
   // tab's first block, each section's rows rowsY under its heading, and the next heading
@@ -212,10 +209,4 @@ export function wallRowHeight(tops: readonly number[]): number {
   const { lineHeight, pad, y } = STATS_LAYOUT.wallText;
   const last = tops.at(-1) ?? y - lineHeight;
   return Math.max(BADGE_STRIP.badgeSize + 2 * badgeTop, last + lineHeight + pad, MIN_PRESS);
-}
-
-// The scrollbar's track and thumb for content max pixels taller than the view, scrolled y, or
-// null for content that fits.
-export function statsScrollbar(max: number, y: number): ScrollbarRects | null {
-  return scrollbarRects(SCROLLBAR, VIEW, max, y);
 }

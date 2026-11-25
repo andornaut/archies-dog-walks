@@ -13,7 +13,6 @@ import { MODAL } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
-import { type ScrollbarRects, scrollbarRects } from "../ui/scrollbar.ts";
 import { SELECT_OUTSET } from "../ui/selection.ts";
 import { TEXT_SCALE, TEXT_STYLE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { FEEDBACK } from "./feedback.ts";
@@ -27,7 +26,7 @@ const SHOP = SHOP_PAGE;
 const PANEL = PAGE_LAYOUT.rect;
 const PAGE_TITLE = cardTitleRow(PANEL);
 const BACK = PAGE_LAYOUT.back;
-const TRACK_X = PAGE_LAYOUT.trackX;
+const TRACK_X = PAGE_LAYOUT.scrollbar.x;
 // Rows run across the page's inset, or with a scrollbar stop scrollGap short of its track.
 const ROW_X = PANEL.x + PAGE_LAYOUT.inset;
 const ROW_WIDTH = PANEL.width - 2 * PAGE_LAYOUT.inset;
@@ -75,6 +74,7 @@ const ROWS_TO_HEADING = TAB_GAP + FIRST_HEADING_Y - PLATE.y;
 const SLOT_HEADING_Y = FIRST_HEADING_Y;
 // A list's rows, height tall, the stacked button gap apart.
 const listRows = ({ height }: { height: number }) => ({
+  gap: BUTTON_SIZE.stackGap,
   height,
   pitch: height + BUTTON_SIZE.stackGap,
 });
@@ -136,10 +136,6 @@ export const SHOP_LAYOUT = {
     width: ROW_WIDTH,
     x: ROW_X,
   },
-  // Beside a list longer than the view: a trackWidth-wide track at x, as tall as the list area,
-  // and in it a thumbWidth-wide thumb thumbInset inside the track's edges, at least thumbMin
-  // tall.
-  scrollbar: { ...SHOP.scrollbar, x: TRACK_X },
   // The tabs split span, the rows' width from x, their faces gap apart, each a hit area height
   // tall at y with its face drawHeight tall at drawY (shopTabRects, shopTabFace).
   tab: TAB,
@@ -165,11 +161,6 @@ export function shopListBottom(
   count: number,
 ): number {
   return spec.y + (Math.max(1, count) - 1) * spec.pitch + spec.height + SHOP_LAYOUT.list.padBottom;
-}
-
-// The shop list's scrollbar (scrollbarRects), or null for a list that fits.
-export function shopScrollbar(max: number, y: number): ScrollbarRects | null {
-  return scrollbarRects(SHOP_LAYOUT.scrollbar, LIST, max, y);
 }
 
 // The open list's area (its mask and hit area), its rows' width and its heading note's right
@@ -237,21 +228,6 @@ export function shopTabFace(hit: Rect): Rect {
   const left = hit.x === x ? hit.x : hit.x + gap / 2;
   const right = hit.x + hit.width === x + span ? hit.x + hit.width : hit.x + hit.width - gap / 2;
   return { height: drawHeight, width: right - left, x: left, y: drawY };
-}
-
-// Rows retain the authored gap while their full-size content determines their heights.
-export function rowRects(
-  width: number,
-  spec: { height: number; pitch: number; y: number },
-  heights: readonly number[],
-): Rect[] {
-  const { x } = SHOP_LAYOUT.row;
-  let y = spec.y;
-  return heights.map((height) => {
-    const rect = { height, width, x, y };
-    y += height + spec.pitch - spec.height;
-    return rect;
-  });
 }
 
 // The end of the visible row content, excluding the authored gap to its next section.

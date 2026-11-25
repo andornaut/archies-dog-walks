@@ -206,23 +206,6 @@ export function wallCell(
   return { ...fitted, whole: fitted.whole && drawn.every((line) => inkWidth(line) <= cell.width) };
 }
 
-interface WallSpec {
-  readonly gap: number;
-  readonly width: number;
-  readonly x: number;
-  readonly y: number;
-}
-
-// Each badge's row, also its tap target: one per height in heights from the top, gap apart.
-export function wallRects(spec: WallSpec, heights: readonly number[]): Rect[] {
-  let y = spec.y;
-  return heights.map((height) => {
-    const rect = { height, width: spec.width, x: spec.x, y };
-    y += height + spec.gap;
-    return rect;
-  });
-}
-
 // A badge strip's rows from its panel's top: the title's capitals at titleY, the first row's
 // badgeSize squares from badgeTop and each later row's rowPitch under the row above, perRow
 // to a row and at most maxRows rows, and a badge's name's first capitals nameGap under the

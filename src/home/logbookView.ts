@@ -4,8 +4,8 @@ import { dogFaceKey } from "../assets/spriteKeys.ts";
 import type { GameData } from "../data/types.ts";
 import { scrollMax } from "../input/listScroll.ts";
 import type { SaveDocument } from "../save/schema.ts";
+import { stackRows } from "../ui/pageLayout.ts";
 import { PALETTE } from "../ui/palette.ts";
-import type { ScrollbarRects } from "../ui/scrollbar.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import {
   BADGE_STRIP,
@@ -14,7 +14,6 @@ import {
   type BadgeView,
   earnedText,
   wallCell,
-  wallRects,
 } from "./badgesView.ts";
 import type { DetailArt, DetailFramed, DetailMeasure, DetailText } from "./detailCardView.ts";
 import { type PageFill, type ShopPageView, shopPageView } from "./shopPageView.ts";
@@ -27,7 +26,6 @@ import {
   STATS_LAYOUT,
   STATS_TABS,
   statsListFrame,
-  statsScrollbar,
   type StatsTab,
   wallLineTops,
   wallRowHeight,
@@ -230,7 +228,7 @@ function badgesTab(
   // Each line's capitals' top, the goal's clear of the name's line, and each row as tall as its
   // badge or its text, whichever is taller.
   const tops = cells.map((cell) => wallLineTops(measure.body, cell));
-  const wallRows = wallRects(WALL, tops.map(wallRowHeight));
+  const wallRows = stackRows(WALL, tops.map(wallRowHeight));
   badges.forEach((badge, i) => {
     const rect = wallRows[i];
     const cell = cells[i];
@@ -339,10 +337,4 @@ export function logbookView(measure: LogbookMeasure, data: Data, state: LogbookS
   const frame = scrolls ? statsListFrame(true) : fits;
   const laid = scrolls ? tabContent(measure, data, state, frame.right) : unscrolled;
   return { ...laid, frame, page };
-}
-
-// The scrollbar beside a tab max pixels longer than its view, scrolled y, or null for one that
-// fits.
-export function logbookScrollbar(max: number, y: number): ScrollbarRects | null {
-  return statsScrollbar(max, y);
 }

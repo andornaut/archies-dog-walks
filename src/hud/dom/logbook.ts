@@ -2,36 +2,24 @@ import "./logbook.css";
 
 import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { logbookScrollbar, type LogbookView } from "../../home/logbookView.ts";
+import type { LogbookView } from "../../home/logbookView.ts";
 import type { ShopPageView } from "../../home/shopPageView.ts";
-import { earnedBand, statsTabRects } from "../../home/statsLayout.ts";
-import { pageCloseControl } from "../../ui/closeControl.ts";
+import { earnedBand, STATS_LAYOUT, statsTabRects } from "../../home/statsLayout.ts";
 import { contentSeparatorPart } from "../../ui/dom/contentSeparator.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import type { NativeGesture } from "../../ui/dom/modalLifecycle.ts";
-import { type DomPart, fillPart, framedBoxPart, framelessView } from "../../ui/dom/parts.ts";
+import { type DomPart, fillPart, framedBoxPart } from "../../ui/dom/parts.ts";
 import { setBox } from "../../ui/dom/pixelLine.ts";
-import { dimDrawn, followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import {
-  type DomScale,
-  gridRect,
-  gridX,
-  gridY,
-  scrollbarBoxes,
-  wholeArtPixels,
-} from "../../ui/domScale.ts";
+import { type DomScale, gridRect, wholeArtPixels } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
+import { type DomPage, showPage } from "./page.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
-import { type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
-import { createPageTab } from "./shopPage.ts";
+import type { DomQuestionPanel } from "./questionPanel.ts";
 
-// The Logbook in HTML over the canvas: the page, its title and Back drawn as a
-// panel's (showQuestionPanel), the open tab's content clipped to the list's frame and moved up by
-// the scroll, and the scrollbar, at the places the canvas draws them (logbookView).
-// It is a page like the Pet shop, not a modal: its top bar stays live, and a modal over it (a
-// badge card, the Menu) dims and stills it with the rest of the background.
+// The Logbook in HTML over the canvas, on the page template (showPage): the open tab's content
+// clipped to the list's frame and moved up by the scroll, at the places logbookView lays out.
 // Where the list is scrolled to, and whether it has settled: no drag or fling moving it.
 export interface LogbookScroll {
   readonly max: number;
@@ -79,50 +67,11 @@ export function scrollPlace(
   return { by: grid(scale.origin.y) - grid(origin.y), scale: { ...scale, origin } };
 }
 
-// The scrollbar's track and thumb (scrollbarBoxes) from the track's corner on the art-pixel grid.
-function scrollbarPart(doc: Document, input: DomLogbookInput): DomPart & { follow: () => void } {
-  const element = doc.createElement("div");
-  element.className = "adw-lines";
-  const track = doc.createElement("div");
-  track.className = "adw-scroll-track";
-  const thumb = doc.createElement("div");
-  thumb.className = "adw-scroll-thumb";
-  element.append(track, thumb);
-  let at: DomScale | undefined;
-  let shown = "";
-  const follow = () => {
-    const scroll = input.scroll();
-    const bar = logbookScrollbar(scroll.max, scroll.y);
-    element.hidden = bar === null;
-    if (at === undefined || bar === null) {
-      return;
-    }
-    const key = JSON.stringify([at, bar]);
-    if (key === shown) {
-      return;
-    }
-    shown = key;
-    const corner = { left: gridX(at, bar.track.x), top: gridY(at, bar.track.y) };
-    const boxes = scrollbarBoxes(at, corner, bar);
-    setBox(track, boxes.track);
-    setBox(thumb, boxes.thumb);
-  };
-  return {
-    element,
-    follow,
-    place: (scale) => {
-      at = scale;
-      shown = "";
-      follow();
-    },
-  };
-}
-
 // The Logbook in layer, shown and its dialog focused.
 export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook {
   const doc = layer.element.ownerDocument;
   const { view } = input;
-  const { content, page } = view;
+  const { content } = view;
   // The list's view, and in it the content laid out from the dialog's corner.
   const clip = doc.createElement("div");
   clip.className = "adw-clip";
@@ -160,26 +109,6 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
       },
     };
   };
-  const tabs = statsTabRects().flatMap((rect, index) => {
-    const tab = view.page.tabs[index];
-    if (tab === undefined) {
-      return [];
-    }
-    const part = createPageTab(
-      doc,
-      {
-        font: input.fonts.title,
-        press: {
-          accepts: () => shown.accepts(),
-          burst: (event) => shown.burst(input.toGame({ x: event.clientX, y: event.clientY })),
-          press: () => input.navigation.activate({ tab: index }),
-        },
-      },
-      rect,
-      tab,
-    );
-    return [{ ...part, hit: rect }];
-  });
   const rowForBox = (box: Rect) =>
     view.wallRows.findIndex(
       (row) =>
@@ -285,46 +214,22 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
       contentParts.flatMap((part) => (part.ready === undefined ? [] : [part.ready])),
     ).then((all) => all.flat()),
   };
-  const scrollbar = scrollbarPart(doc, input);
-  const pagePaint = doc.createElement("div");
-  pagePaint.className = "adw-lines";
-  let pageFill = fillPart(doc, page.fill);
-  pagePaint.append(pageFill.element);
-  let pageScale: DomScale | undefined;
-  let dimmed = false;
-  const pagePart: DomPart = {
-    element: pagePaint,
-    place: (scale) => {
-      pageScale = scale;
-      pageFill.place(scale);
-    },
-  };
-  const tabHost = doc.createElement("div");
-  tabHost.className = "adw-lines";
-  tabHost.append(...tabs.map((tab) => tab.element));
-  const tabPart: DomPart = {
-    controls: tabs.flatMap((tab) => tab.controls ?? []),
-    element: tabHost,
-    place: (scale) => tabs.forEach((tab) => tab.place(scale)),
-  };
+  const tabCount = view.page.tabs.length;
   let originalHit: Rect | undefined;
-  const shown = showQuestionPanel(layer, {
-    close: null,
-    closeLabel: input.closeLabel,
+  const shown: DomPage = showPage(layer, {
+    back: input.navigation.close,
+    chrome: view.page,
     fonts: input.fonts,
-    footerPress: input.navigation.close,
     gesture: {
       cancel: () => {
         originalHit = undefined;
         input.navigation.gesture.cancel?.();
       },
       down: (event) => {
-        const tab = tabs.find((part) =>
-          part.controls?.some((control) => control.contains(event.target as Node)),
-        );
+        const tab = statsTabRects()[shown.tabAt(event.target as Node) ?? -1];
         const badge = badges.find((part) => part.control.contains(event.target as Node));
         originalHit =
-          tab?.hit ??
+          tab ??
           (badge === undefined
             ? undefined
             : {
@@ -342,26 +247,27 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
         return handled === true || (hit !== undefined && !containsPoint(hit, point.x, point.y));
       },
     },
-    modal: false,
-    numberKeys: false,
+    list: {
+      clip,
+      part: list,
+      scroll: () => {
+        const scroll = input.scroll();
+        return {
+          contentHeight: scroll.max + STATS_LAYOUT.view.height,
+          viewport: STATS_LAYOUT.view,
+          y: scroll.y,
+        };
+      },
+    },
     onFocus: (index) => {
       clip.scrollTop = 0;
-      const row = index === undefined ? undefined : view.wallRows[index - tabs.length];
+      const row = index === undefined ? undefined : view.wallRows[index - tabCount];
       if (row !== undefined) {
         input.navigation.focus(row);
       }
     },
-    parts: [pagePart, tabPart, list, scrollbar],
-    presses: [],
+    tab: (index) => input.navigation.activate({ tab: index }),
     toGame: input.toGame,
-    view: framelessView(page.panel, {
-      // The page draws no close control; the panel still places one, which close: null leaves
-      // out.
-      close: pageCloseControl(page.panel),
-      footer: page.back,
-      title: page.title,
-      titleY: page.title[0]?.capTop ?? page.panel.y,
-    }),
   });
   clip.addEventListener(
     "wheel",
@@ -375,34 +281,20 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
   );
   const stop = input.everyFrame(() => {
     follow();
-    scrollbar.follow();
+    shown.follow();
   });
-  const stopUnderlay = followModalUnderlay(layer.input, shown.element);
   return {
     ...shown,
     destroy: () => {
       stop();
-      stopUnderlay();
-      [...tabs, ...badges].forEach((part) => part.dispose());
+      badges.forEach((part) => part.dispose());
       shown.destroy();
     },
     focusBadge: (index) => {
       if (badges[index] !== undefined) {
-        shown.focusControl(tabs.length + index);
+        shown.focusControl(tabCount + index);
       }
     },
-    setDimmed: (next) => {
-      dimmed = next;
-      shown.setDimmed(next);
-    },
-    setPage: (next) => {
-      pageFill = fillPart(doc, next.fill);
-      pagePaint.replaceChildren(pageFill.element);
-      const current = pageScale;
-      if (current !== undefined) {
-        pageFill.place(current);
-      }
-      dimDrawn(pagePaint, dimmed);
-    },
+    setPage: (next) => shown.setFill(next.fill),
   };
 }
