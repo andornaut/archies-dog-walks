@@ -20,7 +20,7 @@ import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/moda
 import { hasPill, PILL_IMAGE_GAP, pillDropUnderInk, pillRiseOverCaps } from "../ui/namePills.ts";
 import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { TOP_BAR_FACE, TOP_BAR_HEIGHT, TOP_BAR_MID, TOP_BAR_WELL } from "../ui/topBarTrim.ts";
-import { topSectionLayout } from "../ui/topSection.ts";
+import { type TopSectionControl, topSectionLayout } from "../ui/topSection.ts";
 import { FEEDBACK } from "./feedback.ts";
 import type { SectionId } from "./sections.ts";
 
@@ -182,11 +182,8 @@ export function sectionFill(section: Rect): Rect {
 export const HOME_BAR_BUTTONS = ["mute", "menu", "exit"] as const;
 export type HomeBarButton = (typeof HOME_BAR_BUTTONS)[number];
 
-// A top bar button: its ui-icon-button-normal face and its hit area from the bar's top.
-interface HomeBarButtonPlace {
-  face: Point;
-  hit: Rect;
-}
+// A top bar button's place (TopSectionControl): its face, hit area and owned part of it.
+type HomeBarButtonPlace = TopSectionControl;
 
 // The home screen's geometry, in screen pixels. Each icon button is drawn at its icon spot
 // and tapped anywhere in its hit area.
@@ -463,11 +460,16 @@ export const HOME_LAYOUT = {
   yardSign: Rect;
 };
 
+// The home bar's shown controls: Exit only where it is offered.
+export function homeBarShown(exit: boolean): readonly HomeBarButton[] {
+  return HOME_BAR_BUTTONS.filter((id) => exit || id !== "exit");
+}
+
 // Every home overlay uses the same visible controls and targets.
 export function homeBarButtons(
   exit: boolean,
 ): readonly (readonly [HomeBarButton, HomeBarButtonPlace])[] {
-  return topSectionLayout(HOME_BAR_BUTTONS.filter((id) => exit || id !== "exit")).controls;
+  return topSectionLayout(homeBarShown(exit)).controls;
 }
 
 // How wide a line of the walker's speech may be, as a label measures it: a bubble that wide

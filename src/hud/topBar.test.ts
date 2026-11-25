@@ -1,4 +1,3 @@
-import { containsPoint } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { MIN_PRESS } from "../data/layout.ts";
@@ -21,7 +20,7 @@ import {
   walkPaused,
   walkPresses,
 } from "./topBar.ts";
-import { WALK_BAR_BUTTONS, type WalkBarButtonId } from "./walkHud.ts";
+import type { WalkBarButtonId } from "./walkHud.ts";
 
 // A card and the zone celebration hold the walk alike.
 const CARD: RunPause = { ...NOTHING_PAUSED, card: true };
@@ -188,22 +187,6 @@ describe("topBarKey", () => {
 });
 
 describe("topBarButtonAt", () => {
-  it("finds each button at its hit area's corners, and none just outside them", () => {
-    for (const id of WALK_BAR_BUTTONS) {
-      const { hit } = TOP_BAR_BUTTONS[id];
-      for (const [x, y] of [
-        [hit.x, hit.y],
-        [hit.x + hit.width - 1, hit.y + hit.height - 1],
-      ] as const) {
-        expect(topBarButtonAt(0, x, y), id).toBe(id);
-        expect(containsPoint(hit, x, y)).toBe(true);
-      }
-    }
-    const first = TOP_BAR_BUTTONS[WALK_BAR_BUTTONS[0]].hit;
-    expect(topBarButtonAt(0, first.x - 1, first.y)).toBeUndefined();
-    expect(topBarButtonAt(0, first.x, first.y + first.height)).toBeUndefined();
-  });
-
   // The presses reach MIN_PRESS rows down, under the walk bar: a showing debuff bar keeps the rows
   // they share, and with none showing the button takes them.
   const bar = SCREEN_LAYOUT.topBar;

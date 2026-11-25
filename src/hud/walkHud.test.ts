@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 
 import { dogFaceKey, ownerFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { MIN_PRESS } from "../data/layout.ts";
+import { MIN_PRESS, WALK_BAR_PARTS } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DebuffId, DogId } from "../data/types.ts";
 import { HOME_LAYOUT, homeBarButtons } from "../home/homeLayout.ts";
@@ -20,6 +20,7 @@ import { zoneLength } from "../runner/walkMotion.ts";
 import { fontInk, gameFont } from "../testing/fontInk.ts";
 import { LONE } from "../testing/packPlaces.ts";
 import { inside } from "../testing/rects.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { TOP_BAR_WELL } from "../ui/topBarTrim.ts";
 import { topSectionCurrency, topSectionGapLeft, topSectionLayout } from "../ui/topSection.ts";
@@ -141,16 +142,17 @@ describe("the walk bar", () => {
     });
   });
 
-  it("runs the hits side by side to the bar's right edge, each face centred in its hit", () => {
+  it("sets its faces the small-button gap apart, each centred in its hit, to the bar's right", () => {
     const { size } = WALK_BAR.buttonFace;
-    const hits = WALK_BAR_BUTTONS.map((id) => BAR.buttons[id].hit);
-    hits.slice(1).forEach((hit, i) => {
-      expect(hit.x).toBe((hits[i]?.x ?? 0) + (hits[i]?.width ?? 0));
+    const faces = WALK_BAR_BUTTONS.map((id) => BAR.buttons[id].face);
+    faces.slice(1).forEach((face, i) => {
+      expect(face.x - faces[i]!.x - size).toBe(BUTTON_SIZE.smallGap);
     });
-    const last = hits.at(-1);
-    expect((last?.x ?? 0) + (last?.width ?? 0)).toBe(topBar.x + topBar.width);
+    const last = BAR.buttons[WALK_BAR_BUTTONS.at(-1)!].hit;
+    expect(last.x + last.width).toBe(topBar.x + topBar.width);
     for (const id of WALK_BAR_BUTTONS) {
       const { face, hit } = BAR.buttons[id];
+      expect(hit).toMatchObject({ height: MIN_PRESS, width: MIN_PRESS, y: topBar.y });
       expect(2 * (face.x - hit.x) + size).toBe(hit.width);
       expect(face.y + size).toBeLessThanOrEqual(topBar.y + topBar.height);
     }
@@ -170,7 +172,7 @@ describe("the walk bar", () => {
     expect(cash.capsY).toBe(home.bank.capsY);
   });
 
-  it("centres visible effects within the fixed currency-to-controls region", () => {
+  it("centres visible effects within their pinned region, clear of the controls' hits", () => {
     const { buttonFace, effects } = WALK_BAR;
     expect(2 * effects.y + effects.size).toBe(2 * buttonFace.y + buttonFace.size);
     expect(effects.pitch - effects.size).toBe(0);
@@ -179,28 +181,15 @@ describe("the walk bar", () => {
       const first = bar.effectWells[0]!;
       const last = bar.effectWells.at(-1)!;
       expect(first.x + last.x + last.width).toBe(
-        topBar.x + WALK_BAR.cash.well.x + WALK_BAR.cash.well.width + bar.buttons.mute.hit.x,
+        2 * topBar.x +
+          WALK_BAR.cash.well.x +
+          WALK_BAR.cash.well.width +
+          WALK_BAR_PARTS.effects.right,
       );
       expect(first.x).toBeGreaterThan(WALK_BAR.cash.well.x + WALK_BAR.cash.well.width);
       expect(last.x + last.width).toBeLessThan(bar.buttons.mute.hit.x);
     }
   });
-
-  // Side by side to the bar's right edge, each face centred in its column.
-  it.each(WALK_BAR_BUTTONS.map((id, i) => [id, i] as const))(
-    "gives %s a MIN_PRESS square press area from the bar's top, its face centred in it",
-    (id, i) => {
-      const { face, hit } = BAR.buttons[id];
-      const fromRight = WALK_BAR_BUTTONS.length - 1 - i;
-      expect(hit).toEqual({
-        height: MIN_PRESS,
-        width: MIN_PRESS,
-        x: SCREEN_CONFIG.width - (fromRight + 1) * MIN_PRESS,
-        y: topBar.y,
-      });
-      expect(2 * face.x + WALK_BAR.buttonFace.size).toBe(2 * hit.x + hit.width);
-    },
-  );
 });
 
 describe("topSectionGapLeft", () => {

@@ -1,4 +1,11 @@
-import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import {
+  ACTION_GAPS,
+  type ActionArrangement,
+  arrangeActions,
+  type PlacedAction,
+  pressedAction,
+} from "@andornaut/game-kit/runtime/ui/actionGroup";
 
 import { BUTTON_SIZE, MIN_PRESS, TOP_BAR_SIZES, WALK_BAR_PARTS } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
@@ -11,7 +18,7 @@ import {
   wellCapsTop,
 } from "./topBarTrim.ts";
 
-// Visibility removes a control from the flow; every section uses this order and pitch.
+// Visibility removes a control from the flow; every section uses this order and spacing.
 export const TOP_SECTION_ORDER = ["mute", "menu", "pause", "exit"] as const;
 export type TopSectionButton = (typeof TOP_SECTION_ORDER)[number];
 
@@ -22,8 +29,60 @@ export function topSectionGapLeft(left: number, right: number, width: number): n
   return left + Math.floor((right - left - width) / 2);
 }
 
-// Currency and controls keep fixed dimensions. Visible effects centre within their reserved
-// region, moving only with the effect count and never with the displayed amount.
+// A control's face (its ui-icon-button-normal's top-left), its hit (its full MIN_PRESS press
+// area) and owned, the part of hit where its face's centre is nearer than a neighbour's, which
+// its DOM button covers.
+export interface TopSectionControl {
+  face: Point;
+  hit: Rect;
+  owned: Rect;
+}
+
+// The shown controls, left to right: TOP_BAR_FACE faces the small-button gap apart on row
+// TOP_BAR_FACE.y, the last one's press ending at the screen's right edge (arrangeActions). Each
+// press is the full MIN_PRESS square centred across its face from the bar's top row, so
+// neighbours' presses overlap, and a press in the overlap goes to the face whose centre is
+// nearest (pressOverlap "nearest"), the earlier on a tie.
+function topSectionControls<T extends TopSectionButton>(shown: readonly T[]) {
+  const size = TOP_BAR_FACE.size;
+  const width = shown.length * size + Math.max(0, shown.length - 1) * ACTION_GAPS.small.row;
+  const right = SCREEN_CONFIG.width - (MIN_PRESS - size) / 2;
+  const arrangement = arrangeActions(
+    {
+      axis: "row",
+      gap: "small",
+      origin: { x: right - width, y: TOP_BAR_FACE.y },
+      pressOverlap: "nearest",
+      width,
+    },
+    shown.map((key) => ({ key, role: "navigation", size: { height: size, width: size } }) as const),
+  );
+  const rows = (rect: Rect): Rect => ({ ...rect, height: MIN_PRESS, y: 0 });
+  const placed = arrangement.actions.filter((action): action is PlacedAction<T> => !action.hidden);
+  const presses: Pick<ActionArrangement<T>, "actions"> = {
+    actions: placed.map((action) => ({ ...action, press: rows(action.press) })),
+  };
+  const controls = placed.map(
+    ({ face, key, outset, press }) =>
+      [
+        key,
+        {
+          face: { x: face.x, y: face.y },
+          hit: rows(press),
+          owned: rows({
+            ...press,
+            width: face.width + outset.left + outset.right,
+            x: face.x - outset.left,
+          }),
+        } satisfies TopSectionControl,
+      ] as const,
+  );
+  return { controls, presses };
+}
+
+// Currency and controls keep fixed dimensions. Visible effects centre within their pinned region
+// (WALK_BAR_PARTS.effects.right), moving only with the effect count and never with the displayed
+// amount or the controls.
 export function topSectionLayout<T extends TopSectionButton>(
   visible: readonly T[],
   sections: { currency?: boolean; effects?: number } = {},
@@ -32,16 +91,7 @@ export function topSectionLayout<T extends TopSectionButton>(
     throw new Error("Menu and Pause share one top-section control");
   }
   const shown = TOP_SECTION_ORDER.filter((id): id is T => visible.includes(id as T));
-  const controls = shown.map((id, i) => {
-    const x = SCREEN_CONFIG.width - (shown.length - i) * MIN_PRESS;
-    return [
-      id,
-      {
-        face: { x: x + (MIN_PRESS - TOP_BAR_FACE.size) / 2, y: TOP_BAR_FACE.y },
-        hit: { height: MIN_PRESS, width: MIN_PRESS, x, y: 0 },
-      },
-    ] as const;
-  });
+  const { controls, presses } = topSectionControls(shown);
   const effects = sections.effects ?? 0;
   const cash = WALK_BAR_PARTS.cash;
   const currencyWidth = cash.room + 2 * TOP_BAR_SIZES.well.padding + TOP_BAR_WELL.lip;
@@ -50,11 +100,7 @@ export function topSectionLayout<T extends TopSectionButton>(
     : undefined;
   const style = WALK_BAR_PARTS.effects;
   const span = effects * style.size + Math.max(0, effects - 1) * style.gap;
-  const effectsX = topSectionGapLeft(
-    TOP_BAR_WELL.x + currencyWidth,
-    controls[0]?.[1].hit.x ?? SCREEN_CONFIG.width,
-    span,
-  );
+  const effectsX = topSectionGapLeft(TOP_BAR_WELL.x + currencyWidth, style.right, span);
   const effectWells = Array.from({ length: effects }, (_, i) => ({
     height: style.size,
     width: style.size,
@@ -73,6 +119,7 @@ export function topSectionLayout<T extends TopSectionButton>(
     currency,
     effectHolds,
     effectWells,
+    presses,
   };
 }
 
@@ -145,11 +192,12 @@ export function topSectionCurrencyText(
   return inkWidth(scale, `$${texts.full}`) <= room ? texts.full : texts.short;
 }
 
-// Rendering and input consume the same compacted control positions.
+// The control a press at (x, y) lands on: of the shown controls whose hit takes it in, the one
+// whose face's centre is nearest (pressedAction), as rendering places them.
 export function topSectionButtonAt<T extends TopSectionButton>(
   visible: readonly T[],
   x: number,
   y: number,
 ): T | undefined {
-  return topSectionLayout(visible).controls.find(([, { hit }]) => containsPoint(hit, x, y))?.[0];
+  return pressedAction(topSectionLayout(visible).presses, { x, y });
 }

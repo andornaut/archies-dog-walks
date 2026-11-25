@@ -163,7 +163,9 @@ export function createNativeTopSection(
   const records: BarControl[] = [];
   let held: BarControl | undefined;
   const updateIcons: (() => void)[] = [];
-  for (const [id, { face, hit }] of layout.controls) {
+  // Each button covers the part of its hit it owns, so where neighbours' hits overlap a press goes
+  // to the nearer face (topSectionLayout), whatever the buttons' stacking order.
+  for (const [id, { face, owned }] of layout.controls) {
     const content = doc.createElement("span");
     content.style.display = "contents";
     let pressed = false;
@@ -250,13 +252,13 @@ export function createNativeTopSection(
         ORIGIN,
         button,
         inputBottom === undefined
-          ? hit
+          ? owned
           : {
-              ...hit,
-              height: Math.max(0, Math.min(hit.height, inputBottom - hit.y)),
+              ...owned,
+              height: Math.max(0, Math.min(owned.height, inputBottom - owned.y)),
             },
       );
-      placeBox(scale, hit, view.face, {
+      placeBox(scale, owned, view.face, {
         ...face,
         height: TOP_BAR_FACE.size,
         width: TOP_BAR_FACE.size,

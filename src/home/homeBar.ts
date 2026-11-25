@@ -1,9 +1,10 @@
 import type { OutsideArea } from "@andornaut/game-kit/runtime/input/outsideTap";
-import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { screenArea } from "../input/outsideTap.ts";
-import { HOME_LAYOUT, type HomeBarButton, homeBarButtons } from "./homeLayout.ts";
+import { topSectionButtonAt } from "../ui/topSection.ts";
+import { HOME_LAYOUT, type HomeBarButton, homeBarButtons, homeBarShown } from "./homeLayout.ts";
 
 // Where an overlay sits: on a home page (the start screen, the Pet shop, the Logbook), or on a
 // walk.
@@ -27,9 +28,9 @@ export function regionOutside(exit: boolean, covered: readonly Rect[]): OutsideA
   return screenArea([...covered, ...homeBarButtons(exit).map(([, { hit }]) => hit)]);
 }
 
-// Input reads the same control positions as the shared top section.
+// Input reads the same control positions and nearest-face routing as the shared top section.
 export function homeBarButtonAt(exit: boolean, x: number, y: number): HomeBarButton | undefined {
-  return homeBarButtons(exit).find(([, { hit }]) => containsPoint(hit, x, y))?.[0];
+  return topSectionButtonAt(homeBarShown(exit), x, y);
 }
 
 // What a live home bar button does; under a modal the bar takes no presses.

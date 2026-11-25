@@ -152,8 +152,9 @@ describe("native top section integration", () => {
       labels.menu,
     ]);
     const shared = topSectionLayout(["mute", "menu"]);
-    expect(buttons.map((button) => button.style.width)).toEqual(
-      shared.controls.map(([, control]) => `${control.hit.width}px`),
+    // Each button covers the part of its hit it owns, so neighbours meet without overlapping.
+    expect(buttons.map((button) => [button.style.left, button.style.width])).toEqual(
+      shared.controls.map(([, { owned }]) => [`${owned.x}px`, `${owned.width}px`]),
     );
     view.setInputBottom(40);
     expect(buttons.map((button) => button.style.height)).toEqual(["40px", "40px"]);
@@ -407,7 +408,7 @@ it("renders the existing Exit glyph and label to the right of Menu through the s
     labels.menu,
     labels.exit,
   ]);
-  expect(buttons.map((button) => button.style.left)).toEqual(["216px", "264px", "312px"]);
+  expect(buttons.map((button) => button.style.left)).toEqual(["224px", "270px", "314px"]);
   expect(
     element.all().some((node) => node.style.backgroundImage?.includes("images/icon-exit.png")),
   ).toBe(true);
@@ -457,8 +458,8 @@ it.each([
     const { buttons, element, view } = fixture(0, true, scale);
     await Promise.resolve();
     const layout = topSectionLayout(["mute", "menu", "exit"], { currency: true });
-    layout.controls.forEach(([, { face, hit }], index) => {
-      const hitBox = gridRect(scale, hit);
+    layout.controls.forEach(([, { face, owned }], index) => {
+      const hitBox = gridRect(scale, owned);
       const faceBox = gridRect(scale, {
         ...face,
         height: TOP_BAR_FACE.size,

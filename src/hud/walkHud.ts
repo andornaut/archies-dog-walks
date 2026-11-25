@@ -51,8 +51,8 @@ export const EFFECT_WELLS = maxEffects(gameData);
 
 // The walk bar's three sections, left to right: the cash well, the effect wells and the
 // buttons. The cash well and the buttons keep their places at the bar's ends, and the effect
-// wells sit evenly between the cash well's right edge and the first button's press area, gap
-// apart, centred down the button faces' rows.
+// wells sit evenly between the cash well's right edge and their pinned region's end
+// (WALK_BAR_PARTS.effects.right), gap apart, centred down the button faces' rows.
 const SHARED_BAR = topSectionLayout(WALK_BAR_BUTTONS, { currency: true, effects: EFFECT_WELLS });
 const CURRENCY = SHARED_BAR.currency;
 const FIRST_EFFECT = SHARED_BAR.effectWells[0];

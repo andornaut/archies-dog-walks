@@ -3,7 +3,7 @@ import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtim
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { isMuteKey, isPauseKey } from "../input/keyBindings.ts";
 import type { PressMode } from "../input/pointerTracking.ts";
-import { topBarGlyphRect } from "../ui/topSection.ts";
+import { topBarGlyphRect, topSectionButtonAt } from "../ui/topSection.ts";
 import {
   type BarButton,
   debuffBarRects,
@@ -37,10 +37,13 @@ export function topBarButtonHits(debuffs: number): Readonly<Record<WalkBarButton
 }
 
 // The button a press at (x, y) lands on, if any, with debuffs debuff bars showing
-// (topBarButtonHits).
+// (topBarButtonHits): where two hits overlap, the one whose face's centre is nearest
+// (topSectionButtonAt).
 export function topBarButtonAt(debuffs: number, x: number, y: number): WalkBarButtonId | undefined {
   const hits = topBarButtonHits(debuffs);
-  return WALK_BAR_BUTTONS.find((press) => containsPoint(hits[press], x, y));
+  const bar = SCREEN_LAYOUT.topBar;
+  const button = topSectionButtonAt(WALK_BAR_BUTTONS, x - bar.x, y - bar.y);
+  return button !== undefined && containsPoint(hits[button], x, y) ? button : undefined;
 }
 
 // A walk key: M mutes, and P and Escape are the pause button's. A held key's repeats press

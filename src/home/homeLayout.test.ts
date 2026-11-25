@@ -338,12 +338,14 @@ describe("home top bar buttons", () => {
     expect(buttons.map(([id]) => id)).toEqual(order);
   });
 
-  // The last face on the walk bar's Pause face and each before it a press column left of the
-  // next, each centred in a MIN_PRESS square hit area from the screen's top, faces on the middle
-  // row.
-  it.each(buttons)("spaces %s's face and hit a press column apart", (_, button) => {
+  // The last face on the walk bar's Pause face and each before it the small-button gap left of
+  // the next, each centred in a MIN_PRESS square hit area from the screen's top, faces on the
+  // middle row.
+  it.each(buttons)("spaces %s's face the small-button gap from the next", (_, button) => {
     const fromRight = buttons.length - 1 - buttons.findIndex(([, b]) => b === button);
-    expect(button.face.x).toBe(WALK_BAR.buttons.pause.faceX - fromRight * MIN_PRESS);
+    expect(button.face.x).toBe(
+      WALK_BAR.buttons.pause.faceX - fromRight * (faceSize + BUTTON_SIZE.smallGap),
+    );
     expect(button.hit).toEqual({
       height: MIN_PRESS,
       width: MIN_PRESS,
@@ -354,11 +356,13 @@ describe("home top bar buttons", () => {
     expect(button.face.y + faceSize / 2).toBe(mid);
   });
 
-  // After the bank's widest well, ending on the face Help's close control takes.
-  it("runs the hit areas side by side to the screen's right edge", () => {
-    const ends = hits.map((hit) => hit.x + hit.width);
-    expect(hits.slice(1).map((hit) => hit.x)).toEqual(ends.slice(0, -1));
+  // After the bank's widest well; the hits overlap and the parts the buttons own meet.
+  it("runs the owned press parts side by side to the screen's right edge", () => {
+    const owned = buttons.map(([, button]) => button.owned);
+    const ends = owned.map((part) => part.x + part.width);
+    expect(owned.slice(1).map((part) => part.x)).toEqual(ends.slice(0, -1));
     expect(ends.at(-1)).toBe(SCREEN_CONFIG.width);
+    expect(hits.at(-1)!.x + MIN_PRESS).toBe(SCREEN_CONFIG.width);
     const { well } = HOME_LAYOUT.topBar;
     expect(well.x + well.maxWidth).toBeLessThan(buttons[0]?.[1].face.x ?? 0);
   });

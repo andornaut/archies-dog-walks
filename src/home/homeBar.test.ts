@@ -58,23 +58,8 @@ describe("homeBackAction", () => {
   );
 });
 
+// The bar's positions and press routing are tested with the shared top section.
 it("compacts an unavailable Exit and keeps shown controls outside overlay dismissal", () => {
-  expect(
-    homeBarButtons(true).map(([id, control]) => [
-      id,
-      control.hit.x,
-      control.face.x,
-      control.face.y,
-    ]),
-  ).toEqual([
-    ["mute", 216, 230, 8],
-    ["menu", 264, 278, 8],
-    ["exit", 312, 326, 8],
-  ]);
-  expect(homeBarButtons(false).map(([id, control]) => [id, control.hit.x])).toEqual([
-    ["mute", 264],
-    ["menu", 312],
-  ]);
   const removedColumn = { x: 240, y: 20 };
   expect(homeBarButtonAt(false, removedColumn.x, removedColumn.y)).toBeUndefined();
   expect(isOutside(regionOutside(false, []), removedColumn)).toBe(true);

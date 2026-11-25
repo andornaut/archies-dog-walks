@@ -204,6 +204,10 @@ export const WALK_BAR_PARTS = {
     icon: 1,
     // art: an effect icon's side.
     iconSize: 24,
+    // art: the right end of the region the wells centre in, from the bar's left; the region
+    // starts at the cash well's right edge and is pinned, so the wells keep their places
+    // whatever the controls' press areas.
+    right: 264,
     // art: an effect well's side.
     size: 26,
   },
