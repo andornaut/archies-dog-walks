@@ -72,7 +72,7 @@ function pageTab(measure: PanelMeasure, face: Rect, tab: ShopPageTab): PageTab {
     label: {
       // As a label with originY 0.5 on the face's middle, its line's capitals capTop rows in.
       capTop: Math.round(face.y + face.height / 2) + (capTop - lineHeight / 2) * TEXT_SCALE,
-      centre: "advance",
+      centre: "ink",
       centreX: face.x + face.width / 2,
       colour: PALETTE[look.text],
       font: "title",

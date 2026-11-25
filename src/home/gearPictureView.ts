@@ -14,7 +14,7 @@ export function gearPictureFallback(
 ): PanelText {
   return {
     capTop: picture.y + 11 * picture.scale,
-    centre: "advance",
+    centre: "ink",
     centreX: picture.x + 16 * picture.scale,
     colour: PALETTE.cream,
     font: "title",

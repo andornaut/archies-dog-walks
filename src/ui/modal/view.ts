@@ -71,7 +71,7 @@ export function panelButton(
     rect,
     text: {
       capTop: Math.round(rect.y + (rect.height - BUTTON_LIP_PX) / 2 + lineToCaps),
-      centre: "advance",
+      centre: "ink",
       centreX: rect.x + rect.width / 2,
       colour: PALETTE[BUTTON_COLOURS[primary ? "primary" : "normal"].label],
       font: "title",

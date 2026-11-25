@@ -38,7 +38,7 @@ export function createStartControl(
   const rect = HOME_LAYOUT.startButton;
   const text = {
     capTop: rect.y + HOME_LAYOUT.startLabel.readyY + (ready ? 0 : BUTTON_SIZE.press),
-    centre: "advance",
+    centre: "ink",
     centreX: rect.x + rect.width / 2,
     colour: PALETTE[BUTTON_COLOURS[ready ? "primary" : "disabled"].label],
     font: "title",

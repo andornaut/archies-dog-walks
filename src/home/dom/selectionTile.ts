@@ -91,7 +91,7 @@ export function createSelectionTile(
     view.mark === "fallback"
       ? ({
           capTop: view.rect.y + MARK_OFFSET.y + 4,
-          centre: "advance",
+          centre: "ink",
           centreX: view.rect.x + MARK_OFFSET.x + 8,
           colour: PALETTE.white,
           font: "title",
