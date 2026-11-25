@@ -119,7 +119,8 @@ HUD effect geometry follows the [walk-bar exception](controls.md#sizing-and-spac
 ### Icons beside labels
 
 - **Gap:** a 16px icon beside its label leaves `ICON_LABEL_GAP` (4) from its 16px art cell to the label's first ink column: Settings rows (whose labels share one column, x = 58), the message strip, the new-walker info line, the iOS install steps, the Settings Install button and the reach chip.
-- **Vertical:** the icon centres on its label's capitals, with equal rows above and below them; an odd remainder puts the extra row below.
+- **Vertical:** the icon centres on its label's capitals, with equal rows above and below them; an odd remainder puts the extra row below. Inside a backed chip or plate, such as the reach chip, the icon and label instead form one ink group centred on the backing's flat fill by the [backed-label rule](#backed-labels), keeping at least one clear row against the frame.
+- **Icon beside an icon:** the reach icon that flies beside a treat's small heart keeps its own 2px gap; `ICON_LABEL_GAP` applies only to an icon beside a label.
 - **Install:** the Settings Install button places its icon box, `ICON_LABEL_GAP` and label as one ink group (the icon contributes its cell from ink column 2, its ink filling columns 2 to 13) and centres the union of the icon and label ink on its face. The button is its row's sole action, centred in the row; its width and position follow the build.
 
 ### Backed labels
