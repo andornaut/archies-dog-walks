@@ -654,10 +654,13 @@ export function planSlotSpawns<Kind extends string>(
   };
   const solve = (ordering: "original" | "balanced") => {
     const board = createSlotConstructionState(geometry, path);
-    const result = createSlotWitnessSearch(geometry, path, domains, witnessJobs, {
-      ...work,
-      ordinaryOrder: ordering,
-    }).solve(board);
+    const result = createSlotWitnessSearch(
+      { ...work, ordinaryOrder: ordering },
+      geometry,
+      path,
+      domains,
+      witnessJobs,
+    ).solve(board);
     recordAttempt(ordering, result.status);
     return result;
   };

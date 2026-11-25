@@ -78,11 +78,11 @@ export interface WitnessWork<Kind extends string> {
 
 // One native transaction selects entries before independent materialisation audits.
 export function createSlotWitnessSearch<Kind extends string>(
+  work: WitnessWork<Kind>,
   geometry: Omit<SpawnPlan<Kind>, "quotas">,
   path: PlannedSpawns<Kind>["path"],
   domains: CandidateDomains<Kind>,
   jobs: readonly WitnessJob<Kind>[],
-  work: WitnessWork<Kind>,
 ) {
   const byKey = new Map(jobs.map((job) => [job.key, job]));
   const construct = createSlotWitnessConstruct(geometry, path, jobs);

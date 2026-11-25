@@ -183,7 +183,7 @@ describe("complete witness native contracts", () => {
     const jobs = preparations.map(({ job }) => job);
     const state = createSlotConstructionState(geometry, path);
     const domains = createSlotCandidateDomains(geometry, path);
-    const result = createSlotWitnessSearch(geometry, path, domains, jobs, boundedWork(jobs)).solve(
+    const result = createSlotWitnessSearch(boundedWork(jobs), geometry, path, domains, jobs).solve(
       state,
     );
     expect(result.status).toBe("compatible");
@@ -251,11 +251,11 @@ describe("complete witness native contracts", () => {
       );
       const state = createSlotConstructionState(smallRoad, path);
       const result = createSlotWitnessSearch(
+        boundedWork(jobs),
         smallRoad,
         path,
         createSlotCandidateDomains(smallRoad, path),
         jobs,
-        boundedWork(jobs),
       ).solve(state);
       expect(state.entries()).toEqual([]);
       return result;
@@ -293,7 +293,7 @@ describe("complete witness native contracts", () => {
     const state = createSlotConstructionState(geometry, path);
     const domains = createSlotCandidateDomains(geometry, path);
     const pair = jobs.slice(0, 2);
-    const first = createSlotWitnessSearch(geometry, path, domains, pair, boundedWork(pair)).solve(
+    const first = createSlotWitnessSearch(boundedWork(pair), geometry, path, domains, pair).solve(
       state,
     );
     expect(first.status).toBe("compatible");
@@ -314,10 +314,16 @@ describe("complete witness native contracts", () => {
     ).toBe("valid");
     expect(first.witness).toHaveLength(2);
     const rejected: string[] = [];
-    const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
-      ...boundedWork(jobs),
-      rejected: (_candidate, failure) => rejected.push(failure.rule),
-    }).solve(state);
+    const result = createSlotWitnessSearch(
+      {
+        ...boundedWork(jobs),
+        rejected: (_candidate, failure) => rejected.push(failure.rule),
+      },
+      geometry,
+      path,
+      domains,
+      jobs,
+    ).solve(state);
     expect(result.status).toBe("blocked");
     expect(rejected).toContain("kind-row");
     expect(state.entries()).toEqual([]);

@@ -97,24 +97,30 @@ describe("bounded runtime ordering portfolio", () => {
       preparedSeen: unknown[] = [];
     let calls = 0;
     vi.spyOn(witnessSearch, "createSlotWitnessSearch").mockImplementation(
-      (road, path, domains, jobs, work) => {
+      (work, road, path, domains, jobs) => {
         const first = calls++ === 0;
         domainsSeen.push(domains);
         jobsSeen.push(jobs);
         preparedSeen.push([...jobs[0]!.preparations()][0]);
         let state: Parameters<ReturnType<typeof create>["solve"]>[0];
-        const search = create(road, path, domains, jobs, {
-          ...work,
-          check() {
-            if (first && state.entries().length > 0) {
-              while (work.propagate!()) {
-                /* Consume the real shared allowance. */
+        const search = create(
+          {
+            ...work,
+            check() {
+              if (first && state.entries().length > 0) {
+                while (work.propagate!()) {
+                  /* Consume the real shared allowance. */
+                }
+                return false;
               }
-              return false;
-            }
-            return work.check();
+              return work.check();
+            },
           },
-        });
+          road,
+          path,
+          domains,
+          jobs,
+        );
         return {
           ...search,
           solve(value) {
@@ -158,16 +164,22 @@ describe("bounded runtime ordering portfolio", () => {
   it("never resets the cumulative candidate allowance", () => {
     const create = witnessSearch.createSlotWitnessSearch;
     vi.spyOn(witnessSearch, "createSlotWitnessSearch").mockImplementation(
-      (road, path, domains, jobs, work) =>
-        create(road, path, domains, jobs, {
-          ...work,
-          check() {
-            while (work.check()) {
-              /* Consume the real shared allowance. */
-            }
-            return false;
+      (work, road, path, domains, jobs) =>
+        create(
+          {
+            ...work,
+            check() {
+              while (work.check()) {
+                /* Consume the real shared allowance. */
+              }
+              return false;
+            },
           },
-        }),
+          road,
+          path,
+          domains,
+          jobs,
+        ),
     );
     const result = planSlotSpawns(context, geometry, catalogue(), rewards, config);
     expect(result.status).toBe("unsupported");
@@ -182,16 +194,22 @@ describe("bounded runtime ordering portfolio", () => {
     const create = witnessSearch.createSlotWitnessSearch;
     const search = vi
       .spyOn(witnessSearch, "createSlotWitnessSearch")
-      .mockImplementation((road, path, domains, jobs, work) =>
-        create(road, path, domains, jobs, {
-          ...work,
-          check() {
-            while (work.anchor()) {
-              /* Consume the real shared allowance. */
-            }
-            return false;
+      .mockImplementation((work, road, path, domains, jobs) =>
+        create(
+          {
+            ...work,
+            check() {
+              while (work.anchor()) {
+                /* Consume the real shared allowance. */
+              }
+              return false;
+            },
           },
-        }),
+          road,
+          path,
+          domains,
+          jobs,
+        ),
       );
     const result = planSlotSpawns(context, geometry, catalogue(), rewards, config);
     expect(result.status).toBe("unsupported");
@@ -224,36 +242,42 @@ it.each(["source", "geometry", "cyclic-geometry"] as const)(
     const rejected: unknown[] = [];
     const searchSpy = vi
       .spyOn(witnessSearch, "createSlotWitnessSearch")
-      .mockImplementation((nativeRoad, path, domains, jobs, work) => {
+      .mockImplementation((work, nativeRoad, path, domains, jobs) => {
         const primary = searchSpy.mock.calls.length === 1;
         let state: Parameters<ReturnType<typeof create>["solve"]>[0];
-        const search = create(nativeRoad, path, domains, jobs, {
-          ...work,
-          check() {
-            if (primary && state.entries().length > 0) {
-              if (rejected.length === 0) {
-                try {
-                  if (change === "source") {
-                    Object.defineProperty(kinds[0]!, "compile", {
-                      value: () => ({ blocksLane: false }),
-                    });
-                  } else if (change === "geometry") {
-                    road.cellInset++;
-                  } else {
-                    Object.assign(road, { changed: road });
+        const search = create(
+          {
+            ...work,
+            check() {
+              if (primary && state.entries().length > 0) {
+                if (rejected.length === 0) {
+                  try {
+                    if (change === "source") {
+                      Object.defineProperty(kinds[0]!, "compile", {
+                        value: () => ({ blocksLane: false }),
+                      });
+                    } else if (change === "geometry") {
+                      road.cellInset++;
+                    } else {
+                      Object.assign(road, { changed: road });
+                    }
+                  } catch (error) {
+                    rejected.push(error);
                   }
-                } catch (error) {
-                  rejected.push(error);
                 }
+                while (work.propagate!()) {
+                  /* Consume the real shared allowance. */
+                }
+                return false;
               }
-              while (work.propagate!()) {
-                /* Consume the real shared allowance. */
-              }
-              return false;
-            }
-            return work.check();
+              return work.check();
+            },
           },
-        });
+          nativeRoad,
+          path,
+          domains,
+          jobs,
+        );
         return {
           ...search,
           solve(value) {

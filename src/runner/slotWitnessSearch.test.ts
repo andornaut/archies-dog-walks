@@ -69,7 +69,7 @@ function fixture(overrides: Partial<WitnessWork<string>> = {}, auxiliary = false
     progress: () => 0,
     ...overrides,
   };
-  const search = createSlotWitnessSearch(road, path, domains, jobs, work);
+  const search = createSlotWitnessSearch(work, road, path, domains, jobs);
   return { domains, jobs, path, search, state };
 }
 

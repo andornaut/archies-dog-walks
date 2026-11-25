@@ -106,16 +106,22 @@ describe("optional native slot delivery", () => {
       expect(state.checkComplete().accepted).toBe(true);
       return true;
     });
-    const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
-      anchor: () => true,
-      certifyPartial,
-      check,
-      minimumDelivery: 9,
-      ordinaryOrder: "original",
-      progress: () => 0,
-      propagate: () => true,
-      stopped: () => stopped,
-    }).solve(state);
+    const result = createSlotWitnessSearch(
+      {
+        anchor: () => true,
+        certifyPartial,
+        check,
+        minimumDelivery: 9,
+        ordinaryOrder: "original",
+        progress: () => 0,
+        propagate: () => true,
+        stopped: () => stopped,
+      },
+      geometry,
+      path,
+      domains,
+      jobs,
+    ).solve(state);
     expect(result.status).toBe("partial");
     if (result.status !== "partial") {
       throw new Error("Expected a retained native incumbent");
@@ -140,22 +146,28 @@ describe("optional native slot delivery", () => {
     const certifyPartial = vi.fn(() => true);
     let lastCheck = false;
     let refused = 0;
-    const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
-      anchor: () => true,
-      certifyPartial,
-      check: () => {
-        if (lastCheck) {
-          refused++;
-          return false;
-        }
-        lastCheck = state.entries().length === jobs.length;
-        return true;
+    const result = createSlotWitnessSearch(
+      {
+        anchor: () => true,
+        certifyPartial,
+        check: () => {
+          if (lastCheck) {
+            refused++;
+            return false;
+          }
+          lastCheck = state.entries().length === jobs.length;
+          return true;
+        },
+        minimumDelivery: 9,
+        ordinaryOrder: "original",
+        progress: () => 0,
+        propagate: () => true,
       },
-      minimumDelivery: 9,
-      ordinaryOrder: "original",
-      progress: () => 0,
-      propagate: () => true,
-    }).solve(state);
+      geometry,
+      path,
+      domains,
+      jobs,
+    ).solve(state);
     expect(certifyPartial).toHaveBeenCalledOnce();
     expect(lastCheck).toBe(true);
     expect(refused).toBe(0);
@@ -169,15 +181,21 @@ describe("optional native slot delivery", () => {
   it("cannot omit a protected owner even when nine other owners have native values", () => {
     const { domains, jobs, path, state } = fixture(4, 4);
     const certifyPartial = vi.fn(() => true);
-    const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
-      anchor: () => true,
-      certifyPartial,
-      check: () => true,
-      minimumDelivery: 9,
-      ordinaryOrder: "original",
-      progress: () => 0,
-      propagate: () => true,
-    }).solve(state);
+    const result = createSlotWitnessSearch(
+      {
+        anchor: () => true,
+        certifyPartial,
+        check: () => true,
+        minimumDelivery: 9,
+        ordinaryOrder: "original",
+        progress: () => 0,
+        propagate: () => true,
+      },
+      geometry,
+      path,
+      domains,
+      jobs,
+    ).solve(state);
     expect(result.status).toBe("blocked");
     expect(certifyPartial).not.toHaveBeenCalled();
     expect(state.entries()).toEqual([]);
@@ -193,15 +211,21 @@ describe("optional native slot delivery", () => {
     ({ failures, next, progress }) => {
       const { domains, jobs, path, rejected, state } = rejectingFixture(failures);
       const placed: string[] = [];
-      const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
-        anchor: () => true,
-        certifyPartial: () => true,
-        check: () => true,
-        minimumDelivery: 9,
-        ordinaryOrder: "original",
-        progress: () => progress,
-        propagate: () => true,
-      }).solve({
+      const result = createSlotWitnessSearch(
+        {
+          anchor: () => true,
+          certifyPartial: () => true,
+          check: () => true,
+          minimumDelivery: 9,
+          ordinaryOrder: "original",
+          progress: () => progress,
+          propagate: () => true,
+        },
+        geometry,
+        path,
+        domains,
+        jobs,
+      ).solve({
         ...state,
         commit(owner, entry) {
           const trial = state.commit(owner, entry);
@@ -227,18 +251,24 @@ describe("optional native slot delivery", () => {
     let certified = false;
     let repaired = false;
     const afterAudit: string[] = [];
-    const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
-      anchor: () => true,
-      certifyPartial: () => {
-        certified = true;
-        return true;
+    const result = createSlotWitnessSearch(
+      {
+        anchor: () => true,
+        certifyPartial: () => {
+          certified = true;
+          return true;
+        },
+        check: () => ++checks <= REJECTION_CHECKS,
+        minimumDelivery: 9,
+        ordinaryOrder: "original",
+        ...RESERVE_DUE,
+        propagate: () => true,
       },
-      check: () => ++checks <= REJECTION_CHECKS,
-      minimumDelivery: 9,
-      ordinaryOrder: "original",
-      ...RESERVE_DUE,
-      propagate: () => true,
-    }).solve({
+      geometry,
+      path,
+      domains,
+      jobs,
+    ).solve({
       ...state,
       commit(owner, entry) {
         if (certified && !repaired) {
@@ -273,15 +303,21 @@ describe("optional native slot delivery", () => {
       ineligible = true;
       return false;
     });
-    const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
-      anchor: () => true,
-      certifyPartial,
-      check: () => ++checks <= REJECTION_CHECKS,
-      minimumDelivery: 9,
-      ordinaryOrder: "original",
-      ...RESERVE_DUE,
-      propagate: () => true,
-    }).solve({
+    const result = createSlotWitnessSearch(
+      {
+        anchor: () => true,
+        certifyPartial,
+        check: () => ++checks <= REJECTION_CHECKS,
+        minimumDelivery: 9,
+        ordinaryOrder: "original",
+        ...RESERVE_DUE,
+        propagate: () => true,
+      },
+      geometry,
+      path,
+      domains,
+      jobs,
+    ).solve({
       ...state,
       commit(owner, entry) {
         if (ineligible) {
@@ -304,15 +340,21 @@ describe("optional native slot delivery", () => {
       rule: "native-invariant",
     };
     const certifyPartial = vi.fn(() => true);
-    const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
-      anchor: () => true,
-      certifyPartial,
-      check: () => true,
-      minimumDelivery: 9,
-      ordinaryOrder: "original",
-      progress: () => 0,
-      propagate: () => true,
-    }).solve({
+    const result = createSlotWitnessSearch(
+      {
+        anchor: () => true,
+        certifyPartial,
+        check: () => true,
+        minimumDelivery: 9,
+        ordinaryOrder: "original",
+        progress: () => 0,
+        propagate: () => true,
+      },
+      geometry,
+      path,
+      domains,
+      jobs,
+    ).solve({
       ...state,
       commit(owner, entry) {
         return owner === jobs[9] ? { accepted: false, failure } : state.commit(owner, entry);

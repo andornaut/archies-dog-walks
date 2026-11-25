@@ -319,7 +319,7 @@ describe("safe slot planning", () => {
     const observed = vi
       .spyOn(witnessSearch, "createSlotWitnessSearch")
       .mockImplementation((...args) => {
-        for (const job of args[3]) {
+        for (const job of args[4]) {
           const read = job.preparations.bind(job);
           const prepared = vi.spyOn(job, "preparations").mockImplementation(function* () {
             const available = [...read()];

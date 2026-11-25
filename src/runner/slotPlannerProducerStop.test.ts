@@ -65,13 +65,19 @@ describe("slot producer preparation failure", () => {
       const createSearch = witnessSearch.createSlotWitnessSearch;
       const search = vi
         .spyOn(witnessSearch, "createSlotWitnessSearch")
-        .mockImplementation((road, path, domains, jobs, work) =>
-          createSearch(road, path, domains, jobs, {
-            ...work,
-            anchor: track(work.anchor),
-            check: track(work.check),
-            ...(work.propagate === undefined ? {} : { propagate: track(work.propagate) }),
-          }),
+        .mockImplementation((work, road, path, domains, jobs) =>
+          createSearch(
+            {
+              ...work,
+              anchor: track(work.anchor),
+              check: track(work.check),
+              ...(work.propagate === undefined ? {} : { propagate: track(work.propagate) }),
+            },
+            road,
+            path,
+            domains,
+            jobs,
+          ),
         );
       const active = {
         encounterFixed: 1,
