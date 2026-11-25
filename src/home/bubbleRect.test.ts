@@ -296,8 +296,9 @@ describe("the walker's speech", () => {
   });
 
   it.each(drawn)(
-    "centres the ink of $name down the bubble's cream, any odd row under it",
+    "centres the ink of $name down the bubble's cream, a row clear at least, any odd row under it",
     ({ above, below }) => {
+      expect(above).toBeGreaterThanOrEqual(1);
       expect(below - above).toBeGreaterThanOrEqual(0);
       expect(below - above).toBeLessThanOrEqual(1);
     },

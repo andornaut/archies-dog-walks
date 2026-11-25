@@ -654,9 +654,10 @@ export const HOME_SCREEN = {
     // bubble's right, the name's capitals under the face, the text's narrowing, the face's side
     // and its top.
     owner: { foot: 18, gap: 6, inset: 3, nameGap: 3, roomCut: 4, size: 32, top: 4 },
-    // The rows under the last line's lowest ink, and over the first line's capitals.
-    padBottom: 3,
-    padTop: 4,
+    // The rows under the last line's lowest ink, and over the first line's capitals: a row of
+    // cream clear of the rims beyond the font's lowest ink and its letters' highest.
+    padBottom: 4,
+    padTop: 5,
     // The text's inset from the bubble's sides.
     padX: 5,
     // art: the rows the quip art inks at its bottom and top edges.

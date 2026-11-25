@@ -2070,8 +2070,8 @@
           "size": 32,
           "top": 4
         },
-        "padBottom": 3,
-        "padTop": 4,
+        "padBottom": 4,
+        "padTop": 5,
         "padX": 5,
         "rim": {
           "bottom": 3,
