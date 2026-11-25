@@ -6,10 +6,15 @@ import crashArt from "virtual:adw-crash-art";
 import { MENU_TEXT } from "../../data/menuText.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { PALETTE } from "../palette.ts";
-import { topSectionLayout } from "../topSection.ts";
+import { TITLE_CAP_ROWS } from "../textFit.ts";
+import { topSectionLayout, topSectionStateCapTop } from "../topSection.ts";
 import { bindGameActionHolds } from "./actionBinding.ts";
 import { createControlGlyph } from "./controlGlyph.ts";
 import { createGameButton } from "./gameButton.ts";
+
+// Rows from the top of an 8px line box to Silkscreen's capitals at 8px, which the crash screen's
+// title face (src/crash/crash.css) sets the state word in, as font-title draws it on the top bar.
+export const STATE_WORD_CAP_TOP = 2;
 
 // Renderer failure uses the same device preference as Phaser's soundboard.
 // The control needs neither a compatible progress save nor loaded game fonts or textures, and
@@ -54,7 +59,8 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
   const controlView = createGameButton(doc, {
     content: { icon, kind: "icon", name: MENU_TEXT.settings.sound },
     getAction: () => ({ activate: toggle }),
-    getState: () => ({ toggled: settings.current.muted }),
+    // Pressed means sound on, as the top bar's Sound control reports it.
+    getState: () => ({ toggled: !settings.current.muted }),
   });
   const button = controlView.element;
   button.setAttribute("aria-keyshortcuts", "M");
@@ -68,6 +74,17 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
   });
   button.style.setProperty("--mute-face-x", `${control.face.x - control.hit.x}px`);
   button.style.setProperty("--mute-face-y", `${control.face.y - control.hit.y}px`);
+  // The current state, as the top bar shows it: directly below the face, centred across the hit
+  // box. The button's pressed state carries it for assistive technology.
+  const state = doc.createElement("span");
+  state.className = "adw-standalone-mute-state";
+  state.setAttribute("aria-hidden", "true");
+  Object.assign(state.style, {
+    left: `${control.hit.x}px`,
+    top: `${topSectionStateCapTop(control.face, TITLE_CAP_ROWS) - STATE_WORD_CAP_TOP}px`,
+    width: `${control.hit.width}px`,
+  });
+  view.append(state);
   const image = doc.createElement("img");
   let rasterReady = false;
   let vector = false;
@@ -85,6 +102,7 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
     controlView.refresh();
     button.title = `${MENU_TEXT.settings.sound}: ${muted ? MENU_TEXT.settings.off : MENU_TEXT.settings.on}`;
     button.setAttribute("data-muted", String(muted));
+    state.textContent = (muted ? MENU_TEXT.settings.off : MENU_TEXT.settings.on).toUpperCase();
     try {
       icon.replaceChildren(createControlGlyph(doc, muted ? "sound-off" : "sound-on"));
       vector = true;

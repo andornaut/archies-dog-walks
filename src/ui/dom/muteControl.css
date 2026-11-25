@@ -20,6 +20,17 @@
   height: 20px;
 }
 
+.adw-standalone-mute-state {
+  position: absolute;
+  color: var(--adw-cream);
+  font:
+    8px / 8px "Archie crash title",
+    ui-monospace,
+    monospace;
+  text-align: center;
+  white-space: nowrap;
+}
+
 .adw-standalone-mute-icon {
   display: grid;
   place-items: center;

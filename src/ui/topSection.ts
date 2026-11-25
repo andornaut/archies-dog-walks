@@ -8,6 +8,7 @@ import {
   TOP_BAR_HEIGHT,
   TOP_BAR_MID,
   TOP_BAR_WELL,
+  topBarContentRows,
   wellCapsTop,
 } from "./topBarTrim.ts";
 
@@ -90,6 +91,14 @@ export function topSectionButtonBacking(face: Point): Rect {
     x: face.x + (TOP_BAR_FACE.size - TOP_BAR_WELL.height) / 2,
     y: TOP_BAR_WELL.y,
   };
+}
+
+// The top row of a toggle's state word, capRows tall, under a control's face: centred down the
+// plum rows between the face's bottom and the bar's edge, so it sits directly below the face.
+export function topSectionStateCapTop(face: Point, capRows: number): number {
+  return Math.floor(
+    (face.y + TOP_BAR_FACE.size + topBarContentRows(TOP_BAR_HEIGHT).bottom - capRows) / 2,
+  );
 }
 
 // Currency follows the same full-size metrics with or without an effects section.

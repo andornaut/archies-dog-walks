@@ -22,14 +22,13 @@ import {
   gridY,
 } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
+import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL, topBarRects } from "../topBarTrim.ts";
 import {
-  TOP_BAR_FACE,
-  TOP_BAR_TRIM,
-  TOP_BAR_WELL,
-  topBarContentRows,
-  topBarRects,
-} from "../topBarTrim.ts";
-import { type TopSectionButton, topSectionCurrency, topSectionLayout } from "../topSection.ts";
+  type TopSectionButton,
+  topSectionCurrency,
+  topSectionLayout,
+  topSectionStateCapTop,
+} from "../topSection.ts";
 import { containGameButtonClicks } from "./actionBinding.ts";
 import { type DomArtSource, imageArt, sheetArt } from "./artElements.ts";
 import { createGameButton } from "./gameButton.ts";
@@ -199,13 +198,7 @@ export function createNativeTopSection(
       sound === undefined
         ? undefined
         : ({
-            capTop: Math.floor(
-              (face.y +
-                TOP_BAR_FACE.size +
-                topBarContentRows(layout.bar.height).bottom -
-                fontMetrics(title).capHeight) /
-                2,
-            ),
+            capTop: topSectionStateCapTop(face, fontMetrics(title).capHeight),
             centre: "ink",
             centreX: face.x + TOP_BAR_FACE.size / 2,
             colour: PALETTE.cream,
