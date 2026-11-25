@@ -5,13 +5,7 @@ import { gameData } from "../data/index.ts";
 import { cardEffectText, type CardTextContext } from "../rules/effectText.ts";
 import { PILL_CLOSE, PILL_SPACE, pillIndex } from "../ui/namePills.ts";
 import { cents } from "../units.ts";
-import {
-  debuffNameMarks,
-  effectNameMarks,
-  faceTextWithNamePills,
-  pillKind,
-  withNamePills,
-} from "./effectNames.ts";
+import { debuffNameMarks, effectNameMarks, pillKind, withNamePills } from "./effectNames.ts";
 
 // The text each mark covers, with its kind.
 function marked(text: string): { kind: string; name: string }[] {
@@ -92,23 +86,6 @@ describe("withNamePills", () => {
 
   it("leaves text naming no effect as it is", () => {
     expect(withNamePills(gameData, "Kilo: −1♥ Second chance")).toBe("Kilo: −1♥ Second chance");
-  });
-});
-
-describe("faceTextWithNamePills", () => {
-  it("sets the line's own marks in their pills, and moves its owners' marks with the text", () => {
-    const text = "Stinky pack! Stinky: Rosa smiles";
-    const shown = faceTextWithNamePills(gameData, {
-      marks: [{ at: text.indexOf("Rosa"), dog: "kilo", length: 4, mood: "happy" }],
-      names: debuffNameMarks(gameData, "stinky", text),
-      text,
-    });
-    const [mark] = shown.marks ?? [];
-    expect(shown.text.slice(mark?.at, (mark?.at ?? 0) + 4)).toBe("Rosa");
-    const { kind, rest } = opened(shown.text);
-    expect(kind).toBe("stinky");
-    expect(rest.startsWith(`Stinky${PILL_CLOSE} pack! `)).toBe(true);
-    expect(shown.text.split(PILL_CLOSE)).toHaveLength(3);
   });
 });
 

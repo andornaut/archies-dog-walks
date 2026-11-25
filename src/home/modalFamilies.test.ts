@@ -12,8 +12,8 @@ import {
   ZONE_EARNINGS_FIT,
   zoneDoneRows,
 } from "../hud/celebrationLayout.ts";
-import { withNamePills } from "../hud/effectNames.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
+import { withNamePills } from "../presentation/effectNames.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { newPlayerSave, veteranSave } from "../testing/saves.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";

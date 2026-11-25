@@ -14,9 +14,11 @@ import { DIFFICULTY_KEY } from "../../assets/spriteKeys.ts";
 import { SLICES } from "../../data/layout.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import type { GameData } from "../../data/types.ts";
+import { textPart } from "../../home/dom/detailText.ts";
 import { CHARM } from "../../layout/buffLayout.ts";
 import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { CARD_LAYOUT, cardRowIn, forkHomeRect } from "../../presentation/cardLayout.ts";
+import { walkBarIconKey } from "../../presentation/effectIcons.ts";
 import { type CardView, MAX_CARD_OPTIONS } from "../../rules/choices.ts";
 import { cardHeader } from "../../ui/cardRow.ts";
 import { registerScenePointer } from "../../ui/dom/actionBinding.ts";
@@ -38,8 +40,7 @@ import {
   choiceCardSurface,
   type ChoiceEntry,
 } from "../choiceCardView.ts";
-import { walkBarIconKey } from "../effectIcons.ts";
-import { type DomDetailCardInput, textPart } from "./detailCard.ts";
+import type { DomDetailCardInput } from "./detailCard.ts";
 import { type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
 
 const ORIGIN = { x: 0, y: 0 } as const;

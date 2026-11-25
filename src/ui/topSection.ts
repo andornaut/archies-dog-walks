@@ -18,6 +18,13 @@ import {
   wellCapsTop,
 } from "./topBarTrim.ts";
 
+// The currency's text in its well, the walk's cash and the home bank alike: its scale and its
+// capitals' top row.
+export const TOP_SECTION_CURRENCY_TEXT = {
+  capsY: wellCapsTop(TITLE_CAP_ROWS * WALK_BAR_PARTS.cash.scale),
+  scale: WALK_BAR_PARTS.cash.scale,
+} as const;
+
 // Visibility removes a control from the flow; every section uses this order and spacing.
 export const TOP_SECTION_ORDER = ["mute", "menu", "pause", "exit"] as const;
 export type TopSectionButton = (typeof TOP_SECTION_ORDER)[number];
@@ -165,7 +172,6 @@ export function pressedEffectWells(wells: readonly Rect[], pressed: number | und
 
 // Currency follows the same full-size metrics with or without an effects section.
 export function topSectionCurrency(layout: { currency: Rect | undefined }, inkWidth: number) {
-  const cash = WALK_BAR_PARTS.cash;
   const maximum = layout.currency;
   if (maximum === undefined) {
     throw new Error("This top section has no currency");
@@ -175,8 +181,8 @@ export function topSectionCurrency(layout: { currency: Rect | undefined }, inkWi
     // The well's flat face, less its lip column.
     left: well.x + Math.floor((well.width - TOP_BAR_WELL.lip - inkWidth) / 2),
     room: maximum.width - TOP_BAR_WELL.lip - 2 * TOP_BAR_SIZES.well.padding,
-    scale: cash.scale,
-    top: wellCapsTop(TITLE_CAP_ROWS * cash.scale),
+    scale: TOP_SECTION_CURRENCY_TEXT.scale,
+    top: TOP_SECTION_CURRENCY_TEXT.capsY,
     well,
   };
 }

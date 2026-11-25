@@ -13,8 +13,6 @@ import { DIFFICULTY_KEY } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { charmEffects } from "../hud/buffMarks.ts";
 import { largeBodyText, smallCardText } from "../hud/cardText.ts";
-import { type EffectItem, effectName } from "../hud/effectIcons.ts";
-import { pillKind } from "../hud/effectNames.ts";
 import {
   CARD_CHARMS_HEIGHT,
   cardCharmPlates,
@@ -40,6 +38,8 @@ import {
   largeCardHeight,
   largeCardRect,
 } from "./cardLayout.ts";
+import { type EffectItem, effectName } from "./effectIcons.ts";
+import { pillKind } from "./effectNames.ts";
 
 describe("largeCardHeight", () => {
   it.each([

@@ -6,7 +6,7 @@ import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 import { DETAIL_WELL_KEY, ownerFaceKey } from "../assets/spriteKeys.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
 import type { GameData } from "../data/types.ts";
-import { withNamePills } from "../hud/effectNames.ts";
+import { withNamePills } from "../presentation/effectNames.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";

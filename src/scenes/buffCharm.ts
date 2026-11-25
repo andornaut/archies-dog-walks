@@ -3,9 +3,13 @@ import type { GameObjects, Scene } from "phaser";
 
 import { playEffect } from "../assets/phaser/sprites.ts";
 import { gameData } from "../data/index.ts";
-import { effectIconFallback, type EffectItem, walkBarIconKey } from "../hud/effectIcons.ts";
 import type { LabelAnchor } from "../hud/feedback.ts";
 import { BUFF_POP, CHARM, sparkleAt } from "../layout/buffLayout.ts";
+import {
+  effectIconFallback,
+  type EffectItem,
+  walkBarIconKey,
+} from "../presentation/effectIcons.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { addFilledRect, drawRing } from "../ui/phaser/draw.ts";
 import { addPixelText } from "../ui/phaser/pixelText.ts";

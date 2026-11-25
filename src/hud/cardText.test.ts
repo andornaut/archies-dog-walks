@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { gameData } from "../data/index.ts";
 import type { ZoneId } from "../data/types.ts";
 import { CARD_LAYOUT, cardEffectArea, plaqueRoom } from "../presentation/cardLayout.ts";
+import { withNamePills } from "../presentation/effectNames.ts";
 import { cardFor, hasPlaque, type OptionView } from "../rules/choices.ts";
 import { upgradeLine } from "../rules/effectText.ts";
 import { defined } from "../testing/defined.ts";
@@ -14,7 +15,6 @@ import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
 import { testState } from "../testing/runState.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { plaqueTexts, smallCardText } from "./cardText.ts";
-import { withNamePills } from "./effectNames.ts";
 
 const BODY = fontFileMetrics("font-body");
 const ONE: TextFitStyle = { scale: 1 };

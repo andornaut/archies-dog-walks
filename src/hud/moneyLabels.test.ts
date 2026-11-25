@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
+import { perkIconKey } from "../presentation/effectIcons.ts";
 import { amountText } from "../rules/causes.ts";
 import { fontFileMetrics } from "../testing/fontInk.ts";
 import { cents } from "../units.ts";
-import { perkIconKey } from "./effectIcons.ts";
 import { FEEDBACK } from "./feedback.ts";
 import { CHANGE_CHIP, CHANGE_LABEL_STYLE } from "./hudLanes.ts";
 import { type ChangeLabel, changeLabels, reachedLabels } from "./hudView.ts";

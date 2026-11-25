@@ -20,6 +20,7 @@ import {
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { DebuffId, DogId, GameData } from "../data/types.ts";
 import type { ScreenLayout } from "../layout/screenLayout.ts";
+import { type EffectItem, maxEffects } from "../presentation/effectIcons.ts";
 import { type OwnerNameLine } from "../presentation/ownerName.ts";
 import { walkLength } from "../rules/route.ts";
 import { zoneLength } from "../runner/walkMotion.ts";
@@ -27,10 +28,8 @@ import type { RunState } from "../state/runState.ts";
 import { lineInk } from "../ui/lineInk.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { GAME_PROGRESS, GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
-import { TITLE_CAP_ROWS } from "../ui/textFit.ts";
-import { TOP_BAR_FACE, wellCapsTop } from "../ui/topBarTrim.ts";
-import { topSectionLayout } from "../ui/topSection.ts";
-import { type EffectItem, maxEffects } from "./effectIcons.ts";
+import { TOP_BAR_FACE } from "../ui/topBarTrim.ts";
+import { TOP_SECTION_CURRENCY_TEXT, topSectionLayout } from "../ui/topSection.ts";
 import { heartRows } from "./hudView.ts";
 
 // The walk screen's HUD: the walk bar (ui-walk-bar) across the top, a full-width bar per active
@@ -41,9 +40,6 @@ import { heartRows } from "./hudView.ts";
 // The walk bar uses the shared order; Settings is reached through Pause.
 export const WALK_BAR_BUTTONS = ["mute", "pause"] as const;
 export type WalkBarButtonId = (typeof WALK_BAR_BUTTONS)[number];
-
-// The cash and the home top bar's bank are set at this scale.
-const CASH_SCALE = WALK_BAR_PARTS.cash.scale;
 
 // The most effects a walk can have, one well each: the walker's perk, the Pocket's gear, the
 // found gear and an upgrade from each fork.
@@ -89,10 +85,10 @@ export const WALK_BAR = {
   buttonFace: TOP_BAR_FACE,
   buttons: BUTTONS,
   cash: {
-    capsY: wellCapsTop(TITLE_CAP_ROWS * CASH_SCALE),
+    capsY: TOP_SECTION_CURRENCY_TEXT.capsY,
     ink: CASH_INK,
     room: WALK_BAR_PARTS.cash.room,
-    scale: CASH_SCALE,
+    scale: TOP_SECTION_CURRENCY_TEXT.scale,
     well: CASH_WELL,
   },
   effects: { ...EFFECT_ROW, pitch: EFFECT_SIZE + EFFECT_GAP, x: EFFECTS_X },
@@ -260,15 +256,6 @@ interface CardLine extends OwnerNameLine {
   top: number;
   // The line's ink left edge, from the card's left.
   x: number;
-}
-
-// The owner's photo round their size-square face, its top-left at face: the face inside the
-// walk card's mat and frame.
-export function ownerPhotoRect(size: number, face: Point): Rect {
-  const { photo } = DOG_CARD.owner;
-  const outset = photo.frame + photo.mat;
-  const side = size + 2 * outset;
-  return { height: side, width: side, x: face.x - outset, y: face.y - outset };
 }
 
 // One whole name centred by visible ink, with the same ink top for every owner.

@@ -5,6 +5,7 @@ import { gameData } from "../../data/index.ts";
 import { BUTTON_SIZE, DEBUFF_BAR, ZONE_PILL_SIZES } from "../../data/layout.ts";
 import type { ZoneId } from "../../data/types.ts";
 import { SCREEN_LAYOUT } from "../../layout/screen.ts";
+import { effectItems, hudEffectIconKey, spareTreatWell } from "../../presentation/effectIcons.ts";
 import { modifiersOf } from "../../rules/modifiers.ts";
 import { currentZone } from "../../rules/route.ts";
 import { FakeDocument } from "../../testing/fakeDom.ts";
@@ -13,7 +14,6 @@ import { liveSwitchRuns } from "../../testing/liveSwitch.ts";
 import { activeModifier, testState } from "../../testing/runState.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
-import { effectItems, hudEffectIconKey, spareTreatWell } from "../effectIcons.ts";
 import {
   debuffTrackLayout,
   debuffTrackStyle,

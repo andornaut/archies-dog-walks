@@ -10,9 +10,9 @@ import { HIT_RULE } from "@andornaut/game-kit/runtime/ui/hitAreas";
 import { HOME_SCREEN, MIN_PRESS } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { DogId } from "../data/types.ts";
-import { ownerPhotoRect, WALK_BAR } from "../hud/walkHud.ts";
 import type { PackPlacement } from "../layout/packFormation.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
+import { ownerPhotoRect } from "../presentation/ownerPhoto.ts";
 import { BUTTON_SIZE, raisedLabelCapTop } from "../ui/buttonGeometry.ts";
 import type { GridSpec } from "../ui/grid.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
@@ -21,7 +21,11 @@ import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/moda
 import { hasPill, PILL_IMAGE_GAP, pillDropUnderInk, pillRiseOverCaps } from "../ui/namePills.ts";
 import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { TOP_BAR_FACE, TOP_BAR_HEIGHT, TOP_BAR_MID, TOP_BAR_WELL } from "../ui/topBarTrim.ts";
-import { type TopSectionControl, topSectionLayout } from "../ui/topSection.ts";
+import {
+  TOP_SECTION_CURRENCY_TEXT,
+  type TopSectionControl,
+  topSectionLayout,
+} from "../ui/topSection.ts";
 import { FEEDBACK } from "./feedback.ts";
 import type { SectionId } from "./sections.ts";
 
@@ -408,8 +412,8 @@ export const HOME_LAYOUT = {
   // centred across the well's ink, its capitals' top at bank.capsY.
   topBar: {
     bank: {
-      capsY: WALK_BAR.cash.capsY,
-      scale: WALK_BAR.cash.scale,
+      capsY: TOP_SECTION_CURRENCY_TEXT.capsY,
+      scale: TOP_SECTION_CURRENCY_TEXT.scale,
     },
     faceSize: TOP_BAR_FACE.size,
     height: TOP_BAR_HEIGHT,

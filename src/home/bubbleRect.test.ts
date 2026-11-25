@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import type { DogId } from "../data/types.ts";
-import { withNamePills } from "../hud/effectNames.ts";
+import { withNamePills } from "../presentation/effectNames.ts";
 import type { Owned } from "../save/schema.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { FakeDocument, type FakeElement } from "../testing/fakeDom.ts";

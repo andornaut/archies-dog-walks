@@ -2,7 +2,6 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { DebuffId, GameData } from "../data/types.ts";
 import { inPill } from "../ui/namePills.ts";
-import type { FaceText } from "./faceText.ts";
 
 // An effect's name where it sits beside its description, set in a pill of its kind's colours: a
 // debuff's own, or the one every buff (gear, a walker's perk or an upgrade) shares.
@@ -31,7 +30,7 @@ export interface NameMark {
   readonly length: number;
 }
 
-type NameData = Pick<GameData, "debuffs" | "shopGear" | "upgrades" | "walkerPerks">;
+export type NameData = Pick<GameData, "debuffs" | "shopGear" | "upgrades" | "walkerPerks">;
 
 // Every effect's name and kind, longest first, so a name inside a longer one is not found in it.
 function effectNames(data: NameData): { kind: EffectNameKind; name: string }[] {
@@ -68,7 +67,7 @@ export function effectNameMarks(data: NameData, text: string): NameMark[] {
 // Text with marks, its own and every name effectNameMarks finds, each set in its kind's pill: a
 // name's colon goes, as the pill sets the name apart. Returns the text and where each of the
 // old text's characters went.
-function pilled(
+export function pilled(
   data: NameData,
   text: string,
   own: readonly NameMark[],
@@ -116,16 +115,4 @@ export function debuffNameMarks(
   const literal = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const at = text.search(new RegExp(`(?<!\\p{L})${literal}(?!\\p{L})`, "u"));
   return at < 0 ? [] : [{ at, kind: debuff, length: name.length }];
-}
-
-// A face text, such as a message strip line, with each effect's name in its pill: the names it
-// marks itself (a debuff's start line marks its lead) and those effectNameMarks finds. Its
-// owners' marks move with the text.
-export function faceTextWithNamePills(
-  data: NameData,
-  line: FaceText & { readonly names?: readonly NameMark[] },
-): FaceText {
-  const { moved, text } = pilled(data, line.text, line.names ?? []);
-  const marks = line.marks?.map((mark) => ({ ...mark, at: moved(mark.at) }));
-  return marks === undefined ? { text } : { marks, text };
 }

@@ -4,11 +4,11 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { minorObstacleNames } from "../content/obstacleLooks.ts";
 import { gameData } from "../data/index.ts";
 import { SIZE_STRIP_LINES } from "../hud/buffMarks.ts";
-import { effectLine } from "../hud/effectIcons.ts";
 import { type FaceText, fillFaceText, ownerFaceText } from "../hud/faceText.ts";
 import type { MessageLine } from "../hud/messageStrip.ts";
 import { STRIP_LINE_FIELDS } from "../hud/runText.ts";
 import { debuffLines } from "../hud/stripLines.ts";
+import { effectLine } from "../presentation/effectIcons.ts";
 import { hintText } from "../rules/hints.ts";
 import { inkWidth } from "./fontInk.ts";
 

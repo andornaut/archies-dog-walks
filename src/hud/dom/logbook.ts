@@ -2,6 +2,7 @@ import "./logbook.css";
 
 import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 
+import { textPart } from "../../home/dom/detailText.ts";
 import type { LogbookView } from "../../home/logbookView.ts";
 import type { ShopPageView } from "../../home/shopPageView.ts";
 import { earnedBand, STATS_LAYOUT, statsTabRects } from "../../home/statsLayout.ts";
@@ -13,7 +14,7 @@ import { setBox } from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { type DomScale, gridRect, wholeArtPixels } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
-import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
+import { artPart, type DomDetailCardInput } from "./detailCard.ts";
 import { type DomPage, showPage } from "./page.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
 import type { DomQuestionPanel } from "./questionPanel.ts";

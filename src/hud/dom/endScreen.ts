@@ -5,6 +5,7 @@ import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { badgeStripFaceBottom, badgeStripHits, type BadgeView } from "../../home/badgesView.ts";
 import type { DetailArt, DetailText } from "../../home/detailCardView.ts";
+import { textPart } from "../../home/dom/detailText.ts";
 import { END_LAYOUT } from "../../home/endLayout.ts";
 import type { EndResults, EndScreenView } from "../../home/endScreenView.ts";
 import { sheetArt } from "../../ui/dom/artElements.ts";
@@ -27,7 +28,7 @@ import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import type { DomBadgeCardInput } from "./badgeCard.ts";
 import { badgeStripParts } from "./celebration.ts";
-import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
+import { artPart, type DomDetailCardInput } from "./detailCard.ts";
 import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
 import {
   type DomQuestionPanel,

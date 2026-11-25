@@ -3,6 +3,7 @@ import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
 import { INLINE_FACE } from "../data/layout.ts";
 import type { DogId, GameData } from "../data/types.ts";
+import { type NameData, type NameMark, pilled } from "../presentation/effectNames.ts";
 import type { FaceMood } from "../rules/treats.ts";
 
 // Walk text that names owners, each name drawn led by the owner's face: the face, then the
@@ -211,4 +212,16 @@ export function styledFaceRows(
 ): FaceRow[] {
   const measure = (text: string) => width(style, text);
   return faceRows(measure, box, (style.lines ?? 1) === 1 ? Infinity : room, line);
+}
+
+// A face text, such as a message strip line, with each effect's name in its pill: the names it
+// marks itself (a debuff's start line marks its lead) and those effectNameMarks finds. Its
+// owners' marks move with the text.
+export function faceTextWithNamePills(
+  data: NameData,
+  line: FaceText & { readonly names?: readonly NameMark[] },
+): FaceText {
+  const { moved, text } = pilled(data, line.text, line.names ?? []);
+  const marks = line.marks?.map((mark) => ({ ...mark, at: moved(mark.at) }));
+  return marks === undefined ? { text } : { marks, text };
 }

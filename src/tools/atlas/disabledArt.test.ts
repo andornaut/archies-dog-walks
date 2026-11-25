@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { dogFaceKey, gearIconKey } from "../../assets/spriteKeys.ts";
 import { gameData } from "../../data/index.ts";
-import { hudEffectIconKey, walkerEffectItems } from "../../hud/effectIcons.ts";
+import { hudEffectIconKey, walkerEffectItems } from "../../presentation/effectIcons.ts";
 import { greysOnTile } from "../../ui/disabledArt.ts";
 
 // The pictures the home screen's and the shop's tiles draw through tileTextureKey and

@@ -8,7 +8,7 @@ import {
 
 import { ownerFaceKey } from "../assets/spriteKeys.ts";
 import type { DogId, GameData } from "../data/types.ts";
-import { withNamePills } from "../hud/effectNames.ts";
+import { withNamePills } from "../presentation/effectNames.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { bubbleLines, bubbleRect, bubbleSize, ownerColumn, ownerPlace } from "./bubbleRect.ts";

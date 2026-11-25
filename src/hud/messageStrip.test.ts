@@ -16,8 +16,7 @@ import { inside } from "../testing/rects.ts";
 import { type LineInk, lineInk } from "../ui/lineInk.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
-import { faceTextWithNamePills } from "./effectNames.ts";
-import { type FaceText, inlineFaceBox } from "./faceText.ts";
+import { type FaceText, faceTextWithNamePills, inlineFaceBox } from "./faceText.ts";
 import {
   EMPTY_MESSAGE_STRIP,
   type LeadSlot,

@@ -24,7 +24,6 @@ import {
 import type { InputEvent } from "../dev/inputLog.ts";
 import type { RunSetup } from "../dev/runSetup.ts";
 import { withSetupStart } from "../dev/setupRun.ts";
-import { effectItems } from "../hud/effectIcons.ts";
 import { cardHintTriggers, startHintTriggers } from "../hud/hintTriggers.ts";
 import { homeQuestionNote, pauseNote } from "../hud/homeQuestion.ts";
 import { NOTHING_PAUSED, type RunPause, walkBackAction, walkPaused } from "../hud/topBar.ts";
@@ -35,6 +34,7 @@ import {
   type ZoneCelebration,
   zoneCelebration,
 } from "../hud/zoneCelebration.ts";
+import { effectItems } from "../presentation/effectIcons.ts";
 import { onFrameTurnChange, PHONE_EVENTS, startWakeLock, stopWakeLock } from "../pwa/index.ts";
 import { requestGameUpdateCheck } from "../pwa/launch.ts";
 import { type CardView, type Choice, outcomeChanges } from "../rules/choices.ts";

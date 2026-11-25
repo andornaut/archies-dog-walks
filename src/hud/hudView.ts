@@ -1,9 +1,7 @@
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 
-import { zonePipTag } from "../assets/spriteKeys.ts";
-import type { DebuffId, DogId, GameData, ZoneId } from "../data/types.ts";
+import type { DebuffId, DogId } from "../data/types.ts";
 import { amountText, type Change, changeAmount, type MoneyChange } from "../rules/causes.ts";
-import { zoneById } from "../rules/route.ts";
 
 // A floating label for a change: over the dog's slot (dog), from where money changed hands to
 // the bank (bank), or, for a money gain, from by the cash total into it (cash), tip marking a
@@ -94,17 +92,4 @@ export function heartRows(perRow: number, hearts: number, max: number): boolean[
     rows.at(-1)?.push(i < hearts);
   }
   return rows;
-}
-
-// A zone pip's state: done, the current zone, or still to come.
-export type PipState = "current" | "done" | "todo";
-
-// A pip's ui-zone-pips tag: its zone's art, done or not, or the todo tag for a pip still to
-// come or a fork not yet taken.
-export function pipTag(
-  data: Pick<GameData, "world">,
-  pip: { readonly state: PipState; readonly zone: ZoneId | null },
-): string {
-  const zone = pip.state === "todo" || pip.zone === null ? null : zoneById(data, pip.zone);
-  return zonePipTag(zone, pip.state === "done");
 }

@@ -44,8 +44,12 @@ import { dogRows, gearRows, type ShopRow, slotRows } from "../home/shop.ts";
 import { SHOP_LAYOUT, SHOP_MESSAGE_FIT, shopRowTextRoom } from "../home/shopLayout.ts";
 import { largeBodyText, smallCardText } from "../hud/cardText.ts";
 import { CELEBRATION_LAYOUT, GREETING_FIT, ZONE_EARNINGS_FIT } from "../hud/celebrationLayout.ts";
-import { faceTextWithNamePills } from "../hud/effectNames.ts";
-import { type FaceText, inlineFaceBox, styledFaceRows } from "../hud/faceText.ts";
+import {
+  type FaceText,
+  faceTextWithNamePills,
+  inlineFaceBox,
+  styledFaceRows,
+} from "../hud/faceText.ts";
 import { CHANGE_LABEL_STYLE, changeLabelRoom, hudLanes } from "../hud/hudLanes.ts";
 import {
   messageRows,

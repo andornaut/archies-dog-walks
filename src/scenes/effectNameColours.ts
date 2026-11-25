@@ -1,4 +1,4 @@
-import type { EffectNameKind } from "../hud/effectNames.ts";
+import type { EffectNameKind } from "../presentation/effectNames.ts";
 import { PALETTE } from "../ui/palette.ts";
 
 type PaletteName = keyof typeof PALETTE;

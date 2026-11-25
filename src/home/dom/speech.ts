@@ -6,7 +6,6 @@ import {
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SLICES } from "../../data/layout.ts";
-import { textPart } from "../../hud/dom/detailCard.ts";
 import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
 import { type DomPart, fillPart, framedPart } from "../../ui/dom/parts.ts";
 import { createTextLine, namePillBoxes, placeText } from "../../ui/dom/pixelLine.ts";
@@ -19,6 +18,7 @@ import { plainMarks } from "../../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { HOME_LAYOUT } from "../homeLayout.ts";
 import type { HomeSpeechView } from "../speechView.ts";
+import { textPart } from "./detailText.ts";
 
 // art: each tail's cream inside, row by row from the tail's top-left, which the bubble's focus
 // fill covers with its inside. ui-quip-tail-down narrows a column a row from columns 2 to 5.

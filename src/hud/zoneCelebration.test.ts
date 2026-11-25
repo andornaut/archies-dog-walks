@@ -4,11 +4,11 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import type { WalkerId } from "../data/types.ts";
+import { perkIconKey } from "../presentation/effectIcons.ts";
 import type { Change, MoneyChange } from "../rules/causes.ts";
 import { agilityPercent } from "../rules/effectText.ts";
 import { walkerGoal, walkerOrder } from "../rules/walkers.ts";
 import { cents, type Hearts } from "../units.ts";
-import { perkIconKey } from "./effectIcons.ts";
 import {
   celebrationText,
   newWalkerCelebrations,

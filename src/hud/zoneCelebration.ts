@@ -3,12 +3,12 @@ import { fillLine, fillNames } from "@andornaut/game-kit/runtime/lines";
 import type { GameData, WalkerId } from "../data/types.ts";
 import { earningsKind } from "../home/endView.ts";
 import { signedDollarText } from "../presentation/currency.ts";
+import { perkIconKey } from "../presentation/effectIcons.ts";
 import type { Change } from "../rules/causes.ts";
 import { agilityPercent } from "../rules/effectText.ts";
 import { newWalkers } from "../rules/walkers.ts";
 import type { RunState } from "../state/runState.ts";
 import { type Cents, cents } from "../units.ts";
-import { perkIconKey } from "./effectIcons.ts";
 import { RUN_TEXT_FIELDS as FIELDS } from "./runText.ts";
 
 // The walker in use cheering over a zone's fees and tips, once its fee coins have landed, after

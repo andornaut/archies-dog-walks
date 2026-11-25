@@ -18,9 +18,9 @@ import {
   type DomQuestionPanelInput,
   showQuestionPanel,
 } from "../hud/dom/questionPanel.ts";
-import { pillKind } from "../hud/effectNames.ts";
 import type { pauseMenuLayout } from "../hud/pauseMenu.ts";
 import { questionPanelView } from "../hud/questionPanelView.ts";
+import { pillKind } from "../presentation/effectNames.ts";
 import { pageFrameTurn } from "../pwa/index.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";

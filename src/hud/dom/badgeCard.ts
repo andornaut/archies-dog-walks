@@ -1,5 +1,6 @@
 import { domArtPath } from "../../assets/domArt.ts";
 import { type BadgeCardView, CONFETTI } from "../../home/badgeCardView.ts";
+import { textPart } from "../../home/dom/detailText.ts";
 import { type DomPart, fillPart, framelessView, panelFramePart } from "../../ui/dom/parts.ts";
 import { setBox } from "../../ui/dom/pixelLine.ts";
 import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
@@ -13,7 +14,7 @@ import {
   gridY,
   wholeArtPixels,
 } from "../../ui/domScale.ts";
-import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
+import { artPart, type DomDetailCardInput } from "./detailCard.ts";
 import { type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
 
 // A badge's card in HTML over the canvas: the ui-panel and close control,

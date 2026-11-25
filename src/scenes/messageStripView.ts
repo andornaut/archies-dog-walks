@@ -5,8 +5,12 @@ import { ownerCardFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { SLICES } from "../data/layout.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
-import { faceTextWithNamePills, type NameMark } from "../hud/effectNames.ts";
-import { type FaceText, inlineFaceBox, withoutFace } from "../hud/faceText.ts";
+import {
+  type FaceText,
+  faceTextWithNamePills,
+  inlineFaceBox,
+  withoutFace,
+} from "../hud/faceText.ts";
 import {
   EMPTY_MESSAGE_STRIP,
   isOwnerLead,
@@ -26,6 +30,7 @@ import {
   stepMessageStrip,
   stripLeadSlot,
 } from "../hud/messageStrip.ts";
+import type { NameMark } from "../presentation/effectNames.ts";
 import { lineInk } from "../ui/lineInk.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";

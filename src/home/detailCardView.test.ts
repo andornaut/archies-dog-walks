@@ -3,10 +3,9 @@ import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { textPart } from "../hud/dom/detailCard.ts";
-import { withNamePills } from "../hud/effectNames.ts";
 import { explainDetail } from "../hud/explain.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
+import { withNamePills } from "../presentation/effectNames.ts";
 import { FakeDocument, type FakeElement } from "../testing/fakeDom.ts";
 import { fontFileMetrics, fontInk, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { testState } from "../testing/runState.ts";
@@ -20,6 +19,7 @@ import { SEPARATOR } from "../ui/separator.ts";
 import { cents } from "../units.ts";
 import { dogDetail, gearDetail, walkerDetail } from "./detail.ts";
 import { detailCardView, type DetailMeasure, type DetailText } from "./detailCardView.ts";
+import { textPart } from "./dom/detailText.ts";
 import { cardTextRooms, HOME_LAYOUT } from "./homeLayout.ts";
 import { slotRows } from "./shop.ts";
 

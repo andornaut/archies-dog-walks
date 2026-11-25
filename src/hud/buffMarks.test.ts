@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import type { DogId, Size } from "../data/types.ts";
+import { effectIconKey, type EffectItem, effectName } from "../presentation/effectIcons.ts";
 import { gearSourceName } from "../rules/causes.ts";
 import type { OptionView } from "../rules/choices.ts";
 import { laneSpeedText } from "../rules/effectText.ts";
@@ -25,7 +26,6 @@ import {
   roadMarks,
   walkStartMarks,
 } from "./buffMarks.ts";
-import { effectIconKey, type EffectItem, effectName } from "./effectIcons.ts";
 
 const { card, seconds } = gameData.runText;
 const CHARMER: ModifierSource = { kind: "upgrade", upgrade: "charmer" };

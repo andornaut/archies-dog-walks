@@ -1,6 +1,7 @@
 import { fillLine, fillNames } from "@andornaut/game-kit/runtime/lines";
 
 import type { Achievement, DebuffId, DogId, EncounterId, GameData, GearId } from "../data/types.ts";
+import { debuffNameMarks } from "../presentation/effectNames.ts";
 import { achievementLabel } from "../rules/achievements.ts";
 import {
   type Change,
@@ -13,7 +14,6 @@ import { spareTreatGiver, spareTreatSource } from "../rules/spareTreats.ts";
 import type { FaceMood, TreatGrabbed } from "../rules/treats.ts";
 import { read } from "../rules/units.ts";
 import type { ActiveDebuff, EffectSource, RunState } from "../state/runState.ts";
-import { debuffNameMarks } from "./effectNames.ts";
 import { type FaceText, fillFaceText, ownerFaceText } from "./faceText.ts";
 import type { MessageIcon, MessageLine } from "./messageStrip.ts";
 import { STRIP_LINE_FIELDS } from "./runText.ts";

@@ -6,15 +6,18 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import type { DogId } from "../data/types.ts";
+import { debuffNameMarks, pillKind } from "../presentation/effectNames.ts";
 import type { HeartChange } from "../rules/causes.ts";
 import type { FaceMood } from "../rules/treats.ts";
 import { bodyRunWidth } from "../testing/bodyFont.ts";
 import { defined } from "../testing/defined.ts";
 import { fontFileMetrics } from "../testing/fontInk.ts";
+import { PILL_CLOSE, pillIndex } from "../ui/namePills.ts";
 import { clampHearts } from "../units.ts";
 import {
   faceRows,
   type FaceText,
+  faceTextWithNamePills,
   fillFaceText,
   INLINE_FACE,
   inlineFaceBox,
@@ -239,5 +242,22 @@ describe("an inline face", () => {
     const rows = styledFaceRows(style, bodyRunWidth, BOX_2X, room, said);
     expect(rows).toHaveLength(count);
     expect(rows.flatMap((row) => row.faces)).toHaveLength(1);
+  });
+});
+
+describe("faceTextWithNamePills", () => {
+  it("sets the line's own marks in their pills, and moves its owners' marks with the text", () => {
+    const text = "Stinky pack! Stinky: Rosa smiles";
+    const shown = faceTextWithNamePills(gameData, {
+      marks: [{ at: text.indexOf("Rosa"), dog: "kilo", length: 4, mood: "happy" }],
+      names: debuffNameMarks(gameData, "stinky", text),
+      text,
+    });
+    const [mark] = shown.marks ?? [];
+    expect(shown.text.slice(mark?.at, (mark?.at ?? 0) + 4)).toBe("Rosa");
+    const index = pillIndex(shown.text.charAt(0));
+    expect(index === undefined ? undefined : pillKind(index)).toBe("stinky");
+    expect(shown.text.slice(1).startsWith(`Stinky${PILL_CLOSE} pack! `)).toBe(true);
+    expect(shown.text.split(PILL_CLOSE)).toHaveLength(3);
   });
 });

@@ -7,8 +7,8 @@ import { describe, expect, it } from "vitest";
 import { ICON_LABEL_GAP } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
+import { perkIconKey } from "../presentation/effectIcons.ts";
 import { fontFileMetrics } from "../testing/fontInk.ts";
-import { perkIconKey } from "./effectIcons.ts";
 import {
   CHANGE_CHIP,
   CHANGE_LABEL_STYLE,

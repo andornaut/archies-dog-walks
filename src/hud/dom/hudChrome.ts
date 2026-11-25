@@ -5,6 +5,14 @@ import { gameData } from "../../data/index.ts";
 import { SLICES } from "../../data/layout.ts";
 import type { DebuffId } from "../../data/types.ts";
 import { SCREEN_LAYOUT } from "../../layout/screen.ts";
+import {
+  effectIconFallback,
+  type EffectItem,
+  effectItems,
+  effectItemsKey,
+  hudEffectIconKey,
+  spareTreatWell,
+} from "../../presentation/effectIcons.ts";
 import { debuffLasting } from "../../rules/durations.ts";
 import { currentZone } from "../../rules/route.ts";
 import { read } from "../../rules/units.ts";
@@ -13,14 +21,6 @@ import { lineInk } from "../../ui/lineInk.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { pressedEffectWells } from "../../ui/topSection.ts";
-import {
-  effectIconFallback,
-  type EffectItem,
-  effectItems,
-  effectItemsKey,
-  hudEffectIconKey,
-  spareTreatWell,
-} from "../effectIcons.ts";
 import {
   DEBUFF_BAR,
   debuffBarRects,

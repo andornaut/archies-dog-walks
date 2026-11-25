@@ -15,6 +15,8 @@ import type { DebuffId, DogId } from "../data/types.ts";
 import { HOME_LAYOUT, homeBarButtons } from "../home/homeLayout.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { dollarAmountText } from "../presentation/currency.ts";
+import { maxEffects } from "../presentation/effectIcons.ts";
+import { ownerPhotoRect } from "../presentation/ownerPhoto.ts";
 import { maxHearts } from "../rules/dogs.ts";
 import { modifiersOf } from "../rules/modifiers.ts";
 import { zoneLength } from "../runner/walkMotion.ts";
@@ -26,7 +28,6 @@ import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { TOP_BAR_WELL } from "../ui/topBarTrim.ts";
 import { topSectionCurrency, topSectionGapLeft, topSectionLayout } from "../ui/topSection.ts";
 import { cents } from "../units.ts";
-import { maxEffects } from "./effectIcons.ts";
 import {
   cardHearts,
   DEBUFF_BAR,
@@ -41,7 +42,6 @@ import {
   explainTargetAt,
   hudOwnerName,
   leadSlot,
-  ownerPhotoRect,
   ownerTabRect,
   SPARE_TREAT_PIP,
   spareTreatPipAt,

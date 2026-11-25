@@ -1,6 +1,8 @@
-import type { DogId, GameData } from "../data/types.ts";
+import { zonePipTag } from "../assets/spriteKeys.ts";
+import type { DogId, GameData, ZoneId } from "../data/types.ts";
 import type { Change, MoneyChange } from "../rules/causes.ts";
 import { quipLine } from "../rules/choices.ts";
+import { zoneById } from "../rules/route.ts";
 import type { LastWalk } from "../save/schema.ts";
 import { type Cents, cents } from "../units.ts";
 
@@ -68,7 +70,8 @@ export function earningsBreakdown(
   });
 }
 
-type ZonePip = "current" | "done" | "todo";
+// A zone pip's state: done, the current zone, or still to come.
+export type ZonePip = "current" | "done" | "todo";
 
 // One pip per zone of a walk: done for each zone finished, current for the zone a run that
 // ended early stopped in, todo for the rest.
@@ -82,6 +85,16 @@ export function zonePips(
     }
     return zone === walk.zonesFinished && walk.outcome !== "finished" ? "current" : "todo";
   });
+}
+
+// A pip's ui-zone-pips tag: its zone's art, done or not, or the todo tag for a pip still to
+// come or a fork not yet taken.
+export function pipTag(
+  data: Pick<GameData, "world">,
+  pip: { readonly state: ZonePip; readonly zone: ZoneId | null },
+): string {
+  const zone = pip.state === "todo" || pip.zone === null ? null : zoneById(data, pip.zone);
+  return zonePipTag(zone, pip.state === "done");
 }
 
 interface ClosingLine {

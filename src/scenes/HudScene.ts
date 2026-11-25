@@ -18,8 +18,6 @@ import {
   projectHudTopSections,
 } from "../hud/dom/hudProjection.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
-import { effectIconKey, type EffectItem, effectItems, perkIconKey } from "../hud/effectIcons.ts";
-import { pillKind } from "../hud/effectNames.ts";
 import { explainDetail } from "../hud/explain.ts";
 import { FEEDBACK } from "../hud/feedback.ts";
 import { runHintTriggers } from "../hud/hintTriggers.ts";
@@ -64,6 +62,13 @@ import {
 import { BUFF_POP, sparkleAt } from "../layout/buffLayout.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { dollarAmountText, shortDollarAmountText } from "../presentation/currency.ts";
+import {
+  effectIconKey,
+  type EffectItem,
+  effectItems,
+  perkIconKey,
+} from "../presentation/effectIcons.ts";
+import { pillKind } from "../presentation/effectNames.ts";
 import { ownerMaxHearts } from "../rules/dogs.ts";
 import { hintFor, hintJumpsQueue } from "../rules/hints.ts";
 import { walkEarnings } from "../rules/run.ts";

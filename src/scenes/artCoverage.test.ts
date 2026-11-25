@@ -43,13 +43,13 @@ import { gameData } from "../data/index.ts";
 import type { CardSource, EncounterId, ZoneId } from "../data/types.ts";
 import { TOUCH_DRAG } from "../help/helpPictures.ts";
 import { badgeWall } from "../home/badgesView.ts";
+import { pipTag, type ZonePip } from "../home/endView.ts";
 import { HOME_LAYOUT } from "../home/homeLayout.ts";
-import { effectIconKey, type EffectItem, walkBarIconKey } from "../hud/effectIcons.ts";
-import { type PipState, pipTag } from "../hud/hudView.ts";
 import { MESSAGE_ICONS } from "../hud/messageStrip.ts";
 import { cardOwnerMood, DOWN_TAILS } from "../hud/moments.ts";
 import { DOG_REACTIONS, HIT_ART } from "../layout/hitEffects.ts";
 import { SCALE_STEPS } from "../layout/projection.ts";
+import { effectIconKey, type EffectItem, walkBarIconKey } from "../presentation/effectIcons.ts";
 import { cardFor } from "../rules/choices.ts";
 import { hitLabel } from "../rules/encounters.ts";
 import { faceMood } from "../rules/treats.ts";
@@ -331,7 +331,7 @@ describe("screen and card art", () => {
     [
       "tags ui-zone-pips with every route pip, for every zone",
       () => {
-        const states: readonly PipState[] = ["current", "done", "todo"];
+        const states: readonly ZonePip[] = ["current", "done", "todo"];
         const tags = gameData.world.zones.flatMap((zone) =>
           states.map((state) => pipTag(gameData, { state, zone: zone.id as ZoneId })),
         );

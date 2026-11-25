@@ -7,7 +7,6 @@ import { ownerFaceKey, ZONE_PIPS_KEY } from "../assets/spriteKeys.ts";
 import { BADGE_STRIP } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { AchievementId, DogId, GameData } from "../data/types.ts";
-import { pipTag } from "../hud/hudView.ts";
 import { signedShortDollarText } from "../presentation/currency.ts";
 import type { OwnerNameLine } from "../presentation/ownerName.ts";
 import { walkLength } from "../rules/route.ts";
@@ -33,7 +32,7 @@ import {
   sideTotalAmountY,
   sideTotalBand,
 } from "./endLayout.ts";
-import { type closingLines, type EarningsLine, zonePips } from "./endView.ts";
+import { type closingLines, type EarningsLine, pipTag, zonePips } from "./endView.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 
 // End results and controls in logical game pixels.

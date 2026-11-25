@@ -5,10 +5,10 @@ import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/te
 import { MESSAGE_STRIP, OWNER_LEAD } from "../data/layout.ts";
 import type { DogId, GameData } from "../data/types.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
+import { effectIconKey, type EffectItem } from "../presentation/effectIcons.ts";
+import type { NameMark } from "../presentation/effectNames.ts";
 import { read } from "../rules/units.ts";
 import type { LineInk } from "../ui/lineInk.ts";
-import { effectIconKey, type EffectItem } from "./effectIcons.ts";
-import type { NameMark } from "./effectNames.ts";
 import { type FaceBox, type FaceRow, faceRows, type FaceText } from "./faceText.ts";
 import { debuffBarRects } from "./walkHud.ts";
 

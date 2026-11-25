@@ -5,8 +5,8 @@ import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { dogFaceKey, gearIconKey } from "../assets/spriteKeys.ts";
 import { PLATE_PAD } from "../data/layout.ts";
 import type { DogId, GameData, GearId, WalkerId } from "../data/types.ts";
-import { hudEffectIconKey, walkerEffectItems } from "../hud/effectIcons.ts";
 import { dollarText } from "../presentation/currency.ts";
+import { hudEffectIconKey, walkerEffectItems } from "../presentation/effectIcons.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import {
   type ArtLook,

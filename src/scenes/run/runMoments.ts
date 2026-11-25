@@ -24,7 +24,6 @@ import {
   stepValues,
   walkStartMarks,
 } from "../../hud/buffMarks.ts";
-import { type EffectItem, effectItems, gearWell } from "../../hud/effectIcons.ts";
 import { heartPopFrame, stackOverPop } from "../../hud/feedback.ts";
 import { stepHintTriggers } from "../../hud/hintTriggers.ts";
 import { changeLabels, reachedLabels, totalLabel } from "../../hud/hudView.ts";
@@ -73,6 +72,7 @@ import {
   splashEffect,
   whiteFlash,
 } from "../../layout/hitEffects.ts";
+import { type EffectItem, effectItems, gearWell } from "../../presentation/effectIcons.ts";
 import {
   type Change,
   type HeartChange,

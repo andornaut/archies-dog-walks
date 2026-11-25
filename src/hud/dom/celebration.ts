@@ -7,6 +7,7 @@ import {
   panelBadgeStrip,
   stripUnderClose,
 } from "../../home/badgesView.ts";
+import { textPart } from "../../home/dom/detailText.ts";
 import { type DomPart, framelessView, panelFramePart } from "../../ui/dom/parts.ts";
 import {
   boundsAdvance,
@@ -33,7 +34,7 @@ import { celebrationHeadlineView } from "../celebrationHeadlineView.ts";
 import { CELEBRATION_LAYOUT } from "../celebrationLayout.ts";
 import type { CentredRow, DottedRule, ZoneCelebrationView } from "../celebrationView.ts";
 import { confettiPart, type DomBadgeCardInput } from "./badgeCard.ts";
-import { artPart, type DomDetailCardInput, textPart } from "./detailCard.ts";
+import { artPart, type DomDetailCardInput } from "./detailCard.ts";
 import {
   type DomQuestionPanel,
   type DomQuestionPanelInput,

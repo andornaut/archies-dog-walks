@@ -10,6 +10,7 @@ import {
   gearDetail,
   walkerDetail,
 } from "../home/detail.ts";
+import { effectIconKey, effectItems, effectName } from "../presentation/effectIcons.ts";
 import { ownerMaxHearts } from "../rules/dogs.ts";
 import { capitalize, debuffFields } from "../rules/effectText.ts";
 import type { Owned, SaveStats } from "../save/schema.ts";
@@ -17,7 +18,6 @@ import { heartsOf } from "../state/pack.ts";
 import type { RunState } from "../state/runState.ts";
 import type { Cents } from "../units.ts";
 import { extraHearts } from "./buffMarks.ts";
-import { effectIconKey, effectItems, effectName } from "./effectIcons.ts";
 import { RUN_TEXT_FIELDS } from "./runText.ts";
 import type { ExplainTarget } from "./walkHud.ts";
 

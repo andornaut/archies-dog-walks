@@ -68,7 +68,6 @@ import { shopAffordable } from "../home/shop.ts";
 import { slotSign, slotSignPurchase } from "../home/slotSign.ts";
 import { homeSpeechView } from "../home/speechView.ts";
 import { tapWalker } from "../home/walkers.ts";
-import { pillKind } from "../hud/effectNames.ts";
 import { downTail } from "../hud/moments.ts";
 import {
   type HoldPress,
@@ -94,6 +93,7 @@ import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { waitedLoad } from "../loadingProgress.ts";
 import { addFigure, PackFigures } from "../pack/phaser/packFigures.ts";
 import { dollarAmountText, shortDollarAmountText } from "../presentation/currency.ts";
+import { pillKind } from "../presentation/effectNames.ts";
 import {
   exitShown,
   installNudgeDue,

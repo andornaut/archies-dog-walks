@@ -1,6 +1,12 @@
 import { fillLine, fillNames } from "@andornaut/game-kit/runtime/lines";
 
 import type { CharmEffect, DogId, Effect, GameData } from "../data/types.ts";
+import {
+  effectIconKey,
+  type EffectItem,
+  effectLine,
+  effectName,
+} from "../presentation/effectIcons.ts";
 import { amountText, changeAmount } from "../rules/causes.ts";
 import { type CardView, type OptionView, outcomeChanges } from "../rules/choices.ts";
 import { packSizeRaise, placeInPack, SIZE_AGILITY } from "../rules/dogs.ts";
@@ -11,7 +17,6 @@ import type { WalkStep } from "../runner/walk.ts";
 import type { WalkItem } from "../runner/walkItems.ts";
 import { packDogs } from "../state/pack.ts";
 import type { ModifierSource } from "../state/runState.ts";
-import { effectIconKey, type EffectItem, effectLine, effectName } from "./effectIcons.ts";
 import type { MessageLine } from "./messageStrip.ts";
 import { RUN_TEXT_FIELDS } from "./runText.ts";
 import { stripLine } from "./stripLines.ts";

@@ -15,7 +15,6 @@ import {
   type LogbookTarget,
   showLogbook,
 } from "../hud/dom/logbook.ts";
-import { pillKind } from "../hud/effectNames.ts";
 import {
   focusDirectionForKey,
   isConfirmKey,
@@ -37,6 +36,7 @@ import {
   stepScroll,
   wheelScroll,
 } from "../input/listScroll.ts";
+import { pillKind } from "../presentation/effectNames.ts";
 import { shownText } from "../ui/dom/pixelLine.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { lineInk } from "../ui/lineInk.ts";

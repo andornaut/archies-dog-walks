@@ -97,14 +97,7 @@ const BANDS: readonly { readonly band: string; readonly rows: readonly string[][
 const KNOWN: Readonly<Record<Kind, readonly string[]>> = {
   cycle: [],
   sideways: [],
-  upward: [
-    "src/home/detailCardView.ts -> src/hud/effectNames.ts",
-    "src/home/dom/speech.ts -> src/hud/dom/detailCard.ts",
-    "src/home/endScreenView.ts -> src/hud/hudView.ts",
-    "src/home/homeLayout.ts -> src/hud/walkHud.ts",
-    "src/home/selectionView.ts -> src/hud/effectIcons.ts",
-    "src/home/speechView.ts -> src/hud/effectNames.ts",
-  ],
+  upward: [],
 };
 
 const PLACES = BANDS.flatMap(({ rows }) => rows).flatMap((groups, row) =>
