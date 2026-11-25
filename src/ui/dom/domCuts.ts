@@ -2,11 +2,11 @@ import { cutFrame } from "@andornaut/game-kit/runtime/web/ui/dom/sheetFrames";
 
 import { domArtPath } from "../../assets/domArt.ts";
 import type { DomArtSource } from "./artElements.ts";
-import type { DomSheetJson } from "./sheetFrames.ts";
+import { type DomSheetJson, sheetFrame } from "./sheetFrames.ts";
 
 // Art cut from its DOM sheet into files of its own, as blob: URLs, for CSS that draws whole files:
-// the stylesheet's art (DOM_STYLE_ART) and a fill CSS repeats. Each cut lasts for the page; a
-// failed one is cut again on the next request.
+// the stylesheet's art (DOM_STYLE_ART), a fill CSS repeats and a control's per-state frames. Each
+// cut lasts for the page; a failed one is cut again on the next request.
 
 const images = new Map<string, Promise<HTMLImageElement>>();
 const cuts = new Map<string, Promise<string>>();
@@ -51,6 +51,31 @@ export function cutDomArt(
         throw new Error(`The DOM sheet has no ${key}`);
       }
       const [x, y, width, height] = rect;
+      return cutFrame(doc, image, { height, width, x, y });
+    });
+    cut.catch(() => cuts.delete(id));
+    cuts.set(id, cut);
+  }
+  return cut;
+}
+
+// One frame of a key's sprite sheet by its tag (its first frame where the sheet has no such tag),
+// cut into a file of its own, for CSS that draws a whole file per state.
+export function cutDomFrame(
+  doc: Document,
+  source: DomArtSource,
+  key: string,
+  tag: string,
+): Promise<string> {
+  const url = source.artUrl(domArtPath("sheet", key, "png"));
+  const id = `${url}#${key}#${tag}`;
+  let cut = cuts.get(id);
+  if (cut === undefined) {
+    cut = Promise.all([
+      source.loadSheet(source.artUrl(domArtPath("sheet", key, "json"))),
+      decodedImage(doc, url),
+    ]).then(([json, image]) => {
+      const { height, width, x, y } = sheetFrame(json, tag);
       return cutFrame(doc, image, { height, width, x, y });
     });
     cut.catch(() => cuts.delete(id));

@@ -129,11 +129,10 @@ export function sheetArt(
   return { element, ...paintSheetArt(source, key, element, imageKey) };
 }
 
-// A sheet's frame drawn on element, which another part (a Game Kit control) made: as sheetArt
-// places its own. With art.alternate, the property holds a second frame's background position,
-// for a state CSS shows in its place. The frame's image, size and position are also held in
-// --adw-art-image, --adw-art-size and --adw-art-position, for CSS that masks a silhouette of it.
-export function paintSheetArt(
+// A sheet's frame drawn on element, placed as sheetArt places it. The frame's image, size and
+// position are also held in --adw-art-image, --adw-art-size and --adw-art-position, for CSS that
+// masks a silhouette of it.
+function paintSheetArt(
   source: DomArtSource,
   key: string,
   element: HTMLElement,
@@ -143,9 +142,7 @@ export function paintSheetArt(
   readonly place: (
     scale: DomScale,
     origin: Point,
-    art: SheetArtPlace & {
-      readonly alternate?: { readonly property: string; readonly tag: string };
-    },
+    art: SheetArtPlace,
     at?: { readonly left: number; readonly top: number },
   ) => void;
 } {
@@ -191,94 +188,6 @@ export function paintSheetArt(
         element.style.backgroundPosition = position;
         element.style.setProperty("--adw-art-size", size);
         element.style.setProperty("--adw-art-position", position);
-        if (art.alternate !== undefined) {
-          const other = sheetFrame(json, art.alternate.tag);
-          element.style.setProperty(
-            art.alternate.property,
-            `${-other.x * across}px ${-other.y * down}px`,
-          );
-        }
-      }),
-    ready: loaded.ready,
-  };
-}
-
-// A sheet's frame stretched across, as a nine-slice cut only at its sides draws it: its left
-// and right columns whole, the columns between them stretched, which holds for art whose
-// middle columns are alike, since the stretch then samples none but them. width, where given,
-// is its width in device pixels. It draws in element where another part made it.
-export function sheetThreeSlice(
-  doc: Document,
-  source: DomArtSource,
-  key: string,
-  slices: { readonly left: number; readonly right: number },
-  element: HTMLElement = doc.createElement("span"),
-): {
-  readonly element: HTMLElement;
-  readonly ready: Promise<readonly string[]>;
-  readonly place: (
-    scale: DomScale,
-    origin: Point,
-    art: SheetArtPlace & { readonly width: number },
-    width?: number,
-  ) => void;
-} {
-  element.classList.add("adw-art");
-  element.style.backgroundImage = "none";
-  const parts = ["left", "middle", "right"].map(() => {
-    const part = doc.createElement("span");
-    part.className = "adw-art";
-    part.style.backgroundImage = backgroundOf(source, key);
-
-    return part;
-  });
-  element.append(...parts);
-  const loaded = sheetOf(source, key, element);
-  return {
-    element,
-    place: (scale, origin, art, across) =>
-      loaded((json) => {
-        const frame = sheetFrame(json, art.tag);
-        const pixel = artPixel(scale);
-        const left = gridX(scale, art.x);
-        const width = across ?? gridX(scale, art.x + art.width) - left;
-        const layout = art.projection === "layout";
-        const height = layout
-          ? gridY(scale, art.y + frame.height * (art.scale ?? 1)) - gridY(scale, art.y)
-          : frame.height * pixel;
-        const down = height / frame.height;
-        setBox(element, {
-          height,
-          left: left - gridX(scale, origin.x),
-          top: gridY(scale, art.y) - gridY(scale, origin.y),
-          width,
-        });
-        const [start, middle, end] = parts;
-        const sheetSize = (across: number) =>
-          `${frame.sheet.width * across}px ${frame.sheet.height * down}px`;
-        const sides = layout
-          ? {
-              left: gridX(scale, art.x + slices.left) - left,
-              right:
-                gridX(scale, art.x + art.width) - gridX(scale, art.x + art.width - slices.right),
-            }
-          : { left: slices.left * pixel, right: slices.right * pixel };
-        if (start !== undefined && end !== undefined && middle !== undefined) {
-          setBox(start, { height, left: 0, top: 0, width: sides.left });
-          const near = slices.left === 0 ? pixel : sides.left / slices.left;
-          start.style.backgroundSize = sheetSize(near);
-          start.style.backgroundPosition = `${-frame.x * near}px ${-frame.y * down}px`;
-          setBox(end, { height, left: width - sides.right, top: 0, width: sides.right });
-          const far = slices.right === 0 ? pixel : sides.right / slices.right;
-          end.style.backgroundSize = sheetSize(far);
-          end.style.backgroundPosition = `${-(frame.x + frame.width - slices.right) * far}px ${-frame.y * down}px`;
-          // The middle columns at the stretch that spans them across the room the sides leave.
-          const room = width - sides.left - sides.right;
-          const across = room / (frame.width - slices.left - slices.right);
-          setBox(middle, { height, left: sides.left, top: 0, width: room });
-          middle.style.backgroundSize = sheetSize(across);
-          middle.style.backgroundPosition = `${-(frame.x + slices.left) * across}px ${-frame.y * down}px`;
-        }
       }),
     ready: loaded.ready,
   };

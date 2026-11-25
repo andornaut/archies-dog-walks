@@ -1,11 +1,20 @@
+import "@andornaut/game-kit/runtime/web/ui/dom/slider.css";
+
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
-import { sliderGeometry, sliderLane } from "@andornaut/game-kit/runtime/ui/slider";
+import type { FormRowLayout } from "@andornaut/game-kit/runtime/ui/formRow";
+import { createFormRows } from "@andornaut/game-kit/runtime/web/ui/dom/formRow";
 import { createSlider } from "@andornaut/game-kit/runtime/web/ui/dom/slider";
 
 import { gameData } from "../../data/index.ts";
-import { SLICES } from "../../data/layout.ts";
-import { SLIDER_ART, VOLUME_STEPS, type VolumeKey } from "../../home/settings.ts";
+import { FEEDBACK } from "../../home/feedback.ts";
+import {
+  SETTINGS_FORM_ROWS,
+  SETTINGS_INSTALL_ROWS,
+  SETTINGS_SLIDER,
+  VOLUME_STEPS,
+  type VolumeKey,
+} from "../../home/settings.ts";
 import type {
   SettingsRowView,
   SettingsTarget,
@@ -13,25 +22,13 @@ import type {
   SettingsView,
 } from "../../home/settingsView.ts";
 import { read } from "../../rules/units.ts";
-import {
-  type DomArtSource,
-  imageArt,
-  paintSheetArt,
-  sheetArt,
-  sheetThreeSlice,
-} from "../../ui/dom/artElements.ts";
+import { type DomArtSource, imageArt, sheetArt } from "../../ui/dom/artElements.ts";
 import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";
-import { createGameButton, createGameFormRow } from "../../ui/dom/gameButton.ts";
+import { cutFrameProperties, placeFormRows, rowIcon, switchFrames } from "../../ui/dom/formRows.ts";
+import { createGameFormRow } from "../../ui/dom/gameButton.ts";
 import { guardNativeInput } from "../../ui/dom/modalLifecycle.ts";
 import type { DomPart } from "../../ui/dom/parts.ts";
-import {
-  blockPlace,
-  createTextLine,
-  placeBox,
-  placeFrame,
-  placeText,
-  setBox,
-} from "../../ui/dom/pixelLine.ts";
+import { blockPlace, createTextLine, placeBox, placeText } from "../../ui/dom/pixelLine.ts";
 import { refuse } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { type DomScale, gridX, gridY } from "../../ui/domScale.ts";
@@ -48,12 +45,13 @@ import {
 // The Settings page in HTML over the canvas, on the page template (showPage): its title, its
 // rows scrolling in the page's body with the pages' scrollbar, the version label fixed under the
 // body and Back, each row as its view (settingsView) lays it out. A switch row is Game Kit's form
-// row, the install row a button and a volume row Game Kit's slider; the kit owns their roles,
-// activation, slider keys (the arrows, Home and End) and drags, and the game places their parts
-// on its art-pixel grid and draws their art. Activations, volumes and a held switch's dip go to
-// the scene, which keeps the settings and the keyboard's focus; every other key goes through to
-// it, which moves its focus and the page's with it. The install steps' card opens over the page
-// as a modal.
+// row, the install row its one-action row and a volume row its slider, in kit form row lists that
+// place every row and its icon, switch, face and lane on the art-pixel grid; the kit owns their
+// roles, activation, slider keys (the arrows, Home and End) and drags, and draws the switch's and
+// slider's frames by their state. The game draws each row's face and text. Activations, volumes
+// and a held switch's press go to the scene, which keeps the settings and the keyboard's focus;
+// every other key goes through to it, which moves its focus and the page's with it. The install
+// steps' card opens over the page as a modal.
 
 export interface DomSettingsInput
   extends Pick<DomQuestionPanelInput, "closeLabel" | "fonts" | "toGame">, DomArtSource {
@@ -134,38 +132,51 @@ function hideKitText(...parts: readonly HTMLElement[]): void {
   }
 }
 
+// A row's element and its parts, placed from the row's view as it stands, in the kit list that
+// places it.
+interface RowPart {
+  readonly destroy: () => void;
+  readonly element: HTMLElement;
+  readonly place: (scale: DomScale) => void;
+  readonly ready: Promise<readonly string[]>;
+  readonly refuse: (reducedMotion: boolean) => void;
+}
+
+// The Install row: the kit's one-action row, the whole row its press, with the secondary face of
+// the button's size, and on that face its icon and label ink as one centred group.
 function installPart(
   layer: UiLayer,
   input: DomSettingsInput,
   panel: () => Pick<DomQuestionPanel, "accepts" | "capture">,
-  origin: () => Point,
   burst: (event: PointerEvent) => void,
   row: SettingsRowView,
-) {
+): RowPart {
   const doc = layer.element.ownerDocument;
-  const { button, rect } = row;
+  const { button } = row;
   const glyph = row.icon;
   if (button === undefined || glyph === undefined) {
     throw new Error("The Install action requires a face and icon");
   }
   const content = doc.createElement("span");
   content.className = "adw-lines";
+  content.setAttribute("aria-hidden", "true");
   const icon = sheetArt(doc, input, glyph.key);
   const label = createTextLine(doc, button.text);
-  label.setAttribute("aria-hidden", "true");
-  icon.element.setAttribute("aria-hidden", "true");
   content.append(icon.element, label);
   const accepts = () => panel().accepts();
   const press = () => input.press.activate({ kind: "install" });
-  const view = createGameButton(doc, {
-    appearance: {
-      className: "adw-row adw-button adw-secondary",
-      face: { className: "adw-face" },
+  const view = createGameFormRow(doc, {
+    action: {
+      className: "adw-standard-button-face adw-face",
       role: "secondary",
+      size: { height: button.rect.height, width: button.rect.width },
     },
-    content: { icon: content, kind: "icon", name: row.label },
+    className: "adw-row adw-standard-button adw-button adw-secondary",
     getAction: () => (accepts() ? { activate: press } : null),
+    label: row.label,
   });
+  hideKitText(view.label);
+  view.face?.append(content);
   const stopFeedback = bindPanelFeedback(view, { accepts, burst });
   const stopInput = guardNativeInput(
     {
@@ -183,8 +194,6 @@ function installPart(
     },
     element: view.element,
     place(scale: DomScale) {
-      placeBox(scale, origin(), view.element, rect);
-      placeFrame(scale, rect, view.face, button.rect);
       icon.place(scale, button.rect, glyph);
       placeText(input.fonts.title, scale, button.rect, label, button.text);
     },
@@ -193,40 +202,35 @@ function installPart(
   };
 }
 
-// A row's face, which carries its focus, press and refusal fills, and its icon and text drawn at
-// the places its view lays out, in front of the kit row's own parts.
+// A row's face, which carries its focus, press and refusal fills over the whole row, and its text
+// drawn at the places its view lays out, in front of the kit row's own parts.
 function rowArt(doc: Document, input: DomSettingsInput, first: SettingsRowView) {
   const face = doc.createElement("span");
   face.className = "adw-framed adw-row-face";
-  const icon = first.icon === undefined ? undefined : sheetArt(doc, input, first.icon.key);
+  const icon = first.icon === undefined ? undefined : rowIcon(doc, input, first.icon.key);
   const texts = first.texts.map(() => textElement(doc, input.fonts));
   return {
     face,
     icon,
     place(scale: DomScale, row: SettingsRowView) {
-      const { rect } = row;
-      face.style.backgroundColor = row.face === undefined ? "" : cssHex(row.face.colour);
-      placeBox(scale, rect, face, row.face?.rect ?? rect);
-      if (row.icon !== undefined) {
-        icon?.place(scale, rect, row.icon);
-      }
-      row.texts.forEach((text, i) => texts[i]?.place(scale, rect, text));
+      face.style.backgroundColor = row.face === undefined ? "" : cssHex(row.face);
+      row.texts.forEach((text, i) => texts[i]?.place(scale, row.rect, text));
     },
     texts: texts.map(({ element }) => element),
   };
 }
 
 // A switch row: the kit form row (one button, role switch, its label its name and its note its
-// description) over the row's face, icon, text and the ui-switch frame on the kit's switch. A
-// press dips the row while held, through the scene, and the kit's activation flips it.
+// description) over the row's face and text, its icon and the ui-switch frames on the kit's icon
+// slot and switch. A press holds the row pressed through the scene, which dips its art
+// (pressDip), and the kit's activation flips it.
 function switchPart(
   layer: UiLayer,
   input: DomSettingsInput,
   view: () => SettingsRowView,
   panel: () => Pick<DomQuestionPanel, "accepts" | "capture">,
-  origin: () => Point,
   burst: (event: PointerEvent) => void,
-) {
+): RowPart {
   const doc = layer.element.ownerDocument;
   const first = view();
   const art = rowArt(doc, input, first);
@@ -242,12 +246,11 @@ function switchPart(
     ...(art.icon === undefined ? {} : { icon: art.icon.element }),
     label: first.label,
     ...(first.description === "" ? {} : { note: first.description }),
+    pressDip: FEEDBACK.pressDipPx,
     switch: true,
   });
   const { element } = control;
   hideKitText(control.label, control.note, control.state);
-  const toggle =
-    control.switch === undefined ? undefined : paintSheetArt(input, "ui-switch", control.switch);
   element.prepend(art.face);
   element.append(...art.texts);
   const stopInput = guardNativeInput(
@@ -277,34 +280,26 @@ function switchPart(
     element,
     place(scale: DomScale) {
       const row = view();
-      placeBox(scale, origin(), element, row.rect);
-      element.toggleAttribute("data-ui-pressed", row.dip > 0);
+      element.toggleAttribute("data-ui-pressed", row.pressed);
       art.place(scale, row);
-      if (row.switch !== undefined) {
-        toggle?.place(scale, row.rect, row.switch.art);
-      }
       control.refresh();
     },
-    ready: Promise.all([
-      ...(art.icon === undefined ? [] : [art.icon.ready]),
-      ...(toggle === undefined ? [] : [toggle.ready]),
-    ]).then((urls) => urls.flat()),
+    ready: art.icon?.ready ?? Promise.resolve([]),
     refuse: (reducedMotion: boolean) => refuse(reducedMotion, element),
   };
 }
 
-// A volume row: the kit slider (role slider, its keys, drag and refusal) over the row's face,
-// icon and text, with the track's and knob's frames on the kit's track, fill and thumb, placed
-// by the kit's slider geometry on the art-pixel grid. A muted slider is refused: a press, drag,
-// tap or step key plays the game's refusal cue (refuse) on the row.
+// A volume row: the kit slider (role slider, its keys, drag and refusal) over the row's face and
+// text, with its icon on the kit's icon slot; the kit places its lane, track, fill and knob and
+// draws the slider's frames by its state. A muted slider is refused: a press, drag, tap or step
+// key plays the game's refusal cue (refuse) on the row.
 function sliderPart(
   layer: UiLayer,
   input: DomSettingsInput,
   view: () => SettingsRowView,
   panel: () => Pick<DomQuestionPanel, "accepts" | "capture">,
-  origin: () => Point,
   burst: (event: PointerEvent) => void,
-) {
+): RowPart {
   const doc = layer.element.ownerDocument;
   const first = view();
   const { key } = first;
@@ -327,22 +322,13 @@ function sliderPart(
     },
     ...(art.icon === undefined ? {} : { icon: art.icon.element }),
     label: first.label,
-    layout: { art: SLIDER_ART, height: first.rect.height },
+    layout: SETTINGS_SLIDER,
     refusal: { reducedMotion: input.reducedMotion, refuse },
     slop: read(gameData.tuning, "pixels", "tapMaxDistance"),
     steps: VOLUME_STEPS,
   });
-  const { element, thumb, track } = slider;
+  const { element } = slider;
   hideKitText(slider.label, slider.note, slider.value);
-  const lane = track.parentElement as HTMLElement;
-  lane.classList.add("adw-framed");
-  track.classList.add("adw-framed");
-  const [emptyPart, fillPart] = [...track.children] as HTMLElement[];
-  const parts = {
-    empty: sheetThreeSlice(doc, input, "ui-slider", SLICES["ui-slider"], emptyPart),
-    fill: sheetThreeSlice(doc, input, "ui-slider", SLICES["ui-slider"], fillPart),
-    knob: paintSheetArt(input, "ui-slider-knob", thumb),
-  };
   element.prepend(art.face);
   element.append(...art.texts);
   const stopInput = guardNativeInput(
@@ -361,76 +347,24 @@ function sliderPart(
     },
     element,
     place(scale: DomScale) {
-      const row = view();
-      const { rect } = row;
-      placeBox(scale, origin(), element, rect);
-      // The kit reads presses in page px: one game pixel is unit CSS px.
-      element.style.setProperty("--ui-unit", String(scale.unit));
-      art.place(scale, row);
-      const volume = row.slider;
-      if (volume !== undefined) {
-        const lanes = sliderLane(SLIDER_ART);
-        const placed = sliderGeometry(
-          {
-            art: SLIDER_ART,
-            origin: { x: volume.track.x, y: volume.track.y - lanes.trackTop },
-            project: { x: (edge) => gridX(scale, edge), y: (edge) => gridY(scale, edge) },
-            steps: VOLUME_STEPS,
-            width: volume.track.width,
-          },
-          volume.step,
-        );
-        const at = (box: { x: number; y: number }, from: { x: number; y: number }) => ({
-          left: box.x - from.x,
-          top: box.y - from.y,
-        });
-        const rowCorner = { x: gridX(scale, rect.x), y: gridY(scale, rect.y) };
-        setBox(lane, {
-          ...at(placed.lane, rowCorner),
-          height: placed.lane.height,
-          width: placed.lane.width,
-        });
-        setBox(track, {
-          ...at(placed.track, placed.lane),
-          height: placed.track.height,
-          width: placed.track.width,
-        });
-        const trackOrigin = { x: volume.track.x, y: volume.track.y };
-        parts.empty.place(
-          scale,
-          trackOrigin,
-          { ...trackOrigin, tag: volume.tags.empty, width: volume.track.width },
-          placed.track.width,
-        );
-        parts.fill.place(
-          scale,
-          trackOrigin,
-          { ...trackOrigin, tag: volume.tags.filled, width: volume.track.width },
-          placed.fill.width,
-        );
-        parts.knob.place(
-          scale,
-          trackOrigin,
-          {
-            alternate: { property: "--adw-pressed-frame", tag: "pressed" },
-            tag: volume.tags.knob,
-            x: 0,
-            y: 0,
-          },
-          at(placed.thumb, placed.track),
-        );
-      }
+      art.place(scale, view());
       slider.refresh();
     },
-    ready: Promise.all([
-      ...(art.icon === undefined ? [] : [art.icon.ready]),
-      parts.empty.ready,
-      parts.fill.ready,
-      parts.knob.ready,
-    ]).then((urls) => urls.flat()),
+    ready: art.icon?.ready ?? Promise.resolve([]),
     refuse: (reducedMotion: boolean) => refuse(reducedMotion, element),
   };
 }
+
+// The slider's frames by its state, for the kit's track, fill and knob.
+const SLIDER_FRAMES = [
+  ["--ui-slider-fill-disabled-image", "ui-slider", "filled-disabled"],
+  ["--ui-slider-fill-image", "ui-slider", "filled"],
+  ["--ui-slider-thumb-disabled-image", "ui-slider-knob", "disabled"],
+  ["--ui-slider-thumb-image", "ui-slider-knob", "normal"],
+  ["--ui-slider-thumb-pressed-image", "ui-slider-knob", "pressed"],
+  ["--ui-slider-track-disabled-image", "ui-slider", "empty-disabled"],
+  ["--ui-slider-track-image", "ui-slider", "empty"],
+] as const;
 
 // A row's element and its parts, placed from the row's view as it stands.
 function rowPart(
@@ -439,19 +373,40 @@ function rowPart(
   current: () => SettingsView,
   panel: () => Pick<DomQuestionPanel, "accepts" | "capture">,
   index: number,
-  origin: () => Point,
   burst: (event: PointerEvent) => void,
-) {
+): RowPart {
   const view = () => current().rows[index] as SettingsRowView;
   const first = view();
   switch (first.kind) {
     case "button":
-      return installPart(layer, input, panel, origin, burst, first);
+      return installPart(layer, input, panel, burst, first);
     case "slider":
-      return sliderPart(layer, input, view, panel, origin, burst);
+      return sliderPart(layer, input, view, panel, burst);
     default:
-      return switchPart(layer, input, view, panel, origin, burst);
+      return switchPart(layer, input, view, panel, burst);
   }
+}
+
+// The rows by the kit lists that place them, each list as tall as its switch and button rows (a
+// slider row is its own height) and with one layout: a row of another height or layout starts a
+// list of its own.
+function rowLists(
+  rows: readonly SettingsRowView[],
+): { indexes: number[]; layout: FormRowLayout }[] {
+  type Shape = Omit<FormRowLayout, "height">;
+  const lists: { height: number | undefined; indexes: number[]; shape: Shape }[] = [];
+  rows.forEach((row, index) => {
+    const shape = row.kind === "button" ? SETTINGS_INSTALL_ROWS : SETTINGS_FORM_ROWS;
+    const height = row.kind === "slider" ? undefined : row.rect.height;
+    const last = lists.at(-1);
+    if (last?.shape === shape && (height === undefined || (last.height ?? height) === height)) {
+      last.height ??= height;
+      last.indexes.push(index);
+    } else {
+      lists.push({ height, indexes: [index], shape });
+    }
+  });
+  return lists.map(({ height = 0, indexes, shape }) => ({ indexes, layout: { ...shape, height } }));
 }
 
 // The install steps' card: its title and close control, the glyph of the button the steps start
@@ -514,13 +469,21 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
       () => current,
       () => page,
       i,
-      () => current.rowsViewport,
       burst,
     ),
   );
+  const lists = rowLists(current.rows).map(({ indexes, layout }) => {
+    const view = createFormRows(doc, layout, { className: "adw-framed adw-form-rows" });
+    view.element.append(...indexes.map((i) => rows[i]!.element));
+    return { indexes, view };
+  });
+  const art = Promise.all([
+    ...lists.map(({ view }) => switchFrames(doc, input, view.element)),
+    cutFrameProperties(doc, input, content, SLIDER_FRAMES),
+  ]);
   const separators = current.separators.map(() => createContentSeparator(doc));
   const build = createTextLine(doc, current.build);
-  content.append(...rows.map((row) => row.element), ...separators);
+  content.append(...lists.map(({ view }) => view.element), ...separators);
   const revealRow = (index: number | undefined) => {
     const row = index === undefined ? undefined : current.rows[index];
     if (row === undefined) {
@@ -546,6 +509,13 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
         gridY(scale, current.rowsViewport.y)
       }px`;
       content.style.width = "100%";
+      for (const { indexes, view } of lists) {
+        const first = current.rows[indexes[0]!]!;
+        placeFormRows(scale, current.rowsViewport, view, {
+          rect: first.rect,
+          rows: indexes.map((i) => ({ element: rows[i]!.element })),
+        });
+      }
       for (const row of rows) {
         row.place(scale);
       }
@@ -561,7 +531,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
         }
       });
     },
-    ready: Promise.all(rows.map((row) => row.ready)).then((urls) => urls.flat()),
+    ready: Promise.all([...rows.map((row) => row.ready), art]).then((urls) => urls.flat(2)),
   };
   const label: DomPart = {
     element: build,

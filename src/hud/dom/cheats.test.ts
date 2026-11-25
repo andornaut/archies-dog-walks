@@ -12,6 +12,11 @@ import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { showCheats } from "./cheats.ts";
 
+vi.mock("../../ui/dom/domCuts.ts", () => ({
+  cutDomArt: vi.fn(() => Promise.resolve("blob:cut")),
+  cutDomFrame: vi.fn(() => Promise.resolve("blob:frame")),
+}));
+
 async function cheatsScreen(
   inWalk = false,
   canResetSave = false,

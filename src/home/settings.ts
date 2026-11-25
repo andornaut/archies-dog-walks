@@ -1,6 +1,12 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
-import { type SliderArt, sliderStepForKey } from "@andornaut/game-kit/runtime/ui/slider";
+import type { FormRowLayout } from "@andornaut/game-kit/runtime/ui/formRow";
+import {
+  type SliderArt,
+  sliderLane,
+  type SliderLayout,
+  sliderStepForKey,
+} from "@andornaut/game-kit/runtime/ui/slider";
 
 import { ICON_LABEL_GAP, LABEL_ICON, MIN_PRESS, SETTINGS_CARD, SLICES } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
@@ -11,7 +17,7 @@ import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 import { ROWS_PAGE_LAYOUT } from "../ui/pageLayout.ts";
-import { separatorBetween } from "../ui/separator.ts";
+import { SEPARATOR_BAND, separatorBetween } from "../ui/separator.ts";
 import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
 import { HOME_LAYOUT } from "./homeLayout.ts";
 
@@ -153,6 +159,47 @@ function noteDy(title: FontMetrics): number {
 }
 
 export const SWITCH_STATE_GAP = BUTTON_SIZE.stackGap;
+
+// Switch rows as Game Kit form rows across the rows' column, on the page's art-pixel grid, as tall
+// as the list's height: the label's column ICON_LABEL_GAP after an icon's, the switch pad in from
+// the row's right and icon.dy down, its state word SWITCH_STATE_GAP under it, and the rows a
+// separator and its clearance apart (SEPARATOR_BAND). Cheats' rows, which carry no icon, take it
+// as it is; the game draws every label and state word itself.
+export const SWITCH_ROWS: Omit<FormRowLayout, "height"> = {
+  align: "start",
+  columnGap: ICON_LABEL_GAP,
+  gap: SEPARATOR_BAND,
+  padding: { bottom: 0, left: SETTINGS_ROW.icon.dx, right: SETTINGS_ROW.pad, top: 0 },
+  switch: SETTINGS_ROW.switch,
+  value: {
+    gap: SWITCH_STATE_GAP,
+    offset: SETTINGS_ROW.icon.dy,
+    state: "end",
+    track: SETTINGS_ROW.switch.width,
+  },
+};
+
+// Settings' rows: each row's 16x16 icon icon.dx in from its left and icon.dy down, on its label's
+// capitals (iconBesideLabel).
+export const SETTINGS_FORM_ROWS: Omit<FormRowLayout, "height"> = {
+  ...SWITCH_ROWS,
+  icon: { offset: SETTINGS_ROW.icon.dy, size: LABEL_ICON, slot: LABEL_ICON },
+};
+
+// The Install row: its sole action centred across the whole row, in a list of its own.
+export const SETTINGS_INSTALL_ROWS: Omit<FormRowLayout, "height"> = {
+  ...SETTINGS_FORM_ROWS,
+  padding: { bottom: 0, left: 0, right: 0, top: 0 },
+};
+
+// A volume row's kit slider: slider.height tall, its lane from the labels' column to the row's
+// right inset, the track track.dy down.
+export const SETTINGS_SLIDER: SliderLayout = {
+  art: SLIDER_ART,
+  height: SETTINGS_ROW.slider.height,
+  inset: { left: SETTINGS_ROW.label.dx - SETTINGS_ROW.icon.dx, right: 0 },
+  line: SETTINGS_ROW.track.dy - sliderLane(SLIDER_ART).trackTop,
+};
 
 // The version label (BUILD_LABEL) uses the standard body role, ink-centred across the screen
 // under the page's body, fixed as the body scrolls: its lowest ink labelFoot rows over Back's

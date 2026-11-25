@@ -12,13 +12,13 @@ import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { PAGE_LAYOUT, pageBack } from "../ui/pageLayout.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
-import { FEEDBACK } from "./feedback.ts";
 import { overlayRegion } from "./homeBar.ts";
 import {
   installStepsLayout,
   SETTINGS_ROW,
   settingsInstallWidth,
   settingsLayout,
+  SWITCH_ROWS,
 } from "./settings.ts";
 import {
   SETTINGS_ART_KEYS,
@@ -73,6 +73,13 @@ const view = (state: Partial<SettingsState>) =>
     },
     { ...STATE, ...state },
   );
+
+// A switch row's switch as its kit list places it (SWITCH_ROWS): at the value column's end, its
+// offset down.
+const switchOf = (rect: { x: number; y: number; width: number }) => ({
+  x: rect.x + rect.width - SWITCH_ROWS.padding!.right - SWITCH_ROWS.switch!.width,
+  y: rect.y + SWITCH_ROWS.value!.offset!,
+});
 
 describe("settingsView", () => {
   it("leaves by the page's Back under its page title, on a cream page", () => {
@@ -133,7 +140,7 @@ describe("settingsView", () => {
         ]);
       }
       for (const row of current.rows.filter(({ kind }) => kind === "switch")) {
-        const art = row.switch!.art;
+        const art = switchOf(row.rect);
         const state = row.texts.at(-1)!;
         expect(state.capTop - art.y - SETTINGS_CARD.row.switch.height).toBeGreaterThan(0);
         expect(state).toMatchObject({
@@ -149,7 +156,7 @@ describe("settingsView", () => {
     const scale = domScale(dpr, { height: SCREEN_CONFIG.height, width: 360, x: 0, y: 0 });
     const font = gameFont("font-title");
     for (const row of view({}).rows.filter(({ kind }) => kind === "switch")) {
-      const art = row.switch!.art;
+      const art = switchOf(row.rect);
       const state = row.texts.at(-1)!;
       const place = blockPlace(font, scale, state);
       const end =
@@ -179,7 +186,7 @@ describe("settingsView", () => {
       expect(fps.texts[0]!.capTop - fps.rect.y).toBe(SETTINGS_ROW.label.dy);
       expect(sound.texts[0]!.capTop - sound.rect.y).toBe(SETTINGS_ROW.label.dy);
       expect(fps.texts[0]!.x).toBe(sound.texts[0]!.x);
-      expect(fps.switch!.art.x).toBe(sound.switch!.art.x);
+      expect(fps.texts.at(-1)!.x).toBe(sound.texts.at(-1)!.x);
     },
   );
 
@@ -200,32 +207,25 @@ describe("settingsView", () => {
     expect(icon!.y).toBe(button!.text.capTop - Math.floor((LABEL_ICON - caps) / 2));
   });
 
-  it("dips a pressed row's face, icon, text and switch together", () => {
-    const up = view({}).rows.find(({ key }) => key === "muted");
+  it("holds a pressed row pressed, its parts in place for its kit row's dip", () => {
+    const up = view({}).rows.find(({ key }) => key === "muted")!;
     const down = view({ pressed: { key: "muted", kind: "switch" } }).rows.find(
       ({ key }) => key === "muted",
-    );
-    const tops = (row: typeof up) => [
-      row?.face?.rect.y,
-      row?.icon?.y,
-      ...(row?.texts.map(({ capTop }) => capTop) ?? []),
-      row?.switch?.art.y,
-    ];
-    expect(tops(down)).toEqual(tops(up).map((y) => (y ?? 0) + FEEDBACK.pressDipPx));
+    )!;
+    expect([up.pressed, down.pressed]).toEqual([false, true]);
+    expect([down.icon, down.texts]).toEqual([up.icon, up.texts]);
   });
 
   it.each([
-    [false, "filled", "normal", "45%"],
-    [true, "filled-disabled", "disabled", gameData.menuText.settings.muted],
-  ])("draws a slider muted %s with its %s fill, %s knob and %s", (muted, fill, knob, value) => {
+    [false, "45%"],
+    [true, gameData.menuText.settings.muted],
+  ])("draws a slider muted %s at its step with %s", (muted, value) => {
     const music = view({ settings: { ...DEFAULT_SETTINGS, musicVolume: 0.45, muted } }).rows[1];
-    expect([
-      music?.slider?.tags.filled,
-      music?.slider?.tags.knob,
-      music?.slider?.step,
-      music?.slider?.disabled,
-      music?.texts[1]?.lines,
-    ]).toEqual([fill, knob, 9, muted, [value]]);
+    expect([music?.slider?.step, music?.slider?.disabled, music?.texts[1]?.lines]).toEqual([
+      9,
+      muted,
+      [value],
+    ]);
   });
 
   it("draws the install steps' glyph over the card", () => {

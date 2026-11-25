@@ -338,8 +338,8 @@ export interface CheatRowView {
   // What a screen reader reads it by.
   readonly label: string;
   readonly rect: Rect;
-  // The switch's place and whether it is on.
-  readonly switch?: { readonly on: boolean; readonly x: number; readonly y: number };
+  // Whether the switch is on; its kit form row list places it (SWITCH_ROWS).
+  readonly switch?: { readonly on: boolean };
   readonly texts: readonly PanelText[];
   readonly value: string;
 }
@@ -417,11 +417,7 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
         enabled: row.enabled,
         label: row.label,
         rect: hit,
-        switch: {
-          on: row.on,
-          x: switchX,
-          y: switchY,
-        },
+        switch: { on: row.on },
         texts: [
           {
             ...line,

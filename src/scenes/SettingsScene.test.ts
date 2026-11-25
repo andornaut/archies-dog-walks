@@ -25,6 +25,10 @@ vi.mock("phaser", () => ({
   Scenes: { Events: { PAUSE: "pause", RESUME: "resume", SHUTDOWN: "shutdown" } },
 }));
 vi.mock("virtual:art-files", () => ({ default: new Map() }));
+vi.mock("../ui/dom/domCuts.ts", () => ({
+  cutDomArt: vi.fn(() => Promise.resolve("blob:cut")),
+  cutDomFrame: vi.fn(() => Promise.resolve("blob:frame")),
+}));
 
 function fixture(install = false, width = 360, dpr = 1) {
   const configuredRows = settingsRows(install);
@@ -118,13 +122,13 @@ it("returns manual install instructions to the live Install row without leaving 
   f.shown.update(f.view(true), null);
   await vi.waitFor(() => expect(f.shown.accepts()).toBe(true));
   expect(layerViews(f.element)).toHaveLength(2);
+  // The kit's one-action row, named by its label.
   const install = f.element
     .all()
-    .find(
-      (node) =>
-        node.tagName.toLowerCase() === "button" &&
-        node.getAttribute("aria-label") === gameData.menuText.settings.install,
-    )!;
+    .find((node) => node.getAttribute("data-ui-form-action") !== null)!;
+  expect(
+    install.all().some((node) => node.textContent === gameData.menuText.settings.install),
+  ).toBe(true);
   scene.closeSteps();
   expect(scene.steps).toBeUndefined();
   expect(scene.focus?.row).toBe(scene.rows.findIndex((row) => row.key === "install"));

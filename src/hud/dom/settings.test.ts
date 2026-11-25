@@ -9,9 +9,14 @@ import { DEFAULT_SETTINGS } from "../../save/settings.ts";
 import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, fontInk, gameFont } from "../../testing/fontInk.ts";
 import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
-import { artPixel, domScale, gridRect } from "../../ui/domScale.ts";
+import { artPixel, domScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { type DomSettingsInput, showSettings } from "./settings.ts";
+
+vi.mock("../../ui/dom/domCuts.ts", () => ({
+  cutDomArt: vi.fn(() => Promise.resolve("blob:cut")),
+  cutDomFrame: vi.fn(() => Promise.resolve("blob:frame")),
+}));
 
 function fixture(install = false, width = 360, dpr = 1) {
   const configuredRows = settingsRows(install);
@@ -221,7 +226,7 @@ it("keeps the page's chrome fixed while revealing whole focused rows in its nati
   const { element, shown, view } = fixture(true);
   const current = view();
   const viewport = element.all().find((part) => part.className.includes("adw-settings-rows"))!;
-  const rows = element.all().filter((part) => part.classList.contains("adw-row"));
+  const lists = element.all().filter((part) => part.classList.contains("adw-form-rows"));
   const last = current.rows.length - 1;
   const rect = { ...current.rowsViewport, height: current.rows[last]!.rect.height };
   const small = { ...current, rowsViewport: rect };
@@ -246,7 +251,7 @@ it("keeps the page's chrome fixed while revealing whole focused rows in its nati
   expect(parseFloat(track.style.left ?? "")).toBeGreaterThan(
     parseFloat(viewport.style.left ?? "") + parseFloat(viewport.style.width ?? ""),
   );
-  expect(rows[0]!.style.top).toBe("0px");
+  expect(lists[0]!.style.top).toBe("0px");
   expect(footer.style.top).toBe(footerTop);
   shown.update(small, 0);
   expect((viewport as unknown as HTMLElement).scrollTop).toBe(0);
@@ -270,3 +275,43 @@ it.each([
   );
   shown.destroy();
 });
+
+it.each([
+  [360, 2],
+  [412, 2.625],
+  [390, 3],
+])(
+  "places each row through its kit list at its view's place at width %i and DPR %f",
+  (width, dpr) => {
+    const { element, scale, shown, view } = fixture(true, width, dpr);
+    const { rows, rowsViewport } = view();
+    const lists = element.all().filter((part) => part.classList.contains("adw-form-rows"));
+    const rowElements = element.all().filter((part) => part.classList.contains("adw-row"));
+    const rowsOf = (list: FakeElement) =>
+      list.children.map((row) => rows[rowElements.indexOf(row)]!);
+    // Install, centred across its whole row, is a list of its own; the rest share a list per height.
+    expect(lists.map((list) => rowsOf(list).map(({ key }) => key))).toEqual([
+      ["muted", "musicVolume", "sfxVolume", "reducedMotion"],
+      ["install"],
+      ["fpsCounter"],
+    ]);
+    for (const list of lists) {
+      const placed = rowsOf(list);
+      const top = gridY(scale, placed[0]!.rect.y);
+      expect([list.style.left, list.style.top]).toEqual([
+        `${gridX(scale, placed[0]!.rect.x) - gridX(scale, rowsViewport.x)}px`,
+        `${top - gridY(scale, rowsViewport.y)}px`,
+      ]);
+      // Each row's track is its pitch to the next on the grid, the last its own height.
+      expect(list.style.getPropertyValue("--ui-form-rows")).toBe(
+        placed
+          .map(({ rect }, i) => {
+            const next = placed[i + 1]?.rect.y ?? rect.y + rect.height;
+            return `${gridY(scale, next) - gridY(scale, rect.y)}px`;
+          })
+          .join(" "),
+      );
+    }
+    shown.destroy();
+  },
+);

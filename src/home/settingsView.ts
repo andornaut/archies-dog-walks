@@ -21,7 +21,6 @@ import { PAGE_LAYOUT, PAGE_TITLE_ROW, pageBack } from "../ui/pageLayout.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { GREYED, selectLook } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
-import { FEEDBACK } from "./feedback.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import {
   INSTALL_STEPS_FIT,
@@ -180,29 +179,27 @@ export interface SettingsArt {
 export interface SettingsRowView {
   // What a screen reader reads it by: its label, and its note or its volume.
   readonly description: string;
-  // The rows its face and content dip while pressed.
-  readonly dip: number;
-  // A noted row's face, in its colour; none on a slider row.
-  readonly face: { readonly colour: number; readonly rect: Rect } | undefined;
+  // A noted row's face colour; none on a slider row.
+  readonly face: number | undefined;
   readonly icon?: SettingsArt;
   readonly key: SettingsRow["key"];
   readonly kind: SettingsRow["kind"];
   readonly label: string;
+  // Whether it is held pressed, which dips a switch row's art (its kit form row's pressDip).
+  readonly pressed: boolean;
   // The label and the note, or the label and the volume.
   readonly texts: readonly SettingsText[];
   readonly rect: Rect;
   // A switch row's switch, whether it is on and its state word.
-  readonly switch?: { readonly art: SettingsArt; readonly on: boolean; readonly word: string };
+  readonly switch?: { readonly on: boolean; readonly word: string };
   // The install row's secondary button.
   readonly button?: PanelButton;
-  // A slider row's volume in steps of VOLUME_STEPS and in percent, its track's rect, the
-  // track's and knob's frame tags, and whether it is disabled, the sound being muted.
+  // A slider row's volume in steps of VOLUME_STEPS and in percent, and whether it is disabled,
+  // the sound being muted.
   readonly slider?: {
     readonly disabled: boolean;
     readonly percent: number;
     readonly step: number;
-    readonly tags: { readonly empty: string; readonly filled: string; readonly knob: string };
-    readonly track: Rect;
   };
 }
 
@@ -271,7 +268,6 @@ function controlRow(
     return {
       button: { ...button, text: { ...button.text, centreX: inkLeft + ink / 2 } },
       description: "",
-      dip: 0,
       face: undefined,
       icon: {
         key: row.icon,
@@ -285,6 +281,7 @@ function controlRow(
       key: row.key,
       kind: row.kind,
       label: words.install,
+      pressed: false,
       rect,
       texts: [],
     };
@@ -295,7 +292,6 @@ function controlRow(
   const on = switchOn(row.key, state.settings);
   const look = selectLook("normal");
   const pressed = state.pressed?.kind === "switch" && state.pressed.key === row.key;
-  const dip = pressed ? FEEDBACK.pressDipPx : 0;
   const { x, y } = rect;
   const room = noteRoomForControl(control?.width ?? SETTINGS_ROW[row.kind].width);
   const description = row.note === undefined ? "" : words[row.note];
@@ -303,8 +299,7 @@ function controlRow(
   const labelTop = y + LABEL.dy;
   const view: SettingsRowView = {
     description,
-    dip,
-    face: { colour: PALETTE[look.face], rect: { ...rect, y: y + dip } },
+    face: PALETTE[look.face],
     ...(row.icon === undefined
       ? {}
       : {
@@ -314,7 +309,7 @@ function controlRow(
             tag: "idle",
             ...iconBesideLabel({
               capHeight: measure.title.capHeight * TEXT_SCALE,
-              capTop: labelTop + dip,
+              capTop: labelTop,
               inkLeft: x + LABEL.dx,
             }),
           },
@@ -322,11 +317,12 @@ function controlRow(
     key: row.key,
     kind: row.kind,
     label: words[row.label],
+    pressed,
     rect,
     texts: [
       {
         anchor: "ink",
-        capTop: labelTop + dip,
+        capTop: labelTop,
         colour: PALETTE[look.text],
         font: "title",
         lines: [words[row.label]],
@@ -338,7 +334,7 @@ function controlRow(
         : [
             {
               anchor: "pen" as const,
-              capTop: noteY + dip,
+              capTop: noteY,
               colour: PALETTE.darkBrown,
               font: "body" as const,
               lines: measure.fitBody(SETTINGS_NOTE_STYLE.lines ?? 1, room, description),
@@ -351,18 +347,17 @@ function controlRow(
   if (control === null) {
     return view;
   }
-  const art = { key: "ui-switch", tag: on ? "on" : "off", x: control.x, y: control.y + dip };
   const word = words[on ? row.states.on : row.states.off];
   return {
     ...view,
-    switch: { art, on, word },
+    switch: { on, word },
     texts: [
       ...view.texts,
       {
         // Its ink ends on the switch's last column: a word wider than the switch grows left,
         // clear of the row's edge.
         anchor: "inkRight",
-        capTop: art.y + control.height + SWITCH_STATE_GAP,
+        capTop: control.y + control.height + SWITCH_STATE_GAP,
         colour: PALETTE[look.text],
         font: "title",
         lines: [word],
@@ -392,10 +387,8 @@ function sliderRow(
     ? fillLine(MENU_TEXT_FIELDS.settings, words, "volume", { percent: String(percent) })
     : words.muted;
   const title = { capTop: y + LABEL.dy, colour, font: "title", scale: TEXT_SCALE } as const;
-  const suffix = active ? "" : "-disabled";
   return {
     description: value,
-    dip: 0,
     face: undefined,
     icon: {
       key: row.icon,
@@ -409,18 +402,9 @@ function sliderRow(
     key: row.key,
     kind: "slider",
     label: words[row.label],
+    pressed: false,
     rect,
-    slider: {
-      disabled: !active,
-      percent,
-      step: steps,
-      tags: {
-        empty: `empty${suffix}`,
-        filled: `filled${suffix}`,
-        knob: active ? "normal" : "disabled",
-      },
-      track: { height: slider.height, width: slider.width, x: slider.x, y: y + slider.dy },
-    },
+    slider: { disabled: !active, percent, step: steps },
     texts: [
       { ...title, anchor: "ink", lines: [words[row.label]], x: x + LABEL.dx },
       { ...title, anchor: "right", lines: [value], x: slider.x + slider.width },

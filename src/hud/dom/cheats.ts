@@ -2,10 +2,13 @@ import "@andornaut/game-kit/runtime/web/ui/dom/actionGroup.css";
 
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { createActionGroup } from "@andornaut/game-kit/runtime/web/ui/dom/actionGroup";
+import { createFormRows } from "@andornaut/game-kit/runtime/web/ui/dom/formRow";
 
 import type { CheatAction, CheatRowView, CheatsView } from "../../dev/cheatsView.ts";
-import { type DomArtSource, paintSheetArt } from "../../ui/dom/artElements.ts";
+import { SWITCH_ROWS } from "../../home/settings.ts";
+import type { DomArtSource } from "../../ui/dom/artElements.ts";
 import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";
+import { placeFormRows, switchFrames } from "../../ui/dom/formRows.ts";
 import { createGameButton, createGameFormRow } from "../../ui/dom/gameButton.ts";
 import type { DomPart } from "../../ui/dom/parts.ts";
 import { createTextLine, placeBox, placeFrame, placeText } from "../../ui/dom/pixelLine.ts";
@@ -190,13 +193,13 @@ function buttonsPart(
 }
 
 // A switch row: Game Kit's form row (one button, role switch, its label its name and its value
-// its state word), over its face, which carries its focus, press and refusal fills, its text and
-// the ui-switch frame on the kit's switch, at the places the row's view lays out. A refused row
-// plays the refusal cue (refuse) on the whole row, as a Settings row does.
+// its state word), over its face, which carries its focus, press and refusal fills, and its text
+// at the places the row's view lays out; its kit list places it and its switch and draws the
+// ui-switch frames. A refused row plays the refusal cue (refuse) on the whole row, as a Settings
+// row does.
 function settingRowPart(
   doc: Document,
   input: DomCheatsInput,
-  origin: Point,
   first: CheatRowView,
   press: { readonly accepts: () => boolean; readonly burst: (event: PointerEvent) => void },
   current: () => CheatRowView,
@@ -234,8 +237,6 @@ function settingRowPart(
   for (const part of [view.label, view.note, view.state]) {
     part.classList.add("visually-hidden");
   }
-  const art =
-    view.switch === undefined ? undefined : paintSheetArt(input, "ui-switch", view.switch);
   element.prepend(face);
   element.append(texts);
   const stopFeedback = bindPanelFeedback(view, press);
@@ -247,19 +248,47 @@ function settingRowPart(
     },
     element,
     place: (scale, row) => {
-      const { rect } = row;
-      placeBox(scale, origin, element, rect);
-      placeBox(scale, rect, face, rect);
-      textLines(doc, input, texts, rect, scale, row);
+      textLines(doc, input, texts, row.rect, scale, row);
       view.setLabel(row.label);
       view.refresh();
-      if (art !== undefined && row.switch !== undefined) {
-        const tag = row.switch.on ? "on" : "off";
-        art.place(scale, rect, { tag, x: row.switch.x, y: row.switch.y });
-      }
     },
-    ready: art?.ready ?? Promise.resolve([]),
+    ready: Promise.resolve([]),
   };
+}
+
+// The rows' kit switch lists: each run of adjacent switch rows, touching, in a list of its own
+// between the rows that are not kit rows.
+function switchLists(
+  doc: Document,
+  input: DomCheatsInput,
+  rows: readonly CheatRowView[],
+  parts: readonly RowPart[],
+) {
+  const runs: number[][] = [];
+  rows.forEach((row, index) => {
+    if (row.kind !== "switch") {
+      return;
+    }
+    const last = runs.at(-1);
+    if (last?.at(-1) === index - 1) {
+      last.push(index);
+    } else {
+      runs.push([index]);
+    }
+  });
+  return runs.map((indexes) => {
+    const view = createFormRows(
+      doc,
+      { ...SWITCH_ROWS, height: rows[indexes[0]!]!.rect.height },
+      { className: "adw-framed adw-form-rows" },
+    );
+    view.element.append(...indexes.map((i) => parts[i]!.element));
+    return {
+      indexes,
+      ready: switchFrames(doc, input, view.element),
+      view,
+    };
+  });
 }
 
 // The Cheats page in layer, shown and its dialog focused.
@@ -291,10 +320,17 @@ export function showCheats(layer: UiLayer, input: DomCheatsInput): DomCheats {
       case "heading":
         return headingPart(doc, input, origin);
       default:
-        return settingRowPart(doc, input, origin, first, press, view);
+        return settingRowPart(doc, input, first, press, view);
     }
   });
-  content.append(...rows.map(({ element }) => element));
+  // Each list where its first row is, so the rows keep their order.
+  const lists = switchLists(doc, input, input.view.rows, rows);
+  content.append(
+    ...rows.flatMap(({ element }, i) => {
+      const list = lists.find(({ indexes }) => indexes.includes(i));
+      return list === undefined ? [element] : list.indexes[0] === i ? [list.view.element] : [];
+    }),
+  );
   const placeRows = (scale: DomScale) => {
     const viewport = viewportRect();
     placeBox(scale, ORIGIN, clip, viewport);
@@ -302,6 +338,12 @@ export function showCheats(layer: UiLayer, input: DomCheatsInput): DomCheats {
     content.style.height = `${
       gridY(scale, viewport.y + current.layout.contentHeight) - gridY(scale, viewport.y)
     }px`;
+    for (const { indexes, view } of lists) {
+      placeFormRows(scale, origin, view, {
+        rect: current.rows[indexes[0]!]!.rect,
+        rows: indexes.map((i, n) => ({ element: rows[i]!.element, ...(n > 0 ? { gap: 0 } : {}) })),
+      });
+    }
     rows.forEach((row, i) => {
       const view = current.rows[i];
       if (view !== undefined) {
@@ -322,7 +364,7 @@ export function showCheats(layer: UiLayer, input: DomCheatsInput): DomCheats {
     controls,
     element: clip,
     place: placeRows,
-    ready: Promise.all(rows.map(({ ready }) => ready)).then((urls) => urls.flat()),
+    ready: Promise.all([...rows, ...lists].map(({ ready }) => ready)).then((urls) => urls.flat()),
   };
   const page: DomPage = showPage(layer, {
     back: input.close,
