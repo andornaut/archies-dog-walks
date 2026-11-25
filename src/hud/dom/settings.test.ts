@@ -281,37 +281,32 @@ it.each([
   [412, 2.625],
   [390, 3],
 ])(
-  "places each row through its kit list at its view's place at width %i and DPR %f",
+  "places every row through one kit list at its view's place at width %i and DPR %f",
   (width, dpr) => {
     const { element, scale, shown, view } = fixture(true, width, dpr);
     const { rows, rowsViewport } = view();
     const lists = element.all().filter((part) => part.classList.contains("adw-form-rows"));
     const rowElements = element.all().filter((part) => part.classList.contains("adw-row"));
-    const rowsOf = (list: FakeElement) =>
-      list.children.map((row) => rows[rowElements.indexOf(row)]!);
-    // Install, centred across its whole row, is a list of its own; the rest share a list per height.
-    expect(lists.map((list) => rowsOf(list).map(({ key }) => key))).toEqual([
-      ["muted", "musicVolume", "sfxVolume", "reducedMotion"],
-      ["install"],
-      ["fpsCounter"],
+    expect(lists).toHaveLength(1);
+    const [list] = lists;
+    // Install, centred across its whole row, shares the list with rows of every height.
+    expect(list!.children.map((row) => rows[rowElements.indexOf(row)]!.key)).toEqual(
+      rows.map(({ key }) => key),
+    );
+    expect(rows.map(({ key }) => key)).toContain("install");
+    expect([list!.style.left, list!.style.top]).toEqual([
+      `${gridX(scale, rows[0]!.rect.x) - gridX(scale, rowsViewport.x)}px`,
+      `${gridY(scale, rows[0]!.rect.y) - gridY(scale, rowsViewport.y)}px`,
     ]);
-    for (const list of lists) {
-      const placed = rowsOf(list);
-      const top = gridY(scale, placed[0]!.rect.y);
-      expect([list.style.left, list.style.top]).toEqual([
-        `${gridX(scale, placed[0]!.rect.x) - gridX(scale, rowsViewport.x)}px`,
-        `${top - gridY(scale, rowsViewport.y)}px`,
-      ]);
-      // Each row's track is its pitch to the next on the grid, the last its own height.
-      expect(list.style.getPropertyValue("--ui-form-rows")).toBe(
-        placed
-          .map(({ rect }, i) => {
-            const next = placed[i + 1]?.rect.y ?? rect.y + rect.height;
-            return `${gridY(scale, next) - gridY(scale, rect.y)}px`;
-          })
-          .join(" "),
-      );
-    }
+    // Each row's track is its pitch to the next on the grid, the last its own height.
+    expect(list!.style.getPropertyValue("--ui-form-rows")).toBe(
+      rows
+        .map(({ rect }, i) => {
+          const next = rows[i + 1]?.rect.y ?? rect.y + rect.height;
+          return `${gridY(scale, next) - gridY(scale, rect.y)}px`;
+        })
+        .join(" "),
+    );
     shown.destroy();
   },
 );

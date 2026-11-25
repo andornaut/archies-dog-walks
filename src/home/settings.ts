@@ -203,12 +203,6 @@ export const SETTINGS_FORM_ROWS: Omit<FormRowLayout, "height"> = {
   icon: { offset: SETTINGS_ROW.icon.dy, size: LABEL_ICON, slot: LABEL_ICON },
 };
 
-// The Install row: its sole action centred across the whole row, in a list of its own.
-export const SETTINGS_INSTALL_ROWS: Omit<FormRowLayout, "height"> = {
-  ...SETTINGS_FORM_ROWS,
-  padding: { bottom: 0, left: 0, right: 0, top: 0 },
-};
-
 // A volume row's kit slider: slider.height tall, its lane from the labels' column to the row's
 // right inset, the track track.dy down.
 export const SETTINGS_SLIDER: SliderLayout = {

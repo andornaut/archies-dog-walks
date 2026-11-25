@@ -2,7 +2,6 @@ import "@andornaut/game-kit/runtime/web/ui/dom/slider.css";
 
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
-import type { FormRowLayout } from "@andornaut/game-kit/runtime/ui/formRow";
 import { createFormRows } from "@andornaut/game-kit/runtime/web/ui/dom/formRow";
 import { createSlider } from "@andornaut/game-kit/runtime/web/ui/dom/slider";
 
@@ -10,7 +9,6 @@ import { gameData } from "../../data/index.ts";
 import { FEEDBACK } from "../../home/feedback.ts";
 import {
   SETTINGS_FORM_ROWS,
-  SETTINGS_INSTALL_ROWS,
   SETTINGS_SLIDER,
   VOLUME_STEPS,
   type VolumeKey,
@@ -45,13 +43,13 @@ import {
 // The Settings page in HTML over the canvas, on the page template (showPage): its title, its
 // rows scrolling in the page's body with the pages' scrollbar, the version label fixed under the
 // body and Back, each row as its view (settingsView) lays it out. A switch row is Game Kit's form
-// row, the install row its one-action row and a volume row its slider, in kit form row lists that
-// place every row and its icon, switch, face and lane on the art-pixel grid; the kit owns their
-// roles, activation, slider keys (the arrows, Home and End) and drags, and draws the switch's and
-// slider's frames by their state. The game draws each row's face and text. Activations, volumes
-// and a held switch's press go to the scene, which keeps the settings and the keyboard's focus;
-// every other key goes through to it, which moves its focus and the page's with it. The install
-// steps' card opens over the page as a modal.
+// row, the install row its one-action row and a volume row its slider, in one kit form row list
+// that places every row and its icon, switch, face and lane on the art-pixel grid; the kit owns
+// their roles, activation, slider keys (the arrows, Home and End) and drags, and draws the
+// switch's and slider's frames by their state. The game draws each row's face and text.
+// Activations, volumes and a held switch's press go to the scene, which keeps the settings and the
+// keyboard's focus; every other key goes through to it, which moves its focus and the page's with
+// it. The install steps' card opens over the page as a modal.
 
 export interface DomSettingsInput
   extends Pick<DomQuestionPanelInput, "closeLabel" | "fonts" | "toGame">, DomArtSource {
@@ -132,8 +130,7 @@ function hideKitText(...parts: readonly HTMLElement[]): void {
   }
 }
 
-// A row's element and its parts, placed from the row's view as it stands, in the kit list that
-// places it.
+// A row's element and its parts, placed from the row's view as it stands, in the kit list.
 interface RowPart {
   readonly destroy: () => void;
   readonly element: HTMLElement;
@@ -387,28 +384,6 @@ function rowPart(
   }
 }
 
-// The rows by the kit lists that place them, each list as tall as its switch and button rows (a
-// slider row is its own height) and with one layout: a row of another height or layout starts a
-// list of its own.
-function rowLists(
-  rows: readonly SettingsRowView[],
-): { indexes: number[]; layout: FormRowLayout }[] {
-  type Shape = Omit<FormRowLayout, "height">;
-  const lists: { height: number | undefined; indexes: number[]; shape: Shape }[] = [];
-  rows.forEach((row, index) => {
-    const shape = row.kind === "button" ? SETTINGS_INSTALL_ROWS : SETTINGS_FORM_ROWS;
-    const height = row.kind === "slider" ? undefined : row.rect.height;
-    const last = lists.at(-1);
-    if (last?.shape === shape && (height === undefined || (last.height ?? height) === height)) {
-      last.height ??= height;
-      last.indexes.push(index);
-    } else {
-      lists.push({ height, indexes: [index], shape });
-    }
-  });
-  return lists.map(({ height = 0, indexes, shape }) => ({ indexes, layout: { ...shape, height } }));
-}
-
 // The install steps' card: its title and close control, the glyph of the button the steps start
 // from, and the steps, a modal over the page.
 function showSteps(
@@ -472,18 +447,21 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
       burst,
     ),
   );
-  const lists = rowLists(current.rows).map(({ indexes, layout }) => {
-    const view = createFormRows(doc, layout, { className: "adw-framed adw-form-rows" });
-    view.element.append(...indexes.map((i) => rows[i]!.element));
-    return { indexes, view };
-  });
+  // One kit list places every row: a switch or button row at its own height, a slider row at its
+  // slider's.
+  const rowList = createFormRows(
+    doc,
+    { ...SETTINGS_FORM_ROWS, height: current.rows[0]!.rect.height },
+    { className: "adw-framed adw-form-rows" },
+  );
+  rowList.element.append(...rows.map((row) => row.element));
   const art = Promise.all([
-    ...lists.map(({ view }) => switchFrames(doc, input, view.element)),
+    switchFrames(doc, input, rowList.element),
     cutFrameProperties(doc, input, content, SLIDER_FRAMES),
   ]);
   const separators = current.separators.map(() => createContentSeparator(doc));
   const build = createTextLine(doc, current.build);
-  content.append(...lists.map(({ view }) => view.element), ...separators);
+  content.append(rowList.element, ...separators);
   const revealRow = (index: number | undefined) => {
     const row = index === undefined ? undefined : current.rows[index];
     if (row === undefined) {
@@ -509,13 +487,13 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
         gridY(scale, current.rowsViewport.y)
       }px`;
       content.style.width = "100%";
-      for (const { indexes, view } of lists) {
-        const first = current.rows[indexes[0]!]!;
-        placeFormRows(scale, current.rowsViewport, view, {
-          rect: first.rect,
-          rows: indexes.map((i) => ({ element: rows[i]!.element })),
-        });
-      }
+      placeFormRows(scale, current.rowsViewport, rowList, {
+        rect: current.rows[0]!.rect,
+        rows: current.rows.map((row, i) => ({
+          element: rows[i]!.element,
+          ...(row.kind === "slider" ? {} : { height: row.rect.height }),
+        })),
+      });
       for (const row of rows) {
         row.place(scale);
       }
