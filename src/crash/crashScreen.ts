@@ -24,6 +24,7 @@ const colour = (name: keyof typeof palette) => `#${palette[name].hex}`;
 // The local paper theme uses the same palette as canvas cards, without loading the renderer.
 for (const [name, value] of [
   ["paper", colour("cream")],
+  ["paper-highlight", colour("white")],
   ["paper-lip", colour("tan")],
   ["paper-text", colour("plum")],
 ] as const) {

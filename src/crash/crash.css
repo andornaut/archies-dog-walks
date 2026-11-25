@@ -17,13 +17,18 @@
   line-height: 1.2;
 }
 
+/* The page's only panel geometry: the kit sheet's rules are less specific and public/controls.css
+   sets only the button skin, so neither can override it in either load order. The kit panel's
+   100% width inside the safe padded page clamps the 360px maximum. */
 .crash .crash-panel {
   max-width: 360px;
+  max-height: calc(100dvh - 32px);
   padding: 16px;
+  overflow: auto;
   border: 1px solid var(--crash-ink);
   background: var(--crash-paper);
   box-shadow:
-    inset 0 1px 0 var(--crash-text),
+    inset 0 1px 0 var(--crash-paper-highlight),
     inset 0 -4px 0 var(--crash-paper-lip),
     4px 4px 0 var(--crash-ink);
   color: var(--crash-paper-text);

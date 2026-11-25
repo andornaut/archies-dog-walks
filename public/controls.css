@@ -129,27 +129,10 @@
   display: none;
 }
 
-/* Keep the wide Reload control inside the card at phone widths. */
-.crash .crash-panel {
-  width: fit-content;
-  max-width: min(336px, calc(100vw - 32px));
-  max-height: calc(100dvh - 32px);
-  padding: 12px;
-  overflow: auto;
-}
-
-.crash .crash-body,
-.crash .crash-title {
-  margin-bottom: 8px;
-}
-
-.crash .crash-details {
-  margin-top: 8px;
-}
-
-/* Modal controls follow their full-size labels, with a 16px inset including the ink border. */
+/* Modal controls follow their full-size labels, with a 16px inset including the ink border.
+   The crash screen's Copy does; its Reload keeps the wide primary width. */
 .steps .app-button,
-.crash .crash-panel .crash-button {
+.crash .crash-details .crash-button {
   width: max-content;
   min-width: 48px;
   padding-inline: 15px;

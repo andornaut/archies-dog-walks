@@ -44,6 +44,7 @@ it("installs the kit crash screen with the game words, palette and portrait", as
   );
   expect(setProperty.mock.calls).toEqual([
     ["--crash-paper", `#${palette.cream.hex}`],
+    ["--crash-paper-highlight", `#${palette.white.hex}`],
     ["--crash-paper-lip", `#${palette.tan.hex}`],
     ["--crash-paper-text", `#${palette.plum.hex}`],
     ["--crash-pose-image", 'url("data:pose")'],
