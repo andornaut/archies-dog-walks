@@ -16,7 +16,7 @@ const PET_SHOP = LAYOUT.scenes.home.petShop;
 
 export const PET_SHOP_AT: readonly [number, number] = [PET_SHOP.x, PET_SHOP.y];
 
-// The PET SHOP board's place in ui-pet-shop: ui-button's go state 114x22, its bottom 2 rows over
+// The PET SHOP board's place in ui-pet-shop: a go-state face 114x22, its bottom 2 rows over
 // the parapet. The building below it starts BOARD_RISE rows down. ui-pet-shop-board's frame adds
 // BOARD_DROP rows under it, where pressed sinks.
 export const BOARD: readonly [x: number, y: number, w: number, h: number] = [3, 0, 114, 22];
@@ -103,7 +103,7 @@ interface PetShopOptions {
 
 // ui-pet-shop's frame, PET_SHOP_W x PET_SHOP_H: the building from BOARD_RISE down, without its
 // board. Everything but the step is drawn t rows lower, so pressed sinks the front 2px onto a step
-// 1px shallower, as ui-button's face sinks into its lip.
+// 1px shallower, as a pressed button's face sinks into its lip.
 export function petShop({ doorFrame = null, pressed = false }: PetShopOptions = {}): Clear {
   const cv = clear(PET_SHOP_W, PET_SHOP_H);
   building(cv, PET_SHOP_W, PET_SHOP_H - BOARD_RISE, pressed, doorFrame);
@@ -127,7 +127,7 @@ export function petShopFront({ doorFrame = null, pressed = false }: PetShopOptio
   return cv;
 }
 
-// The PET SHOP board from its frame's top left: ui-button's go state, a green face with a yellow
+// The PET SHOP board from its frame's top left: the go state (STATES.go), a green face with a yellow
 // top highlight on a forest lip 4px deep, in an ink line with its corners cut, and PET SHOP in the
 // sign letters' shapes at 2x, filled ink (8.41:1 on green) with no outline or shadow, as the go
 // label. Raised, row 0 is ink, row 1 the highlight, the face runs to row 16, the lip fills rows 17

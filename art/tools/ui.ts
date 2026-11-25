@@ -1,6 +1,6 @@
-// Draw the UI kit: icons, nine-slice panels and buttons, the hint bubble and badges.
+// Draw the UI kit: icons, nine-slice panels, the top bar's button faces, the hint bubble and badges.
 //
-// Images (16x16 icons unless noted): icon-pause, icon-play, icon-home, icon-help, icon-close, icon-menu,
+// Images (16x16 icons unless noted): icon-pause, icon-play, icon-home, icon-help, icon-menu,
 // icon-logbook, icon-settings, icon-exit, icon-share (Safari's Share button, on the iOS install steps
 // card), icon-browser-menu (the browser menu button's three dots, on the Chrome for Android and
 // Firefox for Android install steps cards), icon-update (a green down arrow into a tray, on the home
@@ -8,45 +8,40 @@
 // sale the bank covers), icon-treat (the treat pickup, its bone and heart as road.ts's treat lays
 // them out at 16x16, for the message strip), icon-stinky; icon-dog-slot (32x32, a pack slot for
 // sale in the shop: a doghouse with a green plus badge, as the shop's item-<gear> art, outlined
-// with iconEdge); ui-panel (24x24 nine-slice, 4px corners); ui-button-<tag> (24x24, each ui-button
-// tag's frame as an image of its own for HTML's CSS border-image, sliced as ui-button is) and
-// ui-icon-button-<tag> (20x20, normal and pressed); ui-hint (24x24 nine-slice, 8px corners),
-// ui-hint-tail (8x6), ui-new-best
-// (72x20 ribbon, text baked in with font-title); the start screen's ui-detail-card (24x24 nine-slice,
-// 8px corners) and ui-detail-well (68x68); the shop list's ui-scroll-track (8x24) and ui-scroll-thumb
-// (6x24, three-slices with 3px caps); the walker section's ui-cork (32x32 solid pickerWalkerBody
-// tile), the dogs section's ui-plaid (16x16 solid pickerDogsBody tile), the Pocket section's ui-denim
-// (16x16 solid pickerPocketBody tile), all repeated with TileSprite; the card rows' ui-strip-well
-// (24x24 nine-slice, the band behind a card row's subtitle), ui-quip (24x24 nine-slice, 8px corners),
+// with iconEdge); ui-panel (24x24 nine-slice, 4px corners); ui-icon-button-normal and
+// ui-icon-button-pressed (20x20, the top bar's button face under a 16x16 icon such as pause or
+// sound); ui-hint (24x24 nine-slice, 8px corners), ui-hint-tail (8x6), ui-new-best (72x20 ribbon,
+// text baked in with font-title); the start screen's ui-detail-card (24x24 nine-slice, 8px corners)
+// and ui-detail-well (68x68); the shop list's ui-scroll-track (8x24) and ui-scroll-thumb (6x24,
+// three-slices with 3px caps); the walker section's ui-cork (32x32 solid pickerWalkerBody tile), the
+// dogs section's ui-plaid (16x16 solid pickerDogsBody tile), the Pocket section's ui-denim (16x16
+// solid pickerPocketBody tile), all repeated with TileSprite; the card rows' ui-strip-well (24x24
+// nine-slice, the band behind a card row's subtitle), ui-quip (24x24 nine-slice, 8px corners),
 // ui-quip-tail (6x8), ui-quip-tail-down and ui-quip-tail-up (8x6), ui-celebrate-burst (148x132, the
 // starburst behind the walker in the zone celebration), ui-zone-banner (248x48); the start screen top
 // bar's bank well, drawn at (5, 5) in three pieces that stretch it to the bank's width,
-// ui-home-cash-well-left, ui-home-cash-well-mid
-// (repeated across) and ui-home-cash-well-right (1x29 each); the walk HUD's ui-walk-bar (360x40),
-// ui-effect-well (22x22), ui-zone-pill (13x13 three-slice, 4px ends), ui-dog-card-band (360x76, drawn
-// at (0, 480)), ui-lead-tag (27x11, LEAD baked in with font-title) and ui-owner-tab (36x36).
+// ui-home-cash-well-left, ui-home-cash-well-mid (repeated across) and ui-home-cash-well-right (1x29
+// each); the walk HUD's ui-walk-bar (360x40), ui-effect-well (22x22), ui-zone-pill (13x13
+// three-slice, 4px ends), ui-dog-card-band (360x76, drawn at (0, 480)), ui-lead-tag (27x11, LEAD
+// baked in with font-title) and ui-owner-tab (36x36).
 //
 // Sprites: ui-dog-card (120x70, one of three cards in the walk's card row; a tag per dog key and
 // `empty`, then heart-loss: 4 frames, 60, 60, 80 and 80ms, an overlay drawn over the card and under
 // the game's faces, hearts and text), ui-dog-card-warn (120x70, the low-hearts rim drawn over
 // ui-dog-card; tags pulse, static), ui-debuff-bar (360x16, one active debuff's bar under the walk
-// bar; tags muddy, stinky, zoomies, spotlight), ui-afford (24x24 nine-slice, 8px corners; tag
-// glint), ui-check (16x16; tags 1, 2, 3, tick), ui-section (24x32 nine-slice, 3px sides and bottom,
-// 24px top; tags complete, neutral, neutral-walker, neutral-dogs, neutral-pocket), fx-tap and fx-dust
-// (16x16; tag play), ui-heart (8x7; tags full, empty, and
-// full-dark and empty-dark for the navy ui-dog-card), ui-button (24x24 nine-slice, 3px corners and a
-// 5px bottom; tags normal, pressed, disabled, secondary, secondary-pressed, go, go-pressed,
-// go-disabled), ui-icon-button (20x20, the face under a 16x16 icon such as pause, help or sound; tags
-// normal, pressed), ui-switch (32x16; tags on, off), ui-slider (24x10 three-slice, 4px caps; tags
-// filled, empty, filled-disabled, empty-disabled), ui-slider-knob (10x16; tags normal, pressed,
-// disabled), icon-sound (tags on, off), icon-sound-panel, icon-music-panel, icon-effects-panel,
+// bar; tags muddy, stinky, zoomies, spotlight), ui-afford (24x24 nine-slice, 8px corners; tag glint),
+// ui-check (16x16; tags 1, 2, 3, tick), ui-section (24x32 nine-slice, 3px sides and bottom, 24px top;
+// tags complete, neutral, neutral-walker, neutral-dogs, neutral-pocket), fx-tap and fx-dust (16x16;
+// tag play), ui-heart (8x7; tags full, empty, and full-dark and empty-dark for the navy ui-dog-card),
+// ui-switch (32x16; tags on, off), ui-slider (24x10 three-slice, 4px caps; tags filled, empty,
+// filled-disabled, empty-disabled), ui-slider-knob (10x16; tags normal, pressed, disabled),
+// icon-sound (tags on, off), icon-sound-panel, icon-music-panel, icon-effects-panel,
 // icon-motion-panel, icon-fps-counter-panel and icon-install-panel (one frame, tag idle),
 // ui-zone-pips (18x8; tags todo, and <zone> and <zone>-done for each zone in pixel.ts's
-// ZONE_ROAD_COLOURS), ui-tile (24x24 nine-slice, 4px on every side; normal frame 0,
-// selected-static 1, disabled 2, selected 3 to 4 at 180ms),
-// ui-touch-drag (104x40, the help screen's swipe, a white glove dragging one lane-width; tags right
-// and left, each a whole swipe of 15 frames timed per frame (TOUCH_MS) and ending on an empty frame,
-// and still (one frame for reduced motion)).
+// ZONE_ROAD_COLOURS), ui-tile (24x24 nine-slice, 4px on every side; normal frame 0, selected-static
+// 1, disabled 2, selected 3 to 4 at 180ms), ui-touch-drag (104x40, the help screen's swipe, a white
+// glove dragging one lane-width; tags right and left, each a whole swipe of 15 frames timed per frame
+// (TOUCH_MS) and ending on an empty frame, and still (one frame for reduced motion)).
 //
 // Panels, bubbles, plates, tiles and card frames share one chrome (chromeShape); hits.ts, moments.ts,
 // scene.ts and cards.ts draw their plates, callouts and frames with it.
@@ -85,7 +80,6 @@ import { chrome, chromeShape, plate, roundedInside, SIDES } from "./ui/chrome.ts
 import {
   bill,
   browserMenuIcon,
-  close,
   CREAM_PANEL,
   effects,
   exitIcon,
@@ -125,59 +119,18 @@ function panel(): Grid {
   return chrome(new Grid(24, 24), 0, 0, 24, 24);
 }
 
-// An interaction state's face, its lip and a button face's top highlight.
+// An interaction state's face, its lip and a raised face's top highlight.
 type State = readonly [face: string, lip: string | null, hi: string | null];
 
-// The interaction states shared by tiles and buttons: each state's face, its lip and a button face's
-// top highlight. normal is the chrome's cream, selected the gold of ui-section's complete state, go the
-// one primary action on a screen, disabled a flat grey with no lip.
+// The interaction states of tiles and the PET SHOP board (screens/shop.ts): each state's face, its lip
+// and a raised face's top highlight. normal is the chrome's cream, selected the gold of ui-section's
+// complete state, go the one primary action on a screen, disabled a flat grey with no lip.
 export const STATES: Readonly<Record<string, State>> = {
   disabled: ["ngrey", null, null],
   go: ["green", "forest", "yellow"],
   normal: ["cream", "tan", "white"],
   selected: ["yellow", "amber", null],
 };
-
-const BUTTON_KINDS: Readonly<Record<string, string>> = {
-  disabled: "disabled",
-  go: "go",
-  "go-disabled": "disabled",
-  "go-pressed": "go",
-  normal: "normal",
-  pressed: "normal",
-  secondary: "normal",
-  "secondary-pressed": "normal",
-};
-
-// 24x24 nine-slice, 3px top and sides and a 5px bottom: a face in a 1px ink line on its lip, in one of
-// the interaction states (STATES). normal and pressed are the cream standard button, plum label
-// (9.42:1); go and go-pressed the primary action, one per screen: go an ink label on green
-// (8.41:1), go-pressed a white label on forest (7.80:1), as every pressed standard button;
-// disabled and go-disabled are the same flat ngrey face sunk to the pressed depth with no lip or
-// highlight, ndslate label (3.56:1; inactive, so exempt). secondary and secondary-pressed are copies
-// of normal and pressed. No tag adds an outline for its state.
-// Raised, row 0 is ink, row 1 the highlight, the face runs to row 18, the lip fills rows 19 to 22 and
-// ink row 23. Sunk, rows 0 and 1 are clear, row 2 is ink and the face fills rows 3 to 22, 2px lower,
-// so every row from 3 to 18 is plain face and the plate stretches cleanly.
-function button(state: string): Grid {
-  const kind = BUTTON_KINDS[state];
-  if (kind === undefined) {
-    throw new RangeError(`No button state ${state}`);
-  }
-  const [stateFace, lip, hi] = STATES[kind]!;
-  const face = state === "go-pressed" ? "forest" : stateFace;
-  const sunk = state.endsWith("pressed") || kind === "disabled";
-  const top = sunk ? 2 : 0;
-  const g = new Grid(24, 24);
-  g.rect(1, top, 22, 24 - top, "ink");
-  g.rect(0, top + 1, 24, 22 - top, "ink");
-  g.rect(1, top + 1, 22, 22 - top, face);
-  if (!sunk) {
-    g.rect(1, 19, 22, 4, lip);
-    g.rect(1, 1, 22, 1, hi);
-  }
-  return g;
-}
 
 const TILE = 24;
 
@@ -219,9 +172,9 @@ function tile(state: string, phase: number | null = null): Grid {
   return g;
 }
 
-// 20x20, for a 16x16 icon at (2, 1), or (2, 3) when pressed: a navy face in a tan rim on a brown lip,
-// so the rim holds 6.5:1 on the plum bar and 4.5:1 on the home street. Pressed, the face sinks 2px
-// into its lip.
+// 20x20, the top bar's button face, for a 16x16 icon at (2, 1), or (2, 3) when pressed: a navy face
+// in a tan rim on a brown lip, so the rim holds 6.5:1 on the plum bar and 4.5:1 on the home street.
+// Pressed, the face sinks 2px into its lip.
 function iconButton(state: string): Grid {
   const top = state === "pressed" ? 2 : 0;
   const g = new Grid(20, 20);
@@ -1480,20 +1433,8 @@ function edgedImage(g: Drawable): RgbaImage {
   return toImage(g.outlined());
 }
 
-// ui-button's and ui-icon-button's tags, in their sheets' order. Each is also an image of its own,
-// ui-button-<tag> and ui-icon-button-<tag>, the tag's frame pixel for pixel, for HTML's CSS
-// border-image and backgrounds.
-const BUTTON_TAGS = [
-  "normal",
-  "pressed",
-  "disabled",
-  "secondary",
-  "secondary-pressed",
-  "go",
-  "go-pressed",
-  "go-disabled",
-] as const;
-
+// The top bar's button face states, each exported as an image of its own,
+// ui-icon-button-<tag>, for the HTML top bar.
 const ICON_BUTTON_TAGS = ["normal", "pressed"] as const;
 
 // Every image by key, in build order.
@@ -1502,7 +1443,6 @@ const IMAGES: ReadonlyMap<string, () => RgbaImage> = new Map([
   ["icon-play", () => flat(play())],
   ["icon-home", () => flat(homeIcon())],
   ["icon-help", () => flat(helpIcon())],
-  ["icon-close", () => flat(close())],
   ["icon-menu", () => edgedImage(topBarEdge(menuIcon()))],
   ["icon-logbook", () => flat(logbookIcon())],
   ["icon-settings", () => flat(settingsIcon())],
@@ -1516,7 +1456,6 @@ const IMAGES: ReadonlyMap<string, () => RgbaImage> = new Map([
   ["icon-stinky", () => toImage(stinky())],
   ["icon-dog-slot", () => edgedImage(dogSlot())],
   ["ui-panel", () => flat(panel())],
-  ...BUTTON_TAGS.map((tag) => [`ui-button-${tag}`, () => flat(button(tag))] as const),
   ...ICON_BUTTON_TAGS.map((tag) => [`ui-icon-button-${tag}`, () => flat(iconButton(tag))] as const),
   ["ui-hint", () => flat(hint())],
   ["ui-hint-tail", () => flat(hintTail())],
@@ -1598,8 +1537,6 @@ function* sprites(): Generator<Sprite> {
       ["selected", [0, 1].map((p) => tile("selected", p).outlined(false)), 180],
     ],
   ];
-  yield ["ui-button", BUTTON_TAGS.map((s) => still(s, button(s)))];
-  yield ["ui-icon-button", ICON_BUTTON_TAGS.map((s) => still(s, iconButton(s)))];
   yield ["ui-switch", [still("on", toggle(true)), still("off", toggle(false))]];
   yield [
     "ui-slider",

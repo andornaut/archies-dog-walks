@@ -75,7 +75,7 @@ Builds and previews run in the check image, the delivery gate image `archie-chec
 
 ### Naming
 
-- The kebab-case manifest key is the export's file name: `public/art/sprites/<key>.png` and `.json`, `public/art/images/<key>.png` or `public/art/fonts/<key>.png` and `.fnt` (and `.woff`). A sprite tag exported as an image of its own appends the tag (`ui-button-go-pressed`).
+- The kebab-case manifest key is the export's file name: `public/art/sprites/<key>.png` and `.json`, `public/art/images/<key>.png` or `public/art/fonts/<key>.png` and `.fnt` (and `.woff`).
 - A key starts with its kind's prefix, as in `inventory.md` (`dog-`, `fx-`, `ui-`); road objects, moving hazards and `logo` use a plain name.
 - A depth variant appends its step (`dog-kilo@50`).
 - Zone keys use the zone's art id, the neighbourhood's name in kebab case: `high-park`, `cabbagetown`, `kensington-market`, `the-beaches`, `distillery-district`, `yonge-street` (easiest to hardest).

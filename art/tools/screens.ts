@@ -63,16 +63,16 @@
 // on row 20 and cream from row 21, so the board rising 1px shows a third cream row, never a gap.
 // Under the trim a red and white awning, a display window with a food bag and a puppy behind its
 // bone, and a door with a paw on its glass; rust brick with dbrown mortar, lit ochre on the left,
-// dred on the right, ink outline all round, on a grey step. pressed dips as ui-button does: the
-// front sinks 2px onto the step, the step 1px shallower. door-wave is frames 2 to 17 at 120ms each
+// dred on the right, ink outline all round, on a grey step. pressed dips as a pressed button does:
+// the front sinks 2px onto the step, the step 1px shallower. door-wave is frames 2 to 17 at 120ms each
 // (1920ms): the right-hinged door opens, a shopkeeper peeks out and waves inside its aperture, then
 // withdraws as it closes. The building stays fixed. Normal frame 0 is the static closed pose. An
 // affordable item in the shop takes ui-afford 2px outside the frame (232,52 124x112 on screen).
 //
 // ui-pet-shop-board: a 114x24 sprite, tags normal, pressed and focused: the PET SHOP board, drawn over
 // ui-pet-shop at BOARD's offset (3,0 in the shop's frame, 237,54 on screen) with the same origin
-// for all tags. Built and coloured as ui-button's go state (green face, yellow highlight, forest
-// lip, ink line), with PET SHOP in the sign letters' shapes at 2x in ink, as the go label. normal
+// for all tags. Built and coloured in the go state (ui.ts's STATES: green face, yellow highlight,
+// forest lip, ink line), with PET SHOP in the sign letters' shapes at 2x in ink, as the go label. normal
 // fills rows 0 to 21, its bottom 2 rows over the parapet. pressed is Start walk's pressed
 // treatment: a forest face with white letters, its lip and highlight given way to face, sunk 2px
 // (rows 2 to 23) while the building stays up. Focused changes the normal face to cyan. No tag adds

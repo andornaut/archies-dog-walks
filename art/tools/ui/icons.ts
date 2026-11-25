@@ -13,8 +13,8 @@ import { treat } from "../road.ts";
 import { rows, SIDES } from "./chrome.ts";
 
 // ---------- icons ----------
-// icon-pause, icon-play, icon-home, icon-help, icon-close, icon-menu, icon-logbook, icon-settings, icon-exit and
-// icon-sound sit on ui-icon-button's navy face: cream holds 9.6:1 there, tan 6.6:1, amber 7.5:1, orange
+// icon-pause, icon-play, icon-home, icon-help, icon-menu, icon-logbook, icon-settings, icon-exit and icon-sound
+// sit on ui-icon-button's navy face: cream holds 9.6:1 there, tan 6.6:1, amber 7.5:1, orange
 // 5.0:1 and pink 5.1:1. The top bar's glyphs (icon-exit, icon-menu, icon-pause and icon-sound) also sit
 // on forced colours' white ButtonFace, so each takes topBarEdge; the others have no outline. The -panel
 // icons sit on the Settings panel's cream, and icon-share and icon-browser-menu on the install steps
@@ -121,15 +121,6 @@ export function helpIcon(): Grid {
     ],
     (ch) => (ch === "c" ? "cream" : "tan"),
   );
-  return g;
-}
-
-export function close(): Grid {
-  const g = new Grid(16, 16);
-  for (let i = 0; i < 9; i++) {
-    g.rect(3 + i, 3 + i, 2, 2, "cream");
-    g.rect(11 - i, 3 + i, 2, 2, "cream");
-  }
   return g;
 }
 

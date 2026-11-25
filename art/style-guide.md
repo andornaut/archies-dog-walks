@@ -73,7 +73,7 @@ Every piece is very readable, clean and not busy, judged at the size it's shown:
 - Character shading is cel: per material a light, a base and a shade, the shade a crescent along the lower-right rim that follows the form (`Grid.cel`), never a diagonal plane or per-pixel texture. Markings are a few flat patches. A face seen from the front stays clean: flat skin with a 1px shadow down its near (right) edge beside the eyes, never across the jaw or mouth (`faceDisc`).
 - Effects (`fx-`) take a fixed 1px rim: plum, navy for water (`fx-splash`), except the foot-level contact-debuff effects, whose 1px ink edge matches the progress bars. `fx-heart-gain` and `fx-heart-loss` take `ui-fires`' 1px ink line inside a 1px white rim; `fx-dust` and `fx-tap` have no rim. Hazard warnings are outlined in ink.
 - Ground decals have no outline and no shadow.
-- Icons come in two kinds. Chrome glyphs on `ui-icon-button` (`icon-close`, `icon-exit`, `icon-help`, `icon-home`, `icon-logbook`, `icon-menu`, `icon-pause`, `icon-play`, `icon-settings`, `icon-sound`) are two flat tones. The top-bar glyphs (`icon-exit`, `icon-menu`, `icon-pause`, `icon-sound`) take a 1px ink (`#181425`) outline round their outside pixels, filling their inner gaps, so they hold 3:1 on forced colours' white ButtonFace (ink is 18.0:1 on white and 1.30:1 on the navy face); the other chrome glyphs have no outline. Content icons (`icon-gear-*`, `icon-trait-*`, `icon-zone-*`, `item-*`, the badges' rings and the like) take `iconEdge`: two ramp steps darker, then on down the ramp until the outline holds 3:1 on cream and tan. A picture that fills its frame keeps a 1px clear ring for the outline.
+- Icons come in two kinds. Chrome glyphs on the `ui-icon-button-normal` face (`icon-exit`, `icon-help`, `icon-home`, `icon-logbook`, `icon-menu`, `icon-pause`, `icon-play`, `icon-settings`, `icon-sound`) are two flat tones. The top-bar glyphs (`icon-exit`, `icon-menu`, `icon-pause`, `icon-sound`) take a 1px ink (`#181425`) outline round their outside pixels, filling their inner gaps, so they hold 3:1 on forced colours' white ButtonFace (ink is 18.0:1 on white and 1.30:1 on the navy face); the other chrome glyphs have no outline. Content icons (`icon-gear-*`, `icon-trait-*`, `icon-zone-*`, `item-*`, the badges' rings and the like) take `iconEdge`: two ramp steps darker, then on down the ramp until the outline holds 3:1 on cream and tan. A picture that fills its frame keeps a 1px clear ring for the outline.
 - A gear item drawn at several sizes (`item-<gear>` at 32, `icon-gear-<gear>` at 16, `icon-gear-<gear>-20` at 20) keeps the same colours at each.
 - Sprites carry no shadow; the game draws one in the road's darker ramp colour. The bouncing ball carries its own.
 
@@ -89,51 +89,51 @@ An effect's name beside its description sits on a pale pill in the effect's fami
 
 Names are `PALETTE` names in `src/ui/palette.ts`, or `K` names for the neutral greys and any colour it leaves out; ratios are WCAG.
 
-| Pair                           | Ratio | Use                                                                                                                         |
-| ------------------------------ | ----- | --------------------------------------------------------------------------------------------------------------------------- |
-| amber on darkBrown             | 4.57  | Warnings, "You're fired!"                                                                                                   |
-| amber on navy                  | 7.49  | `icon-pause`, `icon-play` on `ui-icon-button`                                                                               |
-| cream on darkBrown             | 5.85  | Text on the wood                                                                                                            |
-| darkBrown on cream             | 5.85  | Secondary text, empty heart outline                                                                                         |
-| darkBrown on cyan              | 5.64  | A focused Settings row's note                                                                                               |
-| darkRed on cream               | 5.07  | Money lost, an unaffordable price or unlock line, full heart                                                                |
-| darkRed on nlgrey              | 5.15  | Price on the short plate                                                                                                    |
-| dlake on foam                  | 5.54  | A buff's name (gear, perk, upgrade) on its pill, beside its effect                                                          |
-| forest on cream                | 5.39  | Money gained, an affordable price line, an earned badge's name                                                              |
-| forest on lime                 | 4.80  | Zoomies' name on its pill                                                                                                   |
-| ink on cyan                    | 11.98 | A focused standard button, top-bar face or `ui-pet-shop-board` `focused`                                                    |
-| ink on deepAmber               | 7.91  | A picked picture's outline on its box                                                                                       |
-| ink on green                   | 8.41  | `ui-button` `go` label, `ui-pet-shop` board, price on the buy plate, a pressed shop or Settings switch row                  |
-| ink on ngrey                   | 7.23  | The emblem's silhouette on a `locked` badge                                                                                 |
-| ink on nlgrey                  | 12.64 | The goal plate: a walker's name, a blocked slot's price, a disabled card's cost; an affordable picture's outline on its box |
-| ink on nslate                  | 3.75  | A disabled picture's outline on its art box                                                                                 |
-| navy on cream                  | 9.59  | `ui-scroll-track` on the shop card (its ink edge 12.44:1)                                                                   |
-| navy on yellow                 | 11.13 | Spotlight's name on its pill                                                                                                |
-| ndslate on cream               | 6.12  | A locked badge's name in the logbook                                                                                        |
-| ndslate on cyan                | 5.89  | A focused shop row the bank can't cover                                                                                     |
-| ndslate on the Logbook focus   | 5.73  | A focused or pressed locked Logbook row's name and goal line (cyan at 35% over cream)                                       |
-| ndslate on ngrey               | 3.56  | Labels on `disabled` tiles and buttons (inactive, exempt), a `locked` badge's emblem                                        |
-| ngrey on darkBrown             | 3.40  | `disabled` tile face on the wood                                                                                            |
-| nslate on cream                | 3.32  | A locked badge's goal and progress in the logbook (inactive, exempt)                                                        |
-| plum on amber                  | 7.35  | Text on amber: step number                                                                                                  |
-| plum on cream                  | 9.42  | Body text on cream: panels, quips, hints, the zone banner, `normal` tiles and buttons                                       |
-| plum on cyan                   | 9.07  | A focused shop row, picker tile, Settings row label or speech bubble                                                        |
-| plum on pink                   | 5.03  | Stinky's name on its pill, Stinky's "+$0" tip label                                                                         |
-| plum on tan                    | 6.49  | Body text on tan                                                                                                            |
-| plum on yellow                 | 10.92 | Text on a selected face (`ui-tile` `selected`)                                                                              |
-| tan on darkBrown               | 4.04  | Empty slot dashed border, hollow page dots                                                                                  |
-| tan on the dimmed road         | 3.0+  | 1px rim around the pause panel                                                                                              |
-| `ui-difficulty` on cream       | 3.2+  | Filled paws plum-outlined (9.42); hollow paws a clay rim (3.2)                                                              |
-| `ui-zone-pips` on cream        | 3.0+  | `todo` dashed; `<zone>` and `<zone>-done` rimmed darker than their well; `-done` ticked                                     |
-| walnut on tan                  | 7.48  | Muddy's name on its pill                                                                                                    |
-| white on darkBrown             | 8.48  | Filled page dot                                                                                                             |
-| white on darkRed, blue, purple | 7.34+ | `ui-hit-label`, `ui-fired-plate`                                                                                            |
-| white on forest                | 7.80  | A pressed standard button, Start walk, `ui-button` `go-pressed`, `ui-pet-shop-board` and `ui-slot-sign` `pressed`           |
-| white on pickerWalkerHeader    | 4.73  | Neutral Walker section heading and prompt                                                                                   |
-| white on pickerPocketHeader    | 5.14  | Neutral Pocket section heading and prompt                                                                                   |
-| white on pickerDogsHeader      | 5.02  | Neutral Dogs section heading and count                                                                                      |
-| white over the dimmed road     | 4.5+  | Card subtitle                                                                                                               |
-| yellow on navy                 | 11.13 | `ui-scroll-thumb` in `ui-scroll-track`                                                                                      |
+| Pair                           | Ratio | Use                                                                                                                               |
+| ------------------------------ | ----- | --------------------------------------------------------------------------------------------------------------------------------- |
+| amber on darkBrown             | 4.57  | Warnings, "You're fired!"                                                                                                         |
+| amber on navy                  | 7.49  | `icon-pause`, `icon-play` on `ui-icon-button-normal`                                                                              |
+| cream on darkBrown             | 5.85  | Text on the wood                                                                                                                  |
+| darkBrown on cream             | 5.85  | Secondary text, empty heart outline                                                                                               |
+| darkBrown on cyan              | 5.64  | A focused Settings row's note                                                                                                     |
+| darkRed on cream               | 5.07  | Money lost, an unaffordable price or unlock line, full heart                                                                      |
+| darkRed on nlgrey              | 5.15  | Price on the short plate                                                                                                          |
+| dlake on foam                  | 5.54  | A buff's name (gear, perk, upgrade) on its pill, beside its effect                                                                |
+| forest on cream                | 5.39  | Money gained, an affordable price line, an earned badge's name                                                                    |
+| forest on lime                 | 4.80  | Zoomies' name on its pill                                                                                                         |
+| ink on cyan                    | 11.98 | A focused standard button, top-bar face or `ui-pet-shop-board` `focused`                                                          |
+| ink on deepAmber               | 7.91  | A picked picture's outline on its box                                                                                             |
+| ink on green                   | 8.41  | Start walk and primary standard button labels, `ui-pet-shop` board, price on the buy plate, a pressed shop or Settings switch row |
+| ink on ngrey                   | 7.23  | The emblem's silhouette on a `locked` badge                                                                                       |
+| ink on nlgrey                  | 12.64 | The goal plate: a walker's name, a blocked slot's price, a disabled card's cost; an affordable picture's outline on its box       |
+| ink on nslate                  | 3.75  | A disabled picture's outline on its art box                                                                                       |
+| navy on cream                  | 9.59  | `ui-scroll-track` on the shop card (its ink edge 12.44:1)                                                                         |
+| navy on yellow                 | 11.13 | Spotlight's name on its pill                                                                                                      |
+| ndslate on cream               | 6.12  | A locked badge's name in the logbook                                                                                              |
+| ndslate on cyan                | 5.89  | A focused shop row the bank can't cover                                                                                           |
+| ndslate on the Logbook focus   | 5.73  | A focused or pressed locked Logbook row's name and goal line (cyan at 35% over cream)                                             |
+| ndslate on ngrey               | 3.56  | Labels on `disabled` tiles and buttons (inactive, exempt), a `locked` badge's emblem                                              |
+| ngrey on darkBrown             | 3.40  | `disabled` tile face on the wood                                                                                                  |
+| nslate on cream                | 3.32  | A locked badge's goal and progress in the logbook (inactive, exempt)                                                              |
+| plum on amber                  | 7.35  | Text on amber: step number                                                                                                        |
+| plum on cream                  | 9.42  | Body text on cream: panels, quips, hints, the zone banner, `normal` tiles and buttons                                             |
+| plum on cyan                   | 9.07  | A focused shop row, picker tile, Settings row label or speech bubble                                                              |
+| plum on pink                   | 5.03  | Stinky's name on its pill, Stinky's "+$0" tip label                                                                               |
+| plum on tan                    | 6.49  | Body text on tan                                                                                                                  |
+| plum on yellow                 | 10.92 | Text on a selected face (`ui-tile` `selected`)                                                                                    |
+| tan on darkBrown               | 4.04  | Empty slot dashed border, hollow page dots                                                                                        |
+| tan on the dimmed road         | 3.0+  | 1px rim around the pause panel                                                                                                    |
+| `ui-difficulty` on cream       | 3.2+  | Filled paws plum-outlined (9.42); hollow paws a clay rim (3.2)                                                                    |
+| `ui-zone-pips` on cream        | 3.0+  | `todo` dashed; `<zone>` and `<zone>-done` rimmed darker than their well; `-done` ticked                                           |
+| walnut on tan                  | 7.48  | Muddy's name on its pill                                                                                                          |
+| white on darkBrown             | 8.48  | Filled page dot                                                                                                                   |
+| white on darkRed, blue, purple | 7.34+ | `ui-hit-label`, `ui-fired-plate`                                                                                                  |
+| white on forest                | 7.80  | A pressed standard button, Start walk, `ui-pet-shop-board` and `ui-slot-sign` `pressed`                                           |
+| white on pickerWalkerHeader    | 4.73  | Neutral Walker section heading and prompt                                                                                         |
+| white on pickerPocketHeader    | 5.14  | Neutral Pocket section heading and prompt                                                                                         |
+| white on pickerDogsHeader      | 5.02  | Neutral Dogs section heading and count                                                                                            |
+| white over the dimmed road     | 4.5+  | Card subtitle                                                                                                                     |
+| yellow on navy                 | 11.13 | `ui-scroll-thumb` in `ui-scroll-track`                                                                                            |
 
 ## UI
 
@@ -203,7 +203,7 @@ No game control adds an outline, ring, keyline or ring-shaped shadow when focuse
 - Settings and Cheats rows, switch or slider, fill cyan on focus; a switch row fills green with ink text while pressed.
 - The speech bubble, tail included, fills cyan on focus, its words and owner's name plum.
 - The slot sign's inner panel fills cyan on focus; pressed, its board fills forest with white words and price and drops 1px.
-- Standard buttons and Start walk fill cyan with ink on focus and forest with white on press; the canvas `ui-button` `go-pressed` frame is the same forest.
+- Standard buttons and Start walk fill cyan with ink on focus and forest with white on press.
 - Top-bar faces turn from navy to ink (`#181425`) while pressed; in forced colours a focused or pressed top-bar face is Highlight at full opacity under its glyph.
 - A walk effect well's interior fills forest (`#265c42`) and dips 2px while pressed; its frame edge stays as drawn.
 
