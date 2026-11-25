@@ -17,7 +17,6 @@ export interface HomeSpeechView {
   readonly rect: Rect;
   readonly lines: readonly string[];
   readonly textX: number;
-  readonly capTop: number;
   readonly tail?: {
     readonly key: string;
     readonly x: number;
@@ -69,7 +68,6 @@ export function homeSpeechView(
   const rect = bubbleRect(petShop.board, layout, { x: walkerAtGate.x, y: layout.top }, size);
   const place = column === null ? undefined : ownerPlace(rect, column);
   return {
-    capTop: rect.y + size.textTop,
     lines,
     rect,
     textX: rect.x + layout.padX + widest / 2,

@@ -4,7 +4,7 @@ import { decodePng } from "@andornaut/art-kit/build/png";
 import { wrapWords } from "@andornaut/game-kit/runtime/lines";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { insetRect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
-import { inkRowsFromCapTop, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
@@ -12,9 +12,12 @@ import type { DogId } from "../data/types.ts";
 import { withNamePills } from "../hud/effectNames.ts";
 import type { Owned } from "../save/schema.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
-import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
-import { hasPill, PILL_SPACE, pillRows } from "../ui/namePills.ts";
+import { FakeDocument, type FakeElement } from "../testing/fakeDom.ts";
+import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
+import { artPixel, domScale, fontPixel, gridY } from "../ui/domScale.ts";
+import { PILL_IMAGE_GAP, PILL_SPACE } from "../ui/namePills.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
 import {
   bubbleLines,
@@ -24,9 +27,11 @@ import {
   ownerPlace,
   speechLines,
 } from "./bubbleRect.ts";
+import { createHomeSpeech } from "./dom/speech.ts";
 import { dogInfo, gearInfo } from "./home.ts";
 import { HOME_LAYOUT, SPEECH_ROOM } from "./homeLayout.ts";
 import { walkerSays } from "./homeLines.ts";
+import { homeSpeechView } from "./speechView.ts";
 import { tapWalker } from "./walkers.ts";
 
 const { board } = HOME_LAYOUT.petShop;
@@ -63,6 +68,7 @@ describe("bubbleRect", () => {
 describe("the walker's speech", () => {
   const text = gameData.homeText;
   const body = fontFileMetrics("font-body");
+  const bodyFont = gameFont("font-body");
   const dogs = keysOf(gameData.dogs);
   const gear = keysOf(gameData.shopGear);
   const walkers = keysOf(gameData.walkers);
@@ -88,20 +94,27 @@ describe("the walker's speech", () => {
         return tap.kind === "drop" ? [] : [tap.text];
       }),
     ]),
-  ].map((message) => said([message]));
-  const parting = dogs.flatMap((dog) =>
-    gameData.quips[dog].parting.map((quip) => said([quip], dog)),
-  );
+  ];
   const notices = [
     text.unsaved,
     text.noticeUpdateNeeded,
     text.noticeOnlineQuota,
     text.noticeOnlineUnsupported,
   ];
-  const speeches = [
-    ...[...messages, ...parting].map(({ owner, parts }) => said(parts, owner)),
-    ...notices.map((notice) => said([notice])),
-  ];
+  // Every speech as the bubble is given it, each once: its paragraphs and the owner who says them.
+  const given = [
+    ...[...messages, ...notices].map((message) => ({ owner: null, paragraphs: [message] })),
+    ...dogs.flatMap((dog) =>
+      gameData.quips[dog].parting.map((quip) => ({ owner: dog, paragraphs: [quip] })),
+    ),
+  ].filter(
+    (speech, i, all) =>
+      all.findIndex(
+        (other) =>
+          other.owner === speech.owner && other.paragraphs.join() === speech.paragraphs.join(),
+      ) === i,
+  );
+  const speeches = given.map(({ owner, paragraphs }) => said(paragraphs, owner));
   const width = (line: string) => bodyTextWidth(2, plainMarks(line));
 
   // A notice shows alone, so the bubble keeps clear of the walker under it.
@@ -162,51 +175,99 @@ describe("the walker's speech", () => {
   const rimBottom = Array.from({ length: quip.height / 2 }, (_, y) => quip.height - 1 - y).filter(
     quipInked,
   ).length;
-  // Each speech whose first or last line sets a name in a pill.
-  const pilled = speeches.flatMap(({ owner, parts }) => {
-    const column = owner === null ? null : ownerColumn(nameInk(owner));
-    const { faced, lines } = bubbleLines(width, column, parts);
-    const ends = [lines[0] ?? "", lines.at(-1) ?? ""];
-    return ends.some(hasPill)
-      ? [
-          {
-            column: faced ? column : null,
-            lines,
-            name: plainMarks(lines.join(" ").replaceAll(PILL_SPACE, " ")),
-          },
-        ]
-      : [];
+
+  it.each(dogs)("centres %s's owner's face over their name", (dog) => {
+    const column = ownerColumn(nameInk(dog));
+    const lines = bubbleLines(width, column, [gameData.quips[dog].parting[0] ?? ""]);
+    const size = bubbleSize(body, lines.lines, 100, column);
+    const rect = { ...size, x: 0, y: 0 };
+    const { face, name } = ownerPlace(rect, column);
+    expect(Math.abs(face.x + face.width / 2 - name.x)).toBeLessThanOrEqual(0.5);
+    expect(size.height).toBeGreaterThanOrEqual(face.height + HOME_LAYOUT.speech.owner.foot);
   });
 
-  it.each(pilled)(
-    "keeps the pills 2 rows clear of the bubble's rim: $name",
-    ({ column, lines }) => {
-      const widest = Math.ceil(Math.max(...lines.map(width)));
-      const size = bubbleSize(body, lines, widest, column);
-      const pill = pillRows(2);
-      const lineTop = (i: number) => size.textTop + i * body.lineHeight * 2 - body.capTop * 2;
-      if (hasPill(lines[0] ?? "")) {
-        expect(lineTop(0) + pill.top - rimTop).toBeGreaterThanOrEqual(2);
+  // Each bubble as the Start screen draws it at 360 wide and DPR 2: the clear art-pixel rows of
+  // cream between the quip art's rims and the text's ink, its pills' included, over and under it.
+  // The cream is the quip art's, between the rims it inks.
+  const fonts = { body: bodyFont, title: gameFont("font-title") };
+  const scale = domScale(2, { height: 560, width: 360, x: 0, y: 0 });
+  const drawn = given.map(({ owner, paragraphs }) => {
+    const view = homeSpeechView(gameData, fonts.body, undefined, { owner, paragraphs });
+    const doc = new FakeDocument();
+    const source = {
+      artUrl: (path: string) => path,
+      hasArt: () => false,
+      imageSize: () => ({ height: 0, width: 0 }),
+      loadSheet: async () => ({}),
+    };
+    const speech = createHomeSpeech(
+      doc as unknown as Document,
+      source,
+      fonts,
+      () => undefined,
+      view,
+    );
+    speech.place(scale);
+    const pixel = fontPixel(scale, TEXT_SCALE);
+    const px = (value: string | undefined) => Number.parseFloat(value ?? "");
+    const nodes = (speech.element as unknown as FakeElement).all();
+    const pills = nodes
+      .filter((node) => node.classList.contains("adw-pill"))
+      .map((node) => ({
+        bottom: px(node.style.top) + px(node.style.height),
+        top: px(node.style.top),
+      }));
+    const glyphRows = nodes.flatMap((node) => {
+      const top = px(node.style.top);
+      if (
+        !node.classList.contains("adw-text") ||
+        node.parentElement?.tagName.toLowerCase() !== "p"
+      ) {
+        return [];
       }
-      if (hasPill(lines.at(-1) ?? "")) {
-        const pillBottom = lineTop(lines.length - 1) + pill.top + pill.height;
-        expect(size.height - rimBottom - pillBottom).toBeGreaterThanOrEqual(2);
-      }
+      const glyphs = [...(node.textContent ?? "")].flatMap((char) => {
+        const glyph = fonts.body.glyphs.get(char);
+        return glyph === undefined || glyph.height === 0 ? [] : [glyph];
+      });
+      return glyphs.map((glyph) => ({
+        bottom: top + (glyph.yOffset + glyph.height) * pixel,
+        top: top + glyph.yOffset * pixel,
+      }));
+    });
+    const art = artPixel(scale);
+    // The art-pixel rows of cream clear over and under rows.
+    const clear = (rows: readonly { bottom: number; top: number }[]) => ({
+      above: (Math.min(...rows.map(({ top }) => top)) - gridY(scale, view.rect.y)) / art - rimTop,
+      below:
+        (gridY(scale, view.rect.y + view.rect.height) -
+          Math.max(...rows.map(({ bottom }) => bottom))) /
+          art -
+        rimBottom,
+    });
+    return {
+      ...clear([...glyphRows, ...pills]),
+      lines: view.lines.length,
+      name: plainMarks(view.lines.join(" ").replaceAll(PILL_SPACE, " ")),
+      pills: pills.length === 0 ? null : clear(pills),
+    };
+  });
+
+  it("draws bubbles of 1, 2 and 3 lines", () => {
+    expect(new Set(drawn.map(({ lines }) => lines))).toEqual(new Set([1, 2, 3]));
+  });
+
+  it.each(drawn)(
+    "centres the ink of $name down the bubble's cream, any odd row under it",
+    ({ above, below }) => {
+      expect(below - above).toBeGreaterThanOrEqual(0);
+      expect(below - above).toBeLessThanOrEqual(1);
     },
   );
 
-  it.each(dogs)(
-    "centres %s's owner's face over their name, the text centred down the bubble",
-    (dog) => {
-      const column = ownerColumn(nameInk(dog));
-      const lines = bubbleLines(width, column, [gameData.quips[dog].parting[0] ?? ""]);
-      const size = bubbleSize(body, lines.lines, 100, column);
-      const rect = { ...size, x: 0, y: 0 };
-      const { face, name } = ownerPlace(rect, column);
-      const ink = inkRowsOfLines(body, lines.lines.length) * 2;
-      expect(Math.abs(face.x + face.width / 2 - name.x)).toBeLessThanOrEqual(0.5);
-      expect(size.height).toBeGreaterThanOrEqual(face.height + HOME_LAYOUT.speech.owner.foot);
-      expect(Math.abs(size.textTop - (size.height - ink - size.textTop))).toBeLessThanOrEqual(2);
+  it.each(drawn.filter(({ pills }) => pills !== null))(
+    "keeps the pills of $name 2 rows clear of the bubble's rim",
+    ({ pills }) => {
+      expect(Math.min(pills!.above, pills!.below)).toBeGreaterThanOrEqual(PILL_IMAGE_GAP);
     },
   );
 });

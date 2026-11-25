@@ -1,14 +1,18 @@
 import { type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
-import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { type BitmapFont, fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SLICES } from "../../data/layout.ts";
 import { textPart } from "../../hud/dom/detailCard.ts";
 import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
 import { type DomPart, fillPart, framedPart } from "../../ui/dom/parts.ts";
-import { createTextLine, placeText } from "../../ui/dom/pixelLine.ts";
+import { createTextLine, namePillBoxes, placeText } from "../../ui/dom/pixelLine.ts";
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
 import type { DomScale } from "../../ui/domScale.ts";
+import { lineInk } from "../../ui/lineInk.ts";
 import { PALETTE } from "../../ui/palette.ts";
+import { plainMarks } from "../../ui/pixelFont.ts";
+import { TEXT_SCALE } from "../../ui/textFit.ts";
+import { HOME_LAYOUT } from "../homeLayout.ts";
 import type { HomeSpeechView } from "../speechView.ts";
 
 // art: each tail's cream inside, row by row from the tail's top-left, which the bubble's focus
@@ -21,6 +25,37 @@ export const SPEECH_TAIL_INSIDES: Readonly<Record<string, readonly Rect[]>> = {
     { height: 1, width: 1, x: 5, y: 3 },
   ],
 };
+
+// The rows lines of 2x body text ink, from the first line's capitals: each line's glyphs and each
+// name's pill as it is painted, the lines a line of the font apart.
+function speechInk(body: BitmapFont, lines: readonly string[]): { bottom: number; top: number } {
+  const { capTop, lineHeight } = fontMetrics(body);
+  const rows = lines.flatMap((line, i) => {
+    const text = plainMarks(line);
+    const caps = i * lineHeight * TEXT_SCALE;
+    const ink = lineInk(body, text, TEXT_SCALE);
+    const pills = namePillBoxes(body, TEXT_SCALE, { x: 0, y: caps - capTop * TEXT_SCALE }, text);
+    return [
+      ...(ink.bottom > ink.top ? [{ bottom: caps + ink.bottom, top: caps + ink.top }] : []),
+      ...pills.map(({ box }) => ({ bottom: box.top + box.height, top: box.top })),
+    ];
+  });
+  return rows.length === 0
+    ? { bottom: 0, top: 0 }
+    : {
+        bottom: Math.max(...rows.map(({ bottom }) => bottom)),
+        top: Math.min(...rows.map(({ top }) => top)),
+      };
+}
+
+// The row of the first line's capitals in a bubble at rect: the lines' ink (speechInk) centred
+// down the cream between the quip art's rims, any odd row left under it.
+function speechCapTop(body: BitmapFont, lines: readonly string[], rect: Rect): number {
+  const { rim } = HOME_LAYOUT.speech;
+  const ink = speechInk(body, lines);
+  const cream = rect.height - rim.top - rim.bottom;
+  return rect.y + rim.top + Math.floor((cream - (ink.bottom - ink.top)) / 2) - ink.top;
+}
 
 export function createHomeSpeech(
   doc: Document,
@@ -85,7 +120,7 @@ export function createHomeSpeech(
     { fonts, pillColours },
     {
       align: "centre",
-      capTop: view.capTop,
+      capTop: speechCapTop(fonts.body, view.lines, view.rect),
       colour: PALETTE.plum,
       lines: view.lines,
       x: view.textX,

@@ -364,10 +364,10 @@ export const HOME_LAYOUT = {
     scale: HOME.slotSign.scale,
   },
   // The walker's speech bubble, its top on the gate scene's top row, growing down to hold
-  // every line it says of 2x body text a line of the font apart, padX in from its sides, the
-  // first line's capitals padTop under its top and the last line's lowest ink padBottom over its
-  // bottom. It keeps clearance clear of the Pet shop's board and margin inside the screen's left
-  // edge.
+  // every line it says of 2x body text a line of the font apart, padX in from its sides, as tall
+  // as padTop over the first line's capitals and padBottom under the last line's lowest ink
+  // (speechPads), the text's ink centred down the cream between its rims. It keeps clearance
+  // clear of the Pet shop's board and margin inside the screen's left edge.
   // An owner's parting line has the owner's column at its right, inset from the bubble's right
   // edge and gap right of the text, as wide as the owner's size square face or their name's
   // 1x ink, whichever is wider: the face, framed in 1px of ink over tan, centred in it top
@@ -490,18 +490,24 @@ export const SPEECH_ROOM =
   2 * HOME_LAYOUT.speech.padX;
 
 // The speech bubble's rows over and under lines of 2x body text: padTop to the first line's
-// capitals and padBottom under the last line's lowest ink, or more where that line's pills
-// would come within PILL_IMAGE_GAP rows of the quip art's rim.
+// capitals and padBottom under the last line's lowest ink. With a pill on the first or last line,
+// each end keeps PILL_IMAGE_GAP rows clear of the quip art's rim beyond the furthest the letters
+// or that end's pills reach, so the text's ink centred down the cream keeps every pill clear.
 export function speechPads(
   body: FontMetrics,
   lines: readonly string[],
 ): { bottom: number; top: number } {
   const { padBottom, padTop, rim } = HOME_LAYOUT.speech;
-  const over = rim.top + PILL_IMAGE_GAP + pillRiseOverCaps(body, 2);
-  const under = pillDropUnderInk(body, 2) + PILL_IMAGE_GAP + rim.bottom;
+  const first = hasPill(lines[0] ?? "");
+  const last = hasPill(lines.at(-1) ?? "");
+  if (!first && !last) {
+    return { bottom: padBottom, top: padTop };
+  }
+  const rise = Math.max((body.capTop - body.letterTop) * 2, first ? pillRiseOverCaps(body, 2) : 0);
+  const drop = last ? pillDropUnderInk(body, 2) : 0;
   return {
-    bottom: hasPill(lines.at(-1) ?? "") ? Math.max(padBottom, under) : padBottom,
-    top: hasPill(lines[0] ?? "") ? Math.max(padTop, over) : padTop,
+    bottom: Math.max(padBottom, drop + PILL_IMAGE_GAP + rim.bottom),
+    top: Math.max(padTop, rim.top + PILL_IMAGE_GAP + rise),
   };
 }
 
