@@ -6,8 +6,8 @@ import { createPager } from "@andornaut/game-kit/runtime/web/ui/dom/pager";
 import { gameData } from "../../data/index.ts";
 import { HELP_LAYOUT } from "../../help/helpLayout.ts";
 import { HELP_DOTS, type HelpButton, type HelpView } from "../../help/helpView.ts";
-import { holdRule, TILE_SLOP_PX } from "../../holdRule.ts";
 import { MENU_TEXT_FIELDS } from "../../home/menuText.ts";
+import { holdRule, TILE_SLOP_PX } from "../../input/holdRule.ts";
 import { colourBox, type DomBox, type DomPart } from "../../ui/dom/parts.ts";
 import {
   createTextLine,

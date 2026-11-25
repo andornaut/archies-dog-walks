@@ -9,19 +9,8 @@ import { roadTileKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { ZoneId } from "../data/types.ts";
-import {
-  crossesLine,
-  dotColour,
-  dottedBands,
-  isLawn,
-  mownAt,
-  seamRow,
-  type Verge,
-  vergeBase,
-  VERGES,
-  walkFrom,
-} from "../road/roadside.ts";
-import { roadProjection, rowScale } from "./projection.ts";
+import { roadProjection, rowScale } from "../layout/projection.ts";
+import { walkerFootY } from "../layout/screenLayout.ts";
 import {
   drawRoad,
   LINE_RUN,
@@ -38,7 +27,18 @@ import {
   stripLines,
   stripSeams,
 } from "./roadRaster.ts";
-import { walkerFootY } from "./screenLayout.ts";
+import {
+  crossesLine,
+  dotColour,
+  dottedBands,
+  isLawn,
+  mownAt,
+  seamRow,
+  type Verge,
+  vergeBase,
+  VERGES,
+  walkFrom,
+} from "./roadside.ts";
 
 const { approach, junction, rasterView: view, road } = SCREEN_LAYOUT;
 // The road's far row, nearest row and middle row, and the backdrop's bottom row above the far

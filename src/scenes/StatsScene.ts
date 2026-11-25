@@ -6,7 +6,6 @@ import { domArtUrl } from "../assets/domArtFiles.ts";
 import { gameData } from "../data/index.ts";
 import { type BadgeView, badgeWall } from "../home/badgesView.ts";
 import { FEEDBACK } from "../home/feedback.ts";
-import { focusDirectionForKey } from "../home/focus.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import { logbookView } from "../home/logbookView.ts";
 import { STATS_LAYOUT, STATS_TABS, type StatsTab } from "../home/statsLayout.ts";
@@ -17,7 +16,12 @@ import {
   showLogbook,
 } from "../hud/dom/logbook.ts";
 import { pillKind } from "../hud/effectNames.ts";
-import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
+import {
+  focusDirectionForKey,
+  isConfirmKey,
+  isPauseKey,
+  menuKeyActs,
+} from "../input/keyBindings.ts";
 import {
   dragScroll,
   isDragging,

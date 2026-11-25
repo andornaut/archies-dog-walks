@@ -15,7 +15,7 @@ import { SLICES } from "../../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../../data/screen.ts";
 import type { GameData } from "../../data/types.ts";
 import { CHARM } from "../../layout/buffLayout.ts";
-import { CARD_LAYOUT, cardRowIn, forkHomeRect } from "../../layout/cardLayout.ts";
+import { CARD_LAYOUT, cardRowIn, forkHomeRect } from "../../presentation/cardLayout.ts";
 import { type CardView, MAX_CARD_OPTIONS } from "../../rules/choices.ts";
 import { cardHeader } from "../../ui/cardRow.ts";
 import { registerScenePointer } from "../../ui/dom/actionBinding.ts";

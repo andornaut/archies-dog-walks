@@ -3,23 +3,11 @@
 
 import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
 
+import type { FocusDirection } from "../input/keyBindings.ts";
+
 export interface Focus {
   readonly column: number;
   readonly row: number;
-}
-
-type FocusDirection = "down" | "left" | "right" | "up";
-
-const KEY_DIRECTIONS: Readonly<Record<string, FocusDirection>> = {
-  ArrowDown: "down",
-  ArrowLeft: "left",
-  ArrowRight: "right",
-  ArrowUp: "up",
-};
-
-// Read from KeyboardEvent.code, which names the arrows as KeyboardEvent.key does.
-export function focusDirectionForKey(code: string): FocusDirection | undefined {
-  return KEY_DIRECTIONS[code];
 }
 
 // The same share of the way along a row of another length.

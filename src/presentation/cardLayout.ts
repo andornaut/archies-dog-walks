@@ -7,11 +7,11 @@ import {
 import { type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
 import { CHOICE_CARDS } from "../data/layout.ts";
+import { CARD_CHARMS_HEIGHT } from "../layout/buffLayout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { CARD_HEADER, cardRowRects, type CardRowSpec } from "../ui/cardRow.ts";
 import { PILL_IMAGE_GAP, pillRiseOverCaps } from "../ui/namePills.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
-import { CARD_CHARMS_HEIGHT } from "./buffLayout.ts";
 
 // The choice cards: the card-frame sprite's parts in card pixels, the row of cards centred
 // on the road, and the enlarged card a hold opens, card-frame-large, centred in the dimmed band

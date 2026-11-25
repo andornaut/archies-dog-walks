@@ -16,6 +16,12 @@ import { charmEffects } from "../hud/buffMarks.ts";
 import { largeBodyText, smallCardText } from "../hud/cardText.ts";
 import { type EffectItem, effectName } from "../hud/effectIcons.ts";
 import { pillKind } from "../hud/effectNames.ts";
+import {
+  CARD_CHARMS_HEIGHT,
+  cardCharmPlates,
+  cardCharmWidth,
+  CHARM,
+} from "../layout/buffLayout.ts";
 import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
 import { everyCardOption } from "../testing/everyCardOption.ts";
 import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
@@ -23,7 +29,6 @@ import { inside } from "../testing/rects.ts";
 import { CARD_HEADER } from "../ui/cardRow.ts";
 import { pillIndex, pillRows } from "../ui/namePills.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
-import { CARD_CHARMS_HEIGHT, cardCharmPlates, cardCharmWidth, CHARM } from "./buffLayout.ts";
 import {
   CARD_LAYOUT,
   CARD_ROW_BLOCK_HEIGHT,

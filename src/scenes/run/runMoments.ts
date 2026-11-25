@@ -196,7 +196,7 @@ interface RunMomentsDeps {
 export class RunMoments {
   private achievements: AchievementPreview<AchievementId> = NOTHING_PREVIEWED;
   private readonly changes: Change[] = [];
-  private readonly contactFrame = new ContactImpactFrame();
+  private readonly contactFrame = new ContactImpactFrame<WalkItem>();
   private readonly deps: RunMomentsDeps;
   // How long the end screen waits for a final firing, the cash it lost, or a payout.
   private endMoments = { ...NO_END_MOMENTS };

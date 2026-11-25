@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { GestureAction } from "./gestures.ts";
 import {
   cardNumberForKey,
+  focusDirectionForKey,
   isConfirmKey,
   isExitKey,
   isHelpKey,
@@ -127,5 +128,13 @@ describe("menuKeyActs", () => {
     { acts: false, code: "Digit1", repeat: true },
   ])("$code, repeat $repeat: acts $acts", ({ acts, code, repeat }) => {
     expect(menuKeyActs(repeat, code)).toBe(acts);
+  });
+});
+
+describe("focusDirectionForKey", () => {
+  it("reads the arrow keys only", () => {
+    expect(focusDirectionForKey("ArrowUp")).toBe("up");
+    expect(focusDirectionForKey("ArrowLeft")).toBe("left");
+    expect(focusDirectionForKey("KeyA")).toBeUndefined();
   });
 });

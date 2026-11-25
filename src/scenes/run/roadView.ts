@@ -14,7 +14,7 @@ import {
   roadRaster,
   solidStrip,
   STRIP,
-} from "../../layout/roadRaster.ts";
+} from "../../road/roadRaster.ts";
 import { previousZone } from "../../rules/route.ts";
 import type { Walk } from "../../runner/walk.ts";
 import { colourFromHex } from "../../ui/palette.ts";

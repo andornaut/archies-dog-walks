@@ -1,6 +1,19 @@
-import { focusDirectionForKey } from "../home/focus.ts";
 import type { LaneDirection } from "../layout/lanes.ts";
 import type { GestureAction } from "./gestures.ts";
+
+export type FocusDirection = "down" | "left" | "right" | "up";
+
+const KEY_DIRECTIONS: Readonly<Record<string, FocusDirection>> = {
+  ArrowDown: "down",
+  ArrowLeft: "left",
+  ArrowRight: "right",
+  ArrowUp: "up",
+};
+
+// Read from KeyboardEvent.code, which names the arrows as KeyboardEvent.key does.
+export function focusDirectionForKey(code: string): FocusDirection | undefined {
+  return KEY_DIRECTIONS[code];
+}
 
 // Keys are matched on KeyboardEvent.code, the key's physical position, so the letter keys sit
 // where a QWERTY keyboard has them on any layout and Shift or Caps Lock changes nothing.

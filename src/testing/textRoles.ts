@@ -76,7 +76,7 @@ import {
   FIRES_FIT,
   largeBodyBox,
   largeBodyStyle,
-} from "../layout/cardLayout.ts";
+} from "../presentation/cardLayout.ts";
 import {
   dollarAmountText,
   dollarText,

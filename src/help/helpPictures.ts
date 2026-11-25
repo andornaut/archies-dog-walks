@@ -13,8 +13,8 @@ import type {
   HelpPictureId,
   MinorObstacleId,
 } from "../data/types.ts";
-import { cardRowIn } from "../layout/cardLayout.ts";
 import { laneCentreXs } from "../layout/lanes.ts";
+import { cardRowIn } from "../presentation/cardLayout.ts";
 import type { Change } from "../rules/causes.ts";
 import { cardFor, type CardView, forkCard, MAX_CARD_OPTIONS } from "../rules/choices.ts";
 import { newRun } from "../rules/newRun.ts";

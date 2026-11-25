@@ -27,7 +27,7 @@ import {
   settleDelay,
   shakeOffset,
 } from "../home/feedback.ts";
-import { type Focus, focusDirectionForKey, moveFocus } from "../home/focus.ts";
+import { type Focus, moveFocus } from "../home/focus.ts";
 import { gearPictureFallback } from "../home/gearPictureView.ts";
 import {
   dogInfo,
@@ -80,6 +80,7 @@ import {
   TILE_SLOP_PX,
 } from "../input/hold.ts";
 import {
+  focusDirectionForKey,
   isConfirmKey,
   isExitKey,
   isHelpKey,

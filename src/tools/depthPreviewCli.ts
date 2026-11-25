@@ -26,7 +26,7 @@ import {
   roadRaster,
   solidStrip,
   STRIP,
-} from "../layout/roadRaster.ts";
+} from "../road/roadRaster.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
 import { GLYPH_HEIGHT } from "../ui/pixelFont.ts";
 import { ART_DIR, ART_MANIFEST, generateArtManifest, measureAnchor } from "./artManifest.ts";

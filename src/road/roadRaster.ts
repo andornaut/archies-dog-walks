@@ -2,6 +2,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { ZoneId } from "../data/types.ts";
+import { distanceAtY, type RoadProjection, roadXAt, rowScale } from "../layout/projection.ts";
 import {
   dotColour,
   dottedBands,
@@ -21,8 +22,7 @@ import {
   vergeBase,
   VERGES,
   walkFrom,
-} from "../road/roadside.ts";
-import { distanceAtY, type RoadProjection, roadXAt, rowScale } from "./projection.ts";
+} from "./roadside.ts";
 
 // The projected road drawn a screen row at a time into a pixel buffer: every row samples one
 // row of the zone's road strip, stretched across by the row's scale, with the verge either

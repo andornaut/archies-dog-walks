@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { focusDirectionForKey, moveFocus } from "./focus.ts";
+import { moveFocus } from "./focus.ts";
 
 // Three rows of 3 dogs, 5 gear items, Start walk, 4 walkers.
 const rows = [3, 3, 3, 5, 1, 4];
@@ -33,13 +33,5 @@ describe("moveFocus", () => {
     for (const [, direction, from, expected] of cases) {
       expect(moveFocus(rows, direction, from)).toEqual(expected);
     }
-  });
-});
-
-describe("focusDirectionForKey", () => {
-  it("reads the arrow keys only", () => {
-    expect(focusDirectionForKey("ArrowUp")).toBe("up");
-    expect(focusDirectionForKey("ArrowLeft")).toBe("left");
-    expect(focusDirectionForKey("KeyA")).toBeUndefined();
   });
 });

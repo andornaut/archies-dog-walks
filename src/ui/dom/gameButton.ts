@@ -14,7 +14,7 @@ import {
 } from "@andornaut/game-kit/runtime/web/ui/dom/formRow";
 
 import { gameData } from "../../data/index.ts";
-import { holdRule, TILE_SLOP_PX } from "../../holdRule.ts";
+import { holdRule, TILE_SLOP_PX } from "../../input/holdRule.ts";
 import { gameButtonAccepts, registerGameButton } from "./actionBinding.ts";
 
 export type GameButtonOptions = Omit<ButtonOptions, "appearance" | "rule"> & {

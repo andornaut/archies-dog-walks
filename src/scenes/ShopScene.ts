@@ -9,7 +9,6 @@ import { dogFaceKey, gearIconKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { PLATE_PAD } from "../data/layout.ts";
 import { FEEDBACK, shakeOffset } from "../home/feedback.ts";
-import { focusDirectionForKey } from "../home/focus.ts";
 import type { Purchase } from "../home/home.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import { type HomeAction, messageLine } from "../home/homeLines.ts";
@@ -53,7 +52,12 @@ import {
   type ShopScreenView,
   showShopScreen,
 } from "../hud/dom/shopScreen.ts";
-import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
+import {
+  focusDirectionForKey,
+  isConfirmKey,
+  isPauseKey,
+  menuKeyActs,
+} from "../input/keyBindings.ts";
 import {
   dragScroll,
   isDragging,

@@ -6,7 +6,7 @@ import { Scene, Scenes } from "phaser";
 import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { FEEDBACK } from "../home/feedback.ts";
-import { type Focus, focusDirectionForKey, moveFocus } from "../home/focus.ts";
+import { type Focus, moveFocus } from "../home/focus.ts";
 import { type OverlayRegion, overlayRegion } from "../home/homeBar.ts";
 import {
   INSTALL_STEPS_FIT,
@@ -36,7 +36,13 @@ import {
 } from "../home/settingsView.ts";
 import { coverHelpUnderlay } from "../hud/dom/helpUnderlay.ts";
 import type { DomSettings } from "../hud/dom/settings.ts";
-import { isConfirmKey, isMuteKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
+import {
+  focusDirectionForKey,
+  isConfirmKey,
+  isMuteKey,
+  isPauseKey,
+  menuKeyActs,
+} from "../input/keyBindings.ts";
 import {
   installApp,
   installState,

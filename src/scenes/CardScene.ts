@@ -9,7 +9,7 @@ import { type HoldPress, holdRule, startHold, tickHold } from "../input/hold.ts"
 import { cardNumberForKey, menuKeyActs } from "../input/keyBindings.ts";
 import { keyNumbersShown } from "../input/keyNumbers.ts";
 import { pressDown, pressUp, type TargetPress } from "../input/targetPress.ts";
-import { cardRowIn } from "../layout/cardLayout.ts";
+import { cardRowIn } from "../presentation/cardLayout.ts";
 import { type CardView, type Choice, MAX_CARD_OPTIONS } from "../rules/choices.ts";
 import type { UiLayer } from "../ui/dom/uiLayer.ts";
 import { rectIndexAt } from "../ui/grid.ts";

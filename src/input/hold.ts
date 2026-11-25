@@ -1,4 +1,4 @@
-export { holdRule, TILE_SLOP_PX } from "../holdRule.ts";
+export { holdRule, TILE_SLOP_PX } from "./holdRule.ts";
 export {
   type HoldPress,
   type HoldRule,

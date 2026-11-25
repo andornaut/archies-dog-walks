@@ -20,7 +20,7 @@ import {
   largeCardHeight,
   largeCardRect,
   plaqueRoom,
-} from "../layout/cardLayout.ts";
+} from "../presentation/cardLayout.ts";
 import {
   type CardView,
   type Choice,

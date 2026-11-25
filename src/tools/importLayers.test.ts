@@ -54,7 +54,7 @@ const BANDS: readonly { readonly band: string; readonly rows: readonly string[][
     rows: [
       ["src/ui"],
       ["src/audio", "src/pack", "src/presentation"],
-      ["src/holdRule.ts", "src/input"],
+      ["src/input"],
       ["src/help"],
       ["src/home"],
       ["src/dev"],
@@ -96,7 +96,7 @@ const BANDS: readonly { readonly band: string; readonly rows: readonly string[][
  */
 const KNOWN: Readonly<Record<Kind, readonly string[]>> = {
   cycle: [],
-  sideways: ["src/input/hold.ts -> src/holdRule.ts"],
+  sideways: [],
   upward: [
     "src/data/screen.ts -> src/layout/projection.ts",
     "src/data/screen.ts -> src/layout/screenLayout.ts",
@@ -106,14 +106,6 @@ const KNOWN: Readonly<Record<Kind, readonly string[]>> = {
     "src/home/homeLayout.ts -> src/hud/walkHud.ts",
     "src/home/selectionView.ts -> src/hud/effectIcons.ts",
     "src/home/speechView.ts -> src/hud/effectNames.ts",
-    "src/input/keyBindings.ts -> src/home/focus.ts",
-    "src/layout/cardLayout.ts -> src/ui/buttonGeometry.ts",
-    "src/layout/cardLayout.ts -> src/ui/cardRow.ts",
-    "src/layout/cardLayout.ts -> src/ui/namePills.ts",
-    "src/layout/cardLayout.ts -> src/ui/textFit.ts",
-    "src/layout/hitEffects.ts -> src/runner/walk.ts",
-    "src/layout/roadRaster.ts -> src/road/roadside.ts",
-    "src/layout/screenLayout.ts -> src/ui/buttonGeometry.ts",
     "src/pack/phaser/packFigures.ts -> src/scenes/run/stage.ts",
     "src/pack/phaser/packFigures.ts -> src/scenes/sprites.ts",
     "src/tools/atlas/atlasPlugin.ts -> src/tools/artManifest.ts",
@@ -344,7 +336,7 @@ describe("the import check", () => {
     ["src/ui/dom/a.ts", "src/scenes/b.ts", "upward"],
     ["src/pwa/launch.ts", "src/tools/pwa/icons.ts", "upward"],
     ["src/sim/a.ts", "src/testing/b.ts", "upward"],
-    ["src/input/a.ts", "src/holdRule.ts", "sideways"],
+    ["src/audio/a.ts", "src/presentation/b.ts", "sideways"],
     ["src/ui/phaser/a.ts", "src/input/phaser/b.ts", "sideways"],
   ])("judges %s importing %s as %s", (from, to, kind) => {
     expect(layerViolation(from, to)).toBe(kind);

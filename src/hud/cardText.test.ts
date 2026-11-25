@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import type { ZoneId } from "../data/types.ts";
-import { CARD_LAYOUT, cardEffectArea, plaqueRoom } from "../layout/cardLayout.ts";
+import { CARD_LAYOUT, cardEffectArea, plaqueRoom } from "../presentation/cardLayout.ts";
 import { cardFor, hasPlaque, type OptionView } from "../rules/choices.ts";
 import { upgradeLine } from "../rules/effectText.ts";
 import { defined } from "../testing/defined.ts";

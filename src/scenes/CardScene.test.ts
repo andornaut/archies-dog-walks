@@ -7,7 +7,7 @@ import { SCREEN_LAYOUT } from "../data/screen.ts";
 import { helpPicture } from "../help/helpPictures.ts";
 import { type NativeChoiceCards, showChoiceCards } from "../hud/dom/choiceCards.ts";
 import { holdRule } from "../input/hold.ts";
-import { cardRowIn } from "../layout/cardLayout.ts";
+import { cardRowIn } from "../presentation/cardLayout.ts";
 import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
 import { read } from "../rules/units.ts";
 import { gameFont } from "../testing/fontInk.ts";

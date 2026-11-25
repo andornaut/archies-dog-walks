@@ -59,13 +59,6 @@ import {
   ZONE_PROGRESS,
   zoneProgressLayout,
 } from "../hud/walkHud.ts";
-import {
-  CARD_LAYOUT,
-  cardEffectArea,
-  cardRows,
-  largeBodyBox,
-  largeCardRect,
-} from "../layout/cardLayout.ts";
 import { COMIC_WORDS } from "../layout/comicWords.ts";
 import { laneCentreXs, laneDividerXs } from "../layout/lanes.ts";
 import {
@@ -86,6 +79,13 @@ import {
   rowScale,
 } from "../layout/projection.ts";
 import { walkerFootY } from "../layout/screenLayout.ts";
+import {
+  CARD_LAYOUT,
+  cardEffectArea,
+  cardRows,
+  largeBodyBox,
+  largeCardRect,
+} from "../presentation/cardLayout.ts";
 import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
 import { read } from "../rules/units.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";

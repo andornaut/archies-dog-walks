@@ -1,7 +1,14 @@
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 
-import type { DebuffId, Effect, GameData, MinorObstacleId } from "../data/types.ts";
-import type { WalkStep } from "../runner/walk.ts";
+import type {
+  DebuffId,
+  DogId,
+  Effect,
+  EncounterId,
+  GameData,
+  MinorObstacleId,
+} from "../data/types.ts";
+import type { ModifiedValue } from "../rules/modified.ts";
 import type { RunState } from "../state/runState.ts";
 
 // Cosmetic cues for hits and applied contact debuffs, over the road at its fx depth. Debuff
@@ -97,18 +104,37 @@ export function hitEffects(still: boolean, hit: StruckDog): HitEffect[] {
   return [bump, { above: 1, at, frame: null, key: HIT_ART.debris[debris].key }];
 }
 
-type ContactImpact = Pick<WalkStep["contacts"][number], "dog" | "item" | "source">;
+// A contact's impact: the dog it landed on, the walk item it happened at, and the minor obstacle
+// or encounter touched.
+interface ContactImpact<Item> {
+  readonly dog: DogId;
+  readonly item: Item;
+  readonly source:
+    | { readonly encounter: EncounterId; readonly kind: "encounter" }
+    | { readonly kind: "minor"; readonly obstacle: MinorObstacleId };
+}
 
-function contactImpactKey({ source }: ContactImpact): string {
+// The fields of a walk step that its impacts come from: its contacts, and the values modifiers
+// changed, each at its walk item.
+interface ImpactStep<Item> {
+  readonly contacts: readonly ContactImpact<Item>[];
+  readonly modified: readonly {
+    readonly dog?: DogId;
+    readonly item: Item;
+    readonly value: Pick<ModifiedValue, "subject">;
+  }[];
+}
+
+function contactImpactKey({ source }: Pick<ContactImpact<unknown>, "source">): string {
   return source.kind === "minor" ? `minor:${source.obstacle}` : `encounter:${source.encounter}`;
 }
 
 // Several fixed walking steps may share a render frame. Physical and acquisition kinds play once.
-export class ContactImpactFrame {
+export class ContactImpactFrame<Item> {
   private frame: number | undefined;
   private readonly kinds = new Set<string>();
 
-  take(frame: number, impacts: readonly ContactImpact[]): ContactImpact[] {
+  take(frame: number, impacts: readonly ContactImpact<Item>[]): ContactImpact<Item>[] {
     this.begin(frame);
     return impacts.filter((impact) => this.admit(contactImpactKey(impact)));
   }
@@ -135,12 +161,12 @@ export class ContactImpactFrame {
 }
 
 // Physical impacts include immune contacts, with one visual attack per material kind per step.
-export function contactImpacts(
+export function contactImpacts<Item>(
   data: Pick<GameData, "encounters">,
-  step: Pick<WalkStep, "contacts" | "modified">,
-): ContactImpact[] {
-  const impacts = new Map<string, ContactImpact>();
-  const add = (impact: ContactImpact) => {
+  step: ImpactStep<Item>,
+): ContactImpact<Item>[] {
+  const impacts = new Map<string, ContactImpact<Item>>();
+  const add = (impact: ContactImpact<Item>) => {
     const key = contactImpactKey(impact);
     if (!impacts.has(key)) {
       impacts.set(key, impact);
