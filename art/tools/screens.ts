@@ -1592,8 +1592,10 @@ const SLOT_SIGN_H = 34;
 const SLOT_BOARD: readonly [x: number, y: number, w: number, h: number] = [1, 6, 89, 27];
 
 // ui-slot-sign: a cream board in a 1px dbrown frame, lit white along its top and tan along its
-// bottom, hung by two dbrown cords from the awning's top stripe. pressed lets the board drop 1px on
-// longer cords.
+// bottom, hung by two dbrown cords from the awning's top stripe. pressed fills the board forest
+// inside its frame, the highlight and shade rows given way to face, as the Pet shop board's pressed
+// face, for white lettering (7.80:1), and drops it 1px on longer cords; the drop only adds to the
+// fill. No tag adds an outline.
 function slotSign(pressed = false): Frame {
   const g = scope.Grid(SLOT_SIGN_W, SLOT_SIGN_H);
   const [x, y, w, h] = SLOT_BOARD;
@@ -1602,9 +1604,11 @@ function slotSign(pressed = false): Frame {
     g.rect(cx, 0, 1, y + d, "dbrown");
   }
   g.rect(x, y + d, w, h, "dbrown");
-  g.rect(x + 1, y + d + 1, w - 2, h - 2, "cream");
-  g.rect(x + 1, y + d + 1, w - 2, 1, "white");
-  g.rect(x + 1, y + d + h - 2, w - 2, 1, "tan");
+  g.rect(x + 1, y + d + 1, w - 2, h - 2, pressed ? "forest" : "cream");
+  if (!pressed) {
+    g.rect(x + 1, y + d + 1, w - 2, 1, "white");
+    g.rect(x + 1, y + d + h - 2, w - 2, 1, "tan");
+  }
   return g.outlined(false);
 }
 

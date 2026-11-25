@@ -151,10 +151,10 @@ const BUTTON_KINDS: Readonly<Record<string, string>> = {
 
 // 24x24 nine-slice, 3px top and sides and a 5px bottom: a face in a 1px ink line on its lip, in one of
 // the interaction states (STATES). normal and pressed are the cream standard button, plum label
-// (9.42:1); go and go-pressed the primary action, one per screen, ink label on green (8.41:1);
-// disabled and go-disabled are the same flat ngrey face sunk to the pressed depth with no lip or
+// (9.42:1); go and go-pressed the primary action, one per screen: go an ink label on green
+// (8.41:1), go-pressed a white label on forest (7.80:1), as every pressed standard button; disabled and go-disabled are the same flat ngrey face sunk to the pressed depth with no lip or
 // highlight, ndslate label (3.56:1; inactive, so exempt). secondary and secondary-pressed are copies
-// of normal and pressed.
+// of normal and pressed. No tag adds an outline for its state.
 // Raised, row 0 is ink, row 1 the highlight, the face runs to row 18, the lip fills rows 19 to 22 and
 // ink row 23. Sunk, rows 0 and 1 are clear, row 2 is ink and the face fills rows 3 to 22, 2px lower,
 // so every row from 3 to 18 is plain face and the plate stretches cleanly.
@@ -163,7 +163,8 @@ function button(state: string): Grid {
   if (kind === undefined) {
     throw new RangeError(`No button state ${state}`);
   }
-  const [face, lip, hi] = STATES[kind]!;
+  const [stateFace, lip, hi] = STATES[kind]!;
+  const face = state === "go-pressed" ? "forest" : stateFace;
   const sunk = state.endsWith("pressed") || kind === "disabled";
   const top = sunk ? 2 : 0;
   const g = new Grid(24, 24);

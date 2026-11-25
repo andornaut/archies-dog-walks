@@ -128,7 +128,7 @@ Names are `PALETTE` names in `src/ui/palette.ts`, or `K` names for the neutral g
 | walnut on tan                  | 7.48  | Muddy's name on its pill                                                                                                    |
 | white on darkBrown             | 8.48  | Filled page dot                                                                                                             |
 | white on darkRed, blue, purple | 7.34+ | `ui-hit-label`, `ui-fired-plate`                                                                                            |
-| white on forest                | 7.80  | A pressed standard button, Start walk and `ui-pet-shop-board` `pressed`                                                     |
+| white on forest                | 7.80  | A pressed standard button, Start walk, `ui-button` `go-pressed`, `ui-pet-shop-board` and `ui-slot-sign` `pressed`           |
 | white on pickerWalkerHeader    | 4.73  | Neutral Walker section heading and prompt                                                                                   |
 | white on pickerPocketHeader    | 5.14  | Neutral Pocket section heading and prompt                                                                                   |
 | white on pickerDogsHeader      | 5.02  | Neutral Dogs section heading and count                                                                                      |
@@ -202,7 +202,8 @@ No game control adds an outline, ring, keyline or ring-shaped shadow when focuse
 - Pet shop rows and picker tiles fill cyan with plum text on focus and green with ink text on press. A row the bank can't cover takes the same focus fill and keeps its ndslate text and darkRed short-plate price.
 - Settings and Cheats rows, switch or slider, fill cyan on focus; a switch row fills green with ink text while pressed.
 - The speech bubble, tail included, fills cyan on focus, its words and owner's name plum.
-- Standard buttons and Start walk fill cyan with ink on focus and forest with white on press.
+- The slot sign's inner panel fills cyan on focus; pressed, its board fills forest with white words and price and drops 1px.
+- Standard buttons and Start walk fill cyan with ink on focus and forest with white on press; the canvas `ui-button` `go-pressed` frame is the same forest.
 - Top-bar faces and walk effect wells turn from navy to ink (`#181425`) while pressed; in forced colours a focused or pressed top-bar face is Highlight at full opacity under its glyph.
 
 ### Icon buttons and top bars
