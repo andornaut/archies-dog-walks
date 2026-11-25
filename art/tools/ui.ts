@@ -32,7 +32,8 @@
 // ui-dog-card; tags pulse, static), ui-debuff-bar (360x16, one active debuff's bar under the walk
 // bar; tags muddy, stinky, zoomies, spotlight), ui-afford (24x24 nine-slice, 8px corners; tag
 // glint), ui-check (16x16; tags 1, 2, 3, tick), ui-section (24x32 nine-slice, 3px sides and bottom,
-// 24px top; tags complete, neutral, neutral-walker, neutral-dogs, neutral-pocket), fx-tap and fx-dust (16x16; tag play), ui-heart (8x7; tags full, empty, and
+// 24px top; tags complete, neutral, neutral-walker, neutral-dogs, neutral-pocket), fx-tap and fx-dust
+// (16x16; tag play), ui-heart (8x7; tags full, empty, and
 // full-dark and empty-dark for the navy ui-dog-card), ui-button (24x24 nine-slice, 3px corners and a
 // 5px bottom; tags normal, pressed, disabled, secondary, secondary-pressed, go, go-pressed,
 // go-disabled), ui-icon-button (20x20, the face under a 16x16 icon such as pause, help or sound; tags
