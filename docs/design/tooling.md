@@ -67,3 +67,4 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0236 | Adopt Delivery Kit 8.1.1                                                     | [adw-0236.md](../work/adw-0236.md) |
 | adw-0241 | Pack the published game assets into reusable groups                          | [adw-0241.md](../work/adw-0241.md) |
 | adw-0243 | Ship the game assets as prebuilt group archives                              | [adw-0243.md](../work/adw-0243.md) |
+| adw-0244 | Select a walk's new neighbourhood in Cheats the moment it is pressed         | [adw-0244.md](../work/adw-0244.md) |
