@@ -3,8 +3,8 @@
 // Informational: it exits 0 whatever it finds.
 import { readdirSync, readFileSync } from "node:fs";
 
+import { parseManifest } from "../assets/manifest.ts";
 import { gameData } from "../data/index.ts";
-import { parseManifest } from "./manifest.ts";
 import { keyNames, unusedKeys } from "./unusedArt.ts";
 
 const sources = readdirSync("src", { encoding: "utf8", recursive: true })

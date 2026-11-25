@@ -1,9 +1,9 @@
 import type { HashedFiles } from "@andornaut/game-kit/build/precachePlugin";
 
-import type { ArtFileMap } from "../assets/artUrl.ts";
-import { parseManifest } from "../assets/manifest.ts";
-import { SOUND_FORMATS } from "../audio/soundFormat.ts";
-import { ART_MANIFEST } from "../tools/artManifest.ts";
+import type { ArtFileMap } from "../../assets/artUrl.ts";
+import { parseManifest } from "../../assets/manifest.ts";
+import { SOUND_FORMATS } from "../../audio/soundFormat.ts";
+import { ART_MANIFEST } from "../artManifest.ts";
 
 // A sound's logical URL in the build manifest: its art path under /art/ without the format's
 // extension. The page requests a hashed alternative directly; this only names the sound.

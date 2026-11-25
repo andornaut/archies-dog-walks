@@ -21,33 +21,14 @@ const root = fileURLToPath(new URL("../../", import.meta.url));
 
 /** Each module's imports of src/ modules; an import is type-only when every form of it is. */
 type Graph = ReadonlyMap<string, readonly { readonly to: string; readonly typeOnly: boolean }[]>;
-type Group = string | { readonly name: string; readonly paths: readonly string[] };
 type Kind = "cycle" | "sideways" | "upward";
-
-/** Build modules that still sit in shipped folders; they belong to Support. */
-const BUILD_IN_SHIPPED_FOLDERS: Group = {
-  name: "build modules in shipped folders",
-  paths: [
-    "src/assets/unusedArt.ts",
-    "src/assets/unusedArtCli.ts",
-    "src/crash/crashFontText.ts",
-    "src/headers/inlineStyle.ts",
-    "src/headers/inlineStyleCheckPlugin.ts",
-    "src/headers/securityHeadersPlugin.ts",
-    "src/pwa/assetGroups.ts",
-    "src/pwa/icons.ts",
-    "src/pwa/precacheArt.ts",
-    "src/pwa/precachePlugin.ts",
-    "src/pwa/webManifestPlugin.ts",
-  ],
-};
 
 /**
  * The bands of the cross-game source structure, lowest first, each with its rows lowest first.
- * A group is a directory or file under src/ (the longest match places a module) or a named set of
- * paths. Groups in one row may not import each other.
+ * A group is a directory or file under src/; the longest match places a module. Groups in one row
+ * may not import each other.
  */
-const BANDS: readonly { readonly band: string; readonly rows: readonly Group[][] }[] = [
+const BANDS: readonly { readonly band: string; readonly rows: readonly string[][] }[] = [
   {
     band: "Foundation",
     rows: [
@@ -99,7 +80,7 @@ const BANDS: readonly { readonly band: string; readonly rows: readonly Group[][]
   {
     band: "Support",
     rows: [
-      [BUILD_IN_SHIPPED_FOLDERS, "src/tools/atlas"],
+      ["src/tools/atlas"],
       ["src/tools"],
       ["src/sim"],
       ["src/tools/plannerAcceptance"],
@@ -135,7 +116,6 @@ const KNOWN: Readonly<Record<Kind, readonly string[]>> = {
     "src/layout/screenLayout.ts -> src/ui/buttonGeometry.ts",
     "src/pack/phaser/packFigures.ts -> src/scenes/run/stage.ts",
     "src/pack/phaser/packFigures.ts -> src/scenes/sprites.ts",
-    "src/pwa/precacheArt.ts -> src/tools/artManifest.ts",
     "src/tools/atlas/atlasPlugin.ts -> src/tools/artManifest.ts",
     "src/tools/atlas/atlasPlugin.ts -> src/tools/concurrency.ts",
     "src/tools/atlas/atlasPlugin.ts -> src/tools/files.ts",
@@ -145,17 +125,13 @@ const KNOWN: Readonly<Record<Kind, readonly string[]>> = {
 };
 
 const PLACES = BANDS.flatMap(({ rows }) => rows).flatMap((groups, row) =>
-  groups.flatMap((group) =>
-    typeof group === "string"
-      ? [{ group, path: group, row }]
-      : group.paths.map((path) => ({ group: group.name, path, row })),
-  ),
+  groups.map((group) => ({ group, row })),
 );
 
-/** The group and row of the longest placed path a module falls under. */
+/** The longest group a module falls under, with its row. */
 function placeOf(module: string): { group: string; row: number } | undefined {
-  return PLACES.filter(({ path }) => module === path || module.startsWith(`${path}/`)).sort(
-    (a, b) => b.path.length - a.path.length,
+  return PLACES.filter(({ group }) => module === group || module.startsWith(`${group}/`)).sort(
+    (a, b) => b.group.length - a.group.length,
   )[0];
 }
 
@@ -360,13 +336,13 @@ describe("the import check", () => {
     ["src/rules/a.ts", "src/rules/b.ts", undefined],
     ["src/hud/a.ts", "src/rules/b.ts", undefined],
     ["src/ui/modal/a.ts", "src/ui/b.ts", undefined],
-    ["src/pwa/precacheArt.ts", "src/pwa/cachePolicy.ts", undefined],
+    ["src/tools/pwa/precacheArt.ts", "src/pwa/cachePolicy.ts", undefined],
     ["src/scenes/a.test.ts", "src/main.ts", undefined],
     ["src/testing/a.ts", "src/sim/b.ts", undefined],
     ["src/rules/a.ts", "src/save/b.ts", "upward"],
     ["src/rules/a.ts", "src/ui/b.ts", "upward"],
     ["src/ui/dom/a.ts", "src/scenes/b.ts", "upward"],
-    ["src/pwa/launch.ts", "src/pwa/icons.ts", "upward"],
+    ["src/pwa/launch.ts", "src/tools/pwa/icons.ts", "upward"],
     ["src/sim/a.ts", "src/testing/b.ts", "upward"],
     ["src/input/a.ts", "src/holdRule.ts", "sideways"],
     ["src/ui/phaser/a.ts", "src/input/phaser/b.ts", "sideways"],

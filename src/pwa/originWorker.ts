@@ -83,7 +83,7 @@ interface Origin {
 }
 
 // The Cloudflare Worker, which runs only for a request no static file answers. It serves the
-// deployed build's archive-only members (src/pwa/precachePlugin.ts) at their URLs from its group
+// deployed build's archive-only members (src/tools/pwa/precachePlugin.ts) at their URLs from its group
 // archives, for a page with no installed build to serve them: the art gallery, the game before
 // it installs, or a browser that plays from the network. The binding opens this deployment's
 // immutable files directly, without forwarding the client's Range or dispatching through this

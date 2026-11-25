@@ -2,10 +2,10 @@ import { readFile } from "node:fs/promises";
 
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data/index.ts";
+import { gameData } from "../../data/index.ts";
 import { webManifestJson } from "./webManifestPlugin.ts";
 
-const WEB_MANIFEST = new URL("../../public/manifest.webmanifest", import.meta.url);
+const WEB_MANIFEST = new URL("../../../public/manifest.webmanifest", import.meta.url);
 
 describe("webManifestJson", () => {
   it("fills the manifest's description from the data and leaves the rest as written", async () => {

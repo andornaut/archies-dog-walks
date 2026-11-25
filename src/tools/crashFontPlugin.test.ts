@@ -7,8 +7,8 @@ import { encodeWoff2 } from "@andornaut/art-kit/build/woff2";
 import { build, createServer } from "vite";
 import { expect, it } from "vitest";
 
-import { CRASH_FONT_TEXT } from "../crash/crashFontText.ts";
 import { CRASH_BODY_FONT, crashFontPlugin } from "./crashFontPlugin.ts";
+import { CRASH_FONT_TEXT } from "./crashFontText.ts";
 
 const FONT = join(import.meta.dirname, "../../art/fonts/tiny5/Tiny5.ttf");
 const CSS = join(import.meta.dirname, "../crash/crash.css");

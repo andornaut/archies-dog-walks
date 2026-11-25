@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { HASHED_ICONS } from "./icons.ts";
 
-const read = (path: string) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
+const read = (path: string) => readFileSync(new URL(`../../../${path}`, import.meta.url), "utf8");
 
 // The icons a page links: its favicons and apple-touch-icon.
 function linkedIcons(html: string): string[] {

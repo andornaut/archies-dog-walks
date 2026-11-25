@@ -1,9 +1,9 @@
 import { precachePlugin as kitPrecachePlugin } from "@andornaut/game-kit/build/precachePlugin";
 import type { Plugin } from "vite";
 
-import type { ArtFileMap } from "../assets/artUrl.ts";
+import type { ArtFileMap } from "../../assets/artUrl.ts";
+import { CACHE_POLICY } from "../../pwa/cachePolicy.ts";
 import { gameOnlyFiles, updateGroup } from "./assetGroups.ts";
-import { CACHE_POLICY } from "./cachePolicy.ts";
 import { artHashedFiles, bootFiles } from "./precacheArt.ts";
 
 interface PrecachePluginOptions {

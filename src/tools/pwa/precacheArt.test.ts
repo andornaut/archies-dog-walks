@@ -2,8 +2,8 @@ import { contentHash } from "@andornaut/game-kit/build/contentHash";
 import { isHashedAssetUrl } from "@andornaut/game-kit/runtime/web/pwa/cachePolicy";
 import { describe, expect, it } from "vitest";
 
-import { hashedArtFileName } from "../tools/atlas/hashedArt.ts";
-import { CACHE_POLICY } from "./cachePolicy.ts";
+import { CACHE_POLICY } from "../../pwa/cachePolicy.ts";
+import { hashedArtFileName } from "../atlas/hashedArt.ts";
 import { bootFiles, hashedArtUrls } from "./precacheArt.ts";
 
 describe("hashedArtUrls", () => {

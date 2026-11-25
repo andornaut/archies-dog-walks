@@ -22,7 +22,7 @@ export default gameViteConfig<typeof ConfigModules>({
   // /art/art-files.json for the art gallery.
   // crashArtPlugin inlines the crash screen's art as data: URLs (src/tools/crashArtPlugin.ts).
   // crashFontPlugin writes the crash screen's body font as a WOFF2 subset to CRASH_FONT_TEXT
-  // (src/crash/crashFontText.ts), and fails for a character of it the font lacks.
+  // (src/tools/crashFontText.ts), and fails for a character of it the font lacks.
   // generatedFilesPlugin, on the dev server only, rewrites public/art/manifest.json and
   // shared/export/ as the art and src/ change. npm run build writes shared/export/ first.
   // publicFilesPlugin, in a build only, copies public/ in place of Vite's copy, leaving out the
@@ -30,12 +30,12 @@ export default gameViteConfig<typeof ConfigModules>({
   // phaserBuildPlugin, in a build only, bundles Phaser from its source without the namespaces the
   // game does not use and without the Canvas renderer (PHASER_BUILD in src/tools/phaserBuild.ts).
   // hashedIconsPlugin writes each icon under a content-hashed name in /assets/ and points the
-  // built pages and /manifest.webmanifest there (HASHED_ICONS in src/pwa/icons.ts).
+  // built pages and /manifest.webmanifest there (HASHED_ICONS in src/tools/pwa/icons.ts).
   // webManifestPlugin fills the manifest's description from the data, in dev and in the manifest
   // hashedIconsPlugin writes, before precachePlugin reads it.
   // precachePlugin writes /sw.js, the router that serves the installed game offline, the build
   // manifest and pointer, and the group archives a first install and an update download, reading
-  // the map of hashed art atlasPlugin writes (src/pwa/precachePlugin.ts).
+  // the map of hashed art atlasPlugin writes (src/tools/pwa/precachePlugin.ts).
   // securityHeadersPlugin writes /_headers, the response headers with each page's CSP.
   // inlineStyleCheckPlugin fails the build for a style element or attribute that CSP would block
   // in a built script or page.

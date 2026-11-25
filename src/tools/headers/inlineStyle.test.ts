@@ -11,7 +11,7 @@ import {
 } from "./inlineStyle.ts";
 import { inlineStyleCheckPlugin } from "./inlineStyleCheckPlugin.ts";
 
-const REPO = join(import.meta.dirname, "../..");
+const REPO = join(import.meta.dirname, "../../..");
 
 const whatIn = (code: string) => scriptInlineStyles("x.js", code).map(({ what }) => what);
 
