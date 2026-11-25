@@ -112,7 +112,7 @@ export interface SettingsFonts {
 // (iconBesideLabel). A switch or button row has its note under them in body text,
 // LABEL_HELP_GAP clear rows under the label font's lowest ink (helpCapDy), from the icon's
 // column, wrapped onto up to note.lines lines, and inkFoot rows under the note's lowest ink.
-// A switch sits at the upper right with its state word below. The Install button is its row's
+// A switch sits at the upper right with its state word below, centred on it. The Install button is its row's
 // sole action, centred in the row. Sliders place the percentage on the label line and the track
 // below it, from the labels' column to the row's right inset. A row spans the page's rows'
 // column (ROWS_PAGE_LAYOUT).
@@ -128,6 +128,8 @@ export const SETTINGS_ROW = {
   pad: ROW.pad,
   slider: ROW.slider,
   switch: ROW.switch,
+  switchInset: ROW.switchInset,
+  switchState: ROW.switchState,
   track: ROW.track,
   width: ROWS_PAGE_LAYOUT.column.width,
 } as const;
@@ -146,8 +148,8 @@ export function noteRoom(kind: "button" | "switch"): number {
 
 // The actual control width determines the note's room on that row.
 export function noteRoomForControl(controlWidth: number): number {
-  const { controlGap, note, pad, width } = SETTINGS_ROW;
-  return width - pad - controlWidth - controlGap - note.dx;
+  const { controlGap, note, switchInset, width } = SETTINGS_ROW;
+  return width - switchInset - controlWidth - controlGap - note.dx;
 }
 
 // A note: at 2x, wrapped onto up to note.lines lines.
@@ -160,11 +162,26 @@ function noteDy(title: FontMetrics): number {
 
 export const SWITCH_STATE_GAP = BUTTON_SIZE.stackGap;
 
+// The x a switch's state word's ink centres on, by the row's switchState rule.
+const STATE_CENTRES: Record<
+  (typeof SETTINGS_ROW)["switchState"]["align"],
+  (control: Pick<Rect, "width" | "x">) => number
+> = {
+  // The switch's centre.
+  switchCentre: (control) => control.x + control.width / 2,
+};
+
+export function switchStateCentre(control: Pick<Rect, "width" | "x">): number {
+  return STATE_CENTRES[SETTINGS_ROW.switchState.align](control);
+}
+
 // Switch rows as Game Kit form rows across the rows' column, on the page's art-pixel grid, as tall
-// as the list's height: the label's column ICON_LABEL_GAP after an icon's, the switch pad in from
-// the row's right and icon.dy down, its state word SWITCH_STATE_GAP under it, and the rows a
-// separator and its clearance apart (SEPARATOR_BAND). Cheats' rows, which carry no icon, take it
-// as it is; the game draws every label and state word itself.
+// as the list's height: the label's column ICON_LABEL_GAP after an icon's, the switch switchInset
+// in from the row's right, centred in a value column that reaches the row's pad, and icon.dy
+// down, its state word SWITCH_STATE_GAP under it and centred on it (switchState), and the rows a
+// separator and its clearance apart (SEPARATOR_BAND). The list's pad leaves a slider's track to
+// the row's pad. Cheats' rows, which carry no icon, take it as it is; the game draws every label
+// and state word itself.
 export const SWITCH_ROWS: Omit<FormRowLayout, "height"> = {
   align: "start",
   columnGap: ICON_LABEL_GAP,
@@ -174,8 +191,8 @@ export const SWITCH_ROWS: Omit<FormRowLayout, "height"> = {
   value: {
     gap: SWITCH_STATE_GAP,
     offset: SETTINGS_ROW.icon.dy,
-    state: "end",
-    track: SETTINGS_ROW.switch.width,
+    state: "center",
+    track: SETTINGS_ROW.switch.width + 2 * (SETTINGS_ROW.switchInset - SETTINGS_ROW.pad),
   },
 };
 
@@ -234,7 +251,7 @@ function rowHeight(fonts: SettingsFonts, shape: SettingsRowShape): number {
   return Math.max(MIN_PRESS, noteBottom, stateBottom);
 }
 
-// Switches align with the row's upper icon edge, 8 in from its right. The Install button, the
+// Switches align with the row's upper icon edge, switchInset in from its right. The Install button, the
 // row's sole action, centres in the row.
 function rowControl(row: Rect, shape: SettingsRowShape): Rect | null {
   if (shape.kind === "slider") {
@@ -250,7 +267,7 @@ function rowControl(row: Rect, shape: SettingsRowShape): Rect | null {
     ...size,
     x:
       shape.kind === "switch"
-        ? row.x + row.width - SETTINGS_ROW.pad - size.width
+        ? row.x + row.width - SETTINGS_ROW.switchInset - size.width
         : row.x + (row.width - size.width) / 2,
     y: row.y + top,
   };

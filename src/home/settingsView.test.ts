@@ -1,3 +1,5 @@
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import { formRowsGeometry } from "@andornaut/game-kit/runtime/ui/formRow";
 import { describe, expect, it } from "vitest";
 
 import { DOM_ART_KEYS } from "../assets/domArt.ts";
@@ -5,11 +7,12 @@ import { gameData } from "../data/index.ts";
 import { ICON_LABEL_GAP, LABEL_ICON, ROWS_PAGE, SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
-import { fontFileMetrics, fontInkRows, gameFont } from "../testing/fontInk.ts";
-import { blockPlace, inkEnd, shownText } from "../ui/dom/pixelLine.ts";
+import { fontFileMetrics, fontInkRows, gameFont, inkWidth } from "../testing/fontInk.ts";
+import { blockPlace, shownText } from "../ui/dom/pixelLine.ts";
 import { deviceX, domScale, fontPixel } from "../ui/domScale.ts";
+import { lineInk } from "../ui/lineInk.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
-import { PAGE_LAYOUT, pageBack } from "../ui/pageLayout.ts";
+import { PAGE_LAYOUT, pageBack, ROWS_PAGE_LAYOUT } from "../ui/pageLayout.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { overlayRegion } from "./homeBar.ts";
@@ -19,6 +22,7 @@ import {
   settingsInstallWidth,
   settingsLayout,
   SWITCH_ROWS,
+  switchStateCentre,
 } from "./settings.ts";
 import {
   SETTINGS_ART_KEYS,
@@ -74,12 +78,12 @@ const view = (state: Partial<SettingsState>) =>
     { ...STATE, ...state },
   );
 
-// A switch row's switch as its kit list places it (SWITCH_ROWS): at the value column's end, its
-// offset down.
-const switchOf = (rect: { x: number; y: number; width: number }) => ({
-  x: rect.x + rect.width - SWITCH_ROWS.padding!.right - SWITCH_ROWS.switch!.width,
-  y: rect.y + SWITCH_ROWS.value!.offset!,
-});
+// A switch row's switch as its kit list places it (SWITCH_ROWS), in game pixels.
+const switchOf = (rect: Rect) =>
+  formRowsGeometry(
+    { ...SWITCH_ROWS, height: rect.height },
+    { origin: rect, rows: [{ switch: true }], width: rect.width },
+  ).rows[0]!.switch!;
 
 describe("settingsView", () => {
   it("leaves by the page's Back under its page title, on a cream page", () => {
@@ -144,27 +148,55 @@ describe("settingsView", () => {
         const state = row.texts.at(-1)!;
         expect(state.capTop - art.y - SETTINGS_CARD.row.switch.height).toBeGreaterThan(0);
         expect(state).toMatchObject({
-          anchor: "inkRight",
-          x: art.x + SETTINGS_CARD.row.switch.width,
+          anchor: "inkCentre",
+          x: art.x + SETTINGS_CARD.row.switch.width / 2,
         });
       }
     }
   });
 
-  // The Settings switch's last column is x = 319 on the 360-wide screen.
-  it.each([1, 2, 3])("ends each state word's ink on its switch's last column at DPR %d", (dpr) => {
+  it("places each switch switchInset in from its row's right, icon.dy down", () => {
+    const { icon, switch: art, switchInset } = SETTINGS_CARD.row;
+    for (const row of view({}).rows.filter(({ kind }) => kind === "switch")) {
+      expect(switchOf(row.rect)).toEqual({
+        ...art,
+        x: row.rect.x + row.rect.width - switchInset - art.width,
+        y: row.rect.y + icon.dy,
+      });
+    }
+  });
+
+  // The switch's centre from its kit list's place and the row's switchState rule.
+  it.each([1, 2, 3])("centres each state word's ink on its switch at DPR %d", (dpr) => {
     const scale = domScale(dpr, { height: SCREEN_CONFIG.height, width: 360, x: 0, y: 0 });
     const font = gameFont("font-title");
-    for (const row of view({}).rows.filter(({ kind }) => kind === "switch")) {
-      const art = switchOf(row.rect);
-      const state = row.texts.at(-1)!;
-      const place = blockPlace(font, scale, state);
-      const end =
-        place.runs[0]!.left +
-        inkEnd(font, shownText("title", state.lines[0]!)) * fontPixel(scale, state.scale);
-      expect(art.x + SETTINGS_CARD.row.switch.width - 1).toBe(329);
-      expect(end).toBe(deviceX(scale, art.x + SETTINGS_CARD.row.switch.width));
+    for (const on of [false, true]) {
+      const settings = { ...DEFAULT_SETTINGS, fpsCounter: on, muted: !on, reducedMotion: on };
+      for (const row of view({ settings }).rows.filter(({ kind }) => kind === "switch")) {
+        const art = switchOf(row.rect);
+        const centre = (deviceX(scale, art.x) + deviceX(scale, art.x + art.width)) / 2;
+        const state = row.texts.at(-1)!;
+        const ink = lineInk(font, shownText("title", state.lines[0]!), 1);
+        const pixel = fontPixel(scale, state.scale);
+        const left = blockPlace(font, scale, state).runs[0]!.left;
+        const inkCentre = left + ((ink.left + ink.right) * pixel) / 2;
+        expect(Math.abs(inkCentre - centre), `${row.key} ${String(on)}`).toBeLessThanOrEqual(
+          dpr === 1 ? 0 : pixel / 2,
+        );
+      }
     }
+  });
+
+  it("keeps the widest state word's ink centred on a switch within the rows' column", () => {
+    const words = gameData.menuText.settings;
+    const widest = Math.max(
+      ...[words.on, words.off, words.shown, words.hidden].map((word) =>
+        inkWidth("font-title", { scale: TEXT_SCALE }, word.toUpperCase()),
+      ),
+    );
+    const { column } = ROWS_PAGE_LAYOUT;
+    const art = switchOf({ height: 48, width: column.width, x: column.x, y: 0 });
+    expect(switchStateCentre(art) + widest / 2).toBeLessThanOrEqual(column.x + column.width);
   });
 
   it.each([false, true])(

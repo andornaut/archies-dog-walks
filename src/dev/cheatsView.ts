@@ -8,7 +8,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { SETTINGS_CARD } from "../data/layout.ts";
 import type { DebuffId, GameData, MenuText, UpgradeId, ZoneId } from "../data/types.ts";
 import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
-import { SWITCH_STATE_GAP, switchRowHeight } from "../home/settings.ts";
+import { SWITCH_STATE_GAP, switchRowHeight, switchStateCentre } from "../home/settings.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { BUTTON_SIZE, raisedLabelCapTop } from "../ui/buttonGeometry.ts";
 import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
@@ -403,12 +403,12 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
     }
     case "switch": {
       // Settings' switch-row layout and height: the label 6 in and its capitals ROW.label.dy
-      // down, the switch at the upper right, 8 in, and the state word under it, its ink ending on
-      // the switch's right edge.
+      // down, the switch at the upper right, switchInset in, and the state word under it, its ink centred
+      // on the switch (switchStateCentre).
       const hit = { ...rect, height: switchRowHeight(measure.title) };
       const look = row.enabled ? selectLook("normal") : { ...selectLook("normal"), ...GREYED };
       const colour = PALETTE[look.text];
-      const switchX = rect.x + rect.width - ROW.pad - SWITCH.width;
+      const switchX = rect.x + rect.width - ROW.switchInset - SWITCH.width;
       const switchY = hit.y + ROW.icon.dy;
       const line = { colour, font: "title", line: 0, scale: TEXT_SCALE } as const;
       return {
@@ -430,7 +430,7 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
             ...line,
             capTop: switchY + SWITCH.height + SWITCH_STATE_GAP,
             centre: "ink",
-            centreX: switchX + SWITCH.width - measure.inkWidth("title", row.value) / 2,
+            centreX: switchStateCentre({ width: SWITCH.width, x: switchX }),
             text: row.value,
           },
         ],

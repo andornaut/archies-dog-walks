@@ -42,6 +42,7 @@ import {
   settingsLayout,
   type SettingsRowShape,
   setVolumeSteps,
+  switchStateCentre,
   volumeStepForKey,
   volumeSteps,
 } from "./settings.ts";
@@ -181,10 +182,10 @@ function rowParts(i: number): [string, Rect][] {
   const noteY = placed.noteY ?? 0;
   const lines = fitted?.lines ?? [];
   const control = placed.control ?? rect;
-  // Each state word, its ink's right edge on the switch's.
+  // Each state word, its ink centred on the switch (switchStateCentre).
   const states = (row.kind === "switch" ? row.states : []).map((word): [string, Rect] => {
     const ink = labelInk("font-title", word, 0, control.y + control.height + BUTTON_SIZE.stackGap);
-    return [`state ${word}`, { ...ink, x: control.x + control.width - ink.width }];
+    return [`state ${word}`, { ...ink, x: switchStateCentre(control) - ink.width / 2 }];
   });
   // A note line's rows run from its capitals to the font's lowest ink, descenders included.
   const noteInk = (line: string, n: number): Rect => {
@@ -232,7 +233,7 @@ describe("the Settings page", () => {
     [
       "a switch's columns and top",
       [switchFace.x, switchFace.x + switchFace.width, switchFace.y - firstSwitch.rect.y],
-      [298, 330, 9],
+      [291, 323, 9],
     ],
     ["a slider's track", [layout.track.x, layout.track.x + layout.track.width], [34, 330]],
     ["Install's centre", [install.x + install.width / 2], [173]],
@@ -241,18 +242,20 @@ describe("the Settings page", () => {
     expect(placed).toEqual(art);
   });
 
-  // Every switch row's state words, each as drawn: right-aligned under the switch, at the gap
-  // below it, inside the row and clear of the label and note column.
+  // Every switch row's state words, each as drawn: centred under the switch, at the gap below it,
+  // inside the row and clear of the label and note column.
   it.each(
     SHIPPED_ROWS.flatMap((row, i) =>
       row.kind === "switch" ? row.states.map((word) => [row.label, word, i] as const) : [],
     ),
-  )("sets the %s row's %s state under its switch's right edge", (_, word, i) => {
+  )("sets the %s row's %s state centred under its switch", (_, word, i) => {
     const parts = new Map(rowParts(i));
     const control = parts.get("control")!;
     const state = parts.get(`state ${word}`)!;
-    expect(state.x + state.width).toBe(control.x + control.width);
-    expect(control.x + control.width).toBe(rows[i]!.rect.x + SETTINGS_ROW.width - SETTINGS_ROW.pad);
+    expect(state.x + state.width / 2).toBe(control.x + control.width / 2);
+    expect(control.x + control.width).toBe(
+      rows[i]!.rect.x + SETTINGS_ROW.width - SETTINGS_ROW.switchInset,
+    );
     expect(state.y).toBeGreaterThan(control.y + control.height);
     expect(inside(state, rows[i]!.rect)).toBe(true);
     for (const [name, ink] of parts) {

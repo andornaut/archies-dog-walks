@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { gameData } from "../data/index.ts";
 import { SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
-import { SWITCH_ROWS, SWITCH_STATE_GAP, switchRowHeight } from "../home/settings.ts";
+import { SWITCH_STATE_GAP, switchRowHeight } from "../home/settings.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
@@ -160,23 +160,20 @@ describe("Cheats layout", () => {
     expect(invincible?.action?.kind).toBe("invincible");
     const { rect } = invincible!;
     expect(rect.height).toBe(switchRowHeight(MEASURE.title));
-    // The switch as its kit list places it (SWITCH_ROWS): at the value column's end.
-    const { icon, label, switch: art } = SETTINGS_CARD.row;
-    const sw = {
-      x: rect.x + rect.width - SWITCH_ROWS.padding!.right - SWITCH_ROWS.switch!.width,
-      y: rect.y + SWITCH_ROWS.value!.offset!,
-    };
+    // The switch as Art's layout places it: switchInset in from the row's right.
+    const { icon, label, switch: art, switchInset } = SETTINGS_CARD.row;
+    const sw = { x: rect.x + rect.width - switchInset - art.width, y: rect.y + icon.dy };
     expect(invincible!.switch).toEqual({ on: false });
     expect(invincible!.texts[0]).toMatchObject({
       capTop: rect.y + label.dy,
       centre: "left",
       centreX: rect.x + icon.dx,
     });
-    // The state word's ink ends on the switch's right edge.
+    // The state word's ink is centred on the switch.
     expect(invincible!.texts[1]).toMatchObject({
       capTop: sw.y + art.height + SWITCH_STATE_GAP,
       centre: "ink",
-      centreX: sw.x + art.width - MEASURE.inkWidth("title", words.settings.off) / 2,
+      centreX: sw.x + art.width / 2,
       text: words.settings.off,
     });
     const on = view({ ...HOME, next: { ...HOME.next, invincible: true } }).rows.find(

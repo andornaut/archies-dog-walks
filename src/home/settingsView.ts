@@ -31,6 +31,7 @@ import {
   SETTINGS_ROW,
   type SettingsLayout,
   SWITCH_STATE_GAP,
+  switchStateCentre,
   type VolumeKey,
   volumePercent,
   volumeSteps,
@@ -155,11 +156,11 @@ export interface SettingsMeasure extends PanelMeasure {
   ) => { left: number; right: number };
 }
 
-// Lines of text: x is where its pen starts, where its first line's ink starts (ink), where its
-// widest line's advance ends (right) or where its widest line's ink ends (inkRight), and capTop
-// its first line's capitals' top, its lines a font line apart.
+// Lines of text: x is where its pen starts, where its first line's ink starts (ink), where each
+// line's ink centres (inkCentre) or where its widest line's advance ends (right), and capTop its
+// first line's capitals' top, its lines a font line apart.
 export interface SettingsText {
-  readonly anchor: "ink" | "inkRight" | "pen" | "right";
+  readonly anchor: "ink" | "inkCentre" | "pen" | "right";
   readonly capTop: number;
   readonly colour: number;
   readonly font: "body" | "title";
@@ -354,15 +355,14 @@ function controlRow(
     texts: [
       ...view.texts,
       {
-        // Its ink ends on the switch's last column: a word wider than the switch grows left,
-        // clear of the row's edge.
-        anchor: "inkRight",
+        // Its ink centred on the switch (switchStateCentre).
+        anchor: "inkCentre",
         capTop: control.y + control.height + SWITCH_STATE_GAP,
         colour: PALETTE[look.text],
         font: "title",
         lines: [word],
         scale: TEXT_SCALE,
-        x: control.x + control.width,
+        x: switchStateCentre(control),
       },
     ],
   };

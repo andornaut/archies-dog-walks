@@ -874,12 +874,17 @@ export const SETTINGS_CARD = {
     label: { dy: 12 },
     // The note's left edge and most lines.
     note: { dx: 6, lines: 3 },
-    // The control's and the track's inset from the row's sides.
+    // The track's inset from the row's sides, and a slider's value's right edge.
     pad: 8,
     // A slider row's height.
     slider: { height: 56 },
     // art: the switch's size.
     switch: { height: 16, width: 32 },
+    // The switch's inset from the row's right: far enough in that the widest state word (Hidden)
+    // centred under it ends on the row's right edge.
+    switchInset: 15,
+    // The state word under a switch (On, Off, Shown, Hidden): its ink centred across the switch.
+    switchState: { align: "switchCentre" },
     // The slider's track: its top and height, and art: the knob's size.
     track: { dy: 30, height: 10, knobHeight: 16, knobWidth: 10 },
   },
