@@ -326,12 +326,13 @@ describe("control state cues", () => {
     ]);
   });
 
-  it("fills the crash screen's focused Error details row over Kit's outline", () => {
-    const KIT_SUMMARY = ".crash-details summary:focus-visible";
-    const SUMMARY = ".crash .crash-details summary:focus-visible";
-    expect(squeeze(KIT_CRASH)).toContain(`${squeeze(KIT_SUMMARY)}{outline:`);
-    expect(rule(SHEETS.crash, SUMMARY)).toContain("outline:none");
-    expect(rule(forced(SHEETS.crash), SUMMARY)).toContain("outline:none");
-    expect(ranks(specificity(SUMMARY), specificity(KIT_SUMMARY))).toBeGreaterThan(0);
+  it("fills the crash screen's focused Error details row cyan under ink through Kit's focus slots", () => {
+    const summary = rule(squeeze(KIT_CRASH), ".crash-details summary:focus-visible");
+    expect(summary).toContain("outline:none");
+    expect(summary).toContain("background-color:var(--ui-colour-button-focus-face");
+    expect(summary).toContain("color:var(--ui-colour-button-focus-text");
+    const details = rule(SHEETS.crash, ".crash .crash-details");
+    expect(details).toContain("--ui-colour-button-focus-face:var(--palette-cyan)");
+    expect(details).toContain("--ui-colour-button-focus-text:var(--palette-ink)");
   });
 });

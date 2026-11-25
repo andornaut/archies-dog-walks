@@ -29,6 +29,7 @@ export function loadingFailurePresentation(unit: number): LoadingFailurePresenta
       highlight: cssHex(PALETTE.yellow),
       lip: paper("lip"),
       panel: paper("fill"),
+      panelHighlight: paper("bevel"),
       shade: cssHex(PALETTE.forest),
       shadow: paper("shadow"),
       text: paper("text"),
@@ -36,6 +37,7 @@ export function loadingFailurePresentation(unit: number): LoadingFailurePresenta
     panel: {
       bodyActionGapPx: 24,
       borderWidthPx: PAPER_PANEL.border,
+      highlightHeightPx: PAPER_PANEL.bevel,
       lipHeightPx: PAPER_PANEL.lip,
       maxWidthPx: MODAL_WIDTHS.large * unit,
       paddingBottomPx: 16,
@@ -51,19 +53,4 @@ export function loadingFailurePresentation(unit: number): LoadingFailurePresenta
       title: { lineHeight: 1.2, sizePx: 24, weight: 700 },
     },
   };
-}
-
-// CLEANUP (added 2026-11-25): remove once Game Kit's loading failure panel draws a bevel row, and
-// pass PAPER_PANEL's bevel to it instead. Adds the modal paper's bevel row, under the top border,
-// to the shadows the kit gives panel; call it after each presentation the kit applies.
-export function paintPaperBevel(panel: HTMLElement): void {
-  const bevel = `inset 0 ${PAPER_PANEL.bevel}px 0 ${paper("bevel")}`;
-  const shadow = panel.style.getPropertyValue("box-shadow");
-  if (!shadow.startsWith(bevel)) {
-    panel.style.setProperty(
-      "box-shadow",
-      shadow === "" ? bevel : `${bevel}, ${shadow}`,
-      panel.style.getPropertyPriority("box-shadow"),
-    );
-  }
 }

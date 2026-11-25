@@ -8,7 +8,7 @@ import { mountLoadingFailure } from "@andornaut/game-kit/runtime/web/progress/do
 import { createModalLayer } from "@andornaut/game-kit/runtime/web/ui/dom/modalLayer";
 
 import { bindGameAction } from "./actionBinding.ts";
-import { loadingFailurePresentation, paintPaperBevel } from "./loadingFailureStyle.ts";
+import { loadingFailurePresentation } from "./loadingFailureStyle.ts";
 import { guardNativeInput } from "./modalLifecycle.ts";
 import type { UiLayer } from "./uiLayer.ts";
 
@@ -54,7 +54,6 @@ export function mountLoadingError(
       root.style[key] = layer.element.style[key];
     }
     failure.setPresentation(presentation());
-    paintPaperBevel(panel);
   };
   const stopScale = layer.onScale(place);
   place();

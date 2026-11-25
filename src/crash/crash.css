@@ -66,25 +66,11 @@
   font-family: ui-monospace, monospace;
 }
 
+/* The focused Error details row fills cyan under ink, as a focused button's face: the kit's
+   summary row takes the focus slots, set on the details alone so the crash buttons keep theirs. */
 .crash .crash-details {
+  --ui-colour-button-focus-face: var(--palette-cyan);
+  --ui-colour-button-focus-text: var(--palette-ink);
   margin-top: 16px;
   font-size: 20px;
-}
-
-/* CLEANUP (added 2026-11-25): remove once Game Kit's crash sheet fills the focused summary row
-   instead of outlining it. The Error details row fills cyan with ink text while focused, as a
-   focused button's face, or Highlight with HighlightText in forced colours. */
-.crash .crash-details summary:focus-visible {
-  outline: none;
-  background: var(--palette-cyan);
-  color: var(--palette-ink);
-}
-
-@media (forced-colors: active) {
-  .crash .crash-details summary:focus-visible {
-    outline: none;
-    forced-color-adjust: none;
-    background: Highlight;
-    color: HighlightText;
-  }
 }
