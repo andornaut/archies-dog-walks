@@ -11,12 +11,12 @@ import {
   dragMomentAt,
   type HelpPicture,
   helpPicture,
+  packStillFrames,
   stillDragMoment,
   TOUCH_DRAG,
 } from "../help/helpPictures.ts";
 import { changeLabels } from "../hud/hudView.ts";
 import { NOTHING_PAUSED } from "../hud/topBar.ts";
-import { DOG_REACTIONS } from "../layout/hitEffects.ts";
 import { currentZone } from "../rules/route.ts";
 import { read } from "../rules/units.ts";
 import { laneControlIn } from "../runner/laneControl.ts";
@@ -94,7 +94,8 @@ export class HelpPictureScene extends Scene {
       this.scene.stop(SCENE_KEYS.helpHud);
       this.scene.stop(SCENE_KEYS.helpCard);
     });
-    const packDraw = this.drawWalk(picture);
+    const walkerKey = walkerSpriteKey(this, picture.walk.run.walker);
+    const packDraw = this.drawWalk(walkerKey, picture);
     const { pack } = packDraw;
     const { drag } = picture;
     if (drag !== null) {
@@ -117,8 +118,10 @@ export class HelpPictureScene extends Scene {
       this.drag = still ? undefined : play;
       this.drawDrag(play, still ? stillDragMoment(drag) : this.dragMoment(play));
     }
+    // Held with each pack figure on its fixed frame, whichever frame its tag has reached.
     if (this.drag === undefined) {
-      this.events.once(Scenes.Events.POST_UPDATE, () => freezeScene(this));
+      const frames = packStillFrames(gameData, walkerKey, picture);
+      this.events.once(Scenes.Events.POST_UPDATE, () => freezeScene(this, frames));
     }
     if (picture.hud) {
       this.showHud(picture, view, pack);
@@ -138,9 +141,10 @@ export class HelpPictureScene extends Scene {
     }
   }
 
-  // The road, its items and the pack, as the run draws them for this walk, held still. The
-  // pack can be drawn again, as in another lane, through the returned PackDraw.
-  private drawWalk(picture: HelpPicture): PackDraw {
+  // The road, its items and the pack, its walker drawn as walkerKey, as the run draws them for
+  // this walk, held still. The pack can be drawn again, as in another lane, through the returned
+  // PackDraw.
+  private drawWalk(walkerKey: string, picture: HelpPicture): PackDraw {
     const { walk } = picture;
     const zone = currentZone(gameData, walk.run);
     const colour = colourFromHex(zone.roadShadowColour);
@@ -151,7 +155,7 @@ export class HelpPictureScene extends Scene {
     items.draw(walk, picture.halted, true, itemShadows.frame(colour));
     itemShadows.hideUnused();
     const dogs = walk.run.pack.map(({ dog }) => dog);
-    const pack = new PackView(this, dogs, walkerSpriteKey(this, walk.run.walker));
+    const pack = new PackView(this, dogs, walkerKey);
     const packShadows = new ShadowPool(this);
     const draw = (shown: Walk) => {
       pack.draw(shown, {
@@ -164,9 +168,6 @@ export class HelpPictureScene extends Scene {
       packShadows.hideUnused();
     };
     draw(walk);
-    if (picture.stumble) {
-      pack.stumble(false, DOG_REACTIONS.hit);
-    }
     return { draw, pack };
   }
 

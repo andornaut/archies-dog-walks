@@ -1,7 +1,9 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { pixels } from "@andornaut/game-kit/runtime/units";
 
+import { dogSpriteKey } from "../assets/spriteKeys.ts";
 import { LANE_COUNT, ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type {
   CardSource,
@@ -93,8 +95,6 @@ export interface HelpPicture {
   readonly hud: boolean;
   readonly pulls: Pulls;
   readonly strips: readonly PictureStrip[];
-  // Whether the pack has just bumped something: the walker stumbles and the dogs react.
-  readonly stumble: boolean;
   readonly walk: Walk;
 }
 
@@ -205,7 +205,6 @@ const STILL: Omit<HelpPicture, "strips" | "walk"> = {
   halted: false,
   hud: false,
   pulls: NO_PULLS,
-  stumble: false,
 };
 
 function lanes(data: GameData): HelpPicture {
@@ -351,7 +350,6 @@ function cards(data: GameData): HelpPicture {
     card: cardFor(data, run, source),
     halted: true,
     strips: [cardStrip()],
-    stumble: true,
     walk: walkIn(run, lane, []),
   };
 }
@@ -438,6 +436,26 @@ const PICTURES: Readonly<Record<HelpPictureId, (data: GameData) => HelpPicture>>
 
 export function helpPicture(data: GameData, id: HelpPictureId): HelpPicture {
   return PICTURES[id](data);
+}
+
+// The frame a still picture's pack figures hold of each tag they show, from its start: the walk
+// on its first stride, which every walk tag starts on, a tell at the peak of the lean, and the
+// idle's first frame.
+export const PACK_STILL_FRAMES: Readonly<Record<string, number>> = { idle: 0, tell: 1, walk: 0 };
+
+// The frame each of the picture's pack figures, the walker drawn as walkerKey and every dog,
+// holds of each tag in PACK_STILL_FRAMES, by animation key.
+export function packStillFrames(
+  data: Pick<GameData, "dogs">,
+  walkerKey: string,
+  picture: HelpPicture,
+): Record<string, number> {
+  const keys = [walkerKey, ...picture.walk.run.pack.map(({ dog }) => dogSpriteKey(data, dog))];
+  return Object.fromEntries(
+    keys.flatMap((key) =>
+      Object.entries(PACK_STILL_FRAMES).map(([tag, frame]) => [animationKey(key, tag), frame]),
+    ),
+  );
 }
 
 // Where each strip shows, top to bottom, in the help screen's picture frame.

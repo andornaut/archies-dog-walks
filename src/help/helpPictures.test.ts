@@ -1,13 +1,17 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import { describe, expect, it } from "vitest";
 
+import { dogSpriteKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { ROAD_CAMERA, SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { HelpPictureId } from "../data/types.ts";
 import { cardRowIn } from "../layout/cardLayout.ts";
 import { screenYAt } from "../layout/projection.ts";
 import { currentZoneId, forkPaths } from "../rules/route.ts";
+import { pullPose } from "../runner/pulls.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
+import { packDogs } from "../state/pack.ts";
 import { cardHeader } from "../ui/cardRow.ts";
 import { HELP_LAYOUT } from "./helpLayout.ts";
 import {
@@ -16,6 +20,7 @@ import {
   dragMomentAt,
   HELP_SCENES,
   helpPicture,
+  packStillFrames,
   type PictureStrip,
   stillDragMoment,
   TOUCH_DRAG,
@@ -164,5 +169,37 @@ describe("dragMomentAt", () => {
     const still = stillDragMoment(loop);
     expect(still.touch).toEqual({ index: 0, tag: "still" });
     expect(still.motion).toEqual({ kind: "still", lane: toLane });
+  });
+});
+
+describe("packStillFrames", () => {
+  // Art's frames: a walking figure on its walk's first stride, a straining dog at the peak of
+  // its tell's lean, and a halted pack on its idle's first frame.
+  const CHOSEN: Readonly<Record<string, number>> = { idle: 0, tell: 1, walk: 0 };
+  const shown = (id: HelpPictureId) => {
+    const picture = helpPicture(gameData, id);
+    const { run } = picture.walk;
+    const walkerKey = gameData.walkers[run.walker].spriteKey;
+    const pose = picture.halted ? "idle" : "walk";
+    const figures = [
+      { key: walkerKey, tag: pose },
+      ...packDogs(run).map((dog) => ({
+        key: dogSpriteKey(gameData, dog),
+        tag: pullPose(gameData, run, picture.pulls, dog)?.tag ?? pose,
+      })),
+    ];
+    return { figures, frames: packStillFrames(gameData, walkerKey, picture) };
+  };
+
+  it.each(IDS)("holds each pack figure of the %s picture on its chosen frame", (id) => {
+    const { figures, frames } = shown(id);
+    for (const { key, tag } of figures) {
+      expect(frames[animationKey(key, tag)], `${key}:${tag}`).toBe(CHOSEN[tag]);
+    }
+  });
+
+  it("covers every tag a picture's pack shows", () => {
+    const tags = new Set(IDS.flatMap((id) => shown(id).figures.map(({ tag }) => tag)));
+    expect([...tags].sort()).toEqual(Object.keys(CHOSEN).sort());
   });
 });
