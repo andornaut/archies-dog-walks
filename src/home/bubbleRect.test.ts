@@ -4,7 +4,7 @@ import { decodePng } from "@andornaut/art-kit/build/png";
 import { wrapWords } from "@andornaut/game-kit/runtime/lines";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { insetRect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
-import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { inkRowsFromCapTop, laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
@@ -14,7 +14,7 @@ import type { Owned } from "../save/schema.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { FakeDocument, type FakeElement } from "../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
-import { artPixel, domScale, fontPixel, gridY } from "../ui/domScale.ts";
+import { artPixel, domScale, fontPixel, gridX, gridY } from "../ui/domScale.ts";
 import { PILL_IMAGE_GAP, PILL_SPACE } from "../ui/namePills.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
@@ -175,6 +175,16 @@ describe("the walker's speech", () => {
   const rimBottom = Array.from({ length: quip.height / 2 }, (_, y) => quip.height - 1 - y).filter(
     quipInked,
   ).length;
+  // The columns it inks at its left and right edges, across its middle row.
+  const quipColumn = (x: number) => {
+    const at = ((quip.height / 2) * quip.width + x) * 4;
+    return Array.from(quip.data.subarray(at, at + 4)).join();
+  };
+  const sideInked = (column: number) => quipColumn(column) !== quipColumn(quip.width / 2);
+  const sideLeft = Array.from({ length: quip.width / 2 }, (_, x) => x).filter(sideInked).length;
+  const sideRight = Array.from({ length: quip.width / 2 }, (_, x) => quip.width - 1 - x).filter(
+    sideInked,
+  ).length;
 
   it.each(dogs)("centres %s's owner's face over their name", (dog) => {
     const column = ownerColumn(nameInk(dog));
@@ -210,45 +220,74 @@ describe("the walker's speech", () => {
     speech.place(scale);
     const pixel = fontPixel(scale, TEXT_SCALE);
     const px = (value: string | undefined) => Number.parseFloat(value ?? "");
+    // Each line's inked boxes in device pixels, by the paragraph that draws it: its pills' and
+    // its glyphs'.
     const nodes = (speech.element as unknown as FakeElement).all();
-    const pills = nodes
-      .filter((node) => node.classList.contains("adw-pill"))
-      .map((node) => ({
-        bottom: px(node.style.top) + px(node.style.height),
-        top: px(node.style.top),
-      }));
-    const glyphRows = nodes.flatMap((node) => {
-      const top = px(node.style.top);
-      if (
-        !node.classList.contains("adw-text") ||
-        node.parentElement?.tagName.toLowerCase() !== "p"
-      ) {
-        return [];
-      }
-      const glyphs = [...(node.textContent ?? "")].flatMap((char) => {
-        const glyph = fonts.body.glyphs.get(char);
-        return glyph === undefined || glyph.height === 0 ? [] : [glyph];
-      });
-      return glyphs.map((glyph) => ({
-        bottom: top + (glyph.yOffset + glyph.height) * pixel,
-        top: top + glyph.yOffset * pixel,
-      }));
+    const pills = nodes.filter((node) => node.classList.contains("adw-pill"));
+    const box = (node: FakeElement) => ({
+      bottom: px(node.style.top) + px(node.style.height),
+      left: px(node.style.left),
+      right: px(node.style.left) + px(node.style.width),
+      top: px(node.style.top),
     });
+    const lines = nodes
+      .filter((node) => node.tagName.toLowerCase() === "p")
+      .map((line) => [
+        ...line
+          .all()
+          .filter((node) => node.classList.contains("adw-pill"))
+          .map(box),
+        ...line
+          .all()
+          .filter((node) => node.classList.contains("adw-text"))
+          .flatMap((node) =>
+            laidGlyphs(fonts.body, 1, node.textContent ?? "").flatMap(({ char, ink }) => {
+              const glyph = fonts.body.glyphs.get(char);
+              return ink === null || glyph === undefined || glyph.height === 0
+                ? []
+                : [
+                    {
+                      bottom: px(node.style.top) + (glyph.yOffset + glyph.height) * pixel,
+                      left: px(node.style.left) + ink.left * pixel,
+                      right: px(node.style.left) + ink.right * pixel,
+                      top: px(node.style.top) + glyph.yOffset * pixel,
+                    },
+                  ];
+            }),
+          ),
+      ]);
     const art = artPixel(scale);
-    // The art-pixel rows of cream clear over and under rows.
-    const clear = (rows: readonly { bottom: number; top: number }[]) => ({
-      above: (Math.min(...rows.map(({ top }) => top)) - gridY(scale, view.rect.y)) / art - rimTop,
+    // The art-pixel rows of cream clear over and under boxes.
+    const clear = (boxes: readonly { bottom: number; top: number }[]) => ({
+      above: (Math.min(...boxes.map(({ top }) => top)) - gridY(scale, view.rect.y)) / art - rimTop,
       below:
         (gridY(scale, view.rect.y + view.rect.height) -
-          Math.max(...rows.map(({ bottom }) => bottom))) /
+          Math.max(...boxes.map(({ bottom }) => bottom))) /
           art -
         rimBottom,
     });
+    // The columns each line's ink sits across: the cream between the frame's sides, or beside an
+    // owner the text's column.
+    const across =
+      view.owner === undefined
+        ? {
+            left: gridX(scale, view.rect.x) + sideLeft * art,
+            right: gridX(scale, view.rect.x + view.rect.width) - sideRight * art,
+          }
+        : {
+            left: gridX(scale, view.rect.x + padX),
+            right: gridX(scale, 2 * view.textX - view.rect.x - padX),
+          };
     return {
-      ...clear([...glyphRows, ...pills]),
+      ...clear(lines.flat()),
+      // Each line's art-pixel columns clear left and right of its ink.
+      columns: lines.map((boxes) => ({
+        left: (Math.min(...boxes.map(({ left }) => left)) - across.left) / art,
+        right: (across.right - Math.max(...boxes.map(({ right }) => right))) / art,
+      })),
       lines: view.lines.length,
       name: plainMarks(view.lines.join(" ").replaceAll(PILL_SPACE, " ")),
-      pills: pills.length === 0 ? null : clear(pills),
+      pills: pills.length === 0 ? null : clear(pills.map(box)),
     };
   });
 
@@ -263,6 +302,12 @@ describe("the walker's speech", () => {
       expect(below - above).toBeLessThanOrEqual(1);
     },
   );
+
+  it.each(drawn)("centres each line of $name across the bubble on its ink", ({ columns }) => {
+    for (const { left, right } of columns) {
+      expect(Math.abs(left - right)).toBeLessThanOrEqual(1);
+    }
+  });
 
   it.each(drawn.filter(({ pills }) => pills !== null))(
     "keeps the pills of $name 2 rows clear of the bubble's rim",

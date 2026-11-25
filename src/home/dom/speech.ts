@@ -1,5 +1,9 @@
 import { type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
-import { type BitmapFont, fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import {
+  type BitmapFont,
+  fontMetrics,
+  laidGlyphs,
+} from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SLICES } from "../../data/layout.ts";
 import { textPart } from "../../hud/dom/detailCard.ts";
@@ -9,6 +13,7 @@ import { createTextLine, namePillBoxes, placeText } from "../../ui/dom/pixelLine
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
 import type { DomScale } from "../../ui/domScale.ts";
 import { lineInk } from "../../ui/lineInk.ts";
+import { inkWithPills } from "../../ui/namePills.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { plainMarks } from "../../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
@@ -57,6 +62,26 @@ function speechCapTop(body: BitmapFont, lines: readonly string[], rect: Rect): n
   return rect.y + rim.top + Math.floor((cream - (ink.bottom - ink.top)) / 2) - ink.top;
 }
 
+// art: the columns ui-quip's frame inks at its left and right edges, its plum line and, at the
+// right, its tan shade, as HOME_LAYOUT.speech.rim gives the rows at its top and bottom.
+const QUIP_SIDES = { left: 2, right: 3 } as const;
+
+// The column a line's visible ink centres on as the text block's inkCentre places it: centre
+// moved by as far as the line's glyphs' middle is from the middle of its glyphs and pills, so
+// its glyphs and pills together centre on centre.
+function lineInkX(body: BitmapFont, line: string, centre: number): number {
+  const chars = laidGlyphs(body, 1, plainMarks(line)).map((glyph) => ({ ...glyph, line: 0 }));
+  const glyphs = chars.flatMap(({ ink }) => (ink === null ? [] : [ink]));
+  const visible = inkWithPills(1, chars);
+  if (glyphs.length === 0 || visible === null) {
+    return centre;
+  }
+  const glyphMiddle =
+    (Math.min(...glyphs.map(({ left }) => left)) + Math.max(...glyphs.map(({ right }) => right))) /
+    2;
+  return centre + (glyphMiddle - (visible.left + visible.right) / 2) * TEXT_SCALE;
+}
+
 export function createHomeSpeech(
   doc: Document,
   source: DomArtSource & {
@@ -102,31 +127,42 @@ export function createHomeSpeech(
     parts.push(framedPart(doc, { border: PALETTE.plum, fill: PALETTE.cream, rect: view.rect }));
   }
   // The keyboard focus's fill over the bubble's cream inside, which uiStyle shows while the
-  // bubble is focused. art: ui-quip's inside, 2 rows in from its top and left and 3 from its
-  // right and bottom, clear of the frame's plum line and tan shade.
+  // bubble is focused, clear of the frame's rim and sides.
+  const { rim } = HOME_LAYOUT.speech;
   const focus = fillPart(doc, {
     colour: PALETTE.cyan,
     rect: {
-      height: view.rect.height - 5,
-      width: view.rect.width - 5,
-      x: view.rect.x + 2,
-      y: view.rect.y + 2,
+      height: view.rect.height - rim.top - rim.bottom,
+      width: view.rect.width - QUIP_SIDES.left - QUIP_SIDES.right,
+      x: view.rect.x + QUIP_SIDES.left,
+      y: view.rect.y + rim.top,
     },
   });
   focus.element.classList.add("adw-speech-focus");
   parts.push(focus);
-  const words = textPart(
-    doc,
-    { fonts, pillColours },
-    {
-      align: "centre",
-      capTop: speechCapTop(fonts.body, view.lines, view.rect),
-      colour: PALETTE.plum,
-      lines: view.lines,
-      x: view.textX,
-    },
+  // Each line's visible ink, its pills' included, centred across the cream between the frame's
+  // sides, or across the text's column beside an owner, the block's ink centred down the cream.
+  const centre =
+    view.owner === undefined
+      ? view.rect.x + QUIP_SIDES.left + (view.rect.width - QUIP_SIDES.left - QUIP_SIDES.right) / 2
+      : view.textX;
+  const capTop = speechCapTop(fonts.body, view.lines, view.rect);
+  const { lineHeight } = fontMetrics(fonts.body);
+  parts.push(
+    ...view.lines.map((line, i) =>
+      textPart(
+        doc,
+        { fonts, pillColours },
+        {
+          align: "inkCentre",
+          capTop: capTop + i * lineHeight * TEXT_SCALE,
+          colour: PALETTE.plum,
+          lines: [line],
+          x: lineInkX(fonts.body, line, centre),
+        },
+      ),
+    ),
   );
-  parts.push(words);
   let ownerFrame: SheetFrame | undefined;
   if (view.owner !== undefined) {
     const owner = view.owner;
