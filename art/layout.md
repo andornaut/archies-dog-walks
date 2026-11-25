@@ -34,7 +34,7 @@ Use 4/8/16 for the ordinary row/group/panel spacing roles, and the button gaps f
 | MODAL.rowGap                      | 4                                 | px         | Text rows                                                   | [modal tokens](../src/ui/modalGeometry.ts)                                              |
 | separator                         | 1px line, 8 clear above and below | px         | Every content separator, full content width                 | [separator](../src/ui/separator.ts)                                                     |
 
-**Separators.** Every content separator (Settings rows, the Cheats dividers, the Cheats section divider included, and the detail card) is one 1px line across the full content width with 8 clear rows to the boxes above and below, a 17-row band. A section break that must read stronger needs its own named pattern, not a second spacing. Its colour is in the [style guide](style-guide.md#ui).
+**Separators.** Every content separator (Settings rows, the Cheats dividers, the Cheats section divider included, and the detail card) is one 1px line across the full content width with 8 clear rows to the boxes above and below, a 17-row band. On the Settings and Cheats pages that width is x = 8–338. A section break that must read stronger needs its own named pattern, not a second spacing. Its colour is in the [style guide](style-guide.md#ui).
 
 The [button gaps](controls.md#sizing-and-spacing) define which buttons are small, give the tile-grid rule and list the named exemptions. Omit absent groups and their gaps. Keep the full font role; wrap text or grow its measured container rather than reducing its scale. Detailed ink gaps remain in [Controls](controls.md#labels-and-icons).
 
@@ -42,15 +42,15 @@ The [button gaps](controls.md#sizing-and-spacing) define which buttons are small
 
 Choose one content rectangle for each page. Derive its outer margins, button edges and statistics label/value columns from that rectangle and its inset. Reserve scrollbar and close-control space before deriving those columns. The scrollbar's room is always reserved: rows, notes and values end at x = 338, 6 short of the track at x = 344–351, on every page whether or not a scrollbar shows, so switching tabs or a list starting to scroll never reflows a row. Section headings on the Pet shop and Logbook pages start their ink at x = 8, the rows' left edge, on every tab; their notes stay right-aligned to the rows' right edge. Do not independently offset a button or statistic to make it appear aligned.
 
-| Token             | Value                                        | Unit           | Scope                                                                    | Source                                     |
-| ----------------- | -------------------------------------------- | -------------- | ------------------------------------------------------------------------ | ------------------------------------------ |
-| SHOP_LAYOUT.panel | 0,40,360,520                                 | x,y,w,h px     | Shop/Logbook page under the top bar, cream, no frame                     | [shop layout](../src/home/shopLayout.ts)   |
-| SHOP_LAYOUT.row.x | 8; width 330, ending at x = 338              | px             | Page inset: heading, tab span and row left edge                          | [shop layout](../src/home/shopLayout.ts)   |
-| STATS_LAYOUT.rows | Shop heading left; shop row right at x = 338 | derived bounds | Logbook label/value columns                                              | [stats layout](../src/home/statsLayout.ts) |
-| SHOP_LAYOUT.list  | Top 144; height 348; bottom 492              | y px           | Shared scrolling viewport, x = 0 to the track less 2                     | [shop layout](../src/home/shopLayout.ts)   |
-| page.back         | 142,500,76,48                                | x,y,w,h px     | Content-sized Back: Shop, Logbook and Help, 12px above the screen's foot | [help layout](../src/help/helpLayout.ts)   |
+| Token             | Value                                        | Unit           | Scope                                                                  | Source                                     |
+| ----------------- | -------------------------------------------- | -------------- | ---------------------------------------------------------------------- | ------------------------------------------ |
+| SHOP_LAYOUT.panel | 0,40,360,520                                 | x,y,w,h px     | Shop/Logbook page under the top bar, cream, no frame                   | [shop layout](../src/home/shopLayout.ts)   |
+| SHOP_LAYOUT.row.x | 8; width 330, ending at x = 338              | px             | Page inset: heading, tab span and row left edge                        | [shop layout](../src/home/shopLayout.ts)   |
+| STATS_LAYOUT.rows | Shop heading left; shop row right at x = 338 | derived bounds | Logbook label/value columns                                            | [stats layout](../src/home/statsLayout.ts) |
+| SHOP_LAYOUT.list  | Top 144; height 348; bottom 492              | y px           | Shared scrolling viewport, x = 0 to the track less 2                   | [shop layout](../src/home/shopLayout.ts)   |
+| page.back         | 142,500,76,48                                | x,y,w,h px     | Content-sized Back: every frameless page, 12px above the screen's foot | [help layout](../src/help/helpLayout.ts)   |
 
-Shop, Logbook and Help are frameless pages under the live top bar: each fills `(0,40,360,520)` edge to edge with no frame, border, margin or close control, and the content-sized Back (`page.back`) is its only leave. End's Back to title is a separate role: the results screen's main next step, a content-sized primary centred in Start walk's slot, `(100,508,160,48)`. Their content takes one 8px side inset, and a scrollbar's track sits at x = 344–351. Shop and Logbook share their page and list geometry. Use `shopListFrame` and `statsListFrame` for the content room. Settings uses Large width and the ordinary [modal placement](#modals), with its height capped by its caller's protected area; its exact panel height and rows viewport follow the build. Its header/X, centred 48px footer and full-size version label above the footer stay fixed while only rows and separators scroll. The footer is Back from Menu or Pause and Close when opened standalone. While its rows overflow, its scrollbar sits in the right padding, 4px past the rows (`MODAL.scrollGap`), so the rows keep their 296px width. Settings rows draw no focus ring: every row, switch or slider, takes the Pet shop row's cyan focus fill, and a switch row takes its green pressed fill with ink text and keeps its dip ([focus and press fills](controls.md#focus-and-press-fills)). Other full-screen pages retain their own bounds.
+Shop, Logbook, Help, Settings and Cheats are frameless pages under the live top bar: each fills `(0,40,360,520)` edge to edge with no frame, border, margin or close control, and the content-sized Back (`page.back`) is its only leave. End's Back to title is a separate role: the results screen's main next step, a content-sized primary centred in Start walk's slot, `(100,508,160,48)`. Their content takes one 8px side inset, and a scrollbar's track sits at x = 344–351. Shop and Logbook share their page and list geometry. Use `shopListFrame` and `statsListFrame` for the content room. Settings and Cheats share the [settings page geometry](#settings-and-cheats-pages). Other full-screen pages retain their own bounds.
 
 ### Page rows
 
@@ -74,6 +74,20 @@ The pager is one 48px row at y = 444: Previous, the six page dots and Next, with
 | 6      | `(36,444,118,48)` | `(162,464,68,8)` | `(238,444,86,48)`         |
 
 Back is the content-sized primary `page.back`, `(142,500,76,48)`, centred below the pager.
+
+### Settings and Cheats pages
+
+Settings and Cheats are frameless pages `(0,40,360,520)` on Game Kit's page frame under the live top bar, separate from the ordinary modal families; their control rules are in [Controls](controls.md#sizing-and-spacing). They share one geometry:
+
+- **Content rectangle:** x = 8–338 (330 wide), with the [scrollbar room](#page-boundsalignment) always reserved and the track at x = 344–351.
+- **Title:** the page title row `(16,64,328,15)`, a 3× heading with its ink centred at x = 180 and no X.
+- **Body viewport:** from 24 below the title's ink (y = 103) to 8 above the next fixed element: the version label on Settings, Back on Cheats. Only the body scrolls.
+- **Separators:** the one [separator](#spacing-tokens), 1px across x = 8–338 with 8 clear above and below.
+- **Back:** `page.back`, `(142,500,76,48)`.
+
+**Settings.** Rows span x = 8–338 and keep their internal layout: the icon 6 in, at x = 14; the label column at x = 34, the 16px icon cell plus `ICON_LABEL_GAP`; the [switch](#switch-rows) 8 in from the right, at x = 298–330, its top 9 below the row's top and the label's capitals 12 below it on every switch row; the state word's ink right edge on x = 330; slider tracks from the label column to the right inset, with values right-aligned to x = 330. Install is its row's sole action, one [ink group](#icons-beside-labels) centred on the row. The version label is metadata above the dismissal footer: its ink centred at x = 180, its ink bottom at y = 492, 8 above Back's face, fixed.
+
+**Cheats.** Two columns 16 apart (`BUTTON_SIZE.gap`), each 157 wide, at x = 8–165 and x = 181–338, the same in the neighbourhood grid and the Unlocks and Money columns. The Unlocks and Money headings start their ink on their columns' left edges. Labels keep full size and fit by measure: a label that does not fit its button on one line breaks onto two balanced lines inside the button's 48px height. The Invincible owners and Reset save rows take the Settings row geometry, and the switch row follows the [switch-row layout](#switch-rows). The Reset save? confirmation is an ordinary [modal](#modals) over the page. See [Cheats layout](../src/dev/cheatsView.ts) and [scroll placement](../src/hud/dom/cheats.ts).
 
 ## Groups/columns
 
@@ -118,7 +132,7 @@ HUD effect geometry follows the [walk-bar exception](controls.md#sizing-and-spac
 
 ### Icons beside labels
 
-- **Gap:** a 16px icon beside its label leaves `ICON_LABEL_GAP` (4) from its 16px art cell to the label's first ink column: Settings rows (whose labels share one column, x = 58), the message strip, the new-walker info line, the iOS install steps, the Settings Install button and the reach chip.
+- **Gap:** a 16px icon beside its label leaves `ICON_LABEL_GAP` (4) from its 16px art cell to the label's first ink column: Settings rows (whose labels share one column, x = 34), the message strip, the new-walker info line, the iOS install steps, the Settings Install button and the reach chip.
 - **Vertical:** the icon centres on its label's capitals, with equal rows above and below them; an odd remainder puts the extra row below. Inside a backed chip or plate, such as the reach chip, the icon and label instead form one ink group centred on the backing's flat fill by the [backed-label rule](#backed-labels), keeping at least one clear row against the frame.
 - **Icon beside an icon:** the reach icon that flies beside a treat's small heart keeps its own 2px gap; `ICON_LABEL_GAP` applies only to an icon beside a label.
 - **Install:** the Settings Install button places its icon box, `ICON_LABEL_GAP` and label as one ink group (the icon contributes its cell from ink column 2, its ink filling columns 2 to 13) and centres the union of the icon and label ink on its face. The button is its row's sole action, centred in the row; its width and position follow the build.
@@ -154,14 +168,14 @@ The choice-card band tokens state the drawn margin they centre in: small `{ y: 2
 
 ## Modals
 
-Every ordinary modal, Settings and Cheats included, uses one vertical rule. Start its top at `(560 - H) / 2`, where `H` is its measured full-size height, which targets the full viewport's midpoint, y = 280, then clamp it with `rectAboveIn` to its caller's protected area. The protected top is y = 56 in every caller, the top bar's 48 press rows plus 8, so no modal covers the top bar. Horizontal actor avoidance may move it left or right without changing that vertical placement. Do not centre in the remaining safe band instead. Full-scene celebrations, results and bespoke pages are separate roles.
+Every ordinary modal uses one vertical rule. Start its top at `(560 - H) / 2`, where `H` is its measured full-size height, which targets the full viewport's midpoint, y = 280, then clamp it with `rectAboveIn` to its caller's protected area. The protected top is y = 56 in every caller, the top bar's 48 press rows plus 8, so no modal covers the top bar. Horizontal actor avoidance may move it left or right without changing that vertical placement. Do not centre in the remaining safe band instead. Full-scene celebrations, results and the frameless pages are separate roles.
 
-| Caller                                                                       | Protected interval   |
-| ---------------------------------------------------------------------------- | -------------------- |
-| Home overlays and full-viewport callers (Settings, Cheats, install, details) | y ≥ 56, bottom ≤ 544 |
-| Walk overlays                                                                | y ≥ 56, bottom ≤ 466 |
+| Caller                                                                                    | Protected interval   |
+| ----------------------------------------------------------------------------------------- | -------------------- |
+| Home overlays and full-viewport callers (the Settings and Cheats pages, install, details) | y ≥ 56, bottom ≤ 544 |
+| Walk overlays                                                                             | y ≥ 56, bottom ≤ 466 |
 
-Clamping can move the final centre: a 400px-high walk modal clamps to y = 66, bottom = 466, without shrinking. Update, Quit, purchase, badge, item, grouped-detail, Settings and Cheats modals follow this rule; a body taller than its room scrolls, and its title, X and footer stay fixed.
+Clamping can move the final centre: a 400px-high walk modal clamps to y = 66, bottom = 466, without shrinking. Update, Quit, purchase, badge, item, grouped-detail and Reset save? modals follow this rule; a body taller than its room scrolls, and its title, X and footer stay fixed.
 
 | Token                            | Value                                                | Unit | Scope                                                                   | Source                                                                                          |
 | -------------------------------- | ---------------------------------------------------- | ---- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
@@ -175,13 +189,11 @@ Clamping can move the final centre: a 400px-high walk modal clamps to y = 66, bo
 | pauseMenu.note.inner             | 232 = 264 − 2 × 16                                   | px   | Note plate width; text wraps at 224px after 4px plate padding each side | [pause layout](../src/hud/pauseMenu.ts) and [note measurement](../src/hud/questionPanelView.ts) |
 | modal.content.bottom             | 16 after final visible content                       | px   | Includes any final note                                                 | [pause layout](../src/hud/pauseMenu.ts)                                                         |
 
-Large contains 296px of body room and Medium 232px after 16px padding on both sides. Settings, rich details, lists and ordinary installation cards use Large; Pause/Menu, brief confirmations, optional Update and Purchase use Medium. Short details choose Medium only after their actual full-font body, heading and footer fit; otherwise use Large. Wrapping, action-row stacking and measured height derive from this room. The [control contract](controls.md#sizing-and-spacing) owns those family rules.
+Large contains 296px of body room and Medium 232px after 16px padding on both sides. Rich details, lists and ordinary installation cards use Large; Pause/Menu, brief confirmations, optional Update and Purchase use Medium. Short details choose Medium only after their actual full-font body, heading and footer fit; otherwise use Large. Wrapping, action-row stacking and measured height derive from this room. The [control contract](controls.md#sizing-and-spacing) owns those family rules.
 
 Detail cards place the portrait on the left and the left-aligned description on its right, with compact dog identity in the same right column. Keep equal outer insets and measure the text room from the right column's actual origin to the inside edge of the right inset. Wrap full-size text at the measured limit. Use the existing Medium and Large families to fit the complete card. Keep the owner block, status and footer below both columns in that order.
 
-Use dedicated `MODAL_TITLE_SCALE = 3` for ordinary modal and Shop/Logbook page headings. Measure actual glyph ink with [titleRole](../src/ui/modal/titleRole.ts), keeping 24px above and below it. Capital ink is 15px and its header 63px; punctuation can increase both. Wrap at a 36px pitch and grow header/body/panel height from actual ink. Body and action labels stay at 2×. End-results badge-strip headings retain their 2× section role. Modal controls, dismissal guards and safe keyboard choices remain defined in [Controls](controls.md#sizing-and-spacing). Width measurements must include every present group and action, not only the title.
-
-Cheats uses the Large panel: 328px wide, centred, with 16px margins, placed by the modal rule above. Its 296px body holds two 140px columns 16px apart (`BUTTON_SIZE.gap`): left buttons at x = 32–172 and right buttons and the Money heading at x = 188–328, the same in the neighbourhood grid and the Unlocks and Money columns. Measure the body at full text size, then fit the panel to its content within its protected area. Only the body scrolls. The title, top-right X and centred 48px-high Back stay fixed, with 8px between the body viewport and Back and 16px below Back. When the body overflows, its scrollbar sits in the right padding, 4px past the rows (`MODAL.scrollGap`), so the rows keep the full body width. A label that does not fit its button on one line breaks onto two balanced lines at full size, inside the button's 48px height. Its switch row follows the [switch-row layout](#switch-rows), and its dividers, section divider included, are the one [separator](#spacing-tokens). See [Cheats layout](../src/dev/cheatsView.ts) and [scroll placement](../src/hud/dom/cheats.ts).
+Use dedicated `MODAL_TITLE_SCALE = 3` for ordinary modal headings and the Shop, Logbook, Settings and Cheats page titles. Measure actual glyph ink with [titleRole](../src/ui/modal/titleRole.ts), keeping 24px above and below it. Capital ink is 15px and its header 63px; punctuation can increase both. Wrap at a 36px pitch and grow header/body/panel height from actual ink. Body and action labels stay at 2×. End-results badge-strip headings retain their 2× section role. Modal controls, dismissal guards and safe keyboard choices remain defined in [Controls](controls.md#sizing-and-spacing). Width measurements must include every present group and action, not only the title.
 
 ### Switch rows
 
