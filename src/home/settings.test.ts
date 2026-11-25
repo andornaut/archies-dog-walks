@@ -100,14 +100,16 @@ describe("volumeStepForKey", () => {
 // from the shipped text.
 const words = gameData.menuText.settings;
 type ShippedRow =
-  { kind: "button" | "switch"; label: string; note?: string } | { kind: "slider"; label: string };
+  | { kind: "button"; label: string }
+  | { kind: "switch"; label: string; note?: string; states: readonly string[] }
+  | { kind: "slider"; label: string };
 const SHIPPED_ROWS: readonly ShippedRow[] = [
-  { kind: "switch", label: words.sound, note: words.soundNote },
+  { kind: "switch", label: words.sound, note: words.soundNote, states: [words.on, words.off] },
   { kind: "slider", label: words.music },
   { kind: "slider", label: words.effects },
-  { kind: "switch", label: words.motion, note: words.motionNote },
+  { kind: "switch", label: words.motion, note: words.motionNote, states: [words.on, words.off] },
   { kind: "button", label: words.install },
-  { kind: "switch", label: words.fpsCounter },
+  { kind: "switch", label: words.fpsCounter, states: [words.shown, words.hidden] },
 ];
 const notedRows = SHIPPED_ROWS.filter((row) => "note" in row && row.note !== undefined);
 const fittedNotes = notedRows.map((row) =>
@@ -210,12 +212,11 @@ function rowParts(i: number): [string, Rect][] {
   const noteY = placed.noteY ?? 0;
   const lines = fitted?.lines ?? [];
   const control = placed.control ?? rect;
-  const state = labelInk(
-    "font-title",
-    words.off,
-    0,
-    control.y + control.height + BUTTON_SIZE.stackGap,
-  );
+  // Each state word, its ink's right edge on the switch's.
+  const states = (row.kind === "switch" ? row.states : []).map((word): [string, Rect] => {
+    const ink = labelInk("font-title", word, 0, control.y + control.height + BUTTON_SIZE.stackGap);
+    return [`state ${word}`, { ...ink, x: control.x + control.width - ink.width }];
+  });
   // A note line's rows run from its capitals to the font's lowest ink, descenders included.
   const noteInk = (line: string, n: number): Rect => {
     const columns = placedInk("font-body", TWO_X, line);
@@ -228,14 +229,7 @@ function rowParts(i: number): [string, Rect][] {
   };
   return [
     ...parts,
-    ...(row.kind === "switch"
-      ? [
-          ["state", { ...state, x: control.x + Math.floor((control.width - state.width) / 2) }] as [
-            string,
-            Rect,
-          ],
-        ]
-      : []),
+    ...states,
     ...lines.map((line, n): [string, Rect] => [`note line ${n + 1}`, noteInk(line, n)]),
     ["control", control],
   ];
@@ -261,6 +255,30 @@ describe("the settings card", () => {
     ),
   ])("keeps %s inside its frame", (_, inner, outer) => {
     expect(inside(inner, outer)).toBe(true);
+  });
+
+  // Every switch row's state words, each as drawn: right-aligned under the switch, at the gap
+  // below it, inside the row and clear of the label and note column.
+  it.each(
+    SHIPPED_ROWS.flatMap((row, i) =>
+      row.kind === "switch" ? row.states.map((word) => [row.label, word, i] as const) : [],
+    ),
+  )("sets the %s row's %s state under its switch's right edge", (_, word, i) => {
+    const parts = new Map(rowParts(i));
+    const control = parts.get("control")!;
+    const state = parts.get(`state ${word}`)!;
+    expect(state.x + state.width).toBe(control.x + control.width);
+    expect(control.x + control.width).toBe(rows[i]!.rect.x + SETTINGS_ROW.width - SETTINGS_ROW.pad);
+    expect(state.y).toBeGreaterThan(control.y + control.height);
+    expect(inside(state, rows[i]!.rect)).toBe(true);
+    for (const [name, ink] of parts) {
+      if (name === "label" || name.startsWith("note")) {
+        const rowsOverlap = ink.y < state.y + state.height && state.y < ink.y + ink.height;
+        if (rowsOverlap) {
+          expect(ink.x + ink.width + SETTINGS_ROW.controlGap, name).toBeLessThanOrEqual(state.x);
+        }
+      }
+    }
   });
 
   // The first row clears the full close target; later rows begin at their separators.
@@ -294,11 +312,6 @@ describe("the settings card", () => {
             control?.x ?? 0,
           );
         }
-      }
-      const state = parts.get("state");
-      if (state !== undefined) {
-        expect(state.y).toBeGreaterThan(control!.y + control!.height);
-        expect(state.x + state.width / 2).toBeCloseTo(control!.x + control!.width / 2, 0);
       }
       const label = parts.get("label");
       const below = parts.get("note line 1") ?? parts.get("knob");

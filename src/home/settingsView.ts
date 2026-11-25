@@ -48,8 +48,17 @@ import {
 export type SwitchKey = "fpsCounter" | "muted" | "reducedMotion";
 export type SettingsWord = Exclude<keyof MenuText["settings"], "installSteps" | "volume">;
 
+// A switch's state words below it, as menuText.settings keys: On and Off for a behaviour,
+// Shown and Hidden for a display.
+export interface SwitchStates {
+  off: SettingsWord;
+  on: SettingsWord;
+}
+const BEHAVIOUR_STATES: SwitchStates = { off: "off", on: "on" };
+const DISPLAY_STATES: SwitchStates = { off: "hidden", on: "shown" };
+
 // Each row carries a 16x16 -panel icon with on and off tags, and the menuText.settings keys
-// of its label, its note and its button's label.
+// of its label, its note, its button's label and its switch's state words.
 export type SettingsRow =
   | {
       icon: string;
@@ -57,7 +66,14 @@ export type SettingsRow =
       kind: "button";
       label: SettingsWord;
     }
-  | { icon?: string; key: SwitchKey; kind: "switch"; label: SettingsWord; note?: SettingsWord }
+  | {
+      icon?: string;
+      key: SwitchKey;
+      kind: "switch";
+      label: SettingsWord;
+      note?: SettingsWord;
+      states: SwitchStates;
+    }
   | { icon: string; key: VolumeKey; kind: "slider"; label: SettingsWord };
 export type ControlRow = Exclude<SettingsRow, { kind: "slider" }>;
 
@@ -76,6 +92,7 @@ export const SETTING_ROWS: readonly SettingsRow[] = [
     kind: "switch",
     label: "sound",
     note: "soundNote",
+    states: BEHAVIOUR_STATES,
   },
   { icon: "icon-music-panel", key: "musicVolume", kind: "slider", label: "music" },
   { icon: "icon-effects-panel", key: "sfxVolume", kind: "slider", label: "effects" },
@@ -85,8 +102,15 @@ export const SETTING_ROWS: readonly SettingsRow[] = [
     kind: "switch",
     label: "motion",
     note: "motionNote",
+    states: BEHAVIOUR_STATES,
   },
-  { icon: "icon-fps-counter-panel", key: "fpsCounter", kind: "switch", label: "fpsCounter" },
+  {
+    icon: "icon-fps-counter-panel",
+    key: "fpsCounter",
+    kind: "switch",
+    label: "fpsCounter",
+    states: DISPLAY_STATES,
+  },
 ];
 // Before FPS while the game can be installed (offersInstall).
 export const INSTALL_ROW: SettingsRow = {
@@ -319,7 +343,7 @@ function controlRow(
     return view;
   }
   const art = { key: "ui-switch", tag: on ? "on" : "off", x: control.x, y: control.y + dip };
-  const word = on ? words.on : words.off;
+  const word = words[on ? row.states.on : row.states.off];
   return {
     ...view,
     switch: { art, on },
@@ -332,7 +356,9 @@ function controlRow(
         font: "title",
         lines: [word],
         scale: TEXT_SCALE,
-        x: control.x + Math.floor((control.width - measure.inkWidth("title", word)) / 2),
+        // Right-aligned to the switch: a word wider than the switch grows left, clear of the
+        // row's edge.
+        x: control.x + control.width - measure.inkWidth("title", word),
       },
     ],
   };

@@ -1224,6 +1224,8 @@ export interface MenuText {
   readonly settings: {
     readonly effects: string;
     readonly fpsCounter: string;
+    // A display control's state words below its switch; behaviour controls use on and off.
+    readonly hidden: string;
     // The Install action, shown while installation is available.
     readonly install: string;
     // The web app manifest's description, which a browser's install prompt may show.
@@ -1240,6 +1242,7 @@ export interface MenuText {
     readonly muted: string;
     readonly off: string;
     readonly on: string;
+    readonly shown: string;
     readonly sound: string;
     readonly soundNote: string;
     readonly title: string;

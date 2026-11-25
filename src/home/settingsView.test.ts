@@ -97,7 +97,11 @@ describe("settingsView", () => {
         switch: { on: fpsCounter },
         texts: [
           { lines: [gameData.menuText.settings.fpsCounter] },
-          { lines: [fpsCounter ? gameData.menuText.settings.on : gameData.menuText.settings.off] },
+          {
+            lines: [
+              fpsCounter ? gameData.menuText.settings.shown : gameData.menuText.settings.hidden,
+            ],
+          },
         ],
       });
       for (const [index, on, label, description] of [
@@ -121,9 +125,8 @@ describe("settingsView", () => {
         const art = row.switch!.art;
         const state = row.texts.at(-1)!;
         expect(state.capTop - art.y - SETTINGS_CARD.row.switch.height).toBeGreaterThan(0);
-        expect(state.x + MEASURE.inkWidth("title", state.lines[0]!) / 2).toBeCloseTo(
-          art.x + SETTINGS_CARD.row.switch.width / 2,
-          0,
+        expect(state.x + MEASURE.inkWidth("title", state.lines[0]!)).toBe(
+          art.x + SETTINGS_CARD.row.switch.width,
         );
       }
     }
