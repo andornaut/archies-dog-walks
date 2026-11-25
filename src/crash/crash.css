@@ -19,11 +19,13 @@
 
 /* The page's only panel geometry: the kit sheet's rules are less specific and public/controls.css
    sets only the button skin, so neither can override it in either load order. The kit panel's
-   100% width inside the safe padded page clamps the 360px maximum. */
+   100% width inside the safe padded page clamps the 360px maximum. The 1px border plus 15px
+   padding keeps content 16px from the outer edge, so a 328px panel gives the Large family's 296px
+   body room. */
 .crash .crash-panel {
   max-width: 360px;
   max-height: calc(100dvh - 32px);
-  padding: 16px;
+  padding: 15px;
   overflow: auto;
   border: 1px solid var(--crash-ink);
   background: var(--crash-paper);

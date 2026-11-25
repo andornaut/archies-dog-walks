@@ -147,7 +147,8 @@ const SPEC: readonly (readonly [string, string, string, RegExp])[] = [
     `the panel's ${side} padding`,
     "panel",
     `padding-${side}`,
-    /^16px$/,
+    // With the 1px border, content sits 16px from the panel's outer edge.
+    /^15px$/,
   ]),
   ["the title to body gap", "title", "margin-bottom", /^16px$/],
   ["the body to Reload gap", "body", "margin-bottom", /^16px$/],
