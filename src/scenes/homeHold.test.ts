@@ -29,7 +29,6 @@ const methods = StartScene.prototype as unknown as {
 function home(target: Target) {
   const state = {
     actAfterDip: vi.fn(),
-    closePressed: () => false,
     dispatchHeld: (target: Target) => methods.dispatchHeld.call(state, target),
     hold: undefined as HoldPress | undefined,
     nativeHome: { accepts: () => true },

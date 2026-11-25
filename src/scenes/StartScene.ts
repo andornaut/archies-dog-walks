@@ -108,7 +108,6 @@ import { walkerOrder } from "../rules/walkers.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { walksFinished, walksPlayed } from "../save/stats.ts";
 import { packDogsOf } from "../state/pack.ts";
-import { closeControl } from "../ui/closeControl.ts";
 import { disabledArtKey } from "../ui/disabledArt.ts";
 import type { NativeTopSection } from "../ui/dom/nativeTopSection.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
@@ -586,15 +585,11 @@ export class StartScene extends Scene {
       this.artWait = undefined;
       this.endPlanning();
       this.entry = undefined;
-      const lifted = this.closePressed();
       const dipping = this.press?.held === false ? this.press : undefined;
       this.hold = undefined;
       this.overlayPress = undefined;
       this.press = dipping;
       this.pressedTarget = undefined;
-      if (lifted) {
-        this.render();
-      }
       if (dipping !== undefined) {
         // Drawn now, for a tap too quick for a frame to have shown it.
         this.place(this.time.now);
@@ -612,9 +607,6 @@ export class StartScene extends Scene {
     // Over an open card the top bar is dimmed and inactive with the rest of the home screen.
     if (this.overlay !== undefined) {
       this.overlayPress = { x: pointer.x, y: pointer.y };
-      if (this.closePressed()) {
-        this.render();
-      }
       return;
     }
     this.pressedTarget = this.targetAt(pointer.x, pointer.y);
@@ -645,15 +637,10 @@ export class StartScene extends Scene {
     native = false,
   ): boolean {
     const down = this.overlayPress;
-    const controlDown = this.closePressed();
     this.overlayPress = undefined;
     if (down !== undefined) {
       if (!cancelled) {
         this.releaseOnOverlay(down, pointer.x, pointer.y);
-      }
-      // A press on a control that ended elsewhere lifts it again.
-      if (controlDown && this.overlay !== undefined) {
-        this.render();
       }
       return true;
     }
@@ -801,16 +788,6 @@ export class StartScene extends Scene {
     this.detailFocus =
       target === undefined ? undefined : target.kind === "dogSlot" ? "slotSign" : targetId(target);
     this.render();
-  }
-  // Whether the press under way started on the open card's close control.
-  private closePressed(): boolean {
-    const rect = this.overlay?.rect;
-    const down = this.overlayPress;
-    return (
-      rect !== undefined &&
-      down !== undefined &&
-      containsPoint(closeControl(rect).hit, down.x, down.y)
-    );
   }
   // Detail cards close on their body.
   private releaseOnOverlay(
@@ -1515,7 +1492,7 @@ export class StartScene extends Scene {
     const view = layout();
     const close = () => this.closeOverlay();
     const presses = item?.pending === undefined ? [] : [close, () => this.buyDetail(item.pending!)];
-    this.htmlDetail = keepPanel(this.htmlDetail, JSON.stringify([view, this.closePressed()]), () =>
+    this.htmlDetail = keepPanel(this.htmlDetail, JSON.stringify(view), () =>
       addHtmlDetailCard(this, layout, close, close, presses),
     );
     this.overlay = { ...overlay, rect: view.card.panel };
