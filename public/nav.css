@@ -84,8 +84,8 @@
   color: #feae34;
 }
 /* The current page's text in the game's selected state, held still: a yellow face with plum
-   text, the ui-select frame (ink, an amber band, ink) 3px outside its ink edge, lifted 2px onto a
-   plum shadow, and the ui-check tick at its top-left corner. */
+   text, a frame (ink, an amber band, ink) 3px outside its ink edge, lifted 2px onto a plum
+   shadow, and the ui-check tick at its top-left corner. */
 .art-nav a[aria-current="page"] > span {
   position: relative;
   top: -2px;

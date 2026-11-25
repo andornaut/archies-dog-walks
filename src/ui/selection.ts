@@ -107,8 +107,8 @@ export const PLATE_LOOKS = {
   { edge: string; face: string; lit: string | null; shade: string | null; text: string }
 >;
 
-// ui-select sits this far outside a selected item on each side by default; its inner ink
-// line then lies on the item's edge.
+// An open Pet shop tab's lift shadow reaches this far past its face, and a focused shop item
+// scrolled into view keeps this margin.
 export { SELECT_OUTSET };
 
 // ui-afford sits this far outside an affordable item on each side.

@@ -45,7 +45,7 @@ const TAB = {
   x: ROW_X,
   y: TAB_Y,
 };
-// A selected tab's frame and shadow end SELECT_OUTSET under its face, within its target.
+// A selected tab's shadow ends SELECT_OUTSET under its face, within its target.
 const TAB_BOTTOM = TAB.drawY + TAB.drawHeight + SELECT_OUTSET;
 const TAB_GAP = SHOP.tab.listGap;
 // The list area: from listClear rows under the tabs' targets to the group gap over Back, from the

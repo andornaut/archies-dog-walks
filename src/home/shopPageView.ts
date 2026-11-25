@@ -20,10 +20,9 @@ export interface PageFill {
   readonly rect: Rect;
 }
 
-// A tab: its plum shadow, which stays put, then its face (a border round a fill, a pixel wide),
-// the open tab's static gold frame SELECT_OUTSET pixels outside it (SELECT_FRAME) and its label,
-// which move together dy pixels (the open tab's lift, a pressed tab's dip) from where they are
-// laid out.
+// A tab: the open tab's plum shadow, which stays put, then its face (a border round a fill, a
+// pixel wide) and its label, which move together dy pixels (the open tab's lift, a pressed tab's
+// dip) from where they are laid out.
 export interface PageTab {
   readonly border: number;
   readonly dy: number;
@@ -54,18 +53,8 @@ export interface ShopPageTab {
 
 const PANEL = SHOP_LAYOUT.panel;
 
-// The open tab's static gold frame round outer, as the canvas draws it (addSelectFrame): an ink
-// ring a pixel wide less its corners, an amber band two wide inside it, an ink keyline a pixel
-// wide three in, and an ink dot in each corner a pixel in. Each is inset pixels in from outer.
-export const SELECT_FRAME = {
-  amber: { inset: 1, width: 2 },
-  dots: { inset: 1 },
-  keyline: { inset: 3, width: 1 },
-  ring: { inset: 0, width: 1 },
-} as const;
-
-// A tab on face: selected while open, its face drawn in code with a slate edge, lifted onto a plum
-// shadow with the gold frame; a pressed one dipped; its label centred in the title font.
+// A tab on face: its face drawn in code with a slate edge; selected while open, its edge ink and
+// lifted onto a plum shadow; a pressed one dipped; its label centred in the title font.
 function pageTab(measure: PanelMeasure, face: Rect, tab: ShopPageTab): PageTab {
   const look = selectLook(tileState({ ...PLAIN_ITEM, picked: tab.open }));
   const selected = look.state === "selected";

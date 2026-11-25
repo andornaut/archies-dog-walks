@@ -74,7 +74,7 @@ export function settleDelay(nowMs: number, startedMs: number): number {
   return Math.max(0, startedMs + FEEDBACK.pressDipMs - nowMs);
 }
 
-// The frame a looping tag, such as ui-select's pulse, shows at nowMs given each frame's
+// The frame a looping tag, such as ui-afford's glint, shows at nowMs given each frame's
 // duration; the first frame with reduced motion.
 export function loopFrame(
   reducedMotion: boolean,

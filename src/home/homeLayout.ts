@@ -432,8 +432,6 @@ export const HOME_LAYOUT = {
   streetSign: shop(HOME.streetSign),
   // The backing begins this far below the section's top, after its header.
   tileOffset: TILE_OFFSET,
-  // A selected tile's ui-select frame sits 1px outside it.
-  tileSelectOutset: HOME.tileSelectOutset,
   // The top bar, plum with every top bar's trim (topBarRects): the bank in its well at the left,
   // then plain plum, then the buttons, the faces centred on row mid. The well is as wide as the
   // bank needs (bankWell), at most well.maxWidth, which ends wellClear columns before the first

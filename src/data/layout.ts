@@ -72,7 +72,6 @@ export const SLICES = {
   "ui-scroll-track": { bottom: 3, left: 0, right: 0, top: 3 },
   // The home screen's section frames: the top slice holds the frame and the heading band.
   "ui-section": { bottom: 3, left: 3, right: 3, top: 24 },
-  "ui-select": { bottom: 8, left: 8, right: 8, top: 8 },
   // A three-slice: 4px caps and a middle that stretches.
   "ui-slider": { bottom: 0, left: 4, right: 4, top: 0 },
   // The band behind a choice card row's subtitle.
@@ -83,7 +82,8 @@ export const SLICES = {
   "ui-zone-pill": { bottom: 0, left: 4, right: 4, top: 0 },
 } as const;
 
-// art: how far ui-select sits outside a selected item on each side by default.
+// art: how far an open Pet shop tab's lift shadow reaches past its face, and the margin kept
+// round a focused shop item scrolled into view.
 export const SELECT_OUTSET = 3;
 
 // art: how far ui-afford sits outside an affordable item on each side.
@@ -675,8 +675,6 @@ export const HOME_SCREEN = {
   streetSign: { scale: 2, x: 312, y: 73 },
   // A section's backing's top under the section's top.
   tileOffset: 24,
-  // art: a selected tile's ui-select frame's outset.
-  tileSelectOutset: 1,
   // The top bar: the bank's ink inset in its well, and the columns the bank's well keeps clear of
   // the first button's face.
   topBar: { wellClear: 16 },

@@ -172,7 +172,7 @@ describe("home layout", () => {
         const visible = [
           at({ ...tile, x: 0, y: 0 }, -FEEDBACK.shakePx, FEEDBACK.pressDipPx),
           at({ ...tile, x: 0, y: 0 }, FEEDBACK.shakePx, FEEDBACK.pressDipPx),
-          insetRect(-HOME_LAYOUT.tileSelectOutset, { ...tile, y: tile.y - FEEDBACK.liftPx }),
+          at({ ...tile, x: 0, y: 0 }, 0, -FEEDBACK.liftPx),
         ];
         for (const ink of visible) {
           expect(inside(ink, safe), `${id}: ${JSON.stringify(ink)}`).toBe(true);
