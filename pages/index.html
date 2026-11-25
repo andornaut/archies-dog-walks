@@ -47,20 +47,8 @@
     <style>
       /* Project home: the logo on Yonge Street's slate sky, the pitch and Play, then five
          highlights, each a cream chrome card with a navy band, game art at an integer scale and a
-         line or two. Colours are from the house palette. */
+         line or two. Colours and controls are the house tokens (/tokens.css). */
       :root {
-        --amber: #feae34;
-        --cream: #ead4aa;
-        --dred: #a22633;
-        --forest: #265c42;
-        --green: #63c74d;
-        --ink: #181425;
-        --muted: #8b9bb4;
-        --navy: #262b44;
-        --plum: #3e2731;
-        --slate: #5a6988;
-        --tan: #e4a672;
-        --yellow: #fee761;
         --f-display: "Silkscreen", ui-monospace, monospace;
         --f-body: "Atkinson Hyperlegible", system-ui, sans-serif;
         color-scheme: dark;
@@ -70,8 +58,8 @@
       }
       body {
         margin: 0;
-        background: var(--ink);
-        color: var(--cream);
+        background: var(--palette-ink);
+        color: var(--palette-cream);
         font-family: var(--f-body);
         font-size: 16px;
         line-height: 1.5;
@@ -99,8 +87,8 @@
         width: var(--w);
         margin-inline: calc((100% - var(--w)) / 2);
         padding: 28px 0 166px;
-        background: var(--slate) url("/art/images/backdrop-yonge-street.png") no-repeat center
-          bottom / 360px 158px;
+        background: var(--palette-slate) url("/art/images/backdrop-yonge-street.png") no-repeat
+          center bottom / 360px 158px;
         image-rendering: pixelated;
         image-rendering: crisp-edges;
       }
@@ -127,47 +115,36 @@
       .sub,
       .keys {
         margin: 0;
-        color: var(--muted);
+        color: var(--palette-grey);
       }
       .keys {
         font-size: 14px;
       }
-      /* Play, and Install beside it while the game can be installed. */
+      /* Play, and Install stacked above it while the game can be installed: full-width faces the
+         stacked gap apart, the primary bottommost, their labels one size. */
       .actions {
         display: flex;
-        justify-content: center;
-        gap: 12px;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--button-stack-gap);
         width: 100%;
-        max-width: 296px;
+        max-width: var(--button-wide-width);
         margin-top: 4px;
       }
-      .play {
+      .install,
+      .play,
+      .steps-close {
         font-family: var(--f-display);
         font-size: 32px;
       }
-      .install,
-      .steps-close {
-        font-family: var(--f-display);
-        font-size: 20px;
-      }
-      /* A visible Install control makes Play and Install a compact pair. */
-      .actions:has(.install:not([hidden])) .play {
-        width: 128px;
-      }
       /* The browser's own install steps where it holds no install prompt, one kind's shown: a
-         highlight's chrome and band over the dimmed page. */
+         highlight's card chrome and band over the dimmed page. */
       .steps {
         width: fit-content;
         max-width: calc(100vw - 32px);
         max-height: calc(100dvh - 32px);
         padding: 0;
         overflow: auto;
-        background: var(--cream);
-        color: var(--plum);
-        border: 1px solid var(--ink);
-        box-shadow:
-          inset 0 0 0 1px var(--plum),
-          inset -3px -3px 0 0 var(--tan);
       }
       .steps::backdrop {
         background: rgb(24 20 37 / 0.75);
@@ -185,8 +162,8 @@
         justify-self: center;
         font-size: 16px;
       }
-      /* A highlight: the cream chrome (ink outer line, plum inner line, tan lip on the bottom
-         and right, corners cut 1px), a navy band with a display heading, then the art. On a
+      /* A highlight: the card chrome (/controls.css), a navy band with a display heading, then
+         the art. On a
          phone it is 366px wide, a 360px screenshot inside 2px of chrome on the left and 4px on
          the right, or the viewport's width when narrower. */
       .hl {
@@ -196,47 +173,31 @@
         margin-inline: calc((100% - var(--w)) / 2);
         display: grid;
         grid-template-columns: minmax(0, 1fr);
-        background: var(--cream);
-        color: var(--plum);
-        border: 1px solid var(--ink);
-        box-shadow:
-          inset 0 0 0 1px var(--plum),
-          inset -3px -3px 0 0 var(--tan);
-        clip-path: polygon(
-          1px 0,
-          calc(100% - 1px) 0,
-          100% 1px,
-          100% calc(100% - 1px),
-          calc(100% - 1px) 100%,
-          1px 100%,
-          0 calc(100% - 1px),
-          0 1px
-        );
         padding: 1px 3px 3px 1px;
       }
       .hl h2,
       .steps h2 {
         margin: 0;
         padding: 10px 12px 12px;
-        background: var(--navy);
+        background: var(--palette-navy);
         font-family: var(--f-display);
         font-weight: 400;
         font-size: 16px;
         line-height: 1;
         letter-spacing: 0.04em;
         text-transform: uppercase;
-        color: var(--yellow);
+        color: var(--palette-yellow);
         text-shadow:
-          -1px -1px 0 var(--ink),
-          0 -1px 0 var(--ink),
-          1px -1px 0 var(--ink),
-          -1px 0 0 var(--ink),
-          1px 0 0 var(--ink),
-          -1px 1px 0 var(--ink),
-          0 1px 0 var(--ink),
-          1px 1px 0 var(--ink),
-          2px 2px 0 var(--dred),
-          3px 3px 0 var(--dred);
+          -1px -1px 0 var(--palette-ink),
+          0 -1px 0 var(--palette-ink),
+          1px -1px 0 var(--palette-ink),
+          -1px 0 0 var(--palette-ink),
+          1px 0 0 var(--palette-ink),
+          -1px 1px 0 var(--palette-ink),
+          0 1px 0 var(--palette-ink),
+          1px 1px 0 var(--palette-ink),
+          2px 2px 0 var(--palette-dred),
+          3px 3px 0 var(--palette-dred);
       }
       .hl p {
         margin: 0;
@@ -250,8 +211,8 @@
         height: auto;
         margin-left: clamp(-2px, (100vw - 360px) / 2 - 2px, 0px);
         object-fit: contain;
-        background: var(--ink);
-        border-bottom: 1px solid var(--plum);
+        background: var(--palette-ink);
+        border-bottom: 1px solid var(--palette-plum);
         image-rendering: pixelated;
         image-rendering: crisp-edges;
       }
@@ -262,7 +223,7 @@
         cursor: pointer;
       }
       .shot-link:focus-visible {
-        outline: 3px solid var(--yellow);
+        outline: 3px solid var(--palette-yellow);
         outline-offset: 6px;
       }
       .art {
@@ -387,13 +348,24 @@
           A cozy pixel-art lane runner for your phone. Four neighbourhoods a walk, about 9 minutes.
         </p>
         <div class="actions">
-          <button class="install app-button" id="install" type="button" hidden>Install</button>
-          <a class="play app-button app-button--primary app-button--wide" href="/play/">Play</a>
+          <button
+            class="install app-button app-button--display app-button--wide"
+            id="install"
+            type="button"
+            hidden
+          >
+            Install
+          </button>
+          <a
+            class="play app-button app-button--display app-button--primary app-button--wide"
+            href="/play/"
+            >Play</a
+          >
         </div>
         <p class="keys">Drag or tap to steer, or use the arrow keys.</p>
       </div>
 
-      <section class="hl" aria-labelledby="h-bump">
+      <section class="hl card-panel" aria-labelledby="h-bump">
         <h2 id="h-bump">Every card obstacle, a choice</h2>
         <img
           class="shot"
@@ -412,7 +384,7 @@
         </p>
       </section>
 
-      <section class="hl" aria-labelledby="h-dogs">
+      <section class="hl card-panel" aria-labelledby="h-dogs">
         <h2 id="h-dogs">Nine dogs to walk</h2>
         <div class="art">
           <div
@@ -437,7 +409,7 @@
         </p>
       </section>
 
-      <section class="hl" aria-labelledby="h-owners">
+      <section class="hl card-panel" aria-labelledby="h-owners">
         <h2 id="h-owners">Keep the owners happy</h2>
         <div class="art" role="group" aria-label="Ralph, Kilo's owner, in four moods">
           <figure class="mood"><span></span>Happy</figure>
@@ -454,7 +426,7 @@
         </p>
       </section>
 
-      <section class="hl" aria-labelledby="h-zones">
+      <section class="hl card-panel" aria-labelledby="h-zones">
         <h2 id="h-zones">Pick your path</h2>
         <ol class="zones" aria-label="Toronto's six neighbourhoods, easiest first">
           <li>
@@ -496,7 +468,7 @@
         </p>
       </section>
 
-      <section class="hl" aria-labelledby="h-shop">
+      <section class="hl card-panel" aria-labelledby="h-shop">
         <h2 id="h-shop">Grow the business</h2>
         <a class="shot-link" href="/play/" aria-label="Play Archie's Dog Walks"
           ><img
@@ -514,7 +486,7 @@
       </section>
     </main>
 
-    <dialog class="steps" id="install-steps" aria-labelledby="install-steps-other">
+    <dialog class="steps card-panel" id="install-steps" aria-labelledby="install-steps-other">
       <div class="steps-body">
         <div data-steps="chromiumAndroid" hidden>
           <h2 id="install-steps-chromiumAndroid">Install app</h2>
@@ -548,7 +520,9 @@
           <h2 id="install-steps-samsungInternet">Add to Home screen</h2>
           <p>Tap the menu, then Add page to, then Home screen.</p>
         </div>
-        <button class="steps-close app-button" type="button">Close</button>
+        <button class="steps-close app-button app-button--display app-button--fit" type="button">
+          Close
+        </button>
       </div>
     </dialog>
   </body>

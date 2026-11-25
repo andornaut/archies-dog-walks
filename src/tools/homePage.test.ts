@@ -7,6 +7,7 @@ import palette from "../../shared/palette.json" with { type: "json" };
 import { gameData } from "../data/index.ts";
 import { helpBodyValues } from "../help/helpBody.ts";
 import { rosterRows } from "../home/home.ts";
+import { CARD_PANEL } from "../ui/paperPanel.ts";
 
 const HOME_PAGE = new URL("../../pages/index.html", import.meta.url);
 const SKY_BACKDROP = new URL("../../public/art/images/backdrop-yonge-street.png", import.meta.url);
@@ -132,8 +133,8 @@ describe("the home page's roster", () => {
 describe("the home page's sky band", () => {
   it("runs the backdrop's top row on above it, in the palette colour of that name", async () => {
     const html = await readFile(HOME_PAGE, "utf8");
-    const name = /\.sky\s*\{[^}]*background:\s*var\(--([a-z]+)\)/u.exec(html)?.[1] ?? "";
-    const hex = new RegExp(`--${name}:\\s*#([0-9a-f]{6});`, "u").exec(html)?.[1];
+    const name = /\.sky\s*\{[^}]*background:\s*var\(--palette-([a-z]+)\)/u.exec(html)?.[1] ?? "";
+    const hex = palette[name as keyof typeof palette]?.hex;
     const { data } = PNG.sync.read(await readFile(SKY_BACKDROP));
     const topLeft = [...data.subarray(0, 3)].map((byte) => byte.toString(16).padStart(2, "0"));
     expect({ hex, name }).toEqual({
@@ -150,7 +151,9 @@ describe("the home page's screenshots", () => {
     const highlight = /\.hl\s*\{([^}]*)\}/u.exec(html)?.[1] ?? "";
     const px = (pattern: RegExp) => (pattern.exec(highlight)?.slice(1) ?? []).map(Number);
     const [cardWidth] = px(/--w:\s*min\((\d+)px,\s*100vw\)/u);
-    const [border = Number.NaN] = px(/border:\s*(\d+)px/u);
+    // Each highlight wears the card chrome, its ink line round the padding.
+    expect(html).toMatch(/<section class="hl card-panel"/u);
+    const border = CARD_PANEL.line;
     const [, right = Number.NaN, , left = Number.NaN] = px(
       /padding:\s*(\d+)px\s+(\d+)px\s+(\d+)px\s+(\d+)px/u,
     );

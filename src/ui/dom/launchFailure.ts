@@ -9,7 +9,7 @@ import { createModalLayer } from "@andornaut/game-kit/runtime/web/ui/dom/modalLa
 
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { bindRecoveryHold } from "./actionBinding.ts";
-import { loadingFailurePresentation } from "./loadingFailureStyle.ts";
+import { loadingFailurePresentation, paintPaperBevel } from "./loadingFailureStyle.ts";
 
 // The game's fit before Phaser exists: CSS pixels per game pixel for the whole screen in view.
 function viewportUnit(view: Pick<Window, "innerHeight" | "innerWidth">): number {
@@ -41,8 +41,12 @@ export function mountLaunchFailure(
     },
     root,
   );
+  paintPaperBevel(failure.element);
   const button = failure.element.querySelector("button");
-  const resize = () => failure.setPresentation(loadingFailurePresentation(viewportUnit(view)));
+  const resize = () => {
+    failure.setPresentation(loadingFailurePresentation(viewportUnit(view)));
+    paintPaperBevel(failure.element);
+  };
   view.addEventListener("resize", resize);
   let close: (() => void) | undefined;
   return {

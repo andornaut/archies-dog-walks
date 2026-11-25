@@ -9,13 +9,15 @@ import { gameDataExport } from "./gameDataExport.ts";
 
 const ROOT = new URL("../../", import.meta.url);
 
-describe("shared/export", () => {
+describe("npm run export:data", () => {
   it.each([...dataExportFiles(gameData)])(
     "%s is what the code exports now: run npm run export:data and commit it",
     async (path, text) => {
       const committed = await readFile(new URL(path, ROOT), "utf8");
-      // Compared parsed first, so a failure names the field that moved.
-      expect(JSON.parse(committed)).toEqual(JSON.parse(text));
+      // A JSON file is compared parsed first, so a failure names the field that moved.
+      if (path.endsWith(".json")) {
+        expect(JSON.parse(committed)).toEqual(JSON.parse(text));
+      }
       expect(committed).toBe(text);
     },
   );

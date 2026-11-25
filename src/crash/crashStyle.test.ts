@@ -7,6 +7,14 @@ import { describe, expect, it } from "vitest";
 // (linked from pages/play/index.html). Their order differs between the dev server and a build, so
 // the screen must resolve the same in every order.
 const read = (url: URL | string) => readFileSync(url, "utf8");
+// The site's tokens (public/tokens.css), which public/controls.css names.
+const TOKENS = new Map(
+  [
+    ...read(new URL("../../public/tokens.css", import.meta.url)).matchAll(
+      /(--[\w-]+):\s*([^;]+);/g,
+    ),
+  ].map(([, name, value]) => [name!, value!]),
+);
 const SHEETS = [
   read(new URL("../../public/controls.css", import.meta.url)),
   read(new URL("./crash.css", import.meta.url)),
@@ -117,6 +125,7 @@ function declarations(body: string): [string, string][] {
 function rules(css: string): { body: string; selectors: string[] }[] {
   const text = css
     .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/@import[^;]*;/g, "")
     .replace(/@[^{]+\{(?:[^{}]*\{[^}]*\})*[^{}]*\}/g, "");
   return [...text.matchAll(/([^{}]+)\{([^}]*)\}/g)].map(([, selectors, body]) => ({
     body: body!,
@@ -124,7 +133,7 @@ function rules(css: string): { body: string; selectors: string[] }[] {
   }));
 }
 
-// The cascaded value of property on the element, with the sheets in order.
+// The cascaded value of property on the element, with the sheets in order, its tokens resolved.
 function resolve(order: readonly number[], path: Path, property: string): string | undefined {
   let winner: { rank: Specificity; value: string } | undefined;
   for (const rule of order.flatMap((sheet) => rules(SHEETS[sheet]!))) {
@@ -136,7 +145,10 @@ function resolve(order: readonly number[], path: Path, property: string): string
       }
     }
   }
-  return winner?.value;
+  return winner?.value.replace(
+    /var\((--[\w-]+)\)/g,
+    (token, name: string) => TOKENS.get(name) ?? token,
+  );
 }
 
 // What the specification gives each element: the property and its cascaded value.
@@ -153,12 +165,7 @@ const SPEC: readonly (readonly [string, string, string, RegExp])[] = [
   ["the title to body gap", "title", "margin-bottom", /^16px$/],
   ["the body to Reload gap", "body", "margin-bottom", /^16px$/],
   ["the gap above the details", "details", "margin-top", /^16px$/],
-  [
-    "the panel's top bevel",
-    "panel",
-    "box-shadow",
-    /^inset 0 1px 0 var\(--crash-paper-highlight\),/,
-  ],
+  ["the panel's top bevel", "panel", "box-shadow", /^inset 0 1px 0 #ffffff,/],
 ];
 
 describe("crash screen style", () => {

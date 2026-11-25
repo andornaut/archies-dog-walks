@@ -10,7 +10,7 @@ import {
 // the game code. The kit splits each group's sound alternatives into one group per format. A
 // listed file no rule names fails the build, so a new kind of file gets a group on purpose.
 const GROUPS: readonly (readonly [RegExp, string])[] = [
-  [/^\/(?:play\/|manifest\.webmanifest|controls\.css)$/, "page"],
+  [/^\/(?:play\/|manifest\.webmanifest|controls\.css|tokens\.css)$/, "page"],
   [/^\/assets\/icons\/[^/]+\.png$/, "icons"],
   [/^\/assets\/phaser-[^/]+\.js$/, "phaser"],
   [/^\/assets\/[^/]+\.(?:css|js)$/, "code"],

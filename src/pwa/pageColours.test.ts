@@ -49,8 +49,9 @@ describe("the space around the game", () => {
 describe("the home page's theme colour", () => {
   it("is its body background, the palette's ink", async () => {
     const html = await readFile(HOME_PAGE, "utf8");
-    const name = /body\s*\{[^}]*background:\s*var\(--([a-z]+)\)/u.exec(html)?.[1] ?? "";
-    const background = new RegExp(`--${name}:\\s*(#[0-9a-f]{6});`, "u").exec(html)?.[1];
+    const name = /body\s*\{[^}]*background:\s*var\(--palette-([a-z]+)\)/u.exec(html)?.[1] ?? "";
+    const hex = palette[name as keyof typeof palette]?.hex;
+    const background = hex === undefined ? undefined : `#${hex}`;
     const theme = /<meta name="theme-color" content="([^"]*)"/u.exec(html)?.[1];
     expect({ background, theme }).toEqual({
       background: `#${palette.ink.hex}`,

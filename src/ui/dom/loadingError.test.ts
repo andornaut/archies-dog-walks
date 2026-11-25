@@ -6,8 +6,11 @@ import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import type { DomScale } from "../domScale.ts";
 import { MODAL } from "../modalGeometry.ts";
+import { PALETTE } from "../palette.ts";
+import { PAPER_PANEL } from "../paperPanel.ts";
 import { mountLaunchFailure } from "./launchFailure.ts";
 import { mountLoadingError } from "./loadingError.ts";
+import { paintPaperBevel } from "./loadingFailureStyle.ts";
 
 const shared = vi.hoisted(() => ({
   dispose: vi.fn(),
@@ -150,4 +153,15 @@ it("uses the same intrinsic Retry before game fonts and art load, including view
   view.dispose();
   expect(shared.dispose).toHaveBeenCalledOnce();
   expect(doc.defaultView.listeners.get("resize")).toHaveLength(0);
+});
+
+it("adds the modal paper's bevel row to the kit panel's shadows once per presentation", () => {
+  const panel = new FakeDocument().createElement("div") as unknown as HTMLElement;
+  const kit = "inset 0 -4px 0 #e4a672, 4px 4px 0 #181425";
+  panel.style.setProperty("box-shadow", kit, "important");
+  paintPaperBevel(panel);
+  paintPaperBevel(panel);
+  const bevel = `inset 0 ${PAPER_PANEL.bevel}px 0 #${PALETTE[PAPER_PANEL.colours.bevel].toString(16)}`;
+  expect(panel.style.getPropertyValue("box-shadow")).toBe(`${bevel}, ${kit}`);
+  expect(panel.style.getPropertyPriority("box-shadow")).toBe("important");
 });

@@ -1,30 +1,33 @@
-/* Shared DOM counterparts of the canvas action and icon controls. */
+@import url("/tokens.css");
+
+/* Shared DOM counterparts of the canvas action and icon controls, and the fallback screens' paper,
+   in the game's palette and geometry (public/tokens.css). */
 .app-button,
 .crash .crash-button {
-  --button-face: #ead4aa;
-  --button-text: #3e2731;
-  --button-lip: #e4a672;
-  --button-highlight: #ffffff;
+  --face: var(--palette-cream);
+  --face-bevel: var(--palette-white);
+  --face-lip: var(--palette-tan);
+  --face-text: var(--palette-plum);
   box-sizing: border-box;
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  width: 128px;
+  width: var(--button-width);
   max-width: 100%;
-  height: 48px;
+  height: var(--button-height);
   min-width: 0;
-  min-height: 48px;
+  min-height: var(--button-height);
   margin: 0;
-  padding: 0 8px 4px;
-  border: 1px solid #181425;
+  padding: 0 8px var(--button-lip);
+  border: var(--button-border) solid var(--palette-ink);
   border-radius: 0;
-  background: var(--button-face);
+  background: var(--face);
   box-shadow:
-    inset 0 -4px 0 var(--button-lip),
-    inset 0 1px 0 var(--button-highlight);
-  color: var(--button-text);
+    inset 0 calc(-1 * var(--button-lip)) 0 var(--face-lip),
+    inset 0 var(--button-bevel) 0 var(--face-bevel);
+  color: var(--face-text);
   font: inherit;
   line-height: 1.1;
   text-align: center;
@@ -35,76 +38,115 @@
 }
 
 :is(.app-button--primary, .crash-panel > .crash-button) {
-  --button-face: #63c74d;
-  --button-text: #181425;
-  --button-lip: #265c42;
-  --button-highlight: #fee761;
+  --face: var(--palette-green);
+  --face-bevel: var(--palette-yellow);
+  --face-lip: var(--palette-forest);
+  --face-text: var(--palette-ink);
 }
 
 :is(.app-button--wide, .crash-panel > .crash-button) {
-  width: 296px;
+  width: var(--button-wide-width);
+}
+
+/* A label in the display face (Silkscreen) centres its capitals' ink, not its font box, on the
+   flat fill between the lit row and the lip: the font box holds the ink --display-ink-drop below
+   its own middle. */
+.app-button--display {
+  padding-top: var(--button-bevel);
+  padding-bottom: calc(var(--button-lip) + 2 * var(--display-ink-drop));
+}
+
+/* A control sized to its full-size label, with the modal's inset including the ink border: the
+   install steps' Close, the crash screen's Copy and the gallery's filters, tags and jump links. */
+.app-button--fit,
+.crash .crash-details .crash-button {
+  width: max-content;
+  min-width: var(--button-height);
+  padding-inline: var(--button-inset);
 }
 
 .app-button:active:not(:disabled),
 .crash .crash-button:active:not(:disabled) {
-  padding-top: 2px;
-  padding-bottom: 2px;
-  box-shadow: inset 0 -2px 0 var(--button-lip);
+  padding-top: var(--button-press);
+  padding-bottom: var(--button-press);
+  box-shadow: inset 0 calc(-1 * var(--button-press)) 0 var(--face-lip);
+}
+
+.app-button--display:active:not(:disabled) {
+  padding-top: calc(var(--button-bevel) + var(--button-press));
+  padding-bottom: calc(var(--button-press) + 2 * var(--display-ink-drop));
+}
+
+/* Forced colours back each label with its whole font box, which the raised room would push over
+   the top outline, so there the box centres on the face. */
+@media (forced-colors: active) {
+  .app-button--display {
+    padding-top: 0;
+    padding-bottom: var(--button-lip);
+  }
+
+  .app-button--display:active:not(:disabled) {
+    padding-top: var(--button-press);
+    padding-bottom: var(--button-press);
+  }
 }
 
 .app-button:disabled,
 .crash .crash-button:disabled {
-  padding-top: 2px;
-  padding-bottom: 2px;
-  background: #a4a4a4;
+  --face: var(--palette-ngrey);
+  --face-text: var(--palette-ndslate);
+  padding-top: var(--button-press);
+  padding-bottom: var(--button-press);
   box-shadow: none;
-  color: #4a4a4a;
   opacity: 1;
   cursor: default;
 }
 
 .app-button:focus-visible {
-  outline: 2px solid #2ce8f5;
+  outline: 2px solid var(--palette-cyan);
   outline-offset: 3px;
 }
 
 .app-button[aria-pressed="true"] {
-  --button-face: #fee761;
-  --button-text: #3e2731;
-  --button-lip: #feae34;
+  --face: var(--palette-yellow);
+  --face-lip: var(--palette-amber);
+  --face-text: var(--palette-plum);
   font-weight: 600;
 }
 
+/* The icon control: the top bar's 20px face centred in its 48px press, its glyph at the top
+   bar's place on the face, both sinking with a press. */
 .app-button--icon {
   position: relative;
-  width: 48px;
+  width: var(--button-height);
   padding: 0;
   border: 0;
   background: transparent;
   box-shadow: none;
-  color: #ead4aa;
+  color: var(--palette-cream);
 }
 
 .app-button--icon::before {
   position: absolute;
-  top: calc(50% - 10px);
-  left: calc(50% - 10px);
+  top: calc(50% - var(--icon-face) / 2);
+  left: calc(50% - var(--icon-face) / 2);
   box-sizing: border-box;
-  width: 20px;
-  height: 20px;
-  border: 1px solid #e4a672;
-  background: #262b44;
+  width: var(--icon-face);
+  height: var(--icon-face);
+  border: 1px solid var(--palette-tan);
+  background: var(--palette-navy);
   box-shadow:
-    inset 0 -2px 0 #b86f50,
-    inset 0 1px 0 #3a4466;
+    inset 0 calc(-1 * var(--icon-lip)) 0 var(--palette-brown),
+    inset 0 var(--button-bevel) 0 var(--palette-dslate);
   content: "";
 }
 
 .app-button--icon svg {
-  position: relative;
-  width: 16px;
-  height: 16px;
-  transform: translateY(-1px);
+  position: absolute;
+  top: calc(50% - var(--icon-face) / 2 + var(--icon-glyph-y));
+  left: calc(50% - var(--icon-face) / 2 + var(--icon-glyph-x));
+  width: var(--icon-glyph);
+  height: var(--icon-glyph);
   fill: currentColor;
   shape-rendering: crispEdges;
 }
@@ -115,13 +157,13 @@
 }
 
 .app-button--icon:active:not(:disabled)::before {
-  height: 18px;
-  transform: translateY(2px);
-  box-shadow: inset 0 1px 0 #3a4466;
+  height: calc(var(--icon-face) - var(--button-press));
+  transform: translateY(var(--button-press));
+  box-shadow: inset 0 var(--button-bevel) 0 var(--palette-dslate);
 }
 
 .app-button--icon:active:not(:disabled) svg {
-  transform: translateY(1px);
+  transform: translateY(var(--button-press));
 }
 
 .app-button[hidden],
@@ -129,11 +171,35 @@
   display: none;
 }
 
-/* Modal controls follow their full-size labels, with a 16px inset including the ink border.
-   The crash screen's Copy does; its Reload keeps the wide primary width. */
-.steps .app-button,
-.crash .crash-details .crash-button {
-  width: max-content;
-  min-width: 48px;
-  padding-inline: 15px;
+/* Modal paper: the crash screen's panel, as Loading failed draws it (src/ui/paperPanel.ts). Each
+   screen keeps its own geometry. */
+.crash .crash-panel {
+  border: var(--paper-border-width) solid var(--paper-border);
+  background: var(--paper-fill);
+  box-shadow:
+    inset 0 var(--paper-bevel-height) 0 var(--paper-bevel),
+    inset 0 calc(-1 * var(--paper-lip-height)) 0 var(--paper-lip),
+    var(--paper-shadow-offset) var(--paper-shadow-offset) 0 var(--paper-shadow);
+  color: var(--paper-text);
+}
+
+/* Card chrome: the website's highlights and install steps. An ink line, a plum line inside it, a
+   tan lip inside its bottom and right, and corners cut a pixel. */
+.card-panel {
+  border: var(--card-line-width) solid var(--card-line);
+  background: var(--card-fill);
+  box-shadow:
+    inset 0 0 0 var(--card-inner-width) var(--card-inner),
+    inset calc(-1 * var(--card-lip-width)) calc(-1 * var(--card-lip-width)) 0 0 var(--card-lip);
+  color: var(--card-text);
+  clip-path: polygon(
+    var(--card-corner) 0,
+    calc(100% - var(--card-corner)) 0,
+    100% var(--card-corner),
+    100% calc(100% - var(--card-corner)),
+    calc(100% - var(--card-corner)) 100%,
+    var(--card-corner) 100%,
+    0 calc(100% - var(--card-corner)),
+    0 var(--card-corner)
+  );
 }

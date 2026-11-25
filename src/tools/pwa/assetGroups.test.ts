@@ -7,6 +7,7 @@ describe("updateGroup", () => {
     ["/play/", "page"],
     ["/manifest.webmanifest", "page"],
     ["/controls.css", "page"],
+    ["/tokens.css", "page"],
     ["/assets/icons/icon-192-xJLL7Tmk.png", "icons"],
     ["/assets/phaser-KjESfy1l.js", "phaser"],
     ["/assets/main-Dn9Nti8m.js", "code"],

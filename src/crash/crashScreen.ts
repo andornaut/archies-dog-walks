@@ -21,18 +21,9 @@ import { mountMuteControl } from "../ui/dom/muteControl.ts";
 
 const colour = (name: keyof typeof palette) => `#${palette[name].hex}`;
 
-// The local paper theme uses the same palette as canvas cards, without loading the renderer.
-for (const [name, value] of [
-  ["paper", colour("cream")],
-  ["paper-highlight", colour("white")],
-  ["paper-lip", colour("tan")],
-  ["paper-text", colour("plum")],
-] as const) {
-  document.documentElement.style.setProperty(`--crash-${name}`, value);
-}
-
-// Archie's upset portrait is a static decorative CSS crop, inlined, so it shows without Phaser,
-// the canvas or a sheet.
+// The panel is the modal paper public/controls.css draws (src/ui/paperPanel.ts). Archie's upset
+// portrait is a static decorative CSS crop, inlined, so it shows without Phaser, the canvas or a
+// sheet.
 document.documentElement.style.setProperty(
   "--crash-pose-image",
   `url(${JSON.stringify(crashArt.pose)})`,

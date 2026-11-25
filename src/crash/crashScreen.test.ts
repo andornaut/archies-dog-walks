@@ -42,13 +42,7 @@ it("installs the kit crash screen with the game words, palette and portrait", as
     },
     window,
   );
-  expect(setProperty.mock.calls).toEqual([
-    ["--crash-paper", `#${palette.cream.hex}`],
-    ["--crash-paper-highlight", `#${palette.white.hex}`],
-    ["--crash-paper-lip", `#${palette.tan.hex}`],
-    ["--crash-paper-text", `#${palette.plum.hex}`],
-    ["--crash-pose-image", 'url("data:pose")'],
-  ]);
+  expect(setProperty.mock.calls).toEqual([["--crash-pose-image", 'url("data:pose")']]);
 });
 
 it("keeps crash recovery independent when the optional sound endpoint cannot mount", async () => {

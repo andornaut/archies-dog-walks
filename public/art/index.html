@@ -40,20 +40,12 @@ header { display: grid; gap: 8px; }
 h1 { font-family: var(--f-display); font-weight: 400; font-size: clamp(26px, 5vw, 40px); line-height: 1.05; margin: 0; letter-spacing: 0.02em; }
 header p { margin: 0; color: var(--muted); max-width: 70ch; }
 .counts { display: flex; flex-wrap: wrap; gap: 8px; font-family: var(--f-mono); font-size: 12px; }
-button, .jump a {
-  min-width: 48px; min-height: 48px; max-width: 100%; padding: 8px 12px;
-  border: 1px solid #181425; border-radius: 0; background: #ead4aa; color: #3e2731;
-  box-shadow: 0 4px 0 #e4a672, 0 5px 0 #181425;
-  font: inherit; cursor: pointer; position: relative; top: 0;
-}
-button:enabled:active, .jump a:active { top: 2px; box-shadow: 0 2px 0 #e4a672, 0 3px 0 #181425; }
-button:disabled, button[aria-pressed="true"]:disabled { background: #a4a4a4; color: #4a4a4a; box-shadow: none; top: 2px; cursor: default; }
-button:focus-visible, .jump a:focus-visible { outline: 2px solid #2ce8f5; outline-offset: 3px; }
-button[aria-pressed="true"] { background: #fee761; color: #3e2731; box-shadow: inset 0 0 0 1px #feae34, 0 4px 0 #e4a672, 0 5px 0 #181425; font-weight: 600; }
-button[aria-pressed="true"]::before { content: "✓ "; content: "✓ " / ""; }
+/* The filters, tags, jump links and palette swatches are the site's buttons (/controls.css), each
+   sized to its label. A selected one keeps the game's tick. */
+.app-button[aria-pressed="true"]::before { content: "✓"; content: "✓" / ""; }
 
 .jump ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.jump a { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-mono); font-size: 13px; text-decoration: none; }
+.jump a { gap: 6px; font-family: var(--f-mono); font-size: 13px; }
 .jump a small { color: inherit; font-size: 12px; }
 .toolbar {
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
@@ -87,7 +79,7 @@ canvas, .view img { display: block; image-rendering: pixelated; image-rendering:
 .meta .key, .sound .key { font-family: var(--f-mono); font-weight: 600; font-size: 14px; overflow-wrap: anywhere; }
 .meta .dims { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
 .tags { display: flex; flex-wrap: wrap; gap: 8px; }
-.tags button { font-family: var(--f-mono); font-size: 12px; }
+.tags .app-button { font-family: var(--f-mono); font-size: 12px; }
 .toolbar :focus-visible, .sound audio:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .strip { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 2px; }
 .strip canvas { background: rgba(255, 255, 255, 0.04); }
@@ -100,7 +92,8 @@ canvas, .view img { display: block; image-rendering: pixelated; image-rendering:
 .empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 6px; padding: 16px; color: var(--muted); font-size: 14px; }
 .empty code { font-family: var(--f-mono); font-size: 13px; color: var(--fg); }
 .palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
-.sw { display: grid; gap: 4px; padding: 8px; font-family: var(--f-mono); font-size: 11px; text-align: left; overflow-wrap: anywhere; }
+.sw.app-button { display: grid; align-items: stretch; justify-content: stretch; gap: 4px; width: auto; height: auto; padding: 8px 8px calc(8px + var(--button-lip)); font-family: var(--f-mono); font-size: 11px; line-height: inherit; text-align: left; overflow-wrap: anywhere; }
+.sw.app-button:active:not(:disabled) { padding-block: calc(8px + var(--button-press)); }
 .sw i { display: block; height: 36px; border: 1px solid #181425; }
 .sw b { font-weight: 600; }
 .error { color: #f6757a; }
@@ -273,7 +266,7 @@ async function addSprite(host, s) {
 
   const tagBar = el("div", { className: "tags" });
   tags.forEach((t, n) => {
-    const b = el("button", { type: "button", textContent: `${t.name} (${t.to - t.from + 1})` });
+    const b = el("button", { type: "button", className: "app-button app-button--fit", textContent: `${t.name} (${t.to - t.from + 1})` });
     b.setAttribute("aria-pressed", String(n === 0));
     b.addEventListener("click", () => {
       for (const o of tagBar.children) o.setAttribute("aria-pressed", "false");
@@ -364,7 +357,7 @@ for (const g of GROUPS) {
   $("s-" + g.id).setAttribute("aria-labelledby", "h-" + g.id);
 }
 const jumpTargets = [...GROUPS.map(g => [g.id, g.title]), ["palette", "Palette"]];
-$("jump").replaceChildren(...jumpTargets.map(([id, title]) => el("li", { id: "j-" + id }, [el("a", { href: "#s-" + id }, [title, el("small", { id: "jn-" + id })])])));
+$("jump").replaceChildren(...jumpTargets.map(([id, title]) => el("li", { id: "j-" + id }, [el("a", { href: "#s-" + id, className: "app-button app-button--fit" }, [title, el("small", { id: "jn-" + id })])])));
 // Keep a jumped-to heading clear of the sticky toolbar, whose height changes as it wraps.
 new ResizeObserver(() => document.documentElement.style.setProperty("--bar", $("toolbar").offsetHeight + "px")).observe($("toolbar"));
 
@@ -414,7 +407,7 @@ async function main() {
 }
 
 $("palette").replaceChildren(...PAL.map(([name, h]) => {
-  const b = el("button", { type: "button", className: "sw", title: "Copy #" + h }, [el("i", { style: `background:#${h}` }), el("span", { innerHTML: `<b>${name}</b> #${h}` })]);
+  const b = el("button", { type: "button", className: "sw app-button", title: "Copy #" + h }, [el("i", { style: `background:#${h}` }), el("span", { innerHTML: `<b>${name}</b> #${h}` })]);
   b.addEventListener("click", async () => { try { await navigator.clipboard.writeText("#" + h); b.lastChild.innerHTML = `<b>${name}</b> copied`; setTimeout(() => { b.lastChild.innerHTML = `<b>${name}</b> #${h}`; }, 900); } catch (e) { /* clipboard unavailable */ } });
   return b;
 }));
@@ -427,7 +420,7 @@ const KINDS = ["sprites", "images", "fonts", "sounds", "palette"];
 let kind = new URLSearchParams(location.search).get("show");
 if (!KINDS.includes(kind)) kind = "";
 const pills = [["", "All"], ...KINDS.map(k => [k, k])].map(([k, label]) => {
-  const b = el("button", { type: "button", textContent: label, dataset: { kind: k } });
+  const b = el("button", { type: "button", className: "app-button app-button--fit", textContent: label, dataset: { kind: k } });
   b.addEventListener("click", () => setKind(b.dataset.kind === kind ? "" : b.dataset.kind));
   return b;
 });
