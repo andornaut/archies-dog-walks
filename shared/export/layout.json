@@ -1834,7 +1834,7 @@
         "width": 300
       },
       "dogOrigin": {
-        "x": 15,
+        "x": 12,
         "y": 261
       },
       "dogTile": {
@@ -1852,17 +1852,17 @@
         "textX": 39
       },
       "dogTileInset": {
-        "x": 2,
+        "x": 3,
         "y": 3
       },
       "dogTiles": {
         "cellHeight": 48,
-        "cellWidth": 109,
+        "cellWidth": 111,
         "columns": 3,
         "gapX": 2,
         "gapY": 2,
         "inset": {
-          "x": 2,
+          "x": 3,
           "y": 3
         }
       },
@@ -2211,56 +2211,56 @@
       "dogRects": [
         {
           "height": 48,
-          "width": 109,
-          "x": 15,
+          "width": 111,
+          "x": 12,
           "y": 261
         },
         {
           "height": 48,
-          "width": 109,
-          "x": 126,
+          "width": 111,
+          "x": 125,
           "y": 261
         },
         {
           "height": 48,
-          "width": 109,
-          "x": 237,
+          "width": 111,
+          "x": 238,
           "y": 261
         },
         {
           "height": 48,
-          "width": 109,
-          "x": 15,
+          "width": 111,
+          "x": 12,
           "y": 311
         },
         {
           "height": 48,
-          "width": 109,
-          "x": 126,
+          "width": 111,
+          "x": 125,
           "y": 311
         },
         {
           "height": 48,
-          "width": 109,
-          "x": 237,
+          "width": 111,
+          "x": 238,
           "y": 311
         },
         {
           "height": 48,
-          "width": 109,
-          "x": 15,
+          "width": 111,
+          "x": 12,
           "y": 361
         },
         {
           "height": 48,
-          "width": 109,
-          "x": 126,
+          "width": 111,
+          "x": 125,
           "y": 361
         },
         {
           "height": 48,
-          "width": 109,
-          "x": 237,
+          "width": 111,
+          "x": 238,
           "y": 361
         }
       ],

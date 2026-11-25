@@ -581,10 +581,8 @@ export const HOME_SCREEN = {
     // The text's left edge.
     textX: 39,
   },
-  // art: the dog tiles' faces, each drawn inside a press cell grown round it to MIN_PRESS tall,
-  // and the gap across between the drawn tiles' frames: 6, so the faces measured 1 px inside each
-  // tile's ink outline are the stacked button gap (8) apart.
-  dogTiles: { columns: 3, face: { height: 42, width: 105 }, frameGapX: 6 },
+  // art: the dog tiles' faces, each drawn inside a press cell grown round it to MIN_PRESS tall.
+  dogTiles: { columns: 3, face: { height: 42, width: 105 } },
   // The gate scene's top.
   gate: { y: 40 },
   // The divider strip's height.

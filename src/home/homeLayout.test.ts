@@ -290,31 +290,10 @@ describe("Pet shop", () => {
 // Each tile grid presses on cells at least MIN_PRESS tall, side by side, the faces drawn inside
 // them the stacked button gap apart both ways.
 describe.each([
-  [
-    "walker",
-    walkerTiles,
-    walkerTiles.columns,
-    walkerOrigin,
-    HOME_LAYOUT.walkerTileInset,
-    BUTTON_SIZE.stackGap,
-  ],
-  [
-    "dog",
-    dogTiles,
-    Object.keys(gameData.dogs).length,
-    dogOrigin,
-    HOME_LAYOUT.dogTileInset,
-    HOME_SCREEN.dogTiles.frameGapX,
-  ],
-  [
-    "Pocket",
-    pocket.cells,
-    pocket.cells.columns,
-    pocket.origin,
-    pocket.tileInset,
-    BUTTON_SIZE.stackGap,
-  ],
-] as const)("the %s tiles' press cells", (_, grid, count, origin, inset, frameGapX) => {
+  ["walker", walkerTiles, walkerTiles.columns, walkerOrigin, HOME_LAYOUT.walkerTileInset],
+  ["dog", dogTiles, Object.keys(gameData.dogs).length, dogOrigin, HOME_LAYOUT.dogTileInset],
+  ["Pocket", pocket.cells, pocket.cells.columns, pocket.origin, pocket.tileInset],
+] as const)("the %s tiles' press cells", (_, grid, count, origin, inset) => {
   const cells = gridRects(grid, count, origin);
   it("press at least MIN_PRESS tall and meet without overlapping", () => {
     expect(grid.cellHeight).toBeGreaterThanOrEqual(MIN_PRESS);
@@ -322,12 +301,12 @@ describe.each([
       [],
     );
   });
-  it("hold faces the stacked button gap apart down, and its drawn frames frameGapX apart across", () => {
+  it("hold faces the stacked button gap apart both ways, outline to outline", () => {
     expect(grid.gapY + 2 * inset.y).toBe(BUTTON_SIZE.stackGap);
     expect(grid.gapX).toBe(grid.gapY);
     const faces = cells.map((cell) => tileFace(inset, cell));
     const across = (faces[1]?.x ?? 0) - ((faces[0]?.x ?? 0) + (faces[0]?.width ?? 0));
-    expect(across).toBe(frameGapX);
+    expect(across).toBe(BUTTON_SIZE.stackGap);
   });
 });
 
