@@ -1,7 +1,6 @@
 import type { SlotPlacement } from "./slotFeasibility.ts";
 import { type PlacementRejection, SpawnBoard } from "./spawnBoard.ts";
 import type { PlannedSpawns, SpawnPlan } from "./spawning.ts";
-import type { SpawnVisibilityTrace } from "./spawnVisibility.ts";
 
 export interface ConstraintOwner {
   readonly key: string;
@@ -42,29 +41,6 @@ export type ConflictBlockers<Kind extends string> = readonly (readonly [
   SlotPlacement<Kind>,
 ])[];
 
-export type NegativeVisibilityLookup<Kind extends string> =
-  | { readonly status: "miss" }
-  | { readonly status: "budget" }
-  | {
-      readonly status: "blocked";
-      readonly failure: Extract<ConstraintResult<Kind>, { accepted: false }>["failure"];
-    };
-interface IntrinsicAttestation {
-  readonly entry: SlotPlacement<string>;
-  readonly fingerprint: string;
-  readonly scope: string;
-  readonly visibility: SpawnVisibilityTrace;
-}
-const intrinsicAttestations = new WeakMap<object, IntrinsicAttestation>();
-function fingerprint(value: unknown): string | undefined {
-  try {
-    return JSON.stringify(value, (_key, field: unknown) =>
-      typeof field === "number" && !Number.isFinite(field) ? { numeric: String(field) } : field,
-    );
-  } catch {
-    return undefined;
-  }
-}
 const checkpointBrand: unique symbol = Symbol("ConstraintCheckpoint");
 export interface ConstraintCheckpoint {
   readonly [checkpointBrand]: true;
@@ -87,37 +63,12 @@ function nativeSlotBoard<Kind extends string>(
   );
 }
 
-function immutableEntry(entry: SlotPlacement<string>): boolean {
-  return (
-    Object.isFrozen(entry) &&
-    Object.isFrozen(entry.event) &&
-    Object.isFrozen(entry.trace) &&
-    Object.isFrozen(entry.request) &&
-    (entry.placement === undefined || Object.isFrozen(entry.placement)) &&
-    (entry.trace.placement === undefined || Object.isFrozen(entry.trace.placement))
-  );
-}
-
-// An accepted result attests its visibility prerequisite for negative visibility lookups unless
-// attestVisibility is false, for a search that never looks them up.
 export function createSlotIntrinsicProbe<Kind extends string>(
   geometry: Omit<SpawnPlan<Kind>, "quotas">,
   path: PlannedSpawns<Kind>["path"],
-  attestVisibility = true,
 ) {
   const board = nativeSlotBoard("complete", geometry, path);
-  const scope = fingerprint([geometry, path]);
-  return (entry: SlotPlacement<Kind>) => {
-    const result = board.checkIntrinsic(entry);
-    if (attestVisibility && result.accepted && scope !== undefined && immutableEntry(entry)) {
-      const visibility = board.visibilityPrerequisite(entry, entry.request);
-      const snapshot = fingerprint(entry);
-      if (visibility !== undefined && snapshot !== undefined) {
-        intrinsicAttestations.set(result, { entry, fingerprint: snapshot, scope, visibility });
-      }
-    }
-    return result;
-  };
+  return (entry: SlotPlacement<Kind>) => board.checkIntrinsic(entry);
 }
 
 function createNativeSlotState<Kind extends string>(
@@ -127,19 +78,8 @@ function createNativeSlotState<Kind extends string>(
   prefix: readonly ConstraintEntry<Kind>[] = [],
 ) {
   const board = nativeSlotBoard(mode, geometry, path);
-  const scope = fingerprint([geometry, path]);
-  const visibilityStats = {
-    attempts: 0,
-    budgetExits: 0,
-    coldBypasses: 0,
-    fingerprintBytes: 0,
-    hits: 0,
-    lookups: 0,
-    misses: 0,
-  };
   let ledger: ConstraintEntry<Kind>[] = [];
   type Failure = Extract<ConstraintResult<Kind>, { accepted: false }>["failure"];
-  let immutablePrefix = true;
   const owners = new Map<string, ConstraintOwner>();
   // Each placed owner's unbound source entry, for conflict blockers that outlive a restore.
   const sources = new WeakMap<SlotPlacement<Kind>, SlotPlacement<Kind>>();
@@ -148,7 +88,6 @@ function createNativeSlotState<Kind extends string>(
     ConstraintCheckpoint,
     {
       readonly entries: readonly ConstraintEntry<Kind>[];
-      readonly immutablePrefix: boolean;
       readonly restore: () => void;
     }
   >();
@@ -208,7 +147,6 @@ function createNativeSlotState<Kind extends string>(
       ledger.push({ entry: result.entry, owner });
       sources.set(result.entry, entry);
       placed.set(owner, entry);
-      immutablePrefix &&= immutableEntry(entry);
     }
     return result;
   };
@@ -257,7 +195,6 @@ function createNativeSlotState<Kind extends string>(
       const mark: ConstraintCheckpoint = { [checkpointBrand]: true };
       checkpoints.set(mark, {
         entries: ledger.slice(),
-        immutablePrefix,
         restore: board.save(),
       });
       return mark;
@@ -265,50 +202,6 @@ function createNativeSlotState<Kind extends string>(
     commit,
     entries(): readonly ConstraintEntry<Kind>[] {
       return ledger.slice();
-    },
-    lookupNegativeVisibility(
-      step: () => boolean,
-      proof: ReturnType<ReturnType<typeof createSlotIntrinsicProbe<Kind>>>,
-      owner: ConstraintOwner,
-      entry: SlotPlacement<Kind>,
-    ): NegativeVisibilityLookup<Kind> {
-      visibilityStats.attempts++;
-      if (!board.hasNegativeVisibilityIndex()) {
-        visibilityStats.coldBypasses++;
-        visibilityStats.misses++;
-        return { status: "miss" };
-      }
-      if (!step()) {
-        visibilityStats.budgetExits++;
-        return { status: "budget" };
-      }
-      visibilityStats.lookups++;
-      const attestation = intrinsicAttestations.get(proof);
-      const miss = (): NegativeVisibilityLookup<Kind> => {
-        visibilityStats.misses++;
-        return { status: "miss" };
-      };
-      if (
-        !immutablePrefix ||
-        !proof.accepted ||
-        attestation === undefined ||
-        attestation.entry !== entry ||
-        attestation.scope !== scope ||
-        ledger.some((saved) => saved.owner.key === owner.key)
-      ) {
-        return miss();
-      }
-      const snapshot = fingerprint(entry);
-      visibilityStats.fingerprintBytes += snapshot?.length ?? 0;
-      if (snapshot !== attestation.fingerprint) {
-        return miss();
-      }
-      const failure = board.lookupNegativeVisibility(attestation.visibility);
-      if (failure === undefined) {
-        return miss();
-      }
-      visibilityStats.hits++;
-      return { failure: failureOf(failure).failure, status: "blocked" };
     },
     openStretchRow(): number | undefined {
       return board.openStretchRow();
@@ -321,16 +214,12 @@ function createNativeSlotState<Kind extends string>(
       }
       saved.restore();
       ledger = [...saved.entries];
-      immutablePrefix = saved.immutablePrefix;
       owners.clear();
       placed.clear();
       ledger.forEach(({ entry, owner }, index) => {
         owners.set(`${index}:0`, owner);
         placed.set(owner, sources.get(entry)!);
       });
-    },
-    visibilityStatistics() {
-      return { ...visibilityStats };
     },
   };
 }

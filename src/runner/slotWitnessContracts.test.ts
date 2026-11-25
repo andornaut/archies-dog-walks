@@ -53,10 +53,20 @@ function route(geometry: Geometry) {
     lane: geometry.pathStart,
   }));
 }
-function boundedWork(): WitnessWork<string> {
+// Runtime work with a full delivery floor over jobs.
+function boundedWork(jobs: readonly WitnessJob<string>[]): WitnessWork<string> {
   let remaining = 32768;
   const spend = () => --remaining >= 0;
-  return { anchor: spend, check: spend, propagate: spend, stopped: () => remaining < 0 };
+  return {
+    anchor: spend,
+    certifyPartial: () => false,
+    check: spend,
+    minimumDelivery: jobs.length,
+    ordinaryOrder: "original",
+    progress: () => 0,
+    propagate: spend,
+    stopped: () => remaining < 0,
+  };
 }
 function prepareJob(
   context: SlotSeedContext,
@@ -173,32 +183,26 @@ describe("complete witness native contracts", () => {
     const jobs = preparations.map(({ job }) => job);
     const state = createSlotConstructionState(geometry, path);
     const domains = createSlotCandidateDomains(geometry, path);
-    const audits: ReturnType<typeof auditSlotPlan>[] = [];
-    const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
-      ...boundedWork(),
-      certify: (selections) => {
-        expect(selections.every(({ job }) => job.phase === "active")).toBe(true);
-        const audit = auditSlotPlan(
-          context,
-          geometry,
-          path,
-          catalogue,
-          [],
-          config,
-          "capacity",
-          assignments(selections),
-        );
-        expect(audit.status).toBe("valid");
-        expect(audit.delivered).toBe(audit.configured);
-        audits.push(audit);
-        return audit.status === "valid";
-      },
-    }).solve(state);
+    const result = createSlotWitnessSearch(geometry, path, domains, jobs, boundedWork(jobs)).solve(
+      state,
+    );
     expect(result.status).toBe("compatible");
     if (result.status !== "compatible") {
       throw new Error("Expected a joint witness from full native mover preparations");
     }
-    expect(audits).toHaveLength(1);
+    expect(result.selections.every(({ job }) => job.phase === "active")).toBe(true);
+    const audit = auditSlotPlan(
+      context,
+      geometry,
+      path,
+      catalogue,
+      [],
+      config,
+      "capacity",
+      assignments(result.selections),
+    );
+    expect(audit.status).toBe("valid");
+    expect(audit.delivered).toBe(audit.configured);
     expect(new Set(result.selections.map(({ job }) => job))).toEqual(new Set(jobs));
     for (const [index, selection] of result.selections.entries()) {
       const { candidate, entry, job } = selection;
@@ -251,7 +255,7 @@ describe("complete witness native contracts", () => {
         path,
         createSlotCandidateDomains(smallRoad, path),
         jobs,
-        boundedWork(),
+        boundedWork(jobs),
       ).solve(state);
       expect(state.entries()).toEqual([]);
       return result;
@@ -288,8 +292,16 @@ describe("complete witness native contracts", () => {
     };
     const state = createSlotConstructionState(geometry, path);
     const domains = createSlotCandidateDomains(geometry, path);
-    const certify = (selections: readonly WitnessSelection<string>[]) => {
-      const audit = auditSlotPlan(
+    const pair = jobs.slice(0, 2);
+    const first = createSlotWitnessSearch(geometry, path, domains, pair, boundedWork(pair)).solve(
+      state,
+    );
+    expect(first.status).toBe("compatible");
+    if (first.status !== "compatible") {
+      throw new Error("Expected two simultaneous native same-kind placements");
+    }
+    expect(
+      auditSlotPlan(
         context,
         geometry,
         path,
@@ -297,23 +309,13 @@ describe("complete witness native contracts", () => {
         [],
         config,
         "active",
-        assignments(selections),
-      );
-      expect(audit.status).toBe("valid");
-      return audit.status === "valid";
-    };
-    const first = createSlotWitnessSearch(geometry, path, domains, jobs.slice(0, 2), {
-      ...boundedWork(),
-      certify,
-    }).solve(state);
-    expect(first.status).toBe("compatible");
-    if (first.status !== "compatible") {
-      throw new Error("Expected two simultaneous native same-kind placements");
-    }
+        assignments(first.selections),
+      ).status,
+    ).toBe("valid");
     expect(first.witness).toHaveLength(2);
     const rejected: string[] = [];
     const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
-      ...boundedWork(),
+      ...boundedWork(jobs),
       rejected: (_candidate, failure) => rejected.push(failure.rule),
     }).solve(state);
     expect(result.status).toBe("blocked");

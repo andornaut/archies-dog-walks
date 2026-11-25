@@ -9,7 +9,7 @@ import type {
 import { nativeSlotPreparationOrderingHint, type PreparedSlotKind } from "./slotCandidates.ts";
 import type { ConstraintEntry, ConstraintResult } from "./slotConstraintState.ts";
 import { coverageLeadingRows, createQuietCoverageState } from "./slotCoverage.ts";
-import { SLOT_OMISSION_ATTEMPTS, SLOT_ROW_PRESSURE } from "./slotDelivery.ts";
+import { SLOT_ROW_PRESSURE } from "./slotDelivery.ts";
 import { createMovingCoverageHints } from "./slotMovingCoverageHints.ts";
 import { drainSlotSolver } from "./slotSolverSession.ts";
 import { traverseSlotSources } from "./slotSourceTraversal.ts";
@@ -19,7 +19,8 @@ import { blockingSpan, type PlannedSpawns, quotaFootprint, type SpawnPlan } from
 
 type Rejection<Kind extends string> = Extract<ConstraintResult<Kind>, { accepted: false }>;
 export interface SlotWitnessConstructPorts<Kind extends string, Mark> {
-  bestDelivery?(): number | undefined;
+  // Deliveries of the best certified floor-meeting partial layout, if any.
+  bestDelivery(): number | undefined;
   candidates(
     job: WitnessJob<Kind>,
     prepared: PreparedSlotKind<Kind>,
@@ -30,12 +31,11 @@ export interface SlotWitnessConstructPorts<Kind extends string, Mark> {
   entries(): readonly ConstraintEntry<Kind>[];
   // Draw tuples' native values, tried before later retry tuples.
   motionTiers?(prepared: PreparedSlotKind<Kind>): SlotMotionTiers;
-  readonly minimumDelivery?: number;
-  // Failed placement attempts before a frame may omit its optional request; reserve by default.
-  readonly omissionAttempts?: number;
-  readonly ordinaryOrder?: "original" | "balanced";
-  partial?(omissions: readonly WitnessOmission<Kind>[]): boolean | undefined;
-  hint?(job: WitnessJob<Kind>): SlotCandidate<Kind> | undefined;
+  readonly minimumDelivery: number;
+  // Failed placement attempts before a frame may omit its optional request.
+  readonly omissionAttempts: number;
+  readonly ordinaryOrder: "original" | "balanced";
+  partial(omissions: readonly WitnessOmission<Kind>[]): boolean | undefined;
   laneClosure?(): { readonly accepted: true } | Rejection<Kind> | undefined;
   preparations(job: WitnessJob<Kind>): Iterable<PreparedSlotKind<Kind>>;
   propagate(): boolean;
@@ -120,16 +120,6 @@ export function createSlotWitnessConstruct<Kind extends string>(
   return Object.assign(run, { begin });
 }
 
-// This mode orders hypothetical choices. The caller owns every native check and work charge.
-export function constructSlotWitness<Kind extends string, Mark>(
-  ports: SlotWitnessConstructPorts<Kind, Mark>,
-  geometry: Omit<SpawnPlan<Kind>, "quotas">,
-  path: PlannedSpawns<Kind>["path"],
-  jobs: readonly WitnessJob<Kind>[],
-): SlotWitnessConstructResult<Kind> {
-  return createSlotWitnessConstruct(geometry, path, jobs)(ports);
-}
-
 function* construct<Kind extends string, Mark>(
   ports: SlotWitnessConstructPorts<Kind, Mark>,
   geometry: Omit<SpawnPlan<Kind>, "quotas">,
@@ -141,7 +131,6 @@ function* construct<Kind extends string, Mark>(
     return { status: "budget" };
   }
   const root = ports.checkpoint();
-  const omissionAttempts = ports.omissionAttempts ?? SLOT_OMISSION_ATTEMPTS.reserve;
   const byKey = new Map(jobs.map((job) => [job.key, job]));
   const {
     coverage,
@@ -255,7 +244,7 @@ function* construct<Kind extends string, Mark>(
   const present = () => new Set(stopped() ? [] : ports.entries().map(({ owner }) => owner.key));
   const resolved = () => new Set([...present(), ...[...omissions.keys()].map((job) => job.key)]);
   const dominated = () => {
-    const best = ports.minimumDelivery === undefined ? undefined : ports.bestDelivery?.();
+    const best = ports.bestDelivery();
     return best !== undefined && jobs.length - omissions.size <= best;
   };
   const leadingRows = () =>
@@ -390,7 +379,7 @@ function* construct<Kind extends string, Mark>(
   };
   function* options(
     scan: SourceScan<Kind>,
-    traversal: { readonly hint: SlotCandidate<Kind> | undefined; readonly seen: Set<string> },
+    seen: Set<string>,
     job: WitnessJob<Kind>,
     prepared: Iterable<PreparedSlotKind<Kind>>,
   ): Generator<Choice<Kind>> {
@@ -401,17 +390,10 @@ function* construct<Kind extends string, Mark>(
     const quietRows = scan.coverage?.leading;
     const covering = scan.coverage?.filter === "anchored";
     const filtered = scan.coverage !== undefined && scan.coverage.filter !== "open";
-    const { hint, seen } = traversal;
-    if (stopped()) {
-      return;
-    }
-    const hintRow =
-      hint?.entry.trace.placement?.block.row ??
-      path.findIndex((row) => row.distance === hint?.entry.event.distance);
     const eligible = (candidate: SlotCandidate<Kind>) =>
       !filtered || coversLeading(candidate, quietRows!);
     const deferredIds = new Set<string>();
-    // The caller supplies the frozen weighted kind order. Hints only reorder its native values.
+    // The caller supplies the frozen weighted kind order.
     for (const source of prepared) {
       if (filtered && (source.herring || !source.request.blocksLane)) {
         continue;
@@ -480,26 +462,8 @@ function* construct<Kind extends string, Mark>(
       for (let index = 0; index < tiers.length || fallback; index++) {
         const motionTier: number | undefined = fallback ? undefined : tiers[index];
         fallback = false;
-        const sourceHint =
-          hint?.prepared === source &&
-          rows.includes(hintRow) &&
-          sourceColumns.includes(hint.entry.event.lane) &&
-          eligible(hint) &&
-          (motionTier === undefined ||
-            (frontiers?.status === "tiers" &&
-              frontiers.draws[motionTier] ===
-                (hint.entry.placement?.selection?.draws ?? source.draws)));
         if (stopped()) {
           return;
-        }
-        if (
-          sourceHint &&
-          (frontiers?.status !== "tiers" || !seen.has(hint.id)) &&
-          (preferredRow === undefined || hintRow === preferredRow) &&
-          (quietRows === undefined || hintRow === sourceRows[0])
-        ) {
-          seen.add(hint.id);
-          yield { option: { candidate: hint, job }, status: "candidate" };
         }
         let emptyTier = false;
         // Each source keeps its own row order; a pressured row waits behind the untried rows.
@@ -517,10 +481,6 @@ function* construct<Kind extends string, Mark>(
           }
           if (covering && !source.request.blocksLane) {
             continue;
-          }
-          if (sourceHint && row === hintRow && !seen.has(hint.id)) {
-            seen.add(hint.id);
-            yield { option: { candidate: hint, job }, status: "candidate" };
           }
           const candidates = ports.candidates(job, source, {
             columnStart: 0,
@@ -596,7 +556,7 @@ function* construct<Kind extends string, Mark>(
     if (stopped()) {
       return;
     }
-    const traversal = { hint: ports.hint?.(job), seen: new Set<string>() };
+    const seen = new Set<string>();
     const pending = new WeakMap<
       PreparedSlotKind<Kind>,
       Extract<Choice<Kind>, { status: "candidate" }>
@@ -605,7 +565,7 @@ function* construct<Kind extends string, Mark>(
       {
         *candidates(source): Generator<SlotSequenceStep<Kind>> {
           const deferred: Option<Kind>[] = [];
-          for (const choice of options(scan, traversal, job, [source])) {
+          for (const choice of options(scan, seen, job, [source])) {
             if (choice.status === "source-end" || choice.status === "tier-end") {
               for (const option of deferred) {
                 pending.set(source, {
@@ -687,7 +647,7 @@ function* construct<Kind extends string, Mark>(
       fatal = result.failure;
     }
     if (!stopped() && result?.accepted === true) {
-      if (ports.minimumDelivery !== undefined && ports.entries().length === jobs.length) {
+      if (ports.entries().length === jobs.length) {
         fullCompletion = complete();
         if (fullCompletion) {
           return "accepted";
@@ -752,18 +712,6 @@ function* construct<Kind extends string, Mark>(
           b.order.width - a.order.width ||
           a.index - b.index,
       );
-    // Compiled nonblocking guarantees affect variable order only, never native admission facts.
-    const nonblockingGuarantees = new Set(
-      mandatory
-        .filter(
-          ({ order }) =>
-            order.prepared.length > 0 &&
-            order.prepared.every((prepared) => prepared.request.blocksLane === false),
-        )
-        .map(({ job }) => job),
-    );
-    const delayedForOrdering = (job: WitnessJob<Kind>) =>
-      job.laneEffect === "none" || nonblockingGuarantees.has(job);
     function* choices(
       pressure: RowPressure<Kind> | undefined,
       job: WitnessJob<Kind>,
@@ -812,52 +760,50 @@ function* construct<Kind extends string, Mark>(
     }
     function* coverageChoices(filled: ReadonlySet<string>, leading: readonly number[]) {
       yield* fixedCoverageChoices(filled, leading);
-      if (ports.minimumDelivery !== undefined) {
-        const ordinary: { job: WitnessJob<Kind>; sources: PreparedSlotKind<Kind>[] }[] = [];
-        const deferred: Option<Kind>[] = [];
-        for (const job of jobs) {
-          if (!job.fixed && job.laneEffect !== "none" && !filled.has(job.key)) {
-            if (!charge()) {
-              return;
-            }
-            const sources: PreparedSlotKind<Kind>[] = [];
-            ordinary.push({ job, sources });
-            function* blockers() {
-              const prepared = job.guaranteed ? orderFor(job).prepared : readPreparations(job);
-              for (const source of prepared) {
-                if (!charge()) {
-                  return;
-                }
-                if (!source.herring && source.request.blocksLane) {
-                  yield source;
-                } else {
-                  sources.push(source);
-                }
+      const ordinary: { job: WitnessJob<Kind>; sources: PreparedSlotKind<Kind>[] }[] = [];
+      const deferred: Option<Kind>[] = [];
+      for (const job of jobs) {
+        if (!job.fixed && job.laneEffect !== "none" && !filled.has(job.key)) {
+          if (!charge()) {
+            return;
+          }
+          const sources: PreparedSlotKind<Kind>[] = [];
+          ordinary.push({ job, sources });
+          function* blockers() {
+            const prepared = job.guaranteed ? orderFor(job).prepared : readPreparations(job);
+            for (const source of prepared) {
+              if (!charge()) {
+                return;
+              }
+              if (!source.herring && source.request.blocksLane) {
+                yield source;
+              } else {
+                sources.push(source);
               }
             }
-            yield* sourceOptions(
-              { coverage: { filter: "blocking", leading }, deferred, rows: rowOrder(job) },
-              job,
-              blockers(),
-            );
-          }
-        }
-        for (const option of deferred) {
-          if (!charge()) {
-            return;
-          }
-          yield { option, status: "candidate" as const };
-        }
-        for (const { job, sources } of ordinary) {
-          if (!charge()) {
-            return;
           }
           yield* sourceOptions(
-            { coverage: { filter: "open", leading }, rows: rowOrder(job) },
+            { coverage: { filter: "blocking", leading }, deferred, rows: rowOrder(job) },
             job,
-            sources,
+            blockers(),
           );
         }
+      }
+      for (const option of deferred) {
+        if (!charge()) {
+          return;
+        }
+        yield { option, status: "candidate" as const };
+      }
+      for (const { job, sources } of ordinary) {
+        if (!charge()) {
+          return;
+        }
+        yield* sourceOptions(
+          { coverage: { filter: "open", leading }, rows: rowOrder(job) },
+          job,
+          sources,
+        );
       }
     }
     // Static proportional order affect ordinary runtime choices, never native admission.
@@ -865,19 +811,13 @@ function* construct<Kind extends string, Mark>(
     const balancedJobs = () => (ordinaryOrder ??= balancedJobOrder(charge, jobs));
     // Prefer one initial coverage owner before wide guarantees; all ordinary choices remain.
     let initialCoveragePending = mandatory.some(({ job, order }) => !job.fixed && order.width > 1);
-    // Runtime search orders each job's rows by occupancy pressure; exact construction keeps the
-    // fixed row order.
+    // Each ordinary frame orders its job's rows by occupancy pressure.
     const ordinaryFrame = (job: WitnessJob<Kind>) => {
-      const pressure =
-        ports.minimumDelivery === undefined
-          ? undefined
-          : { rejections: new Map<number, number>(), rows: new Map<SlotCandidate<Kind>, number>() };
-      return {
-        covering: false,
-        cursor: choices(pressure, job),
-        job,
-        ...(pressure === undefined ? {} : { pressure }),
+      const pressure = {
+        rejections: new Map<number, number>(),
+        rows: new Map<SlotCandidate<Kind>, number>(),
       };
+      return { covering: false, cursor: choices(pressure, job), job, pressure };
     };
     const next = ():
       Pick<Frame, "covering" | "cursor" | "initialCoverage" | "job" | "pressure"> | undefined => {
@@ -893,10 +833,7 @@ function* construct<Kind extends string, Mark>(
           };
         }
       }
-      const guaranteed = mandatory.find(
-        ({ job }) =>
-          !filled.has(job.key) && (ports.minimumDelivery !== undefined || !delayedForOrdering(job)),
-      );
+      const guaranteed = mandatory.find(({ job }) => !filled.has(job.key));
       if (guaranteed !== undefined) {
         return ordinaryFrame(guaranteed.job);
       }
@@ -904,20 +841,16 @@ function* construct<Kind extends string, Mark>(
       if (leading !== undefined) {
         return { covering: true, cursor: coverageChoices(filled, leading) };
       }
-      const ordinary =
-        ports.minimumDelivery !== undefined && ports.ordinaryOrder === "balanced"
-          ? balancedJobs()
-          : jobs;
+      const ordinary = ports.ordinaryOrder === "balanced" ? balancedJobs() : jobs;
       if (ordinary === undefined) {
         return undefined;
       }
       const remaining = ordinary.filter((job) => !filled.has(job.key));
+      // Every guarantee is placed by now; the original order delays jobs with no lane effect.
       const selected =
-        ports.minimumDelivery !== undefined && ports.ordinaryOrder === "balanced"
+        ports.ordinaryOrder === "balanced"
           ? remaining[0]
-          : (remaining.find((job) => !delayedForOrdering(job)) ??
-            mandatory.find(({ job }) => !filled.has(job.key))?.job ??
-            remaining[0]);
+          : (remaining.find((job) => job.laneEffect !== "none") ?? remaining[0]);
       if (selected !== undefined) {
         if (
           !closureChecked &&
@@ -955,7 +888,7 @@ function* construct<Kind extends string, Mark>(
       }
       if (descend) {
         completionRule = undefined;
-        if (ports.partial !== undefined && !stopped()) {
+        if (!stopped()) {
           budget ||= ports.partial(omitted()) === undefined;
         }
         const pending = dominated() ? undefined : next();
@@ -1034,7 +967,6 @@ function* construct<Kind extends string, Mark>(
           frame.omissionOffered ||
           job?.optional !== true ||
           job.guaranteed ||
-          ports.minimumDelivery === undefined ||
           omissions.size >= jobs.length - ports.minimumDelivery
         ) {
           return false;
@@ -1048,7 +980,7 @@ function* construct<Kind extends string, Mark>(
       // Offer the omission once the request's own failed attempts reach the threshold, so its
       // domain is explored before the allowance is spent. The original cursor stays suspended
       // and retains every subsequent native value.
-      if (frame.attempts >= omissionAttempts && omit("not-selected-within-allowance")) {
+      if (frame.attempts >= ports.omissionAttempts && omit("not-selected-within-allowance")) {
         continue;
       }
       let option: Option<Kind>;

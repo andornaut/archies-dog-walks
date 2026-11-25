@@ -100,7 +100,6 @@ describe("optional native slot delivery", () => {
       checks++;
       return true;
     };
-    const certify = vi.fn(() => true);
     const snapshots: string[][] = [];
     const certifyPartial = vi.fn((selected: readonly { readonly job: WitnessJob<string> }[]) => {
       snapshots.push(selected.map(({ job }) => job.key));
@@ -109,10 +108,11 @@ describe("optional native slot delivery", () => {
     });
     const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
       anchor: () => true,
-      certify,
       certifyPartial,
       check,
       minimumDelivery: 9,
+      ordinaryOrder: "original",
+      progress: () => 0,
       propagate: () => true,
       stopped: () => stopped,
     }).solve(state);
@@ -132,19 +132,16 @@ describe("optional native slot delivery", () => {
       Array.from({ length: 9 }, (_, index) => index),
     );
     expect(certifyPartial).toHaveBeenCalledOnce();
-    expect(certify).not.toHaveBeenCalled();
     expect(state.entries()).toEqual([]);
   });
 
   it("certifies full delivery on its last available check instead of downgrading the incumbent", () => {
     const { domains, jobs, path, state } = fixture(undefined);
     const certifyPartial = vi.fn(() => true);
-    const certify = vi.fn(() => true);
     let lastCheck = false;
     let refused = 0;
     const result = createSlotWitnessSearch(geometry, path, domains, jobs, {
       anchor: () => true,
-      certify,
       certifyPartial,
       check: () => {
         if (lastCheck) {
@@ -155,10 +152,11 @@ describe("optional native slot delivery", () => {
         return true;
       },
       minimumDelivery: 9,
+      ordinaryOrder: "original",
+      progress: () => 0,
       propagate: () => true,
     }).solve(state);
     expect(certifyPartial).toHaveBeenCalledOnce();
-    expect(certify).toHaveBeenCalledOnce();
     expect(lastCheck).toBe(true);
     expect(refused).toBe(0);
     expect(result.status).toBe("compatible");
@@ -176,6 +174,8 @@ describe("optional native slot delivery", () => {
       certifyPartial,
       check: () => true,
       minimumDelivery: 9,
+      ordinaryOrder: "original",
+      progress: () => 0,
       propagate: () => true,
     }).solve(state);
     expect(result.status).toBe("blocked");
@@ -198,6 +198,7 @@ describe("optional native slot delivery", () => {
         certifyPartial: () => true,
         check: () => true,
         minimumDelivery: 9,
+        ordinaryOrder: "original",
         progress: () => progress,
         propagate: () => true,
       }).solve({
@@ -234,6 +235,7 @@ describe("optional native slot delivery", () => {
       },
       check: () => ++checks <= REJECTION_CHECKS,
       minimumDelivery: 9,
+      ordinaryOrder: "original",
       ...RESERVE_DUE,
       propagate: () => true,
     }).solve({
@@ -276,6 +278,7 @@ describe("optional native slot delivery", () => {
       certifyPartial,
       check: () => ++checks <= REJECTION_CHECKS,
       minimumDelivery: 9,
+      ordinaryOrder: "original",
       ...RESERVE_DUE,
       propagate: () => true,
     }).solve({
@@ -306,6 +309,8 @@ describe("optional native slot delivery", () => {
       certifyPartial,
       check: () => true,
       minimumDelivery: 9,
+      ordinaryOrder: "original",
+      progress: () => 0,
       propagate: () => true,
     }).solve({
       ...state,

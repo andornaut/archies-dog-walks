@@ -5,10 +5,9 @@ import { createSlotCandidateDomains, type SlotCandidate } from "./slotCandidateD
 import { prepareSlotKind } from "./slotCandidates.ts";
 import { createSlotConstructionState } from "./slotConstraintState.ts";
 import { coverageLeadingRows, quietCoverage } from "./slotCoverage.ts";
+import { SLOT_OMISSION_ATTEMPTS } from "./slotDelivery.ts";
 import { createMovingCoverageHints } from "./slotMovingCoverageHints.ts";
-import { createSlotSolverSession } from "./slotSolverSession.ts";
 import {
-  constructSlotWitness,
   createSlotWitnessConstruct,
   type SlotWitnessConstructPorts,
 } from "./slotWitnessConstruct.ts";
@@ -153,11 +152,17 @@ function fixture(road: typeof geometry, specs: readonly Spec[], limit = Infinity
   const check = () => ++checks <= limit;
   const work = { anchor: () => true, check, propagate: () => true };
   type Mark = { readonly context: number; readonly native: ReturnType<typeof state.checkpoint> };
+  // Runtime ports with a full delivery floor: no omission and no partial incumbent.
   const ports: SlotWitnessConstructPorts<string, Mark> = {
+    bestDelivery: () => undefined,
     candidates: (job, prepared, order) => domains.sequence(work, order, job.key, prepared),
     checkpoint: () => ({ context, native: state.checkpoint() }),
     complete: () => (check() ? state.checkComplete() : undefined),
     entries: state.entries,
+    minimumDelivery: jobs.length,
+    omissionAttempts: SLOT_OMISSION_ATTEMPTS.reserve,
+    ordinaryOrder: "original",
+    partial: () => false,
     preparations: (job) => job.preparations(),
     propagate: work.propagate,
     restore: (mark) => {
@@ -197,34 +202,19 @@ function fixture(road: typeof geometry, specs: readonly Spec[], limit = Infinity
   };
 }
 
-function warmPorts<Mark>(ports: SlotWitnessConstructPorts<string, Mark>) {
-  const hints = new Map<string, SlotCandidate<string>>();
+function spiedPorts<Mark>(ports: SlotWitnessConstructPorts<string, Mark>) {
   const preparations = vi.fn(ports.preparations);
   const propagate = vi.fn(ports.propagate);
   const candidates = vi.fn(ports.candidates);
   const complete = vi.fn(ports.complete);
-  const test = vi.fn((job: WitnessJob<string>, candidate: SlotCandidate<string>) => {
-    const result = ports.test(job, candidate);
-    if (result?.accepted) {
-      hints.set(job.key, candidate);
-    }
-    return result;
-  });
-  const warmed = {
-    ...ports,
-    candidates,
-    complete,
-    hint: (job: WitnessJob<string>) => hints.get(job.key),
-    preparations,
-    propagate,
-    test,
-  };
+  const test = vi.fn(ports.test);
+  const spied = { ...ports, candidates, complete, preparations, propagate, test };
   const clear = () => {
     for (const spy of [candidates, complete, preparations, propagate, test]) {
       spy.mockClear();
     }
   };
-  return { candidates, clear, complete, ports: warmed, preparations, propagate, test };
+  return { candidates, clear, complete, ports: spied, preparations, propagate, test };
 }
 
 function pocketFixture() {
@@ -272,18 +262,17 @@ describe("native witness construction mode", () => {
     jobs[0] = { ...jobs[0]!, preparations: () => [dart] };
     jobs[1] = { ...jobs[1]!, preparations: () => [following] };
     const attempts: string[] = [];
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        test(job, candidate) {
-          attempts.push(job.key);
-          return ports.test(job, candidate);
-        },
-      },
+    const result = createSlotWitnessConstruct(
       road,
       path,
       jobs,
-    );
+    )({
+      ...ports,
+      test(job, candidate) {
+        attempts.push(job.key);
+        return ports.test(job, candidate);
+      },
+    });
     expect(attempts[0]).toBe("reactive");
     expect(result.status).toBe("compatible");
     if (result.status === "compatible") {
@@ -315,18 +304,17 @@ describe("native witness construction mode", () => {
     jobs[0] = { ...jobs[0]!, preparations: () => [dart] };
     jobs[1] = { ...jobs[1]!, preparations: () => [following, narrow] };
     const attempts: { candidate: SlotCandidate<string>; key: string }[] = [];
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        test(job, candidate) {
-          attempts.push({ candidate, key: job.key });
-          return ports.test(job, candidate);
-        },
-      },
+    const result = createSlotWitnessConstruct(
       road,
       path,
       jobs,
-    );
+    )({
+      ...ports,
+      test(job, candidate) {
+        attempts.push({ candidate, key: job.key });
+        return ports.test(job, candidate);
+      },
+    });
     expect(attempts[0]!.key).toBe("crossing");
     expect(attempts.find(({ key }) => key === "mixed")!.candidate.prepared).toBe(following);
     expect(result.status).toBe("compatible");
@@ -341,18 +329,17 @@ describe("native witness construction mode", () => {
       { guaranteed: true, key: "second", moving: true },
     ]);
     const attempts: string[] = [];
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        test(job, candidate) {
-          attempts.push(job.key);
-          return ports.test(job, candidate);
-        },
-      },
+    const result = createSlotWitnessConstruct(
       road,
       path,
       jobs,
-    );
+    )({
+      ...ports,
+      test(job, candidate) {
+        attempts.push(job.key);
+        return ports.test(job, candidate);
+      },
+    });
     expect(attempts[0]).toBe("first");
     expect(result.status).toBe("compatible");
   });
@@ -381,76 +368,6 @@ describe("native witness construction mode", () => {
     expect(preparations).toHaveBeenCalledTimes(2);
   });
 
-  it("ignores delivery count advice when exact construction is requested", () => {
-    const road = { ...geometry, maxEmptyRows: Infinity };
-    const { jobs, path, ports, state } = fixture(road, [{ key: "wall" }]);
-    const result = constructSlotWitness(
-      { ...ports, bestDelivery: () => jobs.length },
-      road,
-      path,
-      jobs,
-    );
-    expect(result.status).toBe("compatible");
-    expect(state.entries()).toEqual([]);
-  });
-
-  it.each([false, true])(
-    "delays a required compiled nonblocker without treating ordering as native proof (sliced %s)",
-    (sliced) => {
-      const road = { ...geometry, maxEmptyRows: Infinity };
-      const { context, jobs, path, ports, state } = fixture(road, [
-        { auxiliary: true, guaranteed: true, key: "required-prize" },
-        { key: "ordinary-wall" },
-        { key: "later" },
-      ]);
-      jobs[0] = { ...jobs[0]!, laneEffect: "possible" };
-      const accepted: string[] = [];
-      const closureDepth: number[] = [];
-      const complete = vi.fn(() => {
-        expect(state.entries().some(({ owner }) => owner === jobs[0])).toBe(true);
-        return ports.complete();
-      });
-      const wired = {
-        ...ports,
-        complete,
-        laneClosure: () => {
-          closureDepth.push(state.entries().length);
-          return state.checkComplete();
-        },
-        test: (job: WitnessJob<string>, candidate: SlotCandidate<string>) => {
-          const result = ports.test(job, candidate);
-          if (result?.accepted) {
-            accepted.push(job.key);
-          }
-          return result;
-        },
-      };
-      let result;
-      if (sliced) {
-        const session = createSlotSolverSession(
-          createSlotWitnessConstruct(road, path, jobs).begin(wired),
-        );
-        let progress = session.advance(1);
-        while (progress.status === "pending") {
-          progress = session.advance(1);
-        }
-        if (progress.status !== "complete") {
-          throw new Error("Missing terminal witness");
-        }
-        result = progress.result;
-      } else {
-        result = constructSlotWitness(wired, road, path, jobs);
-      }
-      expect(result.status).toBe("compatible");
-      expect(accepted).toEqual(["ordinary-wall", "later", "required-prize"]);
-      expect(complete.mock.calls).toEqual([[]]);
-      expect(closureDepth).toEqual([1, 2, 3]);
-      expect(jobs[0]!.laneEffect).toBe("possible");
-      expect(state.entries()).toEqual([]);
-      expect(context()).toBe(0);
-    },
-  );
-
   it("keeps a mixed guaranteed profile pool in normal mandatory order", () => {
     const road = { ...geometry, maxEmptyRows: Infinity };
     const { context, jobs, path, ports, state } = fixture(road, [
@@ -461,21 +378,20 @@ describe("native witness construction mode", () => {
     const blocking = [...jobs[1]!.preparations()][0]!;
     jobs[0] = { ...jobs[0]!, laneEffect: "possible", preparations: () => [nonblocking, blocking] };
     const accepted: string[] = [];
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        test: (job, candidate) => {
-          const result = ports.test(job, candidate);
-          if (result?.accepted) {
-            accepted.push(job.key);
-          }
-          return result;
-        },
-      },
+    const result = createSlotWitnessConstruct(
       road,
       path,
       jobs,
-    );
+    )({
+      ...ports,
+      test: (job, candidate) => {
+        const result = ports.test(job, candidate);
+        if (result?.accepted) {
+          accepted.push(job.key);
+        }
+        return result;
+      },
+    });
     expect(result.status).toBe("compatible");
     expect(accepted).toEqual(["mixed", "ordinary-wall"]);
     expect(state.entries()).toEqual([]);
@@ -495,7 +411,7 @@ describe("native witness construction mode", () => {
     ]);
     const current = pin(jobs[0]!, 0, 0);
     const before = state.entries();
-    const result = constructSlotWitness(ports, geometry, path, jobs);
+    const result = createSlotWitnessConstruct(geometry, path, jobs)(ports);
     expect(result.status).toBe("compatible");
     if (result.status !== "compatible") {
       throw new Error("Expected a complete native composition");
@@ -528,7 +444,7 @@ describe("native witness construction mode", () => {
     ]);
     pin(jobs[0]!, 0, 0);
     const before = state.entries();
-    expect(constructSlotWitness(ports, road, path, jobs)).toEqual({ status: "inconclusive" });
+    expect(createSlotWitnessConstruct(road, path, jobs)(ports)).toEqual({ status: "inconclusive" });
     expect(state.entries()).toEqual(before);
     expect(context()).toBe(0);
   });
@@ -542,7 +458,7 @@ describe("native witness construction mode", () => {
     );
     pin(jobs[0]!, 0, 0);
     const before = state.entries();
-    expect(constructSlotWitness(ports, road, path, jobs)).toEqual({ status: "budget" });
+    expect(createSlotWitnessConstruct(road, path, jobs)(ports)).toEqual({ status: "budget" });
     expect(accepted()).toBe(1);
     expect(state.entries()).toEqual(before);
     expect(context()).toBe(0);
@@ -573,7 +489,7 @@ describe("native witness construction mode", () => {
           return stage === "test" ? { accepted: false, failure } : ports.test(job, candidate);
         },
       };
-      expect(constructSlotWitness(guarded, road, path, jobs)).toEqual({
+      expect(createSlotWitnessConstruct(road, path, jobs)(guarded)).toEqual({
         failure,
         status: "blocked",
       });
@@ -618,12 +534,11 @@ describe("native witness construction mode", () => {
         stop = true;
       });
       expect(
-        constructSlotWitness(
-          { ...ports, candidates, complete, preparations, propagate, stopped: () => stop, test },
+        createSlotWitnessConstruct(
           road,
           path,
           jobs,
-        ),
+        )({ ...ports, candidates, complete, preparations, propagate, stopped: () => stop, test }),
       ).toEqual({ status: "budget" });
       expect(preparations).toHaveBeenCalledTimes(stage === "entry" ? 0 : 1);
       // Source traversal bills opening the source and reaching its end.
@@ -654,7 +569,11 @@ describe("native witness construction mode", () => {
       return result;
     });
     expect(
-      constructSlotWitness({ ...ports, complete, stopped: () => stop, test }, road, path, jobs),
+      createSlotWitnessConstruct(
+        road,
+        path,
+        jobs,
+      )({ ...ports, complete, stopped: () => stop, test }),
     ).toEqual({ status: "budget" });
     expect(test).toHaveBeenCalledTimes(1);
     expect(complete).not.toHaveBeenCalled();
@@ -674,20 +593,17 @@ describe("native witness construction mode", () => {
     const current = pin(jobs[0]!, 0, 0);
     const before = state.entries();
     const construct = createSlotWitnessConstruct(road, path, jobs);
-    const warm = warmPorts(ports);
-    expect(construct(warm.ports).status).toBe("compatible");
-    warm.clear();
-    warm.complete.mockImplementation(() => {
+    const spied = spiedPorts(ports);
+    expect(construct(spied.ports).status).toBe("compatible");
+    spied.clear();
+    spied.complete.mockImplementation(() => {
       expect(state.entries()).toHaveLength(4);
       return ports.complete();
     });
-    const result = construct(warm.ports);
+    const result = construct(spied.ports);
     expect(result.status).toBe("compatible");
-    expect(warm.preparations.mock.calls.map(([job]) => job.key)).toEqual(["later", "reward"]);
-    expect(warm.propagate).toHaveBeenCalledTimes(8);
-    expect(warm.candidates).not.toHaveBeenCalled();
-    expect(warm.test).toHaveBeenCalledTimes(3);
-    expect(warm.complete.mock.calls).toEqual([[]]);
+    expect(spied.preparations.mock.calls.map(([job]) => job.key)).toEqual(["later", "reward"]);
+    expect(spied.complete.mock.calls).toEqual([[]]);
     if (result.status === "compatible") {
       expect(result.witness[0]!.entry).toBe(current);
     }
@@ -720,33 +636,32 @@ describe("native witness construction mode", () => {
     const complete = vi.fn(ports.complete);
     let repairable = false;
     const tested: string[] = [];
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        *candidates(job, prepared, order) {
-          if (order.rows?.includes(4)) {
-            yield* ports.candidates(job, prepared, {
-              columnStart: 0,
-              columns: [columns.get(job)!],
-              rows: [4],
-            });
-          }
-        },
-        complete,
-        test: (job, candidate) => {
-          const result = ports.test(job, candidate);
-          tested.push(`${job.key}:${result?.accepted}`);
-          if (job === jobs[1] && result?.accepted) {
-            const partial = state.checkComplete();
-            repairable = !partial.accepted && partial.failure.rule === "open-stretches";
-          }
-          return result;
-        },
-      },
+    const result = createSlotWitnessConstruct(
       road,
       path,
       jobs,
-    );
+    )({
+      ...ports,
+      *candidates(job, prepared, order) {
+        if (order.rows?.includes(4)) {
+          yield* ports.candidates(job, prepared, {
+            columnStart: 0,
+            columns: [columns.get(job)!],
+            rows: [4],
+          });
+        }
+      },
+      complete,
+      test: (job, candidate) => {
+        const result = ports.test(job, candidate);
+        tested.push(`${job.key}:${result?.accepted}`);
+        if (job === jobs[1] && result?.accepted) {
+          const partial = state.checkComplete();
+          repairable = !partial.accepted && partial.failure.rule === "open-stretches";
+        }
+        return result;
+      },
+    });
     expect(tested).toEqual(["wall:true", "dart:true", "repair:true"]);
     expect(repairable).toBe(true);
     expect(result.status).toBe("compatible");
@@ -791,39 +706,35 @@ describe("native witness construction mode", () => {
       }
     };
     const trace: unknown[] = [];
-    const hint = vi.fn(() => undefined);
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        *candidates(job, source, order) {
-          try {
-            yield* ports.candidates(job, source, {
-              ...order,
-              rows: order.rows.filter((row) => row === 2),
-            });
-          } finally {
-            closed.push(source.source.kind);
-          }
-        },
-        hint,
-        test(job, candidate) {
-          tried.push(candidate.prepared.source.kind);
-          const result = ports.test(job, candidate);
-          trace.push({
-            kind: candidate.prepared.source.kind,
-            lane: candidate.entry.event.lane,
-            result: result?.accepted === false ? result.failure : result?.accepted,
-            row: path.findIndex(({ distance }) => distance === candidate.entry.event.distance),
-          });
-          return result;
-        },
-      },
+    const result = createSlotWitnessConstruct(
       road,
       path,
       jobs,
-    );
+    )({
+      ...ports,
+      *candidates(job, source, order) {
+        try {
+          yield* ports.candidates(job, source, {
+            ...order,
+            rows: order.rows.filter((row) => row === 2),
+          });
+        } finally {
+          closed.push(source.source.kind);
+        }
+      },
+      test(job, candidate) {
+        tried.push(candidate.prepared.source.kind);
+        const result = ports.test(job, candidate);
+        trace.push({
+          kind: candidate.prepared.source.kind,
+          lane: candidate.entry.event.lane,
+          result: result?.accepted === false ? result.failure : result?.accepted,
+          row: path.findIndex(({ distance }) => distance === candidate.entry.event.distance),
+        });
+        return result;
+      },
+    });
     expect(result.status).toBe("compatible");
-    expect(hint).toHaveBeenCalledOnce();
     if (result.status !== "compatible") {
       throw Error("Expected native complete composition");
     }
@@ -864,39 +775,38 @@ describe("native witness construction mode", () => {
     const attempted: { kind: string; row: number }[] = [];
     const advice: { accepted: boolean; row: number }[] = [];
     const complete = vi.fn(ports.complete);
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        *candidates(job, prepared, order) {
-          const rows = order.rows.filter((row) => (job === jobs[0] ? [0, 4] : [4]).includes(row));
-          yield* ports.candidates(job, prepared, { columnStart: 0, columns: [3], rows });
-        },
-        complete,
-        laneClosure: () => {
-          const checked = state.checkComplete();
-          const last = state.entries().at(-1)!;
-          if (last.owner === jobs[0] && last.entry.request === first.request) {
-            advice.push({
-              accepted: checked.accepted,
-              row: path.findIndex(({ distance }) => distance === last.entry.event.distance),
-            });
-          }
-          return checked;
-        },
-        test: (job, candidate) => {
-          if (job === jobs[0]) {
-            attempted.push({
-              kind: candidate.prepared.source.kind,
-              row: path.findIndex(({ distance }) => distance === candidate.entry.event.distance),
-            });
-          }
-          return ports.test(job, candidate);
-        },
-      },
+    const result = createSlotWitnessConstruct(
       road,
       path,
       jobs,
-    );
+    )({
+      ...ports,
+      *candidates(job, prepared, order) {
+        const rows = order.rows.filter((row) => (job === jobs[0] ? [0, 4] : [4]).includes(row));
+        yield* ports.candidates(job, prepared, { columnStart: 0, columns: [3], rows });
+      },
+      complete,
+      laneClosure: () => {
+        const checked = state.checkComplete();
+        const last = state.entries().at(-1)!;
+        if (last.owner === jobs[0] && last.entry.request === first.request) {
+          advice.push({
+            accepted: checked.accepted,
+            row: path.findIndex(({ distance }) => distance === last.entry.event.distance),
+          });
+        }
+        return checked;
+      },
+      test: (job, candidate) => {
+        if (job === jobs[0]) {
+          attempted.push({
+            kind: candidate.prepared.source.kind,
+            row: path.findIndex(({ distance }) => distance === candidate.entry.event.distance),
+          });
+        }
+        return ports.test(job, candidate);
+      },
+    });
     expect(result.status).toBe("compatible");
     expect(
       attempted.filter(({ kind }) => kind === first.source.kind).map(({ row }) => row),
@@ -954,50 +864,49 @@ describe("native witness construction mode", () => {
       return checked;
     });
     expect(
-      constructSlotWitness(
-        {
-          ...ports,
-          *candidates(job, prepared, order) {
-            if (!order.rows.includes(0)) {
-              return;
-            }
-            const candidates = ports.candidates(job, prepared, {
-              columnStart: 0,
-              columns: [3],
-              rows: [0],
-            });
-            const cursor = candidates[Symbol.iterator]();
-            try {
-              const step = cursor.next();
-              if (!step.done) {
-                yield step.value;
-                expect(state.entries()).toEqual(prefix);
-                expect(context()).toBe(0);
-                expect(certificate).toBeUndefined();
-                if (mode === "stop") {
-                  stopped = true;
-                }
-                yield { kind: "candidateChecks", status: "budget" };
-              }
-            } finally {
-              cursor.return?.();
-              candidatesClosed = true;
-            }
-          },
-          checkpoint: () => ({ caller: ports.checkpoint(), certificate }),
-          complete,
-          laneClosure,
-          restore: (mark) => {
-            ports.restore(mark.caller);
-            certificate = mark.certificate;
-          },
-          stopped: () => stopped,
-          test,
-        },
+      createSlotWitnessConstruct(
         road,
         path,
         jobs,
-      ),
+      )({
+        ...ports,
+        *candidates(job, prepared, order) {
+          if (!order.rows.includes(0)) {
+            return;
+          }
+          const candidates = ports.candidates(job, prepared, {
+            columnStart: 0,
+            columns: [3],
+            rows: [0],
+          });
+          const cursor = candidates[Symbol.iterator]();
+          try {
+            const step = cursor.next();
+            if (!step.done) {
+              yield step.value;
+              expect(state.entries()).toEqual(prefix);
+              expect(context()).toBe(0);
+              expect(certificate).toBeUndefined();
+              if (mode === "stop") {
+                stopped = true;
+              }
+              yield { kind: "candidateChecks", status: "budget" };
+            }
+          } finally {
+            cursor.return?.();
+            candidatesClosed = true;
+          }
+        },
+        checkpoint: () => ({ caller: ports.checkpoint(), certificate }),
+        complete,
+        laneClosure,
+        restore: (mark) => {
+          ports.restore(mark.caller);
+          certificate = mark.certificate;
+        },
+        stopped: () => stopped,
+        test,
+      }),
     ).toEqual({ status: "budget" });
     expect(test).toHaveBeenCalledOnce();
     expect(laneClosure).toHaveBeenCalledOnce();
@@ -1010,98 +919,87 @@ describe("native witness construction mode", () => {
     expect(context()).toBe(0);
   });
 
-  it.each([false, true])(
-    "rejects native stretch failure with early lane closure %s and retains every owner",
-    (early) => {
-      const road: typeof geometry = {
-        ...geometry,
-        laneCount: 5,
-        maxEmptyRows: Infinity,
-        minOpenLanes: 2,
-        pathStart: 0,
-        zoneLength: 2000,
-      };
-      delete road.firstContactSeconds;
-      const { context, jobs, laneClosure, path, ports, state } = fixture(
-        road,
-        [
-          { key: "wall" },
-          { key: "dart", moving: true },
-          { key: "repair", width: 2 },
-          { auxiliary: true, key: "reward-a" },
-          { auxiliary: true, key: "reward-b" },
-          { auxiliary: true, key: "reward-c" },
-          { auxiliary: true, key: "later" },
-        ],
-        128,
-      );
-      const dart = crossing(road);
-      jobs[1]!.preparations = () => [dart];
-      const repair = [...jobs[2]!.preparations()][0]!;
-      const attempts = new Map<string, number>();
-      const completions: (string | undefined)[] = [];
-      const closurePrefixes: number[] = [];
-      const result = constructSlotWitness(
-        {
-          ...ports,
-          ...(early
-            ? {
-                laneClosure: () => {
-                  closurePrefixes.push(state.entries().length);
-                  return laneClosure();
-                },
-              }
-            : {}),
-          *candidates(job, prepared, order) {
-            if (job.laneEffect === "none" || job.key === "later") {
-              yield* ports.candidates(job, prepared, order);
-            } else if (order.rows.some((row) => (job === jobs[2] ? [6, 4] : [4]).includes(row))) {
-              const lane = job === jobs[0] ? 2 : job === jobs[1] ? 4 : 3;
-              yield* ports.candidates(job, prepared, {
-                columnStart: 0,
-                columns: [lane],
-                rows: order.rows,
-              });
-            }
-          },
-          complete: () => {
-            const result = ports.complete();
-            completions.push(result?.accepted === false ? result.failure.rule : undefined);
-            return result;
-          },
-          test: (job, candidate) => {
-            attempts.set(job.key, (attempts.get(job.key) ?? 0) + 1);
-            return ports.test(job, candidate);
-          },
-        },
-        road,
-        path,
-        jobs,
-      );
-      expect(result.status).toBe("compatible");
-      expect(completions).toEqual([...(early ? [] : ["open-stretches"]), undefined]);
-      if (early) {
-        expect(closurePrefixes.slice(0, 2)).toEqual([1, 2]);
-        expect(closurePrefixes).toContain(3);
-        expect(closurePrefixes.slice(-4)).toEqual([4, 5, 6, 7]);
-      } else {
-        expect(closurePrefixes).toEqual([]);
-      }
-      for (const job of jobs.filter((job) => job.laneEffect === "none")) {
-        expect(attempts.get(job.key)).toBe(early ? 1 : 2);
-      }
-      if (result.status === "compatible") {
-        expect(result.witness.map(({ owner }) => owner)).toEqual(jobs);
-        expect(result.witness[2]!.entry.request).toBe(repair.request);
-        expect(result.witness[2]!.entry.event.distance).toBe(path[4]!.distance);
-        expect(createSlotConstructionState(road, path, result.witness).checkComplete()).toEqual({
-          accepted: true,
-        });
-      }
-      expect(state.entries()).toEqual([]);
-      expect(context()).toBe(0);
-    },
-  );
+  it("checks lane closure before the complete composition and retains every owner", () => {
+    const road: typeof geometry = {
+      ...geometry,
+      laneCount: 5,
+      maxEmptyRows: Infinity,
+      minOpenLanes: 2,
+      pathStart: 0,
+      zoneLength: 2000,
+    };
+    delete road.firstContactSeconds;
+    const { context, jobs, laneClosure, path, ports, state } = fixture(
+      road,
+      [
+        { key: "wall" },
+        { key: "dart", moving: true },
+        { key: "repair", width: 2 },
+        { auxiliary: true, key: "reward-a" },
+        { auxiliary: true, key: "reward-b" },
+        { auxiliary: true, key: "reward-c" },
+        { auxiliary: true, key: "later" },
+      ],
+      128,
+    );
+    const dart = crossing(road);
+    jobs[1]!.preparations = () => [dart];
+    const repair = [...jobs[2]!.preparations()][0]!;
+    const attempts = new Map<string, number>();
+    const completions: (string | undefined)[] = [];
+    const closurePrefixes: number[] = [];
+    const result = createSlotWitnessConstruct(
+      road,
+      path,
+      jobs,
+    )({
+      ...ports,
+      *candidates(job, prepared, order) {
+        if (job.laneEffect === "none" || job.key === "later") {
+          yield* ports.candidates(job, prepared, order);
+        } else if (order.rows.some((row) => (job === jobs[2] ? [6, 4] : [4]).includes(row))) {
+          const lane = job === jobs[0] ? 2 : job === jobs[1] ? 4 : 3;
+          yield* ports.candidates(job, prepared, {
+            columnStart: 0,
+            columns: [lane],
+            rows: order.rows,
+          });
+        }
+      },
+      complete: () => {
+        const result = ports.complete();
+        completions.push(result?.accepted === false ? result.failure.rule : undefined);
+        return result;
+      },
+      laneClosure: () => {
+        closurePrefixes.push(state.entries().length);
+        return laneClosure();
+      },
+      test: (job, candidate) => {
+        attempts.set(job.key, (attempts.get(job.key) ?? 0) + 1);
+        return ports.test(job, candidate);
+      },
+    });
+    expect(result.status).toBe("compatible");
+    // The last placement goes straight to the complete check.
+    expect(completions).toEqual([undefined]);
+    expect(closurePrefixes.slice(0, 2)).toEqual([1, 2]);
+    expect(closurePrefixes).toContain(3);
+    expect(closurePrefixes.slice(-3)).toEqual([4, 5, 6]);
+    for (const job of jobs.filter((job) => job.laneEffect === "none")) {
+      expect(attempts.get(job.key)).toBe(1);
+    }
+    if (result.status === "compatible") {
+      expect(result.witness.map(({ owner }) => owner)).toEqual(jobs);
+      expect(result.witness[2]!.entry.request).toBe(repair.request);
+      expect(result.witness[2]!.entry.event.distance).toBe(path[4]!.distance);
+      expect(createSlotConstructionState(road, path, result.witness).checkComplete()).toEqual({
+        accepted: true,
+      });
+    }
+    expect(state.entries()).toEqual([]);
+    expect(context()).toBe(0);
+  });
 
   it("distinguishes an absent lane-closure port from a present exhausted callback", () => {
     const road = { ...geometry, maxEmptyRows: Infinity };
@@ -1114,20 +1012,19 @@ describe("native witness construction mode", () => {
     const preparations = vi.fn(ports.preparations);
     const test = vi.fn(ports.test);
     expect(
-      constructSlotWitness(
-        { ...ports, laneClosure: () => undefined, preparations, test },
+      createSlotWitnessConstruct(
         road,
         path,
         jobs,
-      ),
+      )({ ...ports, laneClosure: () => undefined, preparations, test }),
     ).toEqual({ status: "budget" });
     expect(preparations).not.toHaveBeenCalled();
     expect(test).not.toHaveBeenCalled();
     expect(state.entries()).toEqual(before);
-    expect(constructSlotWitness(ports, road, path, jobs).status).toBe("compatible");
+    expect(createSlotWitnessConstruct(road, path, jobs)(ports).status).toBe("compatible");
   });
 
-  it("exhausts an earlier weighted kind before using another kind or its hint", () => {
+  it("exhausts an earlier weighted kind before using another kind", () => {
     const road = { ...geometry, maxEmptyRows: Infinity };
     const { jobs, path, ports } = fixture(road, [{ key: "subject" }]);
     const job = jobs[0]!;
@@ -1146,8 +1043,7 @@ describe("native witness construction mode", () => {
       weight: 3,
     });
     job.preparations = () => [first, later];
-    const hint = createSlotCandidateDomains(road, path).at(job.key, later, 4, 0)[0]!;
-    const result = constructSlotWitness({ ...ports, hint: () => hint }, road, path, jobs);
+    const result = createSlotWitnessConstruct(road, path, jobs)(ports);
     expect(result.status).toBe("compatible");
     if (result.status === "compatible") {
       expect(result.witness[0]!.entry.request).toBe(first.request);
@@ -1177,35 +1073,32 @@ describe("native witness construction mode", () => {
         weight: 1,
       });
       job.preparations = () => [first, later];
-      const hint = createSlotCandidateDomains(road, path).at(job.key, first, 4, 0)[0]!;
       const rows: { kind: string; row: number }[] = [];
       const trials: { accepted: boolean; row: number }[] = [];
       const repairRow = vi.fn(() => ({ row: 1, status: "row" as const }));
-      const result = constructSlotWitness(
-        {
-          ...ports,
-          candidates: (owner, source, order) => {
-            rows.push({ kind: source.source.kind, row: order.rows![0]! });
-            return ports.candidates(owner, source, order);
-          },
-          hint: () => hint,
-          repairRow,
-          test: (owner, candidate) => {
-            const checked = ports.test(owner, candidate)!;
-            trials.push({
-              accepted: checked.accepted,
-              row: path.findIndex(({ distance }) => distance === candidate.entry.event.distance),
-            });
-            return {
-              accepted: false,
-              failure: { classification: "intrinsic", owners: [], rule: "exhaust-values" },
-            };
-          },
-        },
+      const result = createSlotWitnessConstruct(
         road,
         path,
         jobs,
-      );
+      )({
+        ...ports,
+        candidates: (owner, source, order) => {
+          rows.push({ kind: source.source.kind, row: order.rows![0]! });
+          return ports.candidates(owner, source, order);
+        },
+        repairRow,
+        test: (owner, candidate) => {
+          const checked = ports.test(owner, candidate)!;
+          trials.push({
+            accepted: checked.accepted,
+            row: path.findIndex(({ distance }) => distance === candidate.entry.event.distance),
+          });
+          return {
+            accepted: false,
+            failure: { classification: "intrinsic", owners: [], rule: "exhaust-values" },
+          };
+        },
+      });
       const ideal = Math.floor(((job.ordinal + 0.5) * path.length) / job.total);
       const fallback = Array.from({ length: path.length }, (_, row) => row)
         .filter((row) => row !== 1)
@@ -1235,34 +1128,32 @@ describe("native witness construction mode", () => {
     const prefix = state.entries();
     const prefixes: (number | undefined)[] = [];
     const repairRows: number[] = [];
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        *candidates(job, prepared, order) {
-          const choice = state.entries().find(({ owner }) => owner.key === "choice");
-          const row = job.key === "repair" ? choice!.entry.event.lane + 1 : 0;
-          if (job.key === "repair") {
-            repairRows.push(order.rows![0]!);
-          }
-          if (order.rows?.includes(row)) {
-            yield* ports.candidates(job, prepared, {
-              columnStart: 0,
-              columns: job.key === "choice" ? [0, 1] : [0],
-              rows: [row],
-            });
-          }
-        },
-        repairRow: () => {
-          const lane = state.entries().find(({ owner }) => owner.key === "choice")?.entry
-            .event.lane;
-          prefixes.push(lane);
-          return { row: lane === undefined ? 0 : lane + 1, status: "row" };
-        },
-      },
+    const result = createSlotWitnessConstruct(
       road,
       path,
       jobs,
-    );
+    )({
+      ...ports,
+      *candidates(job, prepared, order) {
+        const choice = state.entries().find(({ owner }) => owner.key === "choice");
+        const row = job.key === "repair" ? choice!.entry.event.lane + 1 : 0;
+        if (job.key === "repair") {
+          repairRows.push(order.rows![0]!);
+        }
+        if (order.rows?.includes(row)) {
+          yield* ports.candidates(job, prepared, {
+            columnStart: 0,
+            columns: job.key === "choice" ? [0, 1] : [0],
+            rows: [row],
+          });
+        }
+      },
+      repairRow: () => {
+        const lane = state.entries().find(({ owner }) => owner.key === "choice")?.entry.event.lane;
+        prefixes.push(lane);
+        return { row: lane === undefined ? 0 : lane + 1, status: "row" };
+      },
+    });
     expect(result.status).toBe("compatible");
     expect(prefixes).toEqual([undefined, 0, 0, 1, 1]);
     expect(repairRows[0]).toBe(1);
@@ -1287,12 +1178,11 @@ describe("native witness construction mode", () => {
       const preparations = vi.fn(ports.preparations);
       const test = vi.fn(ports.test);
       const repairRow = vi.fn(() => ({ status }));
-      const result = constructSlotWitness(
-        { ...ports, preparations, repairRow, test },
+      const result = createSlotWitnessConstruct(
         road,
         path,
         jobs,
-      );
+      )({ ...ports, preparations, repairRow, test });
       expect(repairRow).toHaveBeenCalledOnce();
       if (status === "budget") {
         expect(result).toEqual({ status: "budget" });
@@ -1388,7 +1278,7 @@ describe("native witness construction mode", () => {
       };
     }
     const repairRow = vi.fn(() => ({ status: "none" as const }));
-    const result = constructSlotWitness({ ...ports, repairRow }, geometry, path, jobs);
+    const result = createSlotWitnessConstruct(geometry, path, jobs)({ ...ports, repairRow });
     expect(result.status).toBe("compatible");
     expect(repairRow).toHaveBeenCalledOnce();
     expect(compiled).toEqual(jobs.flatMap((job) => [`${job.key}:wide`, `${job.key}:good`]));
@@ -1414,30 +1304,29 @@ describe("native witness construction mode", () => {
     ]);
     const complete = vi.fn(ports.complete);
     let laterAttempts = 0;
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        *candidates(job, prepared, order) {
-          if (order.rows?.includes(0)) {
-            yield* ports.candidates(job, prepared, {
-              columnStart: 0,
-              columns: job === jobs[0] ? [0, 1] : [0],
-              rows: [0],
-            });
-          }
-        },
-        complete,
-        test: (job, candidate) => {
-          if (job === jobs[1]) {
-            laterAttempts++;
-          }
-          return ports.test(job, candidate);
-        },
-      },
+    const result = createSlotWitnessConstruct(
       road,
       path,
       jobs,
-    );
+    )({
+      ...ports,
+      *candidates(job, prepared, order) {
+        if (order.rows?.includes(0)) {
+          yield* ports.candidates(job, prepared, {
+            columnStart: 0,
+            columns: job === jobs[0] ? [0, 1] : [0],
+            rows: [0],
+          });
+        }
+      },
+      complete,
+      test: (job, candidate) => {
+        if (job === jobs[1]) {
+          laterAttempts++;
+        }
+        return ports.test(job, candidate);
+      },
+    });
     expect(result.status).toBe("compatible");
     expect(laterAttempts).toBe(2);
     expect(complete).toHaveBeenCalledOnce();
@@ -1448,7 +1337,7 @@ describe("native witness construction mode", () => {
     expect(context()).toBe(0);
   });
 
-  it("invalidates job metadata and old hints when the preparation method is replaced", () => {
+  it("invalidates job metadata when the preparation method is replaced", () => {
     const road = { ...geometry, maxEmptyRows: Infinity };
     const { jobs, path, pin, ports } = fixture(road, [
       { key: "pinned" },
@@ -1456,9 +1345,9 @@ describe("native witness construction mode", () => {
     ]);
     pin(jobs[0]!, 0, 0);
     const construct = createSlotWitnessConstruct(road, path, jobs);
-    const warm = warmPorts(ports);
-    expect(construct(warm.ports).status).toBe("compatible");
-    warm.clear();
+    const spied = spiedPorts(ports);
+    expect(construct(spied.ports).status).toBe("compatible");
+    spied.clear();
     const footprint = { lanes: 2, rows: 1 };
     const replacement = prepareSlotKind({ movers: () => 0.5, spawns: () => 0.5 }, road, {
       compile: () => ({ blocksLane: true, first: true, footprint }),
@@ -1468,10 +1357,10 @@ describe("native witness construction mode", () => {
       weight: 1,
     });
     jobs[1]!.preparations = () => [replacement];
-    const result = construct(warm.ports);
+    const result = construct(spied.ports);
     expect(result.status).toBe("compatible");
-    expect(warm.preparations).toHaveBeenCalledTimes(1);
-    expect(warm.candidates).toHaveBeenCalled();
+    expect(spied.preparations).toHaveBeenCalledTimes(1);
+    expect(spied.candidates).toHaveBeenCalled();
     if (result.status === "compatible") {
       expect(result.witness.find(({ owner }) => owner === jobs[1])!.entry.request).toBe(
         replacement.request,
@@ -1496,22 +1385,22 @@ describe("native witness construction mode", () => {
       }
     };
     const construct = createSlotWitnessConstruct(road, path, jobs);
-    const warm = warmPorts({ ...ports, stopped: () => stop });
-    expect(construct(warm.ports)).toEqual({ status: "budget" });
-    expect(warm.preparations).toHaveBeenCalledTimes(1);
+    const spied = spiedPorts({ ...ports, stopped: () => stop });
+    expect(construct(spied.ports)).toEqual({ status: "budget" });
+    expect(spied.preparations).toHaveBeenCalledTimes(1);
     stop = false;
     interrupt = false;
-    expect(construct(warm.ports).status).toBe("compatible");
-    expect(warm.preparations).toHaveBeenCalledTimes(2);
-    warm.clear();
-    expect(construct(warm.ports).status).toBe("compatible");
-    expect(warm.preparations).not.toHaveBeenCalled();
-    warm.clear();
+    expect(construct(spied.ports).status).toBe("compatible");
+    expect(spied.preparations).toHaveBeenCalledTimes(2);
+    spied.clear();
+    expect(construct(spied.ports).status).toBe("compatible");
+    expect(spied.preparations).not.toHaveBeenCalled();
+    spied.clear();
     stop = true;
-    expect(construct(warm.ports)).toEqual({ status: "budget" });
-    expect(warm.preparations).not.toHaveBeenCalled();
-    expect(warm.test).not.toHaveBeenCalled();
-    expect(warm.complete).not.toHaveBeenCalled();
+    expect(construct(spied.ports)).toEqual({ status: "budget" });
+    expect(spied.preparations).not.toHaveBeenCalled();
+    expect(spied.test).not.toHaveBeenCalled();
+    expect(spied.complete).not.toHaveBeenCalled();
   });
 
   it("tries initial coverage before wide guarantees", () => {
@@ -1525,21 +1414,20 @@ describe("native witness construction mode", () => {
       { key: "cover-c" },
     ]);
     const accepted: string[] = [];
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        test(job, candidate) {
-          const result = ports.test(job, candidate);
-          if (result?.accepted) {
-            accepted.push(job.key);
-          }
-          return result;
-        },
-      },
+    const result = createSlotWitnessConstruct(
       road,
       path,
       jobs,
-    );
+    )({
+      ...ports,
+      test(job, candidate) {
+        const result = ports.test(job, candidate);
+        if (result?.accepted) {
+          accepted.push(job.key);
+        }
+        return result;
+      },
+    });
     expect(accepted[0]).toBe("required-cover");
     expect(result.status).toBe("compatible");
     if (result.status !== "compatible") {
@@ -1566,26 +1454,30 @@ describe("native witness construction mode", () => {
       500,
     );
     const visited: string[] = [];
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        candidates(job, prepared, order) {
-          visited.push(job.key);
-          return ports.candidates(job, prepared, order);
-        },
-      },
+    const result = createSlotWitnessConstruct(
       road,
       path,
       jobs,
-    );
+    )({
+      ...ports,
+      candidates(job, prepared, order) {
+        visited.push(job.key);
+        return ports.candidates(job, prepared, order);
+      },
+    });
     expect(visited[0]).toBe("late-cover");
     expect(visited).toContain("wide");
-    expect(result.status).not.toBe("compatible");
+    expect(result.status).toBe("compatible");
+    if (result.status === "compatible") {
+      expect(createSlotConstructionState(road, path, result.witness).checkComplete()).toEqual({
+        accepted: true,
+      });
+    }
     expect(state.entries()).toEqual([]);
     expect(context()).toBe(0);
   });
 
-  it("tries native moving gap anchors before an unrelated warm suffix", () => {
+  it("tries native moving gap anchors before a valid value that covers no leading row", () => {
     const road = { ...geometry, maxEmptyRows: 1 };
     const { context, jobs, path, pin, ports, state } = fixture(road, [
       { key: "first" },
@@ -1613,25 +1505,22 @@ describe("native witness construction mode", () => {
     expect(state.commit(job, warm.entry).accepted).toBe(true);
     state.restore(native);
     const accepted: SlotCandidate<string>[] = [];
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        candidates: (owner, prepared, order) =>
-          ports.candidates(owner, prepared, { ...order, columns: [1] }),
-        hint: () => warm,
-        minimumDelivery: jobs.length,
-        test(owner, candidate) {
-          const checked = ports.test(owner, candidate);
-          if (checked?.accepted) {
-            accepted.push(candidate);
-          }
-          return checked;
-        },
-      },
+    const result = createSlotWitnessConstruct(
       road,
       path,
       jobs,
-    );
+    )({
+      ...ports,
+      candidates: (owner, prepared, order) =>
+        ports.candidates(owner, prepared, { ...order, columns: [1] }),
+      test(owner, candidate) {
+        const checked = ports.test(owner, candidate);
+        if (checked?.accepted) {
+          accepted.push(candidate);
+        }
+        return checked;
+      },
+    });
     expect(accepted.length).toBeGreaterThan(0);
     const visible = visibleMoverRows(
       road,
@@ -1639,7 +1528,6 @@ describe("native witness construction mode", () => {
       accepted[0]!.entry,
     );
     expect(visible.some((row) => leading.includes(row))).toBe(true);
-    expect(accepted[0]).not.toBe(warm);
     expect(result.status).toBe("compatible");
     if (result.status === "compatible") {
       expect(quietCoverage(road, result.witness).over).toBe(0);
@@ -1668,33 +1556,32 @@ describe("native witness construction mode", () => {
     job.preparations = () => [first, later];
     const rows = new Map<string, number[]>();
     const native: { accepted: boolean; kind: string; row: number }[] = [];
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        *candidates(owner, prepared, order) {
-          const visited = rows.get(prepared.source.kind) ?? [];
-          visited.push(order.rows![0]!);
-          rows.set(prepared.source.kind, visited);
-          yield* ports.candidates(owner, prepared, order);
-        },
-        minimumDelivery: jobs.length,
-        test(owner, candidate) {
-          const checked = ports.test(owner, candidate)!;
-          native.push({
-            accepted: checked.accepted,
-            kind: candidate.prepared.source.kind,
-            row: candidate.entry.trace.placement!.block.row,
-          });
-          return {
-            accepted: false,
-            failure: { classification: "intrinsic", owners: [], rule: "exhaust-values" },
-          };
-        },
-      },
+    const result = createSlotWitnessConstruct(
       road,
       path,
       jobs,
-    );
+    )({
+      ...ports,
+      *candidates(owner, prepared, order) {
+        const visited = rows.get(prepared.source.kind) ?? [];
+        visited.push(order.rows![0]!);
+        rows.set(prepared.source.kind, visited);
+        yield* ports.candidates(owner, prepared, order);
+      },
+      minimumDelivery: jobs.length,
+      test(owner, candidate) {
+        const checked = ports.test(owner, candidate)!;
+        native.push({
+          accepted: checked.accepted,
+          kind: candidate.prepared.source.kind,
+          row: candidate.entry.trace.placement!.block.row,
+        });
+        return {
+          accepted: false,
+          failure: { classification: "intrinsic", owners: [], rule: "exhaust-values" },
+        };
+      },
+    });
     expect([...rows.keys()]).toEqual([first.source.kind, later.source.kind]);
     for (const visited of rows.values()) {
       expect([...visited].sort((a, b) => a - b)).toEqual(path.map((_, row) => row));
@@ -1766,19 +1653,18 @@ describe("native witness construction mode", () => {
       const candidates = vi.fn(ports.candidates);
       const test = vi.fn(ports.test);
       expect(
-        constructSlotWitness(
-          {
-            ...ports,
-            candidates,
-            minimumDelivery: jobs.length,
-            propagate: () => ++calls < 3 || mode === "cancel",
-            stopped: () => mode === "cancel" && calls >= 3,
-            test,
-          },
+        createSlotWitnessConstruct(
           road,
           path,
           jobs,
-        ),
+        )({
+          ...ports,
+          candidates,
+          minimumDelivery: jobs.length,
+          propagate: () => ++calls < 3 || mode === "cancel",
+          stopped: () => mode === "cancel" && calls >= 3,
+          test,
+        }),
       ).toEqual({ status: "budget" });
       expect(closed).toBe(true);
       expect(candidates).not.toHaveBeenCalled();
@@ -1803,23 +1689,22 @@ describe("balanced runtime ordinary selection", () => {
     ]);
     const original = [...jobs];
     const accepted: string[] = [];
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        minimumDelivery: 7,
-        ordinaryOrder: "balanced",
-        test(job, candidate) {
-          const result = ports.test(job, candidate);
-          if (result?.accepted) {
-            accepted.push(job.key);
-          }
-          return result;
-        },
-      },
+    const result = createSlotWitnessConstruct(
       road,
       path,
       jobs,
-    );
+    )({
+      ...ports,
+      minimumDelivery: 7,
+      ordinaryOrder: "balanced",
+      test(job, candidate) {
+        const result = ports.test(job, candidate);
+        if (result?.accepted) {
+          accepted.push(job.key);
+        }
+        return result;
+      },
+    });
     expect(result.status).toBe("compatible");
     expect(accepted).toEqual([
       "mandatory",
@@ -1852,18 +1737,17 @@ describe("balanced runtime ordinary selection", () => {
       const before = state.entries();
       let charges = 0;
       const test = vi.fn(ports.test);
-      const result = constructSlotWitness(
-        {
-          ...ports,
-          minimumDelivery: 3,
-          ordinaryOrder: "balanced",
-          propagate: () => ++charges < limit,
-          test,
-        },
+      const result = createSlotWitnessConstruct(
         road,
         path,
         jobs,
-      );
+      )({
+        ...ports,
+        minimumDelivery: 3,
+        ordinaryOrder: "balanced",
+        propagate: () => ++charges < limit,
+        test,
+      });
       expect(result).toEqual({ status: "budget" });
       expect(charges).toBe(limit);
       expect(test).not.toHaveBeenCalled();
@@ -1873,7 +1757,7 @@ describe("balanced runtime ordinary selection", () => {
 });
 
 describe("runtime row pressure", () => {
-  function pressured(minimumDelivery: number | undefined) {
+  function pressured() {
     const road = { ...geometry, maxEmptyRows: Infinity };
     const { jobs, path, ports, state } = fixture(road, [{ key: "cover" }, { key: "subject" }]);
     const kind = (key: string) =>
@@ -1889,43 +1773,33 @@ describe("runtime row pressure", () => {
     const ideal = Math.floor(((subject.ordinal + 0.5) * path.length) / subject.total);
     const far = (row: number) => Math.abs(row - ideal) > 1;
     const tested: { readonly kind: string; readonly row: number }[] = [];
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        ...(minimumDelivery === undefined ? {} : { minimumDelivery }),
-        test(owner, candidate) {
-          if (owner !== subject) {
-            return ports.test(owner, candidate);
-          }
-          const { distance, kind } = candidate.entry.event;
-          const row = path.findIndex((step) => step.distance === distance);
-          tested.push({ kind, row });
-          if (kind === "second" && far(row)) {
-            return ports.test(owner, candidate);
-          }
-          // Both kinds meet occupied space beside the ideal row; the first kind's far rows fail on
-          // a rule that is not occupancy.
-          const rule = far(row) ? "kind-lane" : "cells";
-          return { accepted: false, failure: { classification: "conflict", owners: [], rule } };
-        },
+    const result = createSlotWitnessConstruct(road, path, [jobs[0]!, subject])({
+      ...ports,
+      test(owner, candidate) {
+        if (owner !== subject) {
+          return ports.test(owner, candidate);
+        }
+        const { distance, kind } = candidate.entry.event;
+        const row = path.findIndex((step) => step.distance === distance);
+        tested.push({ kind, row });
+        if (kind === "second" && far(row)) {
+          return ports.test(owner, candidate);
+        }
+        // Both kinds meet occupied space beside the ideal row; the first kind's far rows fail on
+        // a rule that is not occupancy.
+        const rule = far(row) ? "kind-lane" : "cells";
+        return { accepted: false, failure: { classification: "conflict", owners: [], rule } };
       },
-      road,
-      path,
-      [jobs[0]!, subject],
-    );
+    });
     expect(state.entries()).toEqual([]);
     return { ideal, result, second: tested.filter(({ kind }) => kind === "second") };
   }
 
   it("moves a row with repeated occupancy rejections behind untried rows", () => {
-    const runtime = pressured(2);
-    const exact = pressured(undefined);
-    expect(runtime.result.status).toBe("compatible");
-    expect(exact.result.status).toBe("compatible");
-    expect(exact.second[0]!.row).toBe(exact.ideal);
+    const { ideal, result, second } = pressured();
+    expect(result.status).toBe("compatible");
     // The first kind's repeated occupancy rejections at the ideal row move it behind the second
     // kind's untried rows.
-    expect(runtime.second[0]!.row).not.toBe(runtime.ideal);
-    expect(runtime.second.length).toBeLessThan(exact.second.length);
+    expect(second[0]!.row).not.toBe(ideal);
   });
 });

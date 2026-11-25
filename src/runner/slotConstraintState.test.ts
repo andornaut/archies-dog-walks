@@ -15,7 +15,6 @@ import { SpawnBoard } from "./spawnBoard.ts";
 import { LaneBlocks, SpawnCells } from "./spawnCells.ts";
 import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 import { auditSpawnPlan } from "./spawnValidation.ts";
-import * as visibility from "./spawnVisibility.ts";
 
 const geometry: Omit<SpawnPlan<string>, "quotas"> = {
   cellInset: 5,
@@ -94,153 +93,7 @@ function hopper() {
 }
 
 describe("native slot constraint transactions", () => {
-  it("reuses exact negative visibility tuples only with current attested entries and prefix owners", () => {
-    const domains = createSlotCandidateDomains(geometry, path);
-    const candidate = (key: string, kind: string, row: number, lane: number) => {
-      const prepared = prepareSlotKind(slotMotionStreams(context, key, kind), geometry, {
-        compile: () => ({ blocksLane: false, footprint: { lanes: 1, rows: 1 } }),
-        footprint: { lanes: 1, rows: 1 },
-        kind,
-        role: "minorFixed",
-        weight: 1,
-      });
-      return domains.at(key, prepared, row, lane)[0]!;
-    };
-    const initial = candidate("initial", "shared", 2, 0);
-    const incoming = candidate("incoming", "shared", 3, 0);
-    const equivalent = candidate("equivalent", "shared", 3, 0);
-    const unrelated = candidate("unrelated", "other", 8, 1);
-    const proof = domains.intrinsic(equivalent);
-    const state = createSlotConstraintState(geometry, path);
-    const empty = state.checkpoint();
-    const firstOwner = { key: "first" },
-      nextOwner = { key: "next" };
-    expect(state.commit(firstOwner, initial.entry).accepted).toBe(true);
-    const coldStep = vi.fn(() => false);
-    const keyQuery = vi.spyOn(SpawnBoard.prototype, "lookupNegativeVisibility");
-    const serialise = vi.spyOn(JSON, "stringify");
-    try {
-      expect(state.lookupNegativeVisibility(coldStep, proof, nextOwner, equivalent.entry)).toEqual({
-        status: "miss",
-      });
-      expect(coldStep).not.toHaveBeenCalled();
-      expect(keyQuery).not.toHaveBeenCalled();
-      expect(serialise).not.toHaveBeenCalled();
-      expect(state.visibilityStatistics()).toMatchObject({
-        attempts: 1,
-        coldBypasses: 1,
-        fingerprintBytes: 0,
-        lookups: 0,
-      });
-    } finally {
-      keyQuery.mockRestore();
-      serialise.mockRestore();
-    }
-    const failure = state.probe({ key: "incoming" }, incoming.entry);
-    expect(failure).toMatchObject({
-      accepted: false,
-      failure: { owners: [firstOwner], rule: "kind-lane" },
-    });
-    const mark = state.checkpoint();
-    const step = vi.fn(() => true);
-    const native = vi.spyOn(SpawnBoard.prototype, "probe");
-    const predicate = vi.spyOn(visibility, "visibilityRejection");
-    try {
-      expect(
-        state.lookupNegativeVisibility(step, proof, nextOwner, equivalent.entry),
-      ).toMatchObject({
-        failure: { owners: [firstOwner], rule: "kind-lane" },
-        status: "blocked",
-      });
-      expect(native).not.toHaveBeenCalled();
-      expect(predicate).not.toHaveBeenCalled();
-      expect(step).toHaveBeenCalledTimes(1);
-    } finally {
-      native.mockRestore();
-      predicate.mockRestore();
-    }
-    expect(state.probe({ key: "accepted" }, unrelated.entry).accepted).toBe(true);
-    expect(
-      state.lookupNegativeVisibility(
-        () => true,
-        domains.intrinsic(unrelated),
-        { key: "accepted" },
-        unrelated.entry,
-      ),
-    ).toEqual({ status: "miss" });
-    expect(state.lookupNegativeVisibility(() => false, proof, nextOwner, equivalent.entry)).toEqual(
-      { status: "budget" },
-    );
-    expect(
-      state.lookupNegativeVisibility(() => true, { accepted: true }, nextOwner, equivalent.entry),
-    ).toEqual({ status: "miss" });
-    expect(state.lookupNegativeVisibility(() => true, proof, firstOwner, equivalent.entry)).toEqual(
-      { status: "miss" },
-    );
-    expect(state.probe(firstOwner, equivalent.entry)).toMatchObject({
-      failure: { rule: "duplicate-owner" },
-    });
-    const changed = Object.freeze({
-      ...equivalent.entry,
-      trace: Object.freeze({ ...equivalent.entry.trace, entry: -1 }),
-    });
-    expect(state.lookupNegativeVisibility(() => true, proof, nextOwner, changed)).toEqual({
-      status: "miss",
-    });
-    expect(state.probe(nextOwner, changed)).toMatchObject({ failure: { rule: "trace-binding" } });
-    const footprint = equivalent.entry.request.footprint!;
-    expect(Reflect.set(footprint, "lanes", 2)).toBe(false);
-    expect(footprint.lanes).toBe(1);
-    expect(
-      state.lookupNegativeVisibility(() => true, proof, nextOwner, equivalent.entry),
-    ).toMatchObject({
-      failure: { owners: [firstOwner], rule: "kind-lane" },
-      status: "blocked",
-    });
-    expect(state.commit({ key: "unrelated" }, unrelated.entry).accepted).toBe(true);
-    coldStep.mockClear();
-    expect(state.lookupNegativeVisibility(coldStep, proof, nextOwner, equivalent.entry)).toEqual({
-      status: "miss",
-    });
-    expect(coldStep).not.toHaveBeenCalled();
-    expect(state.lookupNegativeVisibility(() => true, proof, nextOwner, equivalent.entry)).toEqual({
-      status: "miss",
-    });
-    state.restore(mark);
-    expect(
-      state.lookupNegativeVisibility(() => true, proof, nextOwner, equivalent.entry),
-    ).toMatchObject({
-      failure: { owners: [firstOwner] },
-      status: "blocked",
-    });
-    state.restore(empty);
-    const reboundOwner = { key: "rebound" };
-    expect(state.commit(reboundOwner, initial.entry).accepted).toBe(true);
-    expect(state.lookupNegativeVisibility(() => true, proof, nextOwner, equivalent.entry)).toEqual({
-      status: "miss",
-    });
-    expect(state.probe({ key: "incoming" }, incoming.entry)).toMatchObject({
-      failure: { owners: [reboundOwner] },
-    });
-    expect(
-      state.lookupNegativeVisibility(() => true, proof, nextOwner, equivalent.entry),
-    ).toMatchObject({
-      failure: { owners: [reboundOwner] },
-      status: "blocked",
-    });
-    const otherScope = createSlotConstraintState(
-      { ...geometry, stepSeconds: geometry.stepSeconds * 2 },
-      path,
-      [{ entry: initial.entry, owner: firstOwner }],
-    );
-    expect(otherScope.probe({ key: "incoming" }, incoming.entry).accepted).toBe(false);
-    expect(
-      otherScope.lookupNegativeVisibility(() => true, proof, nextOwner, equivalent.entry),
-    ).toEqual({ status: "miss" });
-    expect(state.visibilityStatistics().hits).toBeGreaterThan(0);
-  });
-
-  it("keeps native outside-zone precedence when intrinsic acceptance cannot attest visibility readiness", () => {
+  it("keeps native outside-zone precedence over an accepted intrinsic check", () => {
     const domains = createSlotCandidateDomains(geometry, path);
     const prefixPrepared = prepareSlotKind(
       slotMotionStreams(context, "prefix", "shared"),
@@ -277,18 +130,12 @@ describe("native slot constraint transactions", () => {
       { entry: prefix, owner: { key: "prefix" } },
     ]);
     expect(state.probe({ key: "valid" }, entry)).toMatchObject({ failure: { rule: "kind-lane" } });
-    expect(state.lookupNegativeVisibility(() => true, proof, { key: "valid" }, entry).status).toBe(
-      "blocked",
-    );
     const outside = Object.freeze({
       ...entry,
       placement: Object.freeze({ ...entry.placement!, screen: [-3000, -2999] as const }),
     });
     const outsideProof = createSlotIntrinsicProbe(geometry, path)(outside);
     expect(outsideProof).toEqual({ accepted: true });
-    expect(
-      state.lookupNegativeVisibility(() => true, outsideProof, { key: "outside" }, outside),
-    ).toEqual({ status: "miss" });
     expect(state.probe({ key: "outside" }, outside)).toMatchObject({
       failure: { rule: "outside-zone" },
     });
@@ -422,12 +269,10 @@ describe("native slot constraint transactions", () => {
     };
     expect(state.checkComplete()).toEqual(failure);
     const beforeAdvice = JSON.stringify(state.entries());
-    const visibilityBeforeAdvice = state.visibilityStatistics();
     const beforeProbe = state.probe(owners[2]!, entries[2]!);
     expect(state.openStretchRow()).toBe(4);
     expect(state.openStretchRow()).toBe(4);
     expect(JSON.stringify(state.entries())).toBe(beforeAdvice);
-    expect(state.visibilityStatistics()).toEqual(visibilityBeforeAdvice);
     expect(state.probe(owners[2]!, entries[2]!)).toEqual(beforeProbe);
     expect(state.checkComplete()).toEqual(failure);
     expect(state.entries()).toEqual(prefix);

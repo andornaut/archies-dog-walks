@@ -491,8 +491,8 @@ describe("safe slot planning", () => {
     const create = constraintState.createSlotIntrinsicProbe;
     const blocked = vi
       .spyOn(constraintState, "createSlotIntrinsicProbe")
-      .mockImplementation((plan, path, attestVisibility) => {
-        const probe = create(plan, path, attestVisibility);
+      .mockImplementation((plan, path) => {
+        const probe = create(plan, path);
         return (entry) =>
           entry.event.mover === undefined && entry.event.distance === rows[1]
             ? { accepted: false as const, rule: "body" }

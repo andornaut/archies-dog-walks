@@ -5,7 +5,11 @@ import type { PreparedSlotKind } from "./slotCandidates.ts";
 import * as preparation from "./slotCandidates.ts";
 import type { SlotSource } from "./slotConfig.ts";
 import { createSlotConstructionState } from "./slotConstraintState.ts";
-import { constructSlotWitness, type SlotWitnessConstructPorts } from "./slotWitnessConstruct.ts";
+import { SLOT_OMISSION_ATTEMPTS } from "./slotDelivery.ts";
+import {
+  createSlotWitnessConstruct,
+  type SlotWitnessConstructPorts,
+} from "./slotWitnessConstruct.ts";
 import type { WitnessJob } from "./slotWitnessSearch.ts";
 import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 
@@ -191,6 +195,7 @@ function run(pools: readonly (readonly PreparedSlotKind<string>[])[], allowance 
     propagate: () => ++propagation <= allowance,
   };
   const ports: SlotWitnessConstructPorts<string, ReturnType<typeof state.checkpoint>> = {
+    bestDelivery: () => undefined,
     candidates(job, prepared, order) {
       orderingPropagation ??= propagation;
       ordering = false;
@@ -200,13 +205,17 @@ function run(pools: readonly (readonly PreparedSlotKind<string>[])[], allowance 
     checkpoint: state.checkpoint,
     complete: state.checkComplete,
     entries: state.entries,
+    minimumDelivery: jobs.length,
+    omissionAttempts: SLOT_OMISSION_ATTEMPTS.reserve,
+    ordinaryOrder: "original",
+    partial: () => false,
     preparations: (job) => job.preparations(),
     propagate: work.propagate,
     restore: state.restore,
     test: (job, candidate) => state.commit(job, candidate.entry),
   };
   try {
-    const result = constructSlotWitness(ports, geometry, path, jobs);
+    const result = createSlotWitnessConstruct(geometry, path, jobs)(ports);
     expect(state.entries()).toEqual([]);
     if (result.status === "compatible") {
       expect(createSlotConstructionState(geometry, path, result.witness).checkComplete()).toEqual({

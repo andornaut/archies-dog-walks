@@ -15,11 +15,15 @@ import {
 } from "./slotCandidates.ts";
 import type { SlotConfiguration, SlotKind, SlotSource } from "./slotConfig.ts";
 import { createSlotConstructionState } from "./slotConstraintState.ts";
+import { SLOT_OMISSION_ATTEMPTS } from "./slotDelivery.ts";
 import * as entropy from "./slotEntropy.ts";
 import { slotMotionStreams } from "./slotEntropy.ts";
 import { makeSlotJobs } from "./slotJobs.ts";
 import type { SlotAssignment } from "./slotPlan.ts";
-import { constructSlotWitness, type SlotWitnessConstructPorts } from "./slotWitnessConstruct.ts";
+import {
+  createSlotWitnessConstruct,
+  type SlotWitnessConstructPorts,
+} from "./slotWitnessConstruct.ts";
 import type { WitnessJob } from "./slotWitnessSearch.ts";
 import {
   blockingLength,
@@ -256,6 +260,7 @@ describe("native slot motion retry capabilities", () => {
     };
     const requested: (number | undefined)[] = [];
     const ports: SlotWitnessConstructPorts<string, ReturnType<typeof state.checkpoint>> = {
+      bestDelivery: () => undefined,
       candidates(owner, kind, order) {
         requested.push(order.motionTier);
         return order.motionTier === undefined
@@ -265,13 +270,17 @@ describe("native slot motion retry capabilities", () => {
       checkpoint: state.checkpoint,
       complete: state.checkComplete,
       entries: state.entries,
+      minimumDelivery: 1,
       motionTiers: (kind) => domains.motionTiers(work, kind),
+      omissionAttempts: SLOT_OMISSION_ATTEMPTS.reserve,
+      ordinaryOrder: "original",
+      partial: () => false,
       preparations: (owner) => owner.preparations(),
       propagate: work.propagate,
       restore: state.restore,
       test: (owner, candidate) => state.commit(owner, candidate.entry),
     };
-    const result = constructSlotWitness(ports, geometry, path, [job]);
+    const result = createSlotWitnessConstruct(geometry, path, [job])(ports);
     expect(result.status).toBe("compatible");
     expect(requested.filter((tier) => tier === 0)).toHaveLength(1);
     expect(requested.some((tier) => tier !== undefined && tier > 0)).toBe(true);

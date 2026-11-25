@@ -7,7 +7,6 @@ import {
   keepMoverSpot,
   leavesPathOpen,
   type MoverGrid,
-  moverWithinZone,
   type Spot,
 } from "./moverSpots.ts";
 import { ridersMeet, type RiderSpan, riderSpanOf } from "./riderSpans.ts";
@@ -76,15 +75,6 @@ export class SpawnBoard<Kind extends string> {
   private readonly places: PlacedPlaces;
   private readonly standingFit: StandingFitContext;
   private readonly entries: SpawnPlacement<Kind>[] = [];
-  private visibilityContext: {
-    failures?: Map<
-      string,
-      {
-        readonly rule: string;
-        readonly owners: readonly SpawnPlacement<Kind>[];
-      }
-    >;
-  } = {};
   private readonly bodies: MoverBody[] = [];
   private readonly riders: RiderSpan[] = [];
   private readonly screens: OnScreen[] = [];
@@ -166,11 +156,7 @@ export class SpawnBoard<Kind extends string> {
         array.splice(0, array.length, ...saved);
       };
     };
-    const visibilityContext = this.visibilityContext;
     const restore = [
-      () => {
-        this.visibilityContext = visibilityContext;
-      },
       this.cells.save(),
       this.lanes.save(),
       this.places.save(),
@@ -204,78 +190,17 @@ export class SpawnBoard<Kind extends string> {
       ? quota
       : undefined;
   }
-  private visibilityKey(trace: SpawnVisibilityTrace): string {
-    return JSON.stringify([
-      "hazards",
-      this.plan.scrollSpeed * this.plan.stepSeconds,
-      trace.kind,
-      trace.row,
-      trace.lane,
-      trace.entry,
-      trace.until,
-    ]);
-  }
   private canShow(trace: SpawnVisibilityTrace): boolean {
     if (!trace.hazard) {
       return true;
     }
-    let witness: FeasibilityWitness | undefined;
     const rejection = visibilityRejection(
       this.plan.scrollSpeed * this.plan.stepSeconds,
       this.entries.filter((entry) => entry.trace.hazard).map((entry) => entry.trace),
       trace,
-      (failure) => {
-        witness = failure;
-        this.observation?.(failure);
-      },
+      (failure) => this.observation?.(failure),
     );
-    if (rejection !== undefined && witness?.contributors !== undefined) {
-      let failures = this.visibilityContext.failures;
-      if (failures === undefined) {
-        failures = new Map();
-        this.visibilityContext.failures = failures;
-      }
-      failures.set(this.visibilityKey(trace), {
-        owners: this.entries.filter((entry) => witness!.contributors!.includes(entry.trace)),
-        rule: rejection,
-      });
-    }
     return rejection === undefined;
-  }
-  hasNegativeVisibilityIndex(): boolean {
-    return (this.visibilityContext.failures?.size ?? 0) > 0;
-  }
-  lookupNegativeVisibility(trace: SpawnVisibilityTrace): PlacementRejection | undefined {
-    if (!trace.hazard) {
-      return undefined;
-    }
-    const failure = this.visibilityContext.failures?.get(this.visibilityKey(trace));
-    if (
-      failure === undefined ||
-      failure.owners.length === 0 ||
-      !failure.owners.every((owner) => this.entries.includes(owner))
-    ) {
-      return undefined;
-    }
-    return this.rejection(undefined, {
-      contributors: failure.owners.map((owner) => owner.trace),
-      rule: failure.rule,
-    });
-  }
-  // Mint only after the intrinsic check accepted this exact entry.
-  visibilityPrerequisite(
-    entry: SpawnPlacement<Kind>,
-    quota: SpawnQuota<Kind>,
-  ): SpawnVisibilityTrace | undefined {
-    if (entry.herring) {
-      return entry.trace;
-    }
-    if (entry.event.mover === undefined) {
-      const row = entry.trace.placement?.block.row ?? this.rows.indexOf(entry.event.distance);
-      return this.standingTrace(quota, { lane: entry.event.lane, row });
-    }
-    const spot = this.spot(entry, false);
-    return spot !== undefined && moverWithinZone(this.geometry, spot) ? entry.trace : undefined;
   }
   private standingTrace(quota: SpawnQuota<string>, cell: Cell): SpawnVisibilityTrace {
     const entry = this.rows[cell.row]!,
@@ -876,6 +801,5 @@ export class SpawnBoard<Kind extends string> {
       }
     }
     this.entries.push(entry);
-    this.visibilityContext = {};
   }
 }

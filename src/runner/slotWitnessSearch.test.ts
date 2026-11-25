@@ -60,17 +60,23 @@ function fixture(overrides: Partial<WitnessWork<string>> = {}, auxiliary = false
   });
   const domains = createSlotCandidateDomains(road, path);
   const state = createSlotConstructionState(road, path);
-  const work: WitnessWork<string> = { anchor: () => true, check: () => true, ...overrides };
+  const work: WitnessWork<string> = {
+    anchor: () => true,
+    certifyPartial: () => true,
+    check: () => true,
+    minimumDelivery: jobs.length,
+    ordinaryOrder: "original",
+    progress: () => 0,
+    ...overrides,
+  };
   const search = createSlotWitnessSearch(road, path, domains, jobs, work);
   return { domains, jobs, path, search, state };
 }
 
 describe("native composition solve", () => {
-  it("returns exact insertion-order provenance and certifies the complete composition once", () => {
-    const certify = vi.fn((selections: readonly unknown[]) => selections.length === 4);
-    const { jobs, search, state } = fixture({ certify });
+  it("returns exact insertion-order provenance for the complete composition", () => {
+    const { jobs, search, state } = fixture();
     const result = search.solve(state);
-    expect(certify).toHaveBeenCalledOnce();
     expect(quietCoverage(geometry, result.status === "compatible" ? result.witness : []).over).toBe(
       0,
     );
@@ -124,53 +130,20 @@ describe("native composition solve", () => {
     expect(state.entries()[0]!.entry).toBe(prefix[0]!.entry);
   });
 
-  it("stops without further native work after final certification fails", () => {
-    let stopped = false;
-    let commits = 0;
-    let commitsAtStop = 0;
-    const active = vi.fn(() => {
-      commitsAtStop = commits;
-      stopped = true;
-      return false;
-    });
-    const { jobs, search, state } = fixture({ certify: active, stopped: () => stopped });
-    const commit = state.commit;
-    const phases: string[] = [];
-    const result = search.solve({
-      ...state,
-      commit: (owner, entry) => {
-        expect(stopped).toBe(false);
-        commits++;
-        phases.push(jobs.find((job) => job === owner)!.phase);
-        return commit(owner, entry);
-      },
-    });
-    expect(result.status).toBe("budget");
-    expect(active).toHaveBeenCalledOnce();
-    expect(commits).toBe(commitsAtStop);
-    expect(commits).toBeGreaterThanOrEqual(jobs.length);
-    expect(new Set(phases)).toEqual(new Set(["active"]));
-    expect(state.entries()).toEqual([]);
-  });
-
-  it("checks inert-suffix lane closure before complete composition certification", () => {
-    const certify = vi.fn((selections: readonly unknown[]) => selections.length === 4);
-    const { jobs, search, state } = fixture({ certify }, true);
+  it("checks inert-suffix lane closure before the complete composition", () => {
+    const { jobs, search, state } = fixture({}, true);
     const prefixes: number[] = [];
     const result = search.solve({
       ...state,
       checkComplete: () => {
         const length = state.entries().length;
         prefixes.push(length);
-        expect(certify).not.toHaveBeenCalled();
         return state.checkComplete();
       },
     });
     expect(result.status).toBe("compatible");
     expect(prefixes).toContain(3);
     expect(prefixes.at(-1)).toBe(4);
-    expect(certify).toHaveBeenCalledOnce();
-    expect(certify.mock.calls[0]![0]).toHaveLength(4);
     if (result.status === "compatible") {
       expect(result.selections.map(({ job }) => job)).toEqual([jobs[0], jobs[1], jobs[3], jobs[2]]);
     }
@@ -235,16 +208,12 @@ describe("native composition solve", () => {
     expect(commit).toHaveBeenCalledOnce();
     expect(state.entries()).toEqual([]);
   });
-  it("preserves native results, work and complete certification across different slice sizes", () => {
+  it("preserves native results and work across different slice sizes", () => {
     const run = (slice?: number) => {
-      const counts = { active: 0, anchors: 0, checks: 0, propagation: 0 };
+      const counts = { anchors: 0, checks: 0, propagation: 0 };
       const { search, state } = fixture({
         anchor: () => {
           counts.anchors++;
-          return true;
-        },
-        certify: () => {
-          counts.active++;
           return true;
         },
         check: () => {
@@ -280,7 +249,6 @@ describe("native composition solve", () => {
     };
     const synchronous = run();
     expect(synchronous.result.status).toBe("compatible");
-    expect(synchronous.counts.active).toBe(1);
     expect(JSON.stringify(run(1))).toEqual(JSON.stringify(synchronous));
     expect(JSON.stringify(run(11))).toEqual(JSON.stringify(synchronous));
   });

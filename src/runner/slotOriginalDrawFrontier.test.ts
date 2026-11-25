@@ -4,7 +4,11 @@ import * as moverPlanning from "./moverPlanning.ts";
 import { createSlotCandidateDomains, type SlotCandidateOrder } from "./slotCandidateDomains.ts";
 import { createSlotPathProjection, prepareSlotKind, slotPlacementsAt } from "./slotCandidates.ts";
 import { createSlotConstructionState } from "./slotConstraintState.ts";
-import { constructSlotWitness, type SlotWitnessConstructPorts } from "./slotWitnessConstruct.ts";
+import { SLOT_OMISSION_ATTEMPTS } from "./slotDelivery.ts";
+import {
+  createSlotWitnessConstruct,
+  type SlotWitnessConstructPorts,
+} from "./slotWitnessConstruct.ts";
 import type { WitnessJob } from "./slotWitnessSearch.ts";
 import { rowSpacing, type SpawnPlan, zoneRows } from "./spawning.ts";
 
@@ -87,6 +91,7 @@ function fixture() {
   };
   type Mark = ReturnType<typeof state.checkpoint>;
   const ports: SlotWitnessConstructPorts<string, Mark> = {
+    bestDelivery: () => undefined,
     candidates: (owner, source, order) =>
       order.motionTier === undefined
         ? domains.sequence(work, order, owner.key, source)
@@ -94,7 +99,11 @@ function fixture() {
     checkpoint: state.checkpoint,
     complete: state.checkComplete,
     entries: state.entries,
+    minimumDelivery: 1,
     motionTiers: (source) => domains.motionTiers(work, source),
+    omissionAttempts: SLOT_OMISSION_ATTEMPTS.reserve,
+    ordinaryOrder: "original",
+    partial: () => false,
     preparations: (owner) => owner.preparations(),
     propagate: work.propagate,
     restore: state.restore,
@@ -191,24 +200,19 @@ describe("original draw native frontiers", () => {
 
   it("visits original draws at later anchors before retry draws", () => {
     const { job, path, ports, prepared, state } = fixture();
-    const selected = constructSlotWitness(
-      {
-        ...ports,
-        test(owner, candidate) {
-          const row = candidate.entry.trace.placement!.block.row;
-          if (row !== 1 && candidate.entry.placement?.selection?.draws === prepared.draws) {
-            return {
-              accepted: false,
-              failure: { classification: "conflict", owners: [], rule: "fixture-anchor" },
-            };
-          }
-          return ports.test(owner, candidate);
-        },
+    const selected = createSlotWitnessConstruct(geometry, path, [job])({
+      ...ports,
+      test(owner, candidate) {
+        const row = candidate.entry.trace.placement!.block.row;
+        if (row !== 1 && candidate.entry.placement?.selection?.draws === prepared.draws) {
+          return {
+            accepted: false,
+            failure: { classification: "conflict", owners: [], rule: "fixture-anchor" },
+          };
+        }
+        return ports.test(owner, candidate);
       },
-      geometry,
-      path,
-      [job],
-    );
+    });
     expect(selected.status).toBe("compatible");
     if (selected.status !== "compatible") {
       throw Error("Expected native complete witness");
@@ -225,22 +229,17 @@ describe("original draw native frontiers", () => {
   it("resumes the full native source when a tier view becomes unavailable", () => {
     const { job, path, ports, state } = fixture();
     const orders: (number | undefined)[] = [];
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        *candidates(owner, source, order) {
-          orders.push(order.motionTier);
-          if (order.motionTier !== undefined) {
-            yield { status: "unavailable" };
-            return;
-          }
-          yield* ports.candidates(owner, source, order);
-        },
+    const result = createSlotWitnessConstruct(geometry, path, [job])({
+      ...ports,
+      *candidates(owner, source, order) {
+        orders.push(order.motionTier);
+        if (order.motionTier !== undefined) {
+          yield { status: "unavailable" };
+          return;
+        }
+        yield* ports.candidates(owner, source, order);
       },
-      geometry,
-      path,
-      [job],
-    );
+    });
     expect(result.status).toBe("compatible");
     expect(orders).toEqual([0, undefined]);
     if (result.status !== "compatible") {
@@ -255,22 +254,17 @@ describe("original draw native frontiers", () => {
   it("drains original unsafe fallback before opening a retry tier", () => {
     const { job, path, ports, prepared, state } = fixture();
     const orders: SlotCandidateOrder[] = [];
-    const result = constructSlotWitness(
-      {
-        ...ports,
-        candidates(owner, source, order) {
-          orders.push(order);
-          return ports.candidates(owner, source, order);
-        },
-        laneClosure: () => ({
-          accepted: false,
-          failure: { classification: "conflict", owners: [], rule: "fixture-closure" },
-        }),
+    const result = createSlotWitnessConstruct(geometry, path, [job])({
+      ...ports,
+      candidates(owner, source, order) {
+        orders.push(order);
+        return ports.candidates(owner, source, order);
       },
-      geometry,
-      path,
-      [job],
-    );
+      laneClosure: () => ({
+        accepted: false,
+        failure: { classification: "conflict", owners: [], rule: "fixture-closure" },
+      }),
+    });
     expect(result.status).toBe("compatible");
     expect(orders.length).toBeGreaterThan(0);
     expect(orders.every(({ motionTier }) => motionTier === 0)).toBe(true);

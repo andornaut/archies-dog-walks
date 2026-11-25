@@ -414,7 +414,7 @@ export function planSlotSpawns<Kind extends string>(
   // The second attempt reuses the domains and preparations built on this frozen context.
   deepFreeze(geometry);
   path = deepFreeze(conditioned.path);
-  const domains = createSlotCandidateDomains(geometry, path, { negativeVisibility: false });
+  const domains = createSlotCandidateDomains(geometry, path);
   const layouts = new Map<string, number>();
   const sourceOrders = new Map<SlotJob<Kind>, readonly SlotSource<Kind>[]>();
   const orderSources = (job: SlotJob<Kind>) => {
@@ -604,7 +604,7 @@ export function planSlotSpawns<Kind extends string>(
       finishWorkFailure() ?? unsupported("construction", [{ code: "propagation-attempt-budget" }])
     );
   }
-  const work: WitnessWork<Kind> = {
+  const work: Omit<WitnessWork<Kind>, "ordinaryOrder"> = {
     certifyPartial(
       selected: readonly WitnessSelection<Kind>[],
       missing: readonly WitnessOmission<Kind>[],

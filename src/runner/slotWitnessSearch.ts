@@ -60,18 +60,17 @@ export type WitnessResult<Kind extends string> =
 export interface WitnessWork<Kind extends string> {
   readonly anchor: () => boolean;
   readonly check: () => boolean;
-  readonly certify?: (selections: readonly WitnessSelection<Kind>[]) => boolean;
-  readonly certifyPartial?: (
+  readonly certifyPartial: (
     selections: readonly WitnessSelection<Kind>[],
     omissions: readonly WitnessOmission<Kind>[],
   ) => boolean;
   // Diagnostic observers: the search's first floor-meeting layout and its reserve restart.
   readonly floorMet?: () => void;
-  readonly minimumDelivery?: number;
-  readonly ordinaryOrder?: "original" | "balanced";
+  readonly minimumDelivery: number;
+  readonly ordinaryOrder: "original" | "balanced";
   readonly reserveRestarted?: () => void;
   // Share of the current attempt's work allowance already used, from 0 to 1.
-  readonly progress?: () => number;
+  readonly progress: () => number;
   readonly propagate?: () => boolean;
   readonly rejected?: (candidate: SlotCandidate<Kind>, failure: Failure<Kind>) => void;
   readonly stopped?: () => boolean;
@@ -95,8 +94,6 @@ export function createSlotWitnessSearch<Kind extends string>(
     const reserveDue = () =>
       !reserving &&
       incumbent === undefined &&
-      work.minimumDelivery !== undefined &&
-      work.progress !== undefined &&
       work.progress() * SLOT_OMISSION_RESERVE.denominator >= SLOT_OMISSION_RESERVE.numerator;
     const halted = () => partialFailure !== undefined || work.stopped?.() === true;
     const stopped = () => halted() || reserveDue();
@@ -104,10 +101,9 @@ export function createSlotWitnessSearch<Kind extends string>(
       return { status: "budget" };
     }
     if (
-      work.minimumDelivery !== undefined &&
-      (!Number.isSafeInteger(work.minimumDelivery) ||
-        work.minimumDelivery < 0 ||
-        work.minimumDelivery > jobs.length)
+      !Number.isSafeInteger(work.minimumDelivery) ||
+      work.minimumDelivery < 0 ||
+      work.minimumDelivery > jobs.length
     ) {
       return {
         failure: { classification: "unattributed", owners: [], rule: "invalid-delivery-floor" },
@@ -122,10 +118,8 @@ export function createSlotWitnessSearch<Kind extends string>(
     }
     const root = state.checkpoint();
     const provenance = new WeakMap<object, SlotCandidate<Kind>>();
-    // Runtime construction rejects a repeated test without native work while every owner of its
-    // recorded conflict keeps its placement. Exact construction keeps native failures for its
-    // negative visibility lookup.
-    const reuse = work.minimumDelivery !== undefined;
+    // A repeated test is rejected without native work while every owner of its recorded conflict
+    // keeps its placement.
     const conflicts = new Map<
       WitnessJob<Kind>,
       Map<SlotCandidate<Kind>, { blockers: ConflictBlockers<Kind>; failure: Failure<Kind> }>
@@ -154,7 +148,7 @@ export function createSlotWitnessSearch<Kind extends string>(
         }
         const entries = state.entries();
         if (
-          entries.length < work.minimumDelivery! ||
+          entries.length < work.minimumDelivery ||
           entries.length >= jobs.length ||
           entries.length <= (incumbent?.selections.length ?? -1)
         ) {
@@ -195,7 +189,6 @@ export function createSlotWitnessSearch<Kind extends string>(
         );
         if (
           missing.some(({ job }) => !job.optional || job.guaranteed) ||
-          work.certifyPartial === undefined ||
           !work.certifyPartial(selected, missing)
         ) {
           return stopped() ? undefined : false;
@@ -242,16 +235,6 @@ export function createSlotWitnessSearch<Kind extends string>(
             failure: { classification: "intrinsic", owners: [], rule: intrinsic.rule },
           };
         }
-        if (!reuse) {
-          const cached = state.lookupNegativeVisibility(propagate, intrinsic, job, candidate.entry);
-          if (cached.status === "budget") {
-            return undefined;
-          }
-          if (cached.status === "blocked") {
-            work.rejected?.(candidate, cached.failure);
-            return { accepted: false, failure: cached.failure };
-          }
-        }
         if (!charge()) {
           return undefined;
         }
@@ -260,7 +243,7 @@ export function createSlotWitnessSearch<Kind extends string>(
           provenance.set(trial.entry, candidate);
         } else {
           work.rejected?.(candidate, trial.failure);
-          const blockers = reuse ? state.blockersOf(trial.failure) : undefined;
+          const blockers = state.blockersOf(trial.failure);
           if (blockers !== undefined) {
             let byCandidate = conflicts.get(job);
             if (byCandidate === undefined) {
@@ -272,7 +255,8 @@ export function createSlotWitnessSearch<Kind extends string>(
         }
         return trial;
       }
-      const ports: SlotWitnessConstructPorts<Kind, Mark<Kind>> = {
+      const ports: Omit<SlotWitnessConstructPorts<Kind, Mark<Kind>>, "omissionAttempts"> = {
+        bestDelivery: () => incumbent?.selections.length,
         candidates(job, prepared, order) {
           return (order.motionTier === undefined ? domains.sequence : domains.frontierSequence)(
             { anchor: work.anchor, check: charge, propagate },
@@ -318,9 +302,6 @@ export function createSlotWitnessSearch<Kind extends string>(
               },
             };
           }
-          if (work.certify !== undefined && !work.certify(selected)) {
-            return undefined;
-          }
           return stopped() ? undefined : checked;
         },
         entries: () => state.entries(),
@@ -331,15 +312,10 @@ export function createSlotWitnessSearch<Kind extends string>(
           const checked = state.checkComplete();
           return stopped() ? undefined : checked;
         },
-        ...(work.ordinaryOrder === undefined ? {} : { ordinaryOrder: work.ordinaryOrder }),
+        minimumDelivery: work.minimumDelivery,
         motionTiers: (prepared) => domains.motionTiers({ propagate }, prepared),
-        ...(work.minimumDelivery === undefined
-          ? {}
-          : {
-              bestDelivery: () => incumbent?.selections.length,
-              minimumDelivery: work.minimumDelivery,
-              partial: recordPartial,
-            }),
+        ordinaryOrder: work.ordinaryOrder,
+        partial: recordPartial,
         preparations: (job) => job.preparations(),
         propagate,
         rejects(job, candidate) {

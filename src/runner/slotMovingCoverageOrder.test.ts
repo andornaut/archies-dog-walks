@@ -6,6 +6,7 @@ import { type PreparedSlotKind, prepareSlotKind } from "./slotCandidates.ts";
 import type { SlotSource } from "./slotConfig.ts";
 import { createSlotConstructionState } from "./slotConstraintState.ts";
 import { coverageLeadingRows, quietCoverage } from "./slotCoverage.ts";
+import { SLOT_OMISSION_ATTEMPTS } from "./slotDelivery.ts";
 import {
   createSlotWitnessConstruct,
   type SlotWitnessConstructPorts,
@@ -99,11 +100,15 @@ function fixture(pools: readonly (readonly SlotSource<string>[])[]) {
   type Mark = ReturnType<typeof state.checkpoint>;
   const attempts: { candidate: SlotCandidate<string>; key: string }[] = [];
   const ports: SlotWitnessConstructPorts<string, Mark> = {
+    bestDelivery: () => undefined,
     candidates: (job, value, order) => domains.sequence(work, order, job.key, value),
     checkpoint: state.checkpoint,
     complete: state.checkComplete,
     entries: state.entries,
     minimumDelivery: pools.length,
+    omissionAttempts: SLOT_OMISSION_ATTEMPTS.reserve,
+    ordinaryOrder: "original",
+    partial: () => false,
     preparations: (job) => job.preparations(),
     propagate: work.propagate,
     restore: state.restore,
