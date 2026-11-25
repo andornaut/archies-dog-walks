@@ -5,7 +5,8 @@
   "account_id": "90f23a78b62eb9571a3fd6c296d15f30",
   "compatibility_date": "2026-11-10",
   "main": "./dist/.worker/index.mjs",
-  // Static files take the ordinary asset path. The Worker only serves missing packed members.
+  // Static files take the ordinary asset path. The Worker runs only where no file matches, and
+  // serves the archive-only game files from the deployed build's group archives.
   "assets": {
     "binding": "ASSETS",
     "directory": "./dist",

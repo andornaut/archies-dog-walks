@@ -1,9 +1,13 @@
+import { validateBuildManifest } from "@andornaut/game-kit/build/buildManifest";
 import {
-  createOriginMemberReader,
-  type OriginMemberReader,
-} from "@andornaut/game-kit/runtime/web/pwa/dom/originMemberReader";
+  BUILD_POINTER_URL,
+  type BuildPointer,
+} from "@andornaut/game-kit/runtime/web/pwa/buildContract";
+import {
+  createGroupArchiveMemberReader,
+  type GroupArchiveMemberReader,
+} from "@andornaut/game-kit/runtime/web/pwa/dom/groupArchiveMemberReader";
 
-import { ORIGIN_INDEX_URL, type PackedAssetIndex } from "../assets/packedAssetIndex.ts";
 import { COMMON_RULE } from "../headers/securityPolicy.ts";
 
 type AssetBinding = { fetch: (request: Request) => Promise<Response> };
@@ -72,25 +76,42 @@ async function memberResponse(
   return new Response(body, { headers, status: 206 });
 }
 
-// The binding always opens the immutable bytes of this deployment directly, without forwarding the
-// client's Range or dispatching through this Worker again. Retained files can remain ordinary assets.
-async function readerFor(assets: AssetBinding, requestUrl: string) {
-  const read = (path: string) => assets.fetch(new Request(new URL(path, requestUrl)));
-  const index = await read(ORIGIN_INDEX_URL);
-  if (!index.ok) {
-    throw new Error("Packed asset index unavailable");
-  }
-  const { index: members, urls } = (await index.json()) as PackedAssetIndex;
-  const reader: OriginMemberReader = createOriginMemberReader(
+interface Origin {
+  // Each archived member's SHA-256, by URL, from the deployed build manifest.
+  readonly digests: ReadonlyMap<string, string>;
+  readonly reader: GroupArchiveMemberReader;
+}
+
+// The Cloudflare Worker, which runs only for a request no static file answers. It serves the
+// deployed build's archive-only members (src/pwa/precachePlugin.ts) at their URLs from its group
+// archives, for a page with no installed build to serve them: the art gallery, the game before
+// it installs, or a browser that plays from the network. The binding opens this deployment's
+// immutable files directly, without forwarding the client's Range or dispatching through this
+// Worker again. One reader per instance keeps the pointer's archive index and its one verified
+// archive; a failure to build it is retried on the next request.
+let origin: Promise<Origin> | undefined;
+
+async function openOrigin(assets: AssetBinding, requestUrl: string): Promise<Origin> {
+  const json = async (path: string) => {
+    const response = await assets.fetch(new Request(new URL(path, requestUrl)));
+    if (!response.ok) {
+      throw new Error(`${path} unavailable`);
+    }
+    return response.json() as Promise<unknown>;
+  };
+  const pointer = await json(BUILD_POINTER_URL);
+  // The reader validates the pointer, groups included, before the manifest it names is read.
+  const reader = createGroupArchiveMemberReader(
     {
       async readArchive(path) {
-        const response = await read(urls[path] ?? path);
+        const response = await assets.fetch(new Request(new URL(path, requestUrl)));
         return response.ok ? (response.body ?? undefined) : undefined;
       },
     },
-    members,
+    pointer,
   );
-  return { members: members.members, reader };
+  const manifest = validateBuildManifest(await json((pointer as BuildPointer).manifest));
+  return { digests: new Map(manifest.files.map(({ sha256, url }) => [url, sha256])), reader };
 }
 
 export default {
@@ -99,19 +120,20 @@ export default {
       return ASSETS.fetch(request);
     }
     try {
-      const { members, reader } = await readerFor(ASSETS, request.url);
+      origin ??= openOrigin(ASSETS, request.url).catch((error: unknown) => {
+        origin = undefined;
+        throw error;
+      });
+      const { digests, reader } = await origin;
       const path = new URL(request.url).pathname;
-      const entry = members.find((member) => member.path === path);
-      if (entry === undefined) {
+      const response = await reader.read(path);
+      const digest = digests.get(path);
+      if (response === undefined || digest === undefined) {
         return await ASSETS.fetch(request);
       }
-      const response = await reader.read(path);
-      if (response === undefined) {
-        throw new Error("Packed asset missing from verified index");
-      }
-      return await memberResponse(request, response, entry.sha256);
+      return await memberResponse(request, response, digest);
     } catch {
-      return new Response("Packed asset unavailable", {
+      return new Response("Archived asset unavailable", {
         headers: { "Cache-Control": "no-store" },
         status: 502,
       });

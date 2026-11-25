@@ -2,13 +2,13 @@ import { precachePlugin as kitPrecachePlugin } from "@andornaut/game-kit/build/p
 import type { Plugin } from "vite";
 
 import type { ArtFileMap } from "../assets/artUrl.ts";
+import { gameOnlyFiles, updateGroup } from "./assetGroups.ts";
 import { CACHE_POLICY } from "./cachePolicy.ts";
 import { artHashedFiles, bootFiles } from "./precacheArt.ts";
 
 interface PrecachePluginOptions {
   // The game's art files, as atlasPlugin hashed them for this build.
   getArtFiles: () => ArtFileMap;
-  getSoundBanks: () => Readonly<Record<string, readonly string[]>>;
   // The game page's file name in the build output, which is its path under Vite's root, e.g.
   // "play/index.html".
   pageHtmlFile: string;
@@ -16,20 +16,46 @@ interface PrecachePluginOptions {
   serviceWorkerSource: string;
 }
 
-// The kit's precache plugin with the game's cache policy and its hashed art: builds the router
-// /sw.js and writes the build's manifest (/.game-kit/manifest-<version>.json, every file the
-// complete build needs offline) and its pointer (/.game-kit/build.json).
+// The kit's precache plugin with the game's cache policy, its hashed art and its update groups:
+// builds the router /sw.js and writes the build's manifest (/.game-kit/manifest-<version>.json,
+// every file the complete build needs offline), its pointer (/.game-kit/build.json) and one
+// static archive per group and sound format, which both a first install and an update download.
+// The files only the installed game requests (gameOnlyFiles) ship only inside the archives; the
+// game's Worker (src/pwa/originWorker.ts) serves them at their URLs to a visitor who has not
+// installed. The first plugin reads the final bundle just before the kit's, which then prunes it.
 export function precachePlugin({
   getArtFiles,
-  getSoundBanks,
   pageHtmlFile,
   serviceWorkerSource,
-}: PrecachePluginOptions): Plugin {
-  return kitPrecachePlugin({
-    boot: bootFiles,
-    hashedFiles: artHashedFiles(getArtFiles, getSoundBanks),
-    pageHtmlFile,
-    policy: CACHE_POLICY,
-    serviceWorkerSource,
-  });
+}: PrecachePluginOptions): Plugin[] {
+  let gameOnly: ReadonlySet<string> | undefined;
+  return [
+    {
+      apply: "build",
+      enforce: "post",
+      generateBundle: {
+        handler(_options, bundle) {
+          gameOnly = gameOnlyFiles(bundle as Parameters<typeof gameOnlyFiles>[0]);
+        },
+        order: "post",
+      },
+      name: "archies-dog-walks-game-only-files",
+    },
+    kitPrecachePlugin({
+      boot: bootFiles,
+      groupedFirstInstall: {
+        archiveOnly: (url) => {
+          if (gameOnly === undefined) {
+            throw new Error("precache: the game-only files are not known yet");
+          }
+          return gameOnly.has(url);
+        },
+      },
+      hashedFiles: artHashedFiles(getArtFiles),
+      pageHtmlFile,
+      policy: CACHE_POLICY,
+      serviceWorkerSource,
+      updateGroup,
+    }),
+  ];
 }

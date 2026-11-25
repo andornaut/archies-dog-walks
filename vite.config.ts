@@ -33,13 +33,16 @@ export default gameViteConfig<typeof ConfigModules>({
   // built pages and /manifest.webmanifest there (HASHED_ICONS in src/pwa/icons.ts).
   // webManifestPlugin fills the manifest's description from the data, in dev and in the manifest
   // hashedIconsPlugin writes, before precachePlugin reads it.
-  // precachePlugin writes /sw.js, the service worker that precaches the game for offline play,
-  // reading the map of hashed art atlasPlugin writes.
+  // precachePlugin writes /sw.js, the router that serves the installed game offline, the build
+  // manifest and pointer, and the group archives a first install and an update download, reading
+  // the map of hashed art atlasPlugin writes (src/pwa/precachePlugin.ts).
   // securityHeadersPlugin writes /_headers, the response headers with each page's CSP.
   // inlineStyleCheckPlugin fails the build for a style element or attribute that CSP would block
   // in a built script or page.
   // uiStylePlugin serves the HTML interface's stylesheet as the CSS module virtual:adw-ui.css, so
   // the build links it as a file the CSP's style-src 'self' allows.
+  // originWorkerPlugin builds the Worker that serves the archive-only files at their URLs to a
+  // page with no installed build (src/pwa/originWorker.ts).
   plugins: (modules, repoPath) => {
     const atlas = modules.atlasPlugin();
     return [
@@ -54,14 +57,13 @@ export default gameViteConfig<typeof ConfigModules>({
       modules.webManifestPlugin(),
       modules.precachePlugin({
         getArtFiles: atlas.api.artFiles,
-        getSoundBanks: atlas.api.soundBanks,
         pageHtmlFile: "play/index.html",
         serviceWorkerSource: repoPath("src/pwa/serviceWorker.ts"),
       }),
       modules.securityHeadersPlugin(),
       modules.inlineStyleCheckPlugin(),
       modules.uiStylePlugin({ source: repoPath("src/ui/dom/uiStylesheet.ts") }),
-      modules.packOriginPlugin(atlas.api.soundBanks, repoPath("src/pwa/packedOrigin.ts")),
+      modules.originWorkerPlugin(repoPath("src/pwa/originWorker.ts")),
     ];
   },
   previewHost: PREVIEW_HOST,

@@ -10,7 +10,6 @@ import {
 } from "@andornaut/game-kit/runtime/progressState";
 import { trackInputModality } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 
-import { prepareSoundBanks } from "./audio/soundBankUrls.ts";
 import { loadingProgress } from "./loadingProgress.ts";
 import { startLaunch } from "./pwa/launch.ts";
 import { launchGame } from "./pwa/launchGame.ts";
@@ -54,7 +53,7 @@ void launchGame(
     },
   ),
   async () => {
-    const [{ startGame }] = await Promise.all([import("./main.ts"), prepareSoundBanks()]);
+    const { startGame } = await import("./main.ts");
     startGame({ loading, nativeProgress });
   },
 ).catch((error: unknown) => {
