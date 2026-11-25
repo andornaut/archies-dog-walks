@@ -64,6 +64,8 @@ export function createPanelButton(
   // Places the button in device pixels from its container's corner at origin, the screen's by
   // default.
   place(scale: DomScale, origin?: Point): void;
+  // Places the face and label in the button, which an action group places on its face.
+  placeContent(scale: DomScale): void;
 } {
   const content = doc.createElement("span");
   content.className = "adw-lines";
@@ -110,6 +112,13 @@ export function createPanelButton(
       return { line, text };
     },
   );
+  // The face and label from the button's corner at corner.
+  const placeContent = (scale: DomScale, corner: Point) => {
+    placeFrame(scale, corner, face, button.rect);
+    for (const { line, text } of lines) {
+      placeText(input.fonts[line.font], scale, button.rect, text, line);
+    }
+  };
   return {
     dispose() {
       stopFeedback();
@@ -118,10 +127,8 @@ export function createPanelButton(
     element,
     place(scale, origin = ORIGIN) {
       placeBox(scale, origin, element, button.hit);
-      placeFrame(scale, button.hit, face, button.rect);
-      for (const { line, text } of lines) {
-        placeText(input.fonts[line.font], scale, button.rect, text, line);
-      }
+      placeContent(scale, button.hit);
     },
+    placeContent: (scale) => placeContent(scale, button.rect),
   };
 }

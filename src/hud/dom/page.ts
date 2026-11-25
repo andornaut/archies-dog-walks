@@ -1,3 +1,4 @@
+import "@andornaut/game-kit/runtime/web/ui/dom/actionGroup.css";
 import "@andornaut/game-kit/runtime/web/ui/dom/modalFrame.css";
 
 import type { Point } from "@andornaut/game-kit/runtime/rect";
@@ -30,13 +31,14 @@ import { createPageTab } from "./shopPage.ts";
 // The page template the Pet shop, the Logbook and Help share in HTML over the canvas: the kit's
 // page frame (createModalFrame's page variant, PAGE_FRAME) under the live top bar, with no close
 // control, placed on the art-pixel grid (gridX, gridY). The frame is the dialog and owns its name,
-// title box and footer room; the page draws in it. In painting order: its fill in the frame's
-// skin, its title's lines in the title box, then in the body its tabs across the tab span
-// (shopTabRects), the page's own parts, its list or body clipped to its view, the pages' scrollbar
-// beside it and the page's overlays, all placed from the screen's corner, and Back (pageBack) in
-// the footer room. The page moves and clips its own list (scroll "game"). A page is not a modal:
-// it opens off the modal layer, the top bar over it keeps its buttons, and a modal over it (the
-// Menu, a detail card) dims and stills it with the rest of the background.
+// title box and footer, whose kit action group places Back (pageBack) on the grid; the page draws
+// in it. In painting order: its fill in the frame's skin, its title's lines in the title box, then
+// in the body its tabs across the tab span (shopTabRects), the page's own parts, its list or body
+// clipped to its view, the pages' scrollbar beside it and the page's overlays, all placed from the
+// screen's corner, and Back's face and label. The page moves and clips its own list (scroll
+// "game"). A page is not a modal: it opens off the modal layer, the top bar over it keeps its
+// buttons, and a modal over it (the Menu, a detail card) dims and stills it with the rest of the
+// background.
 
 export interface PageChrome {
   readonly back: PanelButton;
@@ -202,7 +204,18 @@ export function showPage(layer: UiLayer, input: DomPageInput): DomPage {
     { fonts: input.fonts, press: { accepts: admits, burst, press: input.back } },
     chrome.back,
   );
-  frame.footerSlot.append(back.element);
+  frame.footer.element.append(back.element);
+  const footer = {
+    actions: [
+      {
+        element: back.element,
+        role: chrome.back.primary ? ("primary" as const) : ("secondary" as const),
+        size: { height: chrome.back.rect.height, width: chrome.back.rect.width },
+      },
+    ],
+    // Back's press area is its face.
+    context: { press: { margin: 0 } },
+  };
 
   // Phaser handles a press on the page outside its canvas as its own; a press here is the page's.
   for (const type of ["mousedown", "touchstart"]) {
@@ -230,7 +243,7 @@ export function showPage(layer: UiLayer, input: DomPageInput): DomPage {
       },
       {
         body: 0,
-        footer: { height: PAGE_FRAME.footer },
+        footer,
         scroll: "game",
         ...(titleLines.length === 0 ? {} : { title: PAGE_FRAME.title }),
       },
@@ -244,7 +257,7 @@ export function showPage(layer: UiLayer, input: DomPageInput): DomPage {
     }
     bodyHost.place(scale, units.body);
     parts.forEach((part) => part.place(scale));
-    back.place(scale, units.footer);
+    back.placeContent(scale);
   };
   place(layer.scale());
   const stopScale = layer.onScale(place);
@@ -331,8 +344,11 @@ export function showPage(layer: UiLayer, input: DomPageInput): DomPage {
       }
     },
     setActionShown: (index, shown) => {
-      if (index === BACK) {
+      if (index === BACK && back.element.hidden === shown) {
         back.element.hidden = !shown;
+        if (placedScale !== undefined) {
+          place(placedScale);
+        }
       }
     },
     setDimmed: (next) => {
