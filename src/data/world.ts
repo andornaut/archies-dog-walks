@@ -603,10 +603,10 @@ export const WORLD = {
       spawnSlots: {
         capacity: { encounterFixed: 43, encounterMoving: 28, minorFixed: 37, minorMoving: 93 },
         counts: [
-          { encounterFixed: 30, encounterMoving: 19, minorFixed: 26, minorMoving: 65 },
-          { encounterFixed: 30, encounterMoving: 19, minorFixed: 26, minorMoving: 65 },
-          { encounterFixed: 30, encounterMoving: 19, minorFixed: 26, minorMoving: 65 },
-          { encounterFixed: 30, encounterMoving: 19, minorFixed: 26, minorMoving: 65 },
+          { encounterFixed: 30, encounterMoving: 19, minorFixed: 26, minorMoving: 62 },
+          { encounterFixed: 30, encounterMoving: 19, minorFixed: 26, minorMoving: 62 },
+          { encounterFixed: 30, encounterMoving: 19, minorFixed: 26, minorMoving: 62 },
+          { encounterFixed: 30, encounterMoving: 19, minorFixed: 26, minorMoving: 62 },
         ],
       },
       speed: 0.9375,
