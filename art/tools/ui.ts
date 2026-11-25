@@ -106,6 +106,7 @@ import {
   shareIcon,
   speaker,
   stinky,
+  topBarEdge,
   treatIcon,
   updateIcon,
 } from "./ui/icons.ts";
@@ -1497,15 +1498,15 @@ const ICON_BUTTON_TAGS = ["normal", "pressed"] as const;
 
 // Every image by key, in build order.
 const IMAGES: ReadonlyMap<string, () => RgbaImage> = new Map([
-  ["icon-pause", () => flat(pause())],
+  ["icon-pause", () => edgedImage(topBarEdge(pause()))],
   ["icon-play", () => flat(play())],
   ["icon-home", () => flat(homeIcon())],
   ["icon-help", () => flat(helpIcon())],
   ["icon-close", () => flat(close())],
-  ["icon-menu", () => flat(menuIcon())],
+  ["icon-menu", () => edgedImage(topBarEdge(menuIcon()))],
   ["icon-logbook", () => flat(logbookIcon())],
   ["icon-settings", () => flat(settingsIcon())],
-  ["icon-exit", () => flat(exitIcon())],
+  ["icon-exit", () => edgedImage(topBarEdge(exitIcon()))],
   ["icon-share", () => flat(shareIcon())],
   ["icon-browser-menu", () => flat(browserMenuIcon())],
   ["icon-update", () => edgedImage(updateIcon())],
@@ -1607,9 +1608,10 @@ function* sprites(): Generator<Sprite> {
     ),
   ];
   yield ["ui-slider-knob", ["normal", "pressed", "disabled"].map((s) => still(s, sliderKnob(s)))];
-  const onOff = (draw: (on: boolean) => Drawable): Tag[] =>
-    ["on", "off"].map((t) => still(t, draw(t === "on")));
-  yield ["icon-sound", onOff((on) => speaker(NAVY_FACE, on))];
+  yield [
+    "icon-sound",
+    ["on", "off"].map((t) => still(t, topBarEdge(speaker(NAVY_FACE, t === "on")), true)),
+  ];
   yield ["icon-sound-panel", [still("idle", speaker(CREAM_PANEL, true))]];
   yield ["icon-music-panel", [still("idle", note(CREAM_PANEL))]];
   yield ["icon-effects-panel", [still("idle", effects(CREAM_PANEL))]];

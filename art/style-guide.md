@@ -73,7 +73,7 @@ Every piece is very readable, clean and not busy, judged at the size it's shown:
 - Character shading is cel: per material a light, a base and a shade, the shade a crescent along the lower-right rim that follows the form (`Grid.cel`), never a diagonal plane or per-pixel texture. Markings are a few flat patches. A face seen from the front stays clean: flat skin with a 1px shadow down its near (right) edge beside the eyes, never across the jaw or mouth (`faceDisc`).
 - Effects (`fx-`) take a fixed 1px rim: plum, navy for water (`fx-splash`), except the foot-level contact-debuff effects, whose 1px ink edge matches the progress bars. `fx-heart-gain` and `fx-heart-loss` take `ui-fires`' 1px ink line inside a 1px white rim; `fx-dust` and `fx-tap` have no rim. Hazard warnings are outlined in ink.
 - Ground decals have no outline and no shadow.
-- Icons come in two kinds. Chrome glyphs on `ui-icon-button` (`icon-close`, `icon-exit`, `icon-help`, `icon-home`, `icon-logbook`, `icon-pause`, `icon-play`, `icon-settings`, `icon-sound`) are two flat tones with no outline. Content icons (`icon-gear-*`, `icon-trait-*`, `icon-zone-*`, `item-*`, the badges' rings and the like) take `iconEdge`: two ramp steps darker, then on down the ramp until the outline holds 3:1 on cream and tan. A picture that fills its frame keeps a 1px clear ring for the outline.
+- Icons come in two kinds. Chrome glyphs on `ui-icon-button` (`icon-close`, `icon-exit`, `icon-help`, `icon-home`, `icon-logbook`, `icon-menu`, `icon-pause`, `icon-play`, `icon-settings`, `icon-sound`) are two flat tones. The top-bar glyphs (`icon-exit`, `icon-menu`, `icon-pause`, `icon-sound`) take a 1px ink (`#181425`) outline round their outside pixels, filling their inner gaps, so they hold 3:1 on forced colours' white ButtonFace (ink is 18.0:1 on white and 1.30:1 on the navy face); the other chrome glyphs have no outline. Content icons (`icon-gear-*`, `icon-trait-*`, `icon-zone-*`, `item-*`, the badges' rings and the like) take `iconEdge`: two ramp steps darker, then on down the ramp until the outline holds 3:1 on cream and tan. A picture that fills its frame keeps a 1px clear ring for the outline.
 - A gear item drawn at several sizes (`item-<gear>` at 32, `icon-gear-<gear>` at 16, `icon-gear-<gear>-20` at 20) keeps the same colours at each.
 - Sprites carry no shadow; the game draws one in the road's darker ramp colour. The bouncing ball carries its own.
 
@@ -204,7 +204,8 @@ No game control adds an outline, ring, keyline or ring-shaped shadow when focuse
 - The speech bubble, tail included, fills cyan on focus, its words and owner's name plum.
 - The slot sign's inner panel fills cyan on focus; pressed, its board fills forest with white words and price and drops 1px.
 - Standard buttons and Start walk fill cyan with ink on focus and forest with white on press; the canvas `ui-button` `go-pressed` frame is the same forest.
-- Top-bar faces and walk effect wells turn from navy to ink (`#181425`) while pressed; in forced colours a focused or pressed top-bar face is Highlight at full opacity under its glyph.
+- Top-bar faces turn from navy to ink (`#181425`) while pressed; in forced colours a focused or pressed top-bar face is Highlight at full opacity under its glyph.
+- A walk effect well's interior fills forest (`#265c42`) and dips 2px while pressed; its frame edge stays as drawn.
 
 ### Icon buttons and top bars
 

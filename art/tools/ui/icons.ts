@@ -14,11 +14,12 @@ import { rows, SIDES } from "./chrome.ts";
 
 // ---------- icons ----------
 // icon-pause, icon-play, icon-home, icon-help, icon-close, icon-menu, icon-logbook, icon-settings, icon-exit and
-// icon-sound sit on ui-icon-button's navy face, so they have no outline: cream holds 9.6:1 there, tan
-// 6.6:1, amber 7.5:1, orange 5.0:1 and pink 5.1:1. The -panel icons sit on the Settings panel's cream,
-// and icon-share and icon-browser-menu on the install steps card's: dbrown holds 5.85:1 there and
-// plum 9.42:1. The -panel icons have one frame each: the Settings row's switch, state word and
-// slider show its state.
+// icon-sound sit on ui-icon-button's navy face: cream holds 9.6:1 there, tan 6.6:1, amber 7.5:1, orange
+// 5.0:1 and pink 5.1:1. The top bar's glyphs (icon-exit, icon-menu, icon-pause and icon-sound) also sit
+// on forced colours' white ButtonFace, so each takes topBarEdge; the others have no outline. The -panel
+// icons sit on the Settings panel's cream, and icon-share and icon-browser-menu on the install steps
+// card's: dbrown holds 5.85:1 there and plum 9.42:1. The -panel icons have one frame each: the Settings
+// row's switch, state word and slider show its state.
 
 // An icon's inks: face, and shade on the lower-right edges.
 type Ink = readonly [face: string, shade: string];
@@ -29,6 +30,14 @@ export const CREAM_PANEL: Ink = ["dbrown", "plum"];
 
 // The X on the top bar's muted icon-sound.
 const NAVY_MUTE = "pink";
+
+// A top-bar glyph's outline: one ink line round its outside pixels, so its shape holds 18.0:1 on forced
+// colours' white ButtonFace, where cream holds 1.45:1, amber 1.86:1, tan 2.10:1 and pink 2.71:1. On the
+// navy face ink is 1.30:1, so the normal look barely changes. It fills the gaps inside a glyph (between
+// the menu bars, the pause bars and the speaker's waves), so on white its fills read on ink.
+export function topBarEdge(g: Grid): Grid {
+  return edged(g, "ink");
+}
 
 // Three equally spaced flat bars, centred on the chrome face.
 export function menuIcon(): Grid {
@@ -191,8 +200,8 @@ function muteX(g: Drawable, x: number, y: number, col: string): void {
   }
 }
 
-// A speaker with two sound waves. Muted, the top bar's icon-sound has an X in the waves' place.
-// It has no outline, which would fill the gaps between the waves.
+// A speaker with two sound waves. Muted, the top bar's icon-sound has an X in the waves' place. It has
+// no outline of its own; the top bar's icon-sound takes topBarEdge.
 export function speaker(ink: Ink, on: boolean): Grid {
   const [face, shade] = ink;
   const g = new Grid(16, 16);
@@ -483,7 +492,8 @@ export function settingsIcon(): Grid {
 
 // The home top bar's Exit button: a doorway with an arrow leaving it to the right, the shape the
 // sibling duck-platformer game's shares, cream with tan on the lower-right edges like the other
-// navy-face glyphs.
+// navy-face glyphs. The arrow's tip stops a column short of the frame's edge, leaving room for
+// topBarEdge.
 export function exitIcon(): Grid {
   const g = new Grid(16, 16);
   rows(
@@ -493,14 +503,14 @@ export function exitIcon(): Grid {
     [
       ".cccccccct......",
       ".cctttttct......",
-      ".ct.....ct..t...",
-      ".ct.....tt..ct..",
-      ".ct.........cct.",
-      ".ct...ccccccccct",
-      ".ct...ttttttccct",
-      ".ct.........cct.",
-      ".ct.....ct..ct..",
-      ".ct.....ct..t...",
+      ".ct.....ct.t....",
+      ".ct.....tt.ct...",
+      ".ct........cct..",
+      ".ct...cccccccct.",
+      ".ct...tttttccct.",
+      ".ct........cct..",
+      ".ct.....ct.ct...",
+      ".ct.....ct.t....",
       ".cccccccct......",
       ".ttttttttt......",
     ],
