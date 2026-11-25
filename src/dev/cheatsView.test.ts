@@ -6,6 +6,7 @@ import { MODAL_WIDTHS, SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { SWITCH_STATE_GAP } from "../home/settings.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
+import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import type { PanelMeasure } from "../ui/modal/types.ts";
@@ -217,9 +218,9 @@ describe("Cheats layout", () => {
         expect(left!.rect.y).toBe(right!.rect.y);
         expect([left!.rect.x, left!.rect.width, right!.rect.x, right!.rect.width]).toEqual([
           current.layout.panel.x + MODAL.pad,
-          144,
-          current.layout.panel.x + MODAL.pad + 144 + MODAL.gap,
-          144,
+          140,
+          current.layout.panel.x + MODAL.pad + 140 + BUTTON_SIZE.gap,
+          140,
         ]);
         expect(rectsOverlap(left!.rect, right!.rect)).toBe(false);
       }
@@ -231,8 +232,9 @@ describe("Cheats layout", () => {
       expect(rect.x + rect.width).toBeLessThan(current.layout.scrollbar.x);
       for (const line of lines) {
         expect(line.scale).toBe(TEXT_SCALE);
+        // A line of words wraps at the label room; a single word may take the button's rows room.
         expect(MEASURE.inkWidth("title", line.text)).toBeLessThanOrEqual(
-          rect.width - 2 * MODAL.gap,
+          rect.width - 2 * (line.text.includes(" ") ? MODAL.gap : MODAL.rowGap),
         );
         const ink = MEASURE.titleInk(line.text);
         expect(line.capTop + (ink.top * TEXT_SCALE) / MODAL_TITLE_SCALE).toBeGreaterThan(rect.y);
@@ -249,6 +251,19 @@ describe("Cheats layout", () => {
     ["a label that fits", "Unlock Dogs", 11, ["Unlock Dogs"]],
   ])("wraps %s with the widest line narrowest", (_what, text, room, lines) => {
     expect(balancedWords((line) => line.length, room, text)).toEqual(lines);
+  });
+
+  // Labels at their room's limit: a one-word label within the button's rows room, and a two-word
+  // label at its wrap room (124 of 124 with the current font).
+  it.each([
+    ["Cabbagetown", gameData.world.zones.find(({ id }) => id === "cabbagetown")!.name],
+    ["Unlock Dogs", words.cheats.ownDogs],
+  ])("keeps %s on one full-size line", (_, label) => {
+    const button = buttons(HOME).find((candidate) => candidate.label === label)!;
+    expect(button.lines.map(({ text }) => text)).toEqual([label]);
+    expect(MEASURE.inkWidth("title", label)).toBeLessThanOrEqual(
+      button.rect.width - 2 * (label.includes(" ") ? MODAL.gap : MODAL.rowGap),
+    );
   });
 
   it("wraps Unlock Dog Slots balanced in its button", () => {

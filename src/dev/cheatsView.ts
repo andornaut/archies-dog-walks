@@ -158,7 +158,8 @@ const { compact, stackGap } = BUTTON_SIZE;
 const ROW = SETTINGS_CARD.row;
 const HEADING_HEIGHT = 24;
 const TOGGLE_HEIGHT = 48;
-const COLUMN_GAP = MODAL.gap;
+// The pairs and the Unlocks/Money columns are side-by-side standard buttons.
+const COLUMN_GAP = BUTTON_SIZE.gap;
 const SCROLLBAR = SHOP_PAGE.scrollbar;
 
 export interface CheatsLayout {
