@@ -32,6 +32,11 @@ const FORCED_TOP_ARTWORK =
 const KIT_FOCUSED_ARTWORK =
   'button.ui-standard-button:focus-visible > .ui-button-face > [aria-hidden="true"]';
 
+// A focused or pressed Pet shop row, by Tab or by the Start picker.
+const PLATE_STATES =
+  ".adw-selection-tile:is(:focus-visible, [data-ui-pressed]," +
+  " .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused])";
+
 type Specificity = readonly [number, number, number];
 const count = (text: string, pattern: RegExp) => (text.match(pattern) ?? []).length;
 const ranks = (a: Specificity, b: Specificity) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
@@ -169,6 +174,18 @@ describe("control state cues", () => {
         ":focus-visible, .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused])" +
         " .adw-selection-press-ink",
       "color:var(--adw-selection-focus-ink)!important;forced-color-adjust:none",
+    ],
+    [
+      "a focused or pressed Pet shop row's price plate in forced colours",
+      "tileForced",
+      `${PLATE_STATES} .adw-selection-plate`,
+      "background-color:ButtonFace!important;forced-color-adjust:none",
+    ],
+    [
+      "a focused or pressed Pet shop row's price in forced colours",
+      "tileForced",
+      `${PLATE_STATES} .adw-selection-plate-ink`,
+      "color:ButtonText!important;forced-color-adjust:none",
     ],
     [
       "a focused speech bubble",

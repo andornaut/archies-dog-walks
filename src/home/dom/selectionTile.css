@@ -93,6 +93,25 @@
     color: var(--adw-selection-focus-ink) !important;
     forced-color-adjust: none;
   }
+  /* A focused or pressed row's price plate is ButtonFace, edge included, with a ButtonText price. */
+  .adw-selection-tile:is(
+      :focus-visible,
+      [data-ui-pressed],
+      .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+    )
+    .adw-selection-plate {
+    background-color: ButtonFace !important;
+    forced-color-adjust: none;
+  }
+  .adw-selection-tile:is(
+      :focus-visible,
+      [data-ui-pressed],
+      .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+    )
+    .adw-selection-plate-ink {
+    color: ButtonText !important;
+    forced-color-adjust: none;
+  }
 }
 
 .adw-slot-sign-focus {

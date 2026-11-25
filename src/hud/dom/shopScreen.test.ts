@@ -33,6 +33,7 @@ const SOURCE: ShopScreenInput["source"] = {
 const RECT = { height: 48, width: 300, x: 24, y: 180 };
 function fixture({
   beforeMount,
+  plate,
   scale = domScale(3, { height: 560, width: 360, x: 0, y: 0 }),
   selectable = true,
   source = SOURCE,
@@ -40,6 +41,7 @@ function fixture({
   texts = [],
 }: {
   readonly beforeMount?: (doc: FakeDocument) => void;
+  readonly plate?: ShopScreenView["rows"][number]["plate"];
   readonly tabs?: boolean;
   readonly scale?: DomScale;
   readonly selectable?: boolean;
@@ -87,6 +89,7 @@ function fixture({
         holdDetail: true,
         id: "row",
         label: gameData.dogs.kilo.name,
+        ...(plate === undefined ? {} : { plate }),
         rect: RECT,
         selectable,
         state: "disabled",
@@ -155,6 +158,39 @@ it.each([
     .flatMap((node) => node.className.split(" "))
     .filter((name) => name.startsWith("adw-selection-") && name.endsWith("-ink"));
   expect(inks).toEqual([ink]);
+  f.screen.destroy();
+});
+
+// The forced-colours plate rule finds every plate fill and the price by their classes.
+it("marks a row's price plate fills and price for the forced-colours plate", async () => {
+  const rect = { height: 12, width: 40, x: RECT.x + 250, y: RECT.y + 18 };
+  const f = fixture({
+    plate: {
+      fills: [
+        { colour: 0x727272, rect },
+        {
+          colour: 0xd8d8d8,
+          rect: { ...rect, height: 10, width: 38, x: rect.x + 1, y: rect.y + 1 },
+        },
+      ],
+      label: {
+        capTop: rect.y + 2,
+        centre: "ink",
+        centreX: rect.x + 20,
+        colour: 0xa22633,
+        font: "body",
+        line: 0,
+        scale: TEXT_SCALE,
+        text: "$1,100",
+      },
+      rect,
+    },
+  });
+  await settle();
+  const named = (name: string) =>
+    f.root.all().filter((node) => node.className.split(" ").includes(name));
+  expect(named("adw-selection-plate")).toHaveLength(2);
+  expect(named("adw-selection-plate-ink").map((node) => node.textContent)).toEqual(["$1,100"]);
   f.screen.destroy();
 });
 

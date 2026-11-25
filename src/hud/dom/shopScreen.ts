@@ -410,15 +410,17 @@ export function showShopScreen(
           ready.push(part.ready);
         }
       }
+      // The price plate's fills and price are marked for the forced-colours plate.
       if (row.plate !== undefined) {
         const plate = row.plate;
         for (const fill of plate.fills) {
           const element = doc.createElement("span");
-          element.className = "adw-framed";
+          element.className = "adw-framed adw-selection-plate";
           element.style.backgroundColor = `#${fill.colour.toString(16).padStart(6, "0")}`;
           parts.push({ element, place: (at) => placeBox(at, row.rect, element, fill.rect) });
         }
         const element = createTextLine(doc, plate.label);
+        element.classList.add("adw-selection-plate-ink");
         parts.push({
           element,
           place: (at) =>
