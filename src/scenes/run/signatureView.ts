@@ -7,7 +7,7 @@ import { project } from "../../layout/projection.ts";
 import { facesLeft, inMotion, type MoverOnRoad } from "../../runner/movers.ts";
 import { signatureComponentProgress, signaturePlace } from "../../runner/signaturePaths.ts";
 import type { WalkItem } from "../../runner/walkItems.ts";
-import type { ItemView } from "./itemViews.ts";
+import type { ItemView } from "./itemTypes.ts";
 import { DEPTH, laneX, PROJECTION, showOnRoad } from "./stage.ts";
 import type { StandFrame } from "./standPart.ts";
 

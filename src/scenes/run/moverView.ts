@@ -30,7 +30,7 @@ import {
   moverTell,
 } from "../../runner/movers.ts";
 import { itemCategory, type WalkItem } from "../../runner/walkItems.ts";
-import type { ItemPart, ItemView } from "./itemViews.ts";
+import type { ItemPart, ItemView } from "./itemTypes.ts";
 import { riderCuePosition } from "./riderCuePosition.ts";
 import { drawSignatureTrail } from "./signatureView.ts";
 import { DEPTH, JUNCTURE_Y, laneX, LAYOUT, PROJECTION, showOnRoad } from "./stage.ts";

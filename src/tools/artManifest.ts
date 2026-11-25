@@ -16,7 +16,7 @@ import {
 import { spriteAnchor } from "../assets/spriteAnchor.ts";
 import { standsOnGround } from "../assets/spriteKeys.ts";
 import { spriteSource } from "./atlas/atlasLayout.ts";
-import { jsonText } from "./files.ts";
+import { type ArtFiles, jsonText } from "./files.ts";
 
 // public/art/manifest.json, derived from the files under public/art/. A key is its file's
 // name less the extension, and its kind is the folder it is in:
@@ -32,13 +32,6 @@ import { jsonText } from "./files.ts";
 export const ART_DIR = "art";
 export const ART_MANIFEST = "manifest.json";
 export const ART_MANIFEST_EXTRA = "manifest.extra.json";
-
-// The art directory's files, by paths relative to it.
-export interface ArtFiles {
-  // The names of the files directly in a folder; none for a missing folder.
-  list(dir: string): Promise<string[]>;
-  read(path: string): Promise<Uint8Array>;
-}
 
 // Strict, so a misspelt field fails rather than being dropped.
 function strictRecord<T extends v.ObjectEntries>(entries: T) {

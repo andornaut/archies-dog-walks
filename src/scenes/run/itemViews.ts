@@ -33,6 +33,7 @@ import { type RoadGeometry, walkGeometry } from "../../runner/walkGeometry.ts";
 import { itemCategory, type WalkItem, type WalkItemKind } from "../../runner/walkItems.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { applyItemCue } from "./itemCueViews.ts";
+import type { ItemPart, ItemView } from "./itemTypes.ts";
 import { drawMover, MOVER_CUE_PARTS, moverBodyKey } from "./moverView.ts";
 import { DEPTH, LANE_XS, LAYOUT, PROJECTION, ROW_DEPTH } from "./stage.ts";
 import { type StandFrame, standPart } from "./standPart.ts";
@@ -40,25 +41,6 @@ import { type StandFrame, standPart } from "./standPart.ts";
 // Road art that may be missing is drawn as a box this tall, as wide as its art: its lanes
 // less the lane's spare width beside a 1-lane sprite.
 const PLACEHOLDER_HEIGHT = ROAD_SPRITE_SIZE;
-
-// One sprite of an item. dx is across the road from the item's centre and footY the flat
-// road row it stands on, both in road pixels. feet "bottom" stands it on its frame's bottom
-// rather than its anchor. A flat sprite lies on the road, under everything else with no
-// shadow. A lifted sprite floats that many pixels, at its scale, over where it stands, with
-// no shadow.
-export interface ItemPart {
-  dx: number;
-  feet: "anchor" | "bottom";
-  flat: boolean;
-  footY: (item: Pick<WalkItem, "height" | "y">) => number;
-  key: string;
-  lift: number;
-  sprite: GameObjects.Sprite;
-}
-
-export interface ItemView {
-  parts: ItemPart[];
-}
 
 // A struck obstacle's body sprite and the screen offset added where the road draws it, for its
 // jolt or shake.

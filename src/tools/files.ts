@@ -1,9 +1,15 @@
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-import type { ArtFiles } from "./artManifest.ts";
 import { limitConcurrency } from "./concurrency.ts";
 import { USAGE_EXIT_CODE } from "./usage.ts";
+
+// The art directory's files, by paths relative to it.
+export interface ArtFiles {
+  // The names of the files directly in a folder; none for a missing folder.
+  list(dir: string): Promise<string[]>;
+  read(path: string): Promise<Uint8Array>;
+}
 
 // The most files a build-time reader holds open at once, well under common soft limits on open
 // files (256 on some hosts), since its callers read every art file in parallel.
