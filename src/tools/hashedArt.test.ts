@@ -2,10 +2,10 @@ import { blankImage } from "@andornaut/art-kit/build/rgbaImage";
 import { contentHash } from "@andornaut/game-kit/build/contentHash";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { type AtlasManifest, packAtlasManifest } from "../../assets/atlasManifest.ts";
-import type { AssetManifest } from "../../assets/manifest.ts";
-import { ART_MANIFEST } from "../artManifest.ts";
-import { encodePng } from "./atlasBuild.ts";
+import { type AtlasManifest, packAtlasManifest } from "../assets/atlasManifest.ts";
+import type { AssetManifest } from "../assets/manifest.ts";
+import { ART_MANIFEST } from "./artManifest.ts";
+import { encodePng } from "./atlas/atlasBuild.ts";
 import {
   artFilesJson,
   type DomArtKeys,

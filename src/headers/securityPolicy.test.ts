@@ -4,7 +4,7 @@ import { isHashedAssetUrl } from "@andornaut/game-kit/runtime/web/pwa/cachePolic
 import { describe, expect, it } from "vitest";
 
 import { CACHE_POLICY } from "../pwa/cachePolicy.ts";
-import { hashedArtFileName } from "../tools/atlas/hashedArt.ts";
+import { hashedArtFileName } from "../tools/hashedArt.ts";
 import { BASE_DIRECTIVES, FILE_RULES, navWithoutStylesheet, PAGE_RULES } from "./securityPolicy.ts";
 
 describe("navWithoutStylesheet", () => {

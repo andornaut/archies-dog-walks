@@ -3,7 +3,7 @@ import { isHashedAssetUrl } from "@andornaut/game-kit/runtime/web/pwa/cachePolic
 import { describe, expect, it } from "vitest";
 
 import { CACHE_POLICY } from "../../pwa/cachePolicy.ts";
-import { hashedArtFileName } from "../atlas/hashedArt.ts";
+import { hashedArtFileName } from "../hashedArt.ts";
 import { bootFiles, hashedArtUrls } from "./precacheArt.ts";
 
 describe("hashedArtUrls", () => {

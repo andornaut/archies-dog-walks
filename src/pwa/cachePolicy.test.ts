@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { hashedArtFileName } from "../tools/atlas/hashedArt.ts";
+import { hashedArtFileName } from "../tools/hashedArt.ts";
 import { CACHE_POLICY } from "./cachePolicy.ts";
 
 describe("the game's cache policy", () => {

@@ -21,9 +21,9 @@ import {
 import { parseManifest } from "../../assets/manifest.ts";
 import { type DomSheetJson, domSheetSprite } from "../../ui/dom/sheetFrames.ts";
 import { ART_MANIFEST } from "../artManifest.ts";
+import { artCopies, type DomArtKeys } from "../hashedArt.ts";
 import { ATLAS_MAX_SIZE } from "./atlasLayout.ts";
 import { buildDomSheets, packDomSheet } from "./domSheets.ts";
-import { artCopies, type DomArtKeys } from "./hashedArt.ts";
 
 const ART_DIR = join(import.meta.dirname, "../../../public/art");
 const readOwn = (path: string) => new Uint8Array(readFileSync(join(ART_DIR, path)));

@@ -1,7 +1,7 @@
 // What vite.config.ts's plugins take from the repository's code, in one module so the kit's
 // gameViteConfig loads it through a single Vite module runner, which resolves @andornaut/game-kit
 // as the app does.
-export { atlasPlugin } from "./atlas/atlasPlugin.ts";
+export { atlasPlugin } from "./atlasPlugin.ts";
 export { crashArtPlugin } from "./crashArtPlugin.ts";
 export { crashFontPlugin } from "./crashFontPlugin.ts";
 export { CRASH_FONT_TEXT } from "./crashFontText.ts";

@@ -4,7 +4,7 @@ import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 import { contentHash } from "@andornaut/game-kit/build/contentHash";
 import type { Plugin, ViteDevServer } from "vite";
 
-import { type ArtFileMap, artFileUrl } from "../../assets/artUrl.ts";
+import { type ArtFileMap, artFileUrl } from "../assets/artUrl.ts";
 import {
   DOM_CHOICE_CARD_ART,
   DOM_DISABLED_ART_KEYS,
@@ -14,15 +14,14 @@ import {
   type DomSheet,
   domSheetImagePath,
   domSheetJsonPath,
-} from "../../assets/domArt.ts";
-import { parseManifest } from "../../assets/manifest.ts";
-import type { DomSheetJson } from "../../ui/dom/sheetFrames.ts";
-import { ART_DIR, ART_MANIFEST, artManifestText, generateArtManifest } from "../artManifest.ts";
-import { limitConcurrency } from "../concurrency.ts";
-import { nodeArtFiles, OPEN_FILE_LIMIT, writeIfChanged } from "../files.ts";
-import { type SiteArt, siteHtml, siteNavigation } from "../siteArt.ts";
-import { buildAtlases, WEBP_PAGES } from "./atlasBuild.ts";
-import { buildDomSheet, checkDomCopies } from "./domSheets.ts";
+} from "../assets/domArt.ts";
+import { parseManifest } from "../assets/manifest.ts";
+import type { DomSheetJson } from "../ui/dom/sheetFrames.ts";
+import { ART_DIR, ART_MANIFEST, artManifestText, generateArtManifest } from "./artManifest.ts";
+import { buildAtlases, WEBP_PAGES } from "./atlas/atlasBuild.ts";
+import { buildDomSheet, checkDomCopies } from "./atlas/domSheets.ts";
+import { limitConcurrency } from "./concurrency.ts";
+import { nodeArtFiles, OPEN_FILE_LIMIT, writeIfChanged } from "./files.ts";
 import {
   ART_FILES_JSON,
   ART_FILES_MODULE,
@@ -31,6 +30,7 @@ import {
   type DomArtKeys,
   hashGameArt,
 } from "./hashedArt.ts";
+import { type SiteArt, siteHtml, siteNavigation } from "./siteArt.ts";
 
 // Vite's prefix for a module id that names no file.
 const RESOLVED_ART_FILES_MODULE = `\0${ART_FILES_MODULE}`;
@@ -58,7 +58,7 @@ interface AtlasPluginApi {
 // and the HTML interface's art into its DOM sheets with their copies (src/tools/atlas/
 // domSheets.ts). Every file the game loads (both manifests, the pages, the DOM sheets, the
 // fonts, the sounds and any key the atlas leaves out) goes to the build output under a
-// content-hashed name (src/tools/atlas/hashedArt.ts), and the game reads the names from the
+// content-hashed name (src/tools/hashedArt.ts), and the game reads the names from the
 // ART_FILES_MODULE map. The dev server's map is empty. The map is also written as
 // /art/art-files.json (ART_FILES_JSON), where the art gallery reads it; the dev server serves
 // it empty. Of the files under public/art/, a build copies only the pages and the files the

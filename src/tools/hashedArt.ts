@@ -1,15 +1,15 @@
 import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 import { contentHash } from "@andornaut/game-kit/build/contentHash";
 
-import { type ArtFileMap, artFileUrl } from "../../assets/artUrl.ts";
-import { type AtlasManifest, packAtlasManifest } from "../../assets/atlasManifest.ts";
-import type { DomSheet } from "../../assets/domArt.ts";
-import type { AssetManifest } from "../../assets/manifest.ts";
-import { usesPhaserArt } from "../../assets/phaserArt.ts";
-import { ART_MANIFEST } from "../artManifest.ts";
-import type { AtlasBuild } from "./atlasBuild.ts";
-import { type ArtCopy, CARD_GREY_COPY, DISABLED_COPY } from "./disabledFiles.ts";
-import { buildDomSheets } from "./domSheets.ts";
+import { type ArtFileMap, artFileUrl } from "../assets/artUrl.ts";
+import { type AtlasManifest, packAtlasManifest } from "../assets/atlasManifest.ts";
+import type { DomSheet } from "../assets/domArt.ts";
+import type { AssetManifest } from "../assets/manifest.ts";
+import { usesPhaserArt } from "../assets/phaserArt.ts";
+import { ART_MANIFEST } from "./artManifest.ts";
+import type { AtlasBuild } from "./atlas/atlasBuild.ts";
+import { type ArtCopy, CARD_GREY_COPY, DISABLED_COPY } from "./atlas/disabledFiles.ts";
+import { buildDomSheets } from "./atlas/domSheets.ts";
 
 // The module a build fills with the game's ArtFileMap (src/assets/artUrl.ts). The dev server's
 // map is empty, so every file loads from its own path there.

@@ -8,7 +8,7 @@ import { limitConcurrency } from "./concurrency.ts";
 import { OPEN_FILE_LIMIT } from "./files.ts";
 
 // The public folder of art exports, which a build also writes, content-hashed, under /assets/art/
-// (src/tools/atlas/hashedArt.ts).
+// (src/tools/hashedArt.ts).
 const ART_FOLDER = `${ART_DIR}/`;
 
 // A file under /art/ named by URL: an HTML src or href attribute's value, or a CSS url().
@@ -62,7 +62,7 @@ async function filesUnder(dir: string): Promise<string[]> {
 // In a build, copies the public directory into the output in place of Vite's copy, leaving out
 // the art exports no page or stylesheet names by URL (publicCopies): the game loads its art
 // hashed under /assets/art/, and the art gallery reads it there through /art/art-files.json
-// (src/tools/atlas/atlasPlugin.ts). The URLs are read from the built pages and stylesheets and
+// (src/tools/atlasPlugin.ts). The URLs are read from the built pages and stylesheets and
 // the public ones, and a URL whose file the public directory lacks fails the build.
 export function publicFilesPlugin(): Plugin {
   return {

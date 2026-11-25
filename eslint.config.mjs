@@ -67,7 +67,6 @@ const CONTEXTS = {
     "rules/route.ts",
     "rules/units.ts",
     "runner",
-    "tools/atlas/shared/png.ts",
   ],
   ui: ["assets", "data", "input/holdRule.ts", "layout/screen.ts"],
 };
