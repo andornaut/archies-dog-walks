@@ -95,24 +95,29 @@ Names are `PALETTE` names in `src/ui/palette.ts`, or `K` names for the neutral g
 | amber on navy                  | 7.49  | `icon-pause`, `icon-play` on `ui-icon-button`                                                                               |
 | cream on darkBrown             | 5.85  | Text on the wood                                                                                                            |
 | darkBrown on cream             | 5.85  | Secondary text, empty heart outline                                                                                         |
+| darkBrown on cyan              | 5.64  | A focused Settings row's note                                                                                               |
 | darkRed on cream               | 5.07  | Money lost, an unaffordable price or unlock line, full heart                                                                |
 | darkRed on nlgrey              | 5.15  | Price on the short plate                                                                                                    |
 | dlake on foam                  | 5.54  | A buff's name (gear, perk, upgrade) on its pill, beside its effect                                                          |
 | forest on cream                | 5.39  | Money gained, an affordable price line, an earned badge's name                                                              |
 | forest on lime                 | 4.80  | Zoomies' name on its pill                                                                                                   |
+| ink on cyan                    | 11.98 | A focused standard button, top-bar face or `ui-pet-shop-board` `focused`                                                    |
 | ink on deepAmber               | 7.91  | A picked picture's outline on its box                                                                                       |
-| ink on green                   | 8.41  | `ui-button` `go` label, `ui-pet-shop` board, price on the buy plate                                                         |
+| ink on green                   | 8.41  | `ui-button` `go` label, `ui-pet-shop` board, price on the buy plate, a pressed shop or Settings switch row                  |
 | ink on ngrey                   | 7.23  | The emblem's silhouette on a `locked` badge                                                                                 |
 | ink on nlgrey                  | 12.64 | The goal plate: a walker's name, a blocked slot's price, a disabled card's cost; an affordable picture's outline on its box |
 | ink on nslate                  | 3.75  | A disabled picture's outline on its art box                                                                                 |
 | navy on cream                  | 9.59  | `ui-scroll-track` on the shop card (its ink edge 12.44:1)                                                                   |
 | navy on yellow                 | 11.13 | Spotlight's name on its pill                                                                                                |
 | ndslate on cream               | 6.12  | A locked badge's name in the logbook                                                                                        |
+| ndslate on cyan                | 5.89  | A focused shop row the bank can't cover                                                                                     |
+| ndslate on the Logbook focus   | 5.73  | A focused or pressed locked Logbook row's name and goal line (cyan at 35% over cream)                                       |
 | ndslate on ngrey               | 3.56  | Labels on `disabled` tiles and buttons (inactive, exempt), a `locked` badge's emblem                                        |
 | ngrey on darkBrown             | 3.40  | `disabled` tile face on the wood                                                                                            |
 | nslate on cream                | 3.32  | A locked badge's goal and progress in the logbook (inactive, exempt)                                                        |
 | plum on amber                  | 7.35  | Text on amber: step number                                                                                                  |
 | plum on cream                  | 9.42  | Body text on cream: panels, quips, hints, the zone banner, `normal` tiles and buttons                                       |
+| plum on cyan                   | 9.07  | A focused shop row, picker tile, Settings row label or speech bubble                                                        |
 | plum on pink                   | 5.03  | Stinky's name on its pill, Stinky's "+$0" tip label                                                                         |
 | plum on tan                    | 6.49  | Body text on tan                                                                                                            |
 | plum on yellow                 | 10.92 | Text on a selected face (`ui-tile` `selected`)                                                                              |
@@ -123,6 +128,7 @@ Names are `PALETTE` names in `src/ui/palette.ts`, or `K` names for the neutral g
 | walnut on tan                  | 7.48  | Muddy's name on its pill                                                                                                    |
 | white on darkBrown             | 8.48  | Filled page dot                                                                                                             |
 | white on darkRed, blue, purple | 7.34+ | `ui-hit-label`, `ui-fired-plate`                                                                                            |
+| white on forest                | 7.80  | A pressed standard button, Start walk and `ui-pet-shop-board` `pressed`                                                     |
 | white on pickerWalkerHeader    | 4.73  | Neutral Walker section heading and prompt                                                                                   |
 | white on pickerPocketHeader    | 5.14  | Neutral Pocket section heading and prompt                                                                                   |
 | white on pickerDogsHeader      | 5.02  | Neutral Dogs section heading and count                                                                                      |
@@ -148,7 +154,7 @@ Names are `PALETTE` names in `src/ui/palette.ts`, or `K` names for the neutral g
 - Text keeps one size per role everywhere: never step a font down to fit a line, a label or a name into its box. Where text doesn't fit, the box grows (taller, or a second line) or the words get shorter.
 - A label over its help text (a settings row's title over its note, a detail card's heading over its line) leaves 10 rows of clear space between the label's lowest ink and the help text's capitals, so the two read as separate lines.
 - A count ("0/40 earned", "1 of 5 owned") is right-aligned at its list's right text edge, with or without a heading beside it.
-- Display lettering, the yard sign's letters (yellow fill, 1px ink outline, solid dred shadow), is for big words only, never body text: zone names on `ui-zone-banner`, "WHICH WAY?", "FIRED!", "NEW BEST!", the end screen title and hit labels, in `font-display` (yellow) or `font-display-cream`, colours baked in, drawn untinted. In-art signs use the same letters at 1× with a 1px shadow. `ui-pet-shop`'s PET SHOP board is a button, not a sign: the letter shapes at 2× filled ink with no outline or shadow.
+- Display lettering, the yard sign's letters (yellow fill, 1px ink outline, solid dred shadow), is for big words only, never body text: zone names on `ui-zone-banner`, "WHICH WAY?", "FIRED!", "NEW BEST!", the end screen title and hit labels, in `font-display` (yellow) or `font-display-cream`, colours baked in, drawn untinted. In-art signs use the same letters at 1× with a 1px shadow. `ui-pet-shop`'s PET SHOP board is a button, not a sign: the letter shapes at 2× filled ink with no outline or shadow, white on its forest `pressed` face.
 - `font-comic` holds the comic words' letters, colours baked in, drawn untinted; each glyph's advance is its width plus 1, so the next ring lands on the 1px gap and merges.
 - The gate scene's street sign is an 84×12 plate at (270,40) on screen, filling the rows from the top bar to the Pet shop's minimum top at y = 52: an 82×12 navy face at (271,40) between dslate side columns, on a 2×44 pole at (311,50) under its middle. Its right edge is x = 354 and its bottom y = 52. Render `homeText.gateSign` in capitals using white `font-title` (Silkscreen) at 2×, its ink centred on the navy, across on x = 312 with its capitals' top at y = 41; the letter ink is 78×10, 2px clear of the side columns and 1 row clear of the plate's top and bottom. The Pet shop building remains fixed during attention feedback; its board (`ui-pet-shop-board`) bobs 1px up as Start walk does.
 
@@ -187,6 +193,17 @@ The [control guide](controls.md#labels-and-icons) owns title placement, wrapping
 ### Interaction states
 
 The [control guide](controls.md) defines roles, state cues and geometry. Standard Game Kit faces use square corners, a top bevel and a lower lip. Native modal X and standalone Sound use smooth SVG glyphs. Item cards and bars with authored chrome retain their pixel art.
+
+No game control adds an outline, ring, keyline or ring-shaped shadow when focused, pressed or selected, and none draws one with a pseudo-element border. Each state shows as a fill, text or icon change, and a press's dip only adds to its fill; a disabled control does not dip. The [focus and press fills](controls.md#focus-and-press-fills) give each family's colours:
+
+- Choice card options fill their label band cyan on focus and green on an enabled card's press, Highlight in forced colours.
+- Logbook rows take cyan at 35% over the cream page with their content at full opacity; a locked row's name and goal line are ndslate on it.
+- The Pet shop board's `focused` face is cyan with ink letters and its `pressed` face forest with white letters, sunk 2px.
+- Pet shop rows and picker tiles fill cyan with plum text on focus and green with ink text on press. A row the bank can't cover takes the same focus fill and keeps its ndslate text and darkRed short-plate price.
+- Settings and Cheats rows, switch or slider, fill cyan on focus; a switch row fills green with ink text while pressed.
+- The speech bubble, tail included, fills cyan on focus, its words and owner's name plum.
+- Standard buttons and Start walk fill cyan with ink on focus and forest with white on press.
+- Top-bar faces and walk effect wells turn from navy to ink (`#181425`) while pressed; in forced colours a focused or pressed top-bar face is Highlight at full opacity under its glyph.
 
 ### Icon buttons and top bars
 

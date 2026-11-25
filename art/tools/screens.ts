@@ -73,9 +73,10 @@
 // ui-pet-shop at BOARD's offset (3,0 in the shop's frame, 237,54 on screen) with the same origin
 // for all tags. Built and coloured as ui-button's go state (green face, yellow highlight, forest
 // lip, ink line), with PET SHOP in the sign letters' shapes at 2x in ink, as the go label. normal
-// fills rows 0 to 21, its bottom 2 rows over the parapet; pressed sinks 2px with the front (rows 2
-// to 23) and loses its lip and highlight to face, as go-pressed. Focused changes the normal face to
-// cyan. The game bobs it 1px up as Start walk bobs, and not while pressed.
+// fills rows 0 to 21, its bottom 2 rows over the parapet. pressed is Start walk's pressed
+// treatment: a forest face with white letters, its lip and highlight given way to face, sunk 2px
+// (rows 2 to 23) while the building stays up. Focused changes the normal face to cyan. No tag adds
+// an outline. The game bobs it 1px up as Start walk bobs, and not while pressed.
 //
 // ui-loading: a 98x84 sprite, tag walk (4 frames, 160ms): Casey and Lady side on, walking right on
 // a plum leash, at 1.75x, larger than on the road (Casey 84 rows tall, Lady 56), cel shaded with

@@ -119,9 +119,10 @@ export function petShopBoard(state: BoardState = "normal"): Clear {
   return cv;
 }
 
-// The shop with its board at rest, as the yard shows them.
+// The shop with its board, as the yard shows them: pressed, only the board presses and the
+// building stays up.
 export function petShopFront({ doorFrame = null, pressed = false }: PetShopOptions = {}): Clear {
-  const cv = petShop({ doorFrame, pressed });
+  const cv = petShop({ doorFrame });
   composite({ x: BOARD[0], y: BOARD[1] }, petShopBoard(pressed ? "pressed" : "normal").img, cv.img);
   return cv;
 }
@@ -130,17 +131,26 @@ export function petShopFront({ doorFrame = null, pressed = false }: PetShopOptio
 // top highlight on a forest lip 4px deep, in an ink line with its corners cut, and PET SHOP in the
 // sign letters' shapes at 2x, filled ink (8.41:1 on green) with no outline or shadow, as the go
 // label. Raised, row 0 is ink, row 1 the highlight, the face runs to row 16, the lip fills rows 17
-// to 20 and ink row 21; the caps fill rows 4 to 13. Pressed, the lip and highlight give way to
-// face, as go-pressed, and the board rides down with the front: face and letters sink BOARD_DROP.
-// Focused keeps the raised chrome and replaces the green face with cyan.
+// to 20 and ink row 21; the caps fill rows 4 to 13. Pressed fills the face forest with white
+// letters (7.80:1), the pressed treatment of Start walk and every standard button; the lip and
+// highlight give way to face, and face and letters sink BOARD_DROP, a dip that only adds to the
+// fill. Focused keeps the raised
+// chrome and replaces the green face with cyan (ink letters 11.98:1). No state adds an outline.
+const BOARD_FACES: Readonly<Record<BoardState, readonly [face: string, letters: string]>> = {
+  focused: ["cyan", "ink"],
+  normal: [STATES.go![0], "ink"],
+  pressed: ["forest", "white"],
+};
+
 function shopBoard(cv: Canvas, state: BoardState): void {
   const [, , bw, bh] = BOARD;
   const pressed = state === "pressed";
   const t = pressed ? BOARD_DROP : 0;
-  const [face, lip, hi] = STATES.go!;
+  const [, lip, hi] = STATES.go!;
+  const [face, ink] = BOARD_FACES[state];
   cv.fill(1, t, bw - 2, bh, "ink");
   cv.fill(0, 1 + t, bw, bh - 2, "ink");
-  cv.fill(1, 1 + t, bw - 2, bh - 2, state === "focused" ? "cyan" : face);
+  cv.fill(1, 1 + t, bw - 2, bh - 2, face);
   if (!pressed) {
     cv.fill(1, 1, bw - 2, 1, hi!);
     cv.fill(1, bh - 5, bw - 2, 4, lip!);
@@ -152,7 +162,7 @@ function shopBoard(cv: Canvas, state: BoardState): void {
   const lw = Math.max(...caps.map(([x]) => x)) + 1 - x0;
   const lx = Math.floor((bw - lw) / 2);
   for (const [x, y] of caps) {
-    cv.fill(lx + x - x0, 4 + t + y - y0, 1, 1, "ink");
+    cv.fill(lx + x - x0, 4 + t + y - y0, 1, 1, ink);
   }
 }
 
