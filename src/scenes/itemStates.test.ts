@@ -4,6 +4,7 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
+import { PLATE_PAD } from "../data/layout.ts";
 import type { DogId } from "../data/types.ts";
 import { isAffordable, type Purchase, purchasePrice } from "../home/home.ts";
 import { HOME_LAYOUT } from "../home/homeLayout.ts";
@@ -14,7 +15,6 @@ import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics } from "../testing/fontInk.ts";
 import { type ItemLook, itemTile, itemTileLook } from "../ui/interaction.ts";
 import { cents } from "../units.ts";
-import { PLATE_PAD } from "./itemArt.ts";
 
 const OWNED: Owned = { dogSlots: [1], dogs: [], gear: [], walkers: [] };
 const DOGS = keysOf(gameData.dogs);

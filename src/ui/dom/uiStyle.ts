@@ -10,19 +10,14 @@ import { SETTINGS_STYLE } from "./settingsStyle.ts";
 // its art has not loaded.
 
 const px = (n: 1 | 2 | 3 | 4 | 5 | 8) => `var(--adw-slice-${n})`;
-const skinFrame = (art: string) => `var(--${art}, var(--adw-${art}))`;
 
 // A nine-slice frame: the art cut by its SLICES, its edges drawn as wide as the layer's
 // whole-device-pixel lengths for them.
-export function nineSlice(
-  key: "ui-button" | "ui-detail-card" | "ui-panel" | "ui-quip",
-  art: string,
-): string {
+export function nineSlice(key: "ui-detail-card" | "ui-panel" | "ui-quip", art: string): string {
   const { bottom, left, right, top } = SLICES[key];
   const widths = [top, right, bottom, left].map((edge) => px(edge as 3 | 4 | 5 | 8)).join(" ");
-  const image = key === "ui-button" ? skinFrame(art) : `var(--adw-${art})`;
   return `border-style:solid;border-color:transparent;border-width:${widths};
-  border-image:${image} ${top} ${right} ${bottom} ${left} fill / ${widths} stretch;
+  border-image:var(--adw-${art}) ${top} ${right} ${bottom} ${left} fill / ${widths} stretch;
   background-clip:padding-box;image-rendering:pixelated`;
 }
 
@@ -107,8 +102,6 @@ export const UI_STYLE = `
 .adw-framed,.adw-art,.adw-pill{position:absolute;box-sizing:border-box;pointer-events:none}
 .adw-framed{left:0;top:0}
 .adw-art{background-repeat:no-repeat;background-size:100% 100%;image-rendering:pixelated}
-/* A mirrored list's clip, over the whole screen, cut to the list's rect by clip-path. */
-.adw-clip{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
 .adw-pill{clip-path:polygon(${cutCorners("var(--adw-cut)")})}
 /* Text only a screen reader reads. */
 .adw-spoken{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
@@ -122,25 +115,6 @@ export const UI_STYLE = `
 .adw-button,.adw-close,.adw-slot-sign{margin:0;padding:0;border:0;background:none;color:inherit;font:inherit;
   cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;outline:none}
 .adw-face,.adw-close-face,.adw-close-glyph{position:absolute;box-sizing:border-box;pointer-events:none}
-.adw-face:not(.adw-standard-button-face){
-  ${nineSlice("ui-button", "ui-button-normal")};background-color:var(--adw-cream)}
-.adw-button:not(.adw-standard-button)[data-pressed] .adw-face{border-image-source:${skinFrame("ui-button-pressed")}}
-.adw-button:not(.adw-standard-button).adw-go .adw-face{
-  border-image-source:${skinFrame("ui-button-go")};background-color:var(--adw-green)}
-.adw-button:not(.adw-standard-button).adw-go[data-pressed] .adw-face{
-  border-image-source:${skinFrame("ui-button-go-pressed")};background-color:var(--adw-forest)}
-.adw-button:not(.adw-standard-button).adw-go[data-pressed] .adw-text{color:var(--adw-white)!important}
-.adw-button:not(.adw-standard-button).adw-secondary .adw-face{border-image-source:${skinFrame("ui-button-secondary")}}
-.adw-button:not(.adw-standard-button).adw-secondary[data-pressed] .adw-face{
-  border-image-source:${skinFrame("ui-button-secondary-pressed")}}
-.adw-button:not(.adw-standard-button)[data-pressed] .adw-text,
-.adw-close:not(.adw-standard-button)[data-pressed] .adw-close-glyph{
-  transform:translateY(${px(2)})}
-.adw-close-face:not(.adw-standard-button-face){
-  background:${skinFrame("ui-icon-button-normal")} 0 0/100% 100%;image-rendering:pixelated}
-.adw-close:not(.adw-standard-button)[data-pressed] .adw-close-face{
-  background-image:${skinFrame("ui-icon-button-pressed")}}
-.adw-close-glyph:empty{background:var(--adw-icon-close) 0 0/100% 100%;image-rendering:pixelated}
 /* A focused speech bubble fills its inside and its tail's cyan, its owner's name in plum to keep
    contrast. */
 .adw-speech-focus{display:none;clip-path:polygon(${cutCorners(px(1))})}
@@ -152,10 +126,10 @@ export const UI_STYLE = `
     forced-color-adjust:none;background-color:Highlight!important}
   .adw-button:focus-visible:has(.adw-speech-focus) .adw-text{forced-color-adjust:none;color:HighlightText!important}
 }
-/* The shade under a modal panel: ink at the canvas's modal shade's alpha, blended as it blends. */
-/* A list's view: its content clipped to it and moved up by its scroll. */
+/* A list's view: its content clipped to it, over the whole screen unless placed, and moved up by its
+   scroll. */
 .adw-clip,.adw-scrolled{position:absolute;pointer-events:none}
-.adw-clip{overflow:hidden}
+.adw-clip{left:0;top:0;width:100%;height:100%;overflow:hidden}
 .adw-scroll-track{${capsSlice("ui-scroll-track")}}
 .adw-scroll-thumb{${capsSlice("ui-scroll-thumb")}}
 /* fx-tap's 4 frames side by side, 60ms each; --adw-burst is the burst's snapped side. */

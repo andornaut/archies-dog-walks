@@ -14,7 +14,6 @@ import {
   newWalkerRows,
 } from "../hud/celebrationLayout.ts";
 import { celebrationText } from "../hud/zoneCelebration.ts";
-import { dollarText } from "../presentation/currency.ts";
 import type { Owned } from "../save/schema.ts";
 import { fontFileMetrics, gameGlyphs, inkWidth } from "../testing/fontInk.ts";
 import { VETERAN_EARNED, veteranSave } from "../testing/saves.ts";
@@ -34,9 +33,7 @@ import {
 import { quipCapsTop, quipTextY } from "./endLayout.ts";
 import { CARD_TEXT_ROOM, detailCardLayout, detailOwner, type DetailRow } from "./homeLayout.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
-import { confirmLeftCapTop, purchaseConfirmLayout } from "./purchaseConfirmLayout.ts";
 import { SETTINGS_ROW, settingsLayout } from "./settings.ts";
-import { dogRows, gearRows, slotRows } from "./shop.ts";
 import { detailTextTops, STATS_LAYOUT, wallLineTops } from "./statsLayout.ts";
 
 type Font = "font-body" | "font-title";
@@ -162,29 +159,6 @@ const detailCardPairs: Pair[] = [
   ),
 ];
 
-const SHOP_ROWS = [
-  ...slotRows(gameData, NONE),
-  ...dogRows(gameData, NONE),
-  ...gearRows(gameData, NONE),
-];
-
-// The purchase confirm's price over the bank it would leave.
-const confirmPairs: Pair[] = SHOP_ROWS.flatMap(({ price }) => {
-  if (price === null) {
-    return [];
-  }
-  const label = dollarText(price);
-  const { capTop } = purchaseConfirmLayout(FONTS, {
-    buy: 0,
-    cancel: 0,
-    left: 0,
-    price: 0,
-    title: 0,
-  }).price;
-  const help = confirmLeftCapTop(FONTS.title, capTop);
-  return [{ font: "font-title", held: "exactly", help, label, labelTop: capTop, where: "confirm" }];
-});
-
 // A badge's wall row's name over its goal, and its open card's name over its status.
 const SAVE = veteranSave();
 const BADGES = badgeWall(gameData, VETERAN_EARNED);
@@ -267,7 +241,6 @@ const walkerPairs: Pair[] = keysOf(gameData.walkers).flatMap((walker) => {
 
 const PAIRS: readonly Pair[] = [
   ...badgeCardPairs,
-  ...confirmPairs,
   ...detailCardPairs,
   ...endPairs,
   ...settingsPairs,

@@ -83,6 +83,6 @@ export interface CardAction {
   readonly label: string;
   readonly primary: boolean;
   readonly rect: Rect;
-  // The secondary look, as the purchase confirm's Cancel wears.
+  // The secondary look, as a detail card's Cancel wears.
   readonly secondary?: boolean;
 }

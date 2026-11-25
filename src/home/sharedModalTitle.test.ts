@@ -16,12 +16,9 @@ import type { PanelMeasure, PanelText } from "../ui/modal/types.ts";
 import { modalCardView, panelTitle } from "../ui/modal/view.ts";
 import { navigationMenuWidth } from "../ui/navigationMenu.ts";
 import { MODAL_TITLE_SCALE } from "../ui/textFit.ts";
-import { cents } from "../units.ts";
 import { BADGE_STRIP, celebrationTitle, stripUnderClose } from "./badgesView.ts";
 import { detailCardView, type DetailMeasure } from "./detailCardView.ts";
 import { updateModalLayout } from "./homeLayout.ts";
-import { confirmLines } from "./purchaseConfirm.ts";
-import { purchaseConfirmCardView } from "./purchaseConfirmCardView.ts";
 import { installStepsLayout, SETTINGS_ROW, settingsLayout } from "./settings.ts";
 import { shopPageView } from "./shopPageView.ts";
 
@@ -113,19 +110,10 @@ const detailMeasure: DetailMeasure = {
   hasTag: () => false,
   wrapBody: measure.wrapNote,
 };
-it("moves purchase and detail wells below their wrapped full-size headings", () => {
+it("moves the detail well below its wrapped full-size heading", () => {
   const gear = "runningShoes" as const;
   const item = gameData.shopGear[gear];
   const picture = { key: gearSmallIconKey(gear), scale: 1 };
-  const lines = confirmLines(gameData, {
-    bankAfter: cents(0),
-    name: item.name,
-    price: cents(100),
-    purchase: { gear, kind: "gear" },
-  });
-  const purchase = purchaseConfirmCardView(detailMeasure, { lines, picture, pressed: undefined });
-  expect(purchase.card.title.length).toBeGreaterThan(1);
-  balanced(purchase.card.panel.y, purchase.card.title, purchase.art[0]!.y);
   const detail = detailCardView(gameData, detailMeasure, SCREEN_LAYOUT.screen, {
     card: {
       lines: [],

@@ -2,11 +2,10 @@ import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtim
 
 import { MIN_PRESS, TOP_BAR_SIZES, WALK_BAR_PARTS } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
-import { TEXT_SCALE, TITLE_CAP_ROWS } from "./textFit.ts";
+import { TITLE_CAP_ROWS } from "./textFit.ts";
 import {
   TOP_BAR_FACE,
   TOP_BAR_HEIGHT,
-  TOP_BAR_MID,
   TOP_BAR_WELL,
   topBarContentRows,
   wellCapsTop,
@@ -20,6 +19,9 @@ export interface TopSectionControl {
   hit: Rect;
 }
 
+// The left edge of a section width wide set between left and right (the first column past the
+// section before it and the first of the section after it) with an equal gap on either side,
+// an odd leftover column going to the gap on its right.
 export function topSectionGapLeft(left: number, right: number, width: number): number {
   return left + Math.floor((right - left - width) / 2);
 }
@@ -75,11 +77,6 @@ export function topSectionLayout<T extends TopSectionButton>(
     currency,
     effectHolds,
     effectWells,
-    heading: {
-      scale: TEXT_SCALE,
-      x: SCREEN_CONFIG.width / 2,
-      y: TOP_BAR_MID - (TITLE_CAP_ROWS * TEXT_SCALE) / 2,
-    },
   };
 }
 
@@ -116,6 +113,17 @@ export function topSectionCurrency(layout: { currency: Rect | undefined }, inkWi
     top: wellCapsTop(TITLE_CAP_ROWS * cash.scale),
     well,
   };
+}
+
+// Which of the currency's texts, without its "$", the section shows: full where "$" and it at the
+// currency's scale fit its room, as inkWidth measures them at that scale, else short.
+export function topSectionCurrencyText(
+  inkWidth: (scale: number, text: string) => number,
+  layout: { currency: Rect | undefined },
+  texts: { readonly full: string; readonly short: string },
+): string {
+  const { room, scale } = topSectionCurrency(layout, 0);
+  return inkWidth(scale, `$${texts.full}`) <= room ? texts.full : texts.short;
 }
 
 // Rendering and input consume the same compacted control positions.

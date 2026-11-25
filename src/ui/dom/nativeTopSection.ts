@@ -26,6 +26,7 @@ import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL, topBarRects } from "../topBar
 import {
   type TopSectionButton,
   topSectionCurrency,
+  topSectionCurrencyText,
   topSectionLayout,
   topSectionStateCapTop,
 } from "../topSection.ts";
@@ -45,7 +46,6 @@ export interface NativeTopSectionConfig {
   readonly buttons: readonly TopSectionButton[];
   readonly currency?: boolean;
   readonly effects?: number;
-  readonly heading?: string;
   readonly labels: Readonly<Record<TopSectionButton, string>>;
   readonly muted?: boolean;
   readonly press: (id: TopSectionButton, press: NativeTopSectionPress) => void;
@@ -439,20 +439,6 @@ export function createNativeTopSection(
     doc.removeEventListener("pointercancel", clearMetadata);
     doc.removeEventListener("visibilitychange", clearMetadata);
   });
-  if (config.heading !== undefined) {
-    const line = {
-      capTop: layout.heading.y,
-      centre: "advance",
-      centreX: layout.heading.x,
-      colour: PALETTE.cream,
-      font: "title",
-      scale: layout.heading.scale,
-      text: config.heading,
-    } as const;
-    const element = createTextLine(doc, line);
-    underlayElement.append(element);
-    placed.push((scale) => placeText(title, scale, ORIGIN, element, line));
-  }
   const money = doc.createElement("div");
   money.className = "adw-lines";
   underlayElement.append(money);
@@ -480,10 +466,10 @@ export function createNativeTopSection(
     if (money.hidden) {
       return;
     }
-    const maximum = topSectionCurrency(layout, 0);
-    const fullWidth = inkWidth(title, maximum.scale, `$${amount}`);
-    const text = fullWidth <= maximum.room ? amount : short;
-    const placement = topSectionCurrency(layout, inkWidth(title, maximum.scale, `$${text}`));
+    const measure = (at: number, line: string) => inkWidth(title, at, line);
+    const text = topSectionCurrencyText(measure, layout, { full: amount, short });
+    const { scale: moneyScale } = topSectionCurrency(layout, 0);
+    const placement = topSectionCurrency(layout, measure(moneyScale, `$${text}`));
     const rect = placement.well;
     const cashRects = [
       { ...rect, width: 1 },

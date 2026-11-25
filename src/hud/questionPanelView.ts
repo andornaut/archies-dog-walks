@@ -17,7 +17,7 @@ import type {
   QuestionPanelView,
 } from "../ui/modal/types.ts";
 import { panelButton, panelTitle } from "../ui/modal/view.ts";
-import { NOTE_PLATE, notePartTops, type pauseMenuLayout } from "./pauseMenu.ts";
+import { NOTE_PLATE, notePartTops, noteTextRoom, type pauseMenuLayout } from "./pauseMenu.ts";
 
 export interface PanelQuestion {
   readonly avoid?: Rect | undefined;
@@ -68,7 +68,7 @@ export function questionPanelView(
     barTitleRoom(cardTitleRow(preview.panel), closeControl(preview.panel)),
     question.title,
   );
-  const noteRoom = preview.notePlate.width - 2 * NOTE_PLATE.padX;
+  const noteRoom = noteTextRoom(preview.notePlate);
   const noteParts = question.note.map(({ colour, text }) => ({
     colour,
     lines: (question.sentenceLines ? sentences(text) : [text]).flatMap((said) =>

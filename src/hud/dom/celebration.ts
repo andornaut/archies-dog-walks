@@ -183,27 +183,6 @@ export interface BadgeCelebrationView {
   readonly titleExtraHeight?: number;
 }
 
-// A badge celebration's text and controls in layer, its close control and button each doing
-// close, shown and its dialog focused.
-export function showBadgeCelebration(
-  layer: UiLayer,
-  input: Shared & { close: () => void; view: BadgeCelebrationView },
-): DomQuestionPanel {
-  const doc = layer.element.ownerDocument;
-  const { view } = input;
-  return showQuestionPanel(layer, {
-    backgroundCancel: input.close,
-    close: input.close,
-    closeLabel: input.closeLabel,
-    fonts: input.fonts,
-    numberKeys: false,
-    parts: view.names.map((name) => textPart(doc, input, name)),
-    presses: [input.close],
-    toGame: input.toGame,
-    view: frameless(view.panel, [view.button], view.title, view.titleY),
-  });
-}
-
 export interface BadgeStripParts {
   readonly parts: readonly DomPart[];
   burst(index: number): void;

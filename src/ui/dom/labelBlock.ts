@@ -28,10 +28,6 @@ export interface DomLabelLine {
   readonly text: string;
 }
 
-// The data key a scene sets on a label it places itself about its middle, as the display
-// lettering's centred lines, whose origin is their left: align takes it over the label's origin.
-export const LABEL_ALIGN_DATA = "htmlAlign";
-
 export interface DomLabel {
   // How its lines align on the canvas: from their start, about their middle or to their end.
   readonly align: "centre" | "end" | "start";

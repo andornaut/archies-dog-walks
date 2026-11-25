@@ -95,6 +95,13 @@ export const MARK_OFFSET = { x: -6, y: -1 } as const;
 // The clear rows between a label's lowest ink and its help text's capitals.
 export const LABEL_HELP_GAP = 10;
 
+// The gap between a button's key number and its label: one word space at the label's size, a
+// glyph advance and the tracking.
+export const MENU_BUTTON_KEY_GAP = 16;
+
+// How far a price's or goal's plate edge sits outside its text's capitals on every side.
+export const PLATE_PAD = 3;
+
 // A name's pill in a line of text, in font pixels at 1x.
 export const PILL = {
   // The columns between the pill and the next ink on its line.
@@ -675,11 +682,6 @@ export const HOME_SCREEN = {
   streetSign: { scale: 2, x: 312, y: 73 },
   // A section's backing's top under the section's top.
   tileOffset: 24,
-  // The top bar: the bank's ink inset in its well, and the columns the bank's well keeps clear of
-  // the first button's face.
-  topBar: { wellClear: 16 },
-  // The update notice's button label's padding.
-  updateModal: { labelPad: 8 },
   // The walker's column at the gate.
   walkerAtGate: { x: 180 },
   // A walker tile's portrait box: its offset and side.
@@ -818,9 +820,9 @@ export const LOGBOOK_PAGE = {
     // The first row's top under the earned count's capitals.
     rowsDy: 20,
   },
-  // A wall row's text: its line pitch, most lines, padding under the last, width, left edge and
-  // first capitals' top.
-  wallText: { lineHeight: 16, lines: 3, pad: 4, width: 276, x: 38, y: 4 },
+  // A wall row's text: its line pitch, most lines, padding under the last, left edge and first
+  // capitals' top.
+  wallText: { lineHeight: 16, lines: 3, pad: 4, x: 38, y: 4 },
 } as const;
 
 // The settings card.

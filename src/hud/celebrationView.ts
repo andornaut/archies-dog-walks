@@ -85,7 +85,7 @@ function lineWidth(measure: DetailMeasure, line: string, scale: number): number 
 }
 
 // The button's label ink, with its key number's and the gap between them where the key number
-// shows (addMenuButton's keyNumber).
+// shows.
 function actionInk(measure: DetailMeasure, keyed: { gap: number } | undefined, label: string) {
   const ink = measure.inkWidth("title", label);
   return keyed === undefined ? ink : ink + measure.inkWidth("title", "1") + keyed.gap;

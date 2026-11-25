@@ -234,7 +234,7 @@ describe("an HTML modal card", () => {
 });
 
 describe("an HTML detail card that takes no presses", () => {
-  it("lets every press through, shows its close control as a picture and its art once loaded", async () => {
+  it("lets every press through, draws no close control and shows its art once loaded", async () => {
     const doc = new FakeDocument();
     const { element, layer } = fakeLayer(doc, domScale(2, { height: 560, width: 360, x: 0, y: 0 }));
     const card = { height: 120, width: 280, x: 40, y: 200 };
@@ -248,7 +248,6 @@ describe("an HTML detail card that takes no presses", () => {
     const line = `${inPill(0, "Keen eye")} Spots more`;
     showDetailCard(layer, {
       artUrl: (path) => `/art/${path}`,
-      close: undefined,
       closeLabel: gameData.menuText.common.close,
       fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
       loadSheet: () => Promise.resolve(sheet),
@@ -276,14 +275,7 @@ describe("an HTML detail card that takes no presses", () => {
     expect(dialog?.className).toContain("adw-passive");
     expect(dialog?.listeners.has("mousedown")).toBe(false);
     expect(nodes.some((node) => node.tagName === "button")).toBe(false);
-    const close = nodes.find((node) => node.className === "adw-close");
-    expect([close?.tagName, close?.getAttribute("aria-hidden")]).toEqual(["span", "true"]);
-    const face = close!.all().find((node) => node.classList.contains("adw-close-face"))!;
-    const glyph = close!.all().find((node) => node.classList.contains("adw-close-glyph"))!;
-    expect(glyph.children).toHaveLength(0);
-    const n = (node: typeof face, key: string) => Number.parseFloat(node.style[key]!);
-    expect(n(glyph, "left") + n(glyph, "width") / 2).toBe(n(face, "left") + n(face, "width") / 2);
-    expect(n(glyph, "top") + n(glyph, "height") / 2).toBe(n(face, "top") + n(face, "height") / 2);
+    expect(nodes.some((node) => node.className.includes("adw-close"))).toBe(false);
     dialog?.fire("keydown", { code: "Tab", preventDefault: () => undefined, shiftKey: false });
     expect(doc.activeElement).toBe(dialog);
     const described = nodes.find((node) => node.id === dialog?.getAttribute("aria-describedby"));
@@ -473,7 +465,7 @@ it("dismisses a native detail region only while its modal owns input", () => {
   const { doc, element, layer } = menuContext();
   const dismiss = vi.fn();
   const shown = showQuestionPanel(layer, {
-    close: undefined,
+    close: null,
     closeLabel: gameData.menuText.common.close,
     dismiss,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
@@ -686,7 +678,6 @@ it("uses a detail card's existing any-tap dismissal for its native X and footer"
   };
   const shown = showDetailCard(layer, {
     ...shared,
-    close: undefined,
     dismiss,
     view: {
       art: [],
@@ -717,7 +708,6 @@ it("uses a detail card's existing any-tap dismissal for its native X and footer"
   shown.destroy();
   const passive = showDetailCard(layer, {
     ...shared,
-    close: null,
     view: { art: [], card, framed: [], texts: [], title: gameData.menuText.menu.title },
   });
   expect(

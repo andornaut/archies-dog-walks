@@ -9,6 +9,7 @@ import { gearSmallIconKey } from "../assets/iconKeys.ts";
 import { MANIFEST_CACHE_KEY } from "../assets/phaser/manifestArt.ts";
 import { dogSpriteKey, gearIconKey, walkerPortraitKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
+import { PLATE_PAD } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId, GearId, WalkerId } from "../data/types.ts";
 import { clearRunOverrides } from "../dev/pageRunSetup.ts";
@@ -125,7 +126,7 @@ import { HELP_CLOSED_EVENT } from "./HelpScene.ts";
 import { openHelp } from "./helpScreen.ts";
 import { exitGame, HOME_PAGE_OPENING_EVENT, openHomePage, routeHomeBar } from "./homeBarPress.ts";
 import { addAffordFrame, detailView } from "./homePanels.ts";
-import { drawPetShopFallback, PLATE_PAD, purchasePicture, SHOP_ART } from "./itemArt.ts";
+import { drawPetShopFallback, purchasePicture, SHOP_ART } from "./itemArt.ts";
 import { NATIVE_HOME_READY } from "./nativeHomeReady.ts";
 import { listenOnePress } from "./onePress.ts";
 import {
@@ -1520,7 +1521,7 @@ export class StartScene extends Scene {
     const close = () => this.closeOverlay();
     const presses = item?.pending === undefined ? [] : [close, () => this.buyDetail(item.pending!)];
     this.htmlDetail = keepPanel(this.htmlDetail, JSON.stringify([view, this.closePressed()]), () =>
-      addHtmlDetailCard(this, layout, close, this.closePressed(), close, presses),
+      addHtmlDetailCard(this, layout, close, close, presses),
     );
     this.overlay = { ...overlay, rect: view.card.panel };
   }

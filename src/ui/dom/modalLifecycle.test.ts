@@ -289,12 +289,10 @@ it("releases an unfinished modal contact on window blur and accepts one fresh ac
   );
   await reveal.revealed;
   root.fire("pointerdown", pointer(11, button));
-  button.setAttribute("data-pressed", "");
   button.setAttribute("data-ui-pressed", "");
   expect(press.canvasAllowed()).toBe(false);
   doc.defaultView.fire("blur");
   expect(press.canvasAllowed()).toBe(true);
-  expect(button.getAttribute("data-pressed")).toBeNull();
   expect(button.getAttribute("data-ui-pressed")).toBeNull();
   expect(cancel).toHaveBeenCalledOnce();
   expect(view.accepts()).toBe(true);

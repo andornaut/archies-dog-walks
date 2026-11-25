@@ -62,18 +62,15 @@ export interface DomQuestionPanelInput {
   readonly backgroundCancel?: () => void;
   // The page's own controls drawn outside the panel, interactive with it.
   readonly companions?: readonly HTMLElement[];
-  // What the close control does; undefined draws it as a picture, and a panel with no buttons
-  // then takes no presses: every press goes through to the canvas, whose scene closes it. null
-  // draws no close control, and a panel with no buttons then takes no presses either. Then its
-  // accessible name, and what each button does, in order.
-  readonly close: (() => void) | null | undefined;
+  // What the close control does; null draws no close control, and a panel with no buttons then
+  // takes no presses: every press goes through to the canvas. Then its accessible name, and what
+  // each button does, in order.
+  readonly close: (() => void) | null;
   readonly closeLabel: string;
   // A footer can dismiss a native overlay that intentionally has no corner close control.
   readonly footerPress?: () => void;
   // Gives the caller its exact source control after admission and before activation.
   readonly onInvoke?: (index: number, control: HTMLElement) => void;
-  // Whether a panel that takes no presses shows its close control pressed.
-  readonly closePressed?: boolean;
   // The id of the part that describes the panel, if any.
   readonly describedBy?: string;
   // Told the index (focusControl's) of the control focus moves to, or undefined for the dialog.
@@ -133,8 +130,7 @@ export interface DomRefusal {
 
 const ORIGIN = { x: 0, y: 0 } as const;
 
-// art: the close control's 16x16 glyph on its 20x20 ui-icon-button face, from the face's corner,
-// as the canvas draws it (addIconButton).
+// art: the close control's 16x16 glyph on its 20x20 ui-icon-button face, from the face's corner.
 const CLOSE_GLYPH_SIZE = 16;
 
 // art: fx-tap's side.
@@ -193,7 +189,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   const passive =
     input.dismiss === undefined &&
     input.footerPress === undefined &&
-    (input.close ?? undefined) === undefined &&
+    input.close === null &&
     input.presses.length === 0 &&
     !(input.parts ?? []).some((part) => (part.controls?.length ?? 0) > 0);
   dialog.className = passive ? "adw-dialog adw-passive" : "adw-dialog";
@@ -305,23 +301,19 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       doc,
       {
         fonts: input.fonts,
-        ...(passive
-          ? {}
-          : {
-              press: {
-                accepts,
-                burst,
-                press: () => {
-                  if (!accepts()) {
-                    return;
-                  }
-                  if (part.element.isConnected && !part.element.hidden) {
-                    input.onInvoke?.(index, part.element);
-                  }
-                  press?.();
-                },
-              },
-            }),
+        press: {
+          accepts,
+          burst,
+          press: () => {
+            if (!accepts()) {
+              return;
+            }
+            if (part.element.isConnected && !part.element.hidden) {
+              input.onInvoke?.(index, part.element);
+            }
+            press?.();
+          },
+        },
       },
       button,
     );
@@ -335,77 +327,55 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     return part.element;
   });
 
-  // The close control after the buttons, so it is on top where their press areas meet; a
-  // picture of one where nothing presses it.
-  const pressClose = input.close ?? undefined;
-  const glyph = doc.createElement("span");
-  glyph.className = "adw-close-glyph";
-  if (pressClose !== undefined) {
+  // The close control, pressing press, placed at view.close.
+  const closeControlElement = (press: () => void): HTMLElement => {
+    const glyph = doc.createElement("span");
+    glyph.className = "adw-close-glyph";
     const icon = createControlGlyph(doc, "close");
     Object.assign(icon.style, { height: "100%", width: "100%" });
     glyph.append(icon);
-  }
-  const closeView =
-    pressClose === undefined
-      ? undefined
-      : createGameButton(doc, {
-          appearance: {
-            className: "adw-close",
-            face: { className: "adw-close-face" },
-            role: "navigation",
-          },
-          content: { icon: glyph, kind: "icon", name: input.closeLabel },
-          getAction: () => (accepts() ? { activate: pressClose } : null),
-        });
-  const close = closeView?.element ?? doc.createElement("span");
-  if (closeView === undefined) {
-    close.className = "adw-close";
-    close.setAttribute("aria-hidden", "true");
-    if (input.closePressed === true) {
-      close.setAttribute("data-pressed", "");
-    }
-  }
-  const closeArt = closeFace(view.close);
-  const face = closeView?.face ?? doc.createElement("span");
-  if (closeView === undefined) {
-    face.className = "adw-close-face";
-    close.append(face, glyph);
-  }
-  box(close, ORIGIN, view.close.hit);
-  // The face and its glyph in whole art pixels, from the face's corner on the art-pixel grid.
-  placed.push((scale) => {
-    const pixel = artPixel(scale);
-    const panelBounds = paintedPanel(scale);
-    const inset = wholeArtPixels(scale, MODAL.closeInset * scale.unit * scale.dpr);
-    const side = closeArt.width * pixel;
-    const modal = view.close.titleExclusion === "hit";
-    const left =
-      (modal ? panelBounds.left + panelBounds.width - inset - side : gridX(scale, closeArt.x)) -
-      gridX(scale, view.close.hit.x);
-    const top =
-      (modal ? panelBounds.top + inset : gridY(scale, closeArt.y)) - gridY(scale, view.close.hit.y);
-    setBox(face, { height: side, left, top, width: side });
-    const glyphSide = CLOSE_GLYPH_SIZE * pixel;
-    // Native content starts inside the persistent one-art-pixel face border.
-    const glyphInset = (side - glyphSide) / 2 - (closeView === undefined ? 0 : pixel);
-    setBox(glyph, {
-      height: glyphSide,
-      left: glyphInset + (closeView === undefined ? left : 0),
-      top: glyphInset + (closeView === undefined ? top : 0),
-      width: glyphSide,
+    const closeView = createGameButton(doc, {
+      appearance: {
+        className: "adw-close",
+        face: { className: "adw-close-face" },
+        role: "navigation",
+      },
+      content: { icon: glyph, kind: "icon", name: input.closeLabel },
+      getAction: () => (accepts() ? { activate: press } : null),
     });
-  });
-  if (closeView !== undefined) {
+    const closeArt = closeFace(view.close);
+    const { element, face } = closeView;
+    box(element, ORIGIN, view.close.hit);
+    // The face and its glyph in whole art pixels, from the face's corner on the art-pixel
+    // grid.
+    placed.push((scale) => {
+      const pixel = artPixel(scale);
+      const panelBounds = paintedPanel(scale);
+      const inset = wholeArtPixels(scale, MODAL.closeInset * scale.unit * scale.dpr);
+      const side = closeArt.width * pixel;
+      const modal = view.close.titleExclusion === "hit";
+      const left =
+        (modal ? panelBounds.left + panelBounds.width - inset - side : gridX(scale, closeArt.x)) -
+        gridX(scale, view.close.hit.x);
+      const top =
+        (modal ? panelBounds.top + inset : gridY(scale, closeArt.y)) -
+        gridY(scale, view.close.hit.y);
+      setBox(face, { height: side, left, top, width: side });
+      const glyphSide = CLOSE_GLYPH_SIZE * pixel;
+      // Native content starts inside the persistent one-art-pixel face border.
+      const glyphInset = (side - glyphSide) / 2 - pixel;
+      setBox(glyph, { height: glyphSide, left: glyphInset, top: glyphInset, width: glyphSide });
+    });
     const stopFeedback = bindPanelFeedback(closeView, { accepts, burst });
     disposeButtons.push(() => {
       stopFeedback();
       closeView.dispose();
     });
-  }
-  dialog.append(...buttons);
-  if (input.close !== null) {
-    dialog.append(close);
-  }
+    return element;
+  };
+  // The close control after the buttons, so it is on top where their press areas meet.
+  const close = input.close === null ? undefined : closeControlElement(input.close);
+  dialog.append(...buttons, ...(close === undefined ? [] : [close]));
 
   // Phaser handles a press on the page outside its canvas as its own; a press here is the menu's.
   for (const type of passive ? [] : ["mousedown", "touchstart"]) {
@@ -413,7 +383,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   }
   const native: HTMLElement[] = passive
     ? []
-    : [...buttons, ...(pressClose === undefined ? [] : [close])];
+    : [...buttons, ...(close === undefined ? [] : [close])];
   const focusables = [...(input.parts ?? []).flatMap((part) => part.controls ?? []), ...native];
   dialog.addEventListener("focusin", (event) => {
     const at = focusables.indexOf(event.target as HTMLElement);
@@ -532,7 +502,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
               ...(input.gestureOnActions === true
                 ? actions.flatMap((action, i) => (action.index === -1 ? [buttons[i]!] : []))
                 : buttons),
-              close,
+              ...(close === undefined ? [] : [close]),
             ].some((control) => control.contains(event.target as Node));
             if (sceneGesture) {
               input.gesture?.down?.(event);

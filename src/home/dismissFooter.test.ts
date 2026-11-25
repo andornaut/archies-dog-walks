@@ -11,12 +11,9 @@ import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import type { PanelButton } from "../ui/modal/types.ts";
 import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
-import { cents } from "../units.ts";
 import { badgeCardView } from "./badgeCardView.ts";
 import { badgeWall } from "./badgesView.ts";
 import { detailCardView, type DetailMeasure } from "./detailCardView.ts";
-import { confirmLines } from "./purchaseConfirm.ts";
-import { purchaseConfirmCardView } from "./purchaseConfirmCardView.ts";
 import { installStepsLayout, settingsLayout } from "./settings.ts";
 import { SETTING_ROWS, type SettingsMeasure, settingsView } from "./settingsView.ts";
 import { SHOP_LAYOUT } from "./shopLayout.ts";
@@ -119,27 +116,6 @@ it("grows and recentres detail and badge cards rather than covering the final bo
         inkRowsOfLines(fonts[text.font ?? "body"], text.lines.length) * (text.scale ?? 2),
     ).toBeLessThanOrEqual(close.rect.y - MODAL.gap);
   }
-});
-
-it("keeps only the purchase choices and corner close control", () => {
-  const lines = confirmLines(gameData, {
-    bankAfter: cents(0),
-    name: gameData.shopGear.runningShoes.name,
-    price: cents(100),
-    purchase: { gear: "runningShoes", kind: "gear" },
-  });
-  const purchase = purchaseConfirmCardView(measure, {
-    lines,
-    picture: { key: "missing-test-art", scale: 1 },
-    pressed: undefined,
-  });
-  expect(purchase.card.footer).toBeUndefined();
-  expect(purchase.card.buttons.map(({ label, primary }) => ({ label, primary }))).toEqual([
-    { label: lines.cancel, primary: false },
-    { label: lines.buy, primary: true },
-  ]);
-  const bottom = Math.max(...purchase.card.buttons.map(({ rect }) => rect.y + rect.height));
-  expect(bottom + MODAL.pad).toBe(purchase.card.panel.y + purchase.card.panel.height);
 });
 
 it("keeps the Shop and Logbook scroll viewport clear of their fixed Back", () => {

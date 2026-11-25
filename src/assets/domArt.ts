@@ -26,7 +26,7 @@ import {
   ZONE_PIPS_KEY,
 } from "./spriteKeys.ts";
 
-// The dog slot's icon, as the shop's rows and the purchase confirm draw it (SHOP_ART in
+// The dog slot's icon, as the shop's rows and its detail card draw it (SHOP_ART in
 // src/scenes/itemArt.ts).
 const DOG_SLOT_ICON_KEY = "icon-dog-slot";
 
@@ -35,10 +35,9 @@ const DOG_SLOT_ICON_KEY = "icon-dog-slot";
 // service worker precaches them with the rest of the hashed art. Only a key's own files ship,
 // never its depth steps.
 
-// Every picture a detail card or the purchase confirm can show: each dog's portrait and its
-// owner's face sheet, each walker's portrait and the face that stands in for it, each gear item's
-// icon, the dog slot's icon, each upgrade's and debuff's icon (src/hud/explain.ts), and the well
-// they sit in.
+// Every picture a detail card can show: each dog's portrait and its owner's face sheet, each
+// walker's portrait and the face that stands in for it, each gear item's icon, the dog slot's
+// icon, each upgrade's and debuff's icon (src/hud/explain.ts), and the well they sit in.
 function detailArtKeys(
   data: Pick<GameData, "debuffs" | "dogs" | "shopGear" | "upgrades" | "walkers">,
 ): string[] {
@@ -301,9 +300,9 @@ const CHROME_ART_KEYS = [
 
 // Each sheet's keys, by the first rule that takes a key, in this order: dom-chrome the art every
 // screen can show; dom-cards the choice cards' art and the zone banner; dom-home the start
-// screen's and the shop's, with every tile picture; dom-detail the detail cards' and the
-// purchase confirm's; dom-menus the settings', the Logbook's, the badge cards' and the End
-// screen's; and dom-walk the rest, the walk's HUD and moments.
+// screen's and the shop's, with every tile picture; dom-detail the detail cards'; dom-menus the
+// settings', the Logbook's, the badge cards' and the End screen's; and dom-walk the rest, the
+// walk's HUD and moments.
 function domSheetKeys(): ReadonlyMap<string, DomSheet> {
   const rules: readonly (readonly [DomSheet, readonly string[]])[] = [
     ["dom-chrome", CHROME_ART_KEYS],

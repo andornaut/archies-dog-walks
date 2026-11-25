@@ -1,12 +1,7 @@
-import { fillLine } from "@andornaut/game-kit/runtime/lines";
-
 import type { GameData } from "../data/types.ts";
-import { isConfirmKey, isPauseKey } from "../input/keyBindings.ts";
-import { dollarText } from "../presentation/currency.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { type Cents, cents } from "../units.ts";
 import { buy, type BuyResult, isAffordable, type Purchase, purchasePrice } from "./home.ts";
-import { HOME_TEXT_FIELDS } from "./homeText.ts";
 
 type ShopData = Pick<GameData, "dogSlots" | "dogs" | "shopGear" | "tuning">;
 
@@ -59,38 +54,4 @@ export function answerPurchase(
   choice: ConfirmChoice,
 ): BuyResult | { readonly kind: "cancelled" } {
   return choice === "buy" ? buy(data, pending.purchase, save) : { kind: "cancelled" };
-}
-
-// The answer a key gives an open confirm: Enter or Space buys, Escape or P cancels. Other keys
-// give none.
-export function keyAnswer(code: string): ConfirmChoice | undefined {
-  if (isPauseKey(code)) {
-    return "cancel";
-  }
-  return isConfirmKey(code) ? "buy" : undefined;
-}
-
-// The confirm's words: its title naming the item, the price, the bank it would leave, and its
-// two buttons.
-export interface ConfirmLines {
-  readonly buy: string;
-  readonly cancel: string;
-  readonly left: string;
-  readonly price: string;
-  readonly title: string;
-}
-
-export function confirmLines(
-  data: Pick<GameData, "homeText">,
-  pending: PendingPurchase,
-): ConfirmLines {
-  const text = data.homeText.shop;
-  const fields = HOME_TEXT_FIELDS.shop;
-  return {
-    buy: text.confirmBuy,
-    cancel: text.confirmCancel,
-    left: fillLine(fields, text, "confirmLeft", { amount: dollarText(pending.bankAfter) }),
-    price: dollarText(pending.price),
-    title: fillLine(fields, text, "confirmTitle", { name: pending.name }),
-  };
 }

@@ -24,18 +24,16 @@ import {
   SIDE_LABEL_ROOM,
   sideTotalLabelRoom,
 } from "../home/endLayout.ts";
+import { overlayRegion } from "../home/homeBar.ts";
 import {
-  BANK_ROOM,
-  bankAmountText,
   detailCardRect,
   DOG_TILE_TEXT_ROOM,
+  HOME_BAR_BUTTONS,
   HOME_LAYOUT,
-  UPDATE_MODAL_ROOM,
+  updateModalLayout,
 } from "../home/homeLayout.ts";
 import { messageLine } from "../home/homeLines.ts";
 import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
-import { confirmLines } from "../home/purchaseConfirm.ts";
-import { PURCHASE_CONFIRM_ROOMS } from "../home/purchaseConfirmLayout.ts";
 import {
   INSTALL_STEPS_FIT,
   installStepsLayout,
@@ -62,9 +60,9 @@ import { MONEY_LABEL } from "../hud/moneyLabels.ts";
 import {
   HOME_QUESTION_ANSWERS,
   NOTE_PLATE,
+  noteTextRoom,
   PANEL_TEXT_ROOM,
   PAUSE_NOTE_LINES,
-  PAUSE_NOTE_WIDTH,
   pauseMenuLayout,
   QUIT_QUESTION_ANSWERS,
 } from "../hud/pauseMenu.ts";
@@ -95,19 +93,19 @@ import type { Owned } from "../save/schema.ts";
 import { readBitmapFont } from "../tools/fontFile.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
-import { modalTitleLayout } from "../ui/modal/layout.ts";
+import { MODAL, modalTitleLayout } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { PAUSE_MENU_ITEMS, pauseMenuItemLabel } from "../ui/navigationMenu.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { MODAL_TITLE_SCALE, TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
+import { topSectionCurrency, topSectionCurrencyText, topSectionLayout } from "../ui/topSection.ts";
 import { cents } from "../units.ts";
 import { bodyRunWidth } from "./bodyFont.ts";
 import { defined } from "./defined.ts";
 import { everyCardOption } from "./everyCardOption.ts";
 import { everyStripLine } from "./everyStripLine.ts";
 import { fitInFont, fontFileMetrics, gameFont, inkWidth } from "./fontInk.ts";
-import { newPlayerSave } from "./saves.ts";
 import { TEST_TUNING } from "./tuning.ts";
 
 // Every string the data puts in each text role, set at the role's one size as the game sets it,
@@ -331,7 +329,7 @@ function endRoles(): TextRoleCase[] {
 }
 
 // The shop's rows, with nothing bought and with everything owned, beside their price or OWNED in
-// a row beside a scrollbar; its messages; and the purchase confirm's lines.
+// a row beside a scrollbar; and its messages.
 function shopRoles(): TextRoleCase[] {
   const data = { ...gameData, tuning: TEST_TUNING };
   // A label's width as Phaser gives it: its glyphs' advances at 2x.
@@ -379,18 +377,12 @@ function shopRoles(): TextRoleCase[] {
           ? wrappedRole(role, "font-body", room, [text(row)])
           : plainRole(role, "font-body", { room, style: TEXT_STYLE }, [text(row)]);
       });
-  const forSale = rowsOf({ ...newPlayerSave.owned, dogs: [], gear: [] }).flatMap(
-    ({ name, price, purchase }) => (price === null ? [] : [{ name, price, purchase }]),
-  );
   const messages = rowsOf(starting).flatMap((row) => [
     ...(row.price === null
       ? []
       : [messageLine(data.homeText, { amount: row.price, kind: "cantAfford", name: row.name })]),
     messageLine(data.homeText, { kind: "bought", name: row.name, purchase: row.purchase }),
   ]);
-  const bankAfter = cents(forSale.reduce((sum, row) => sum + row.price, 0));
-  const confirm = forSale.map((row) => confirmLines(data, { bankAfter, ...row }));
-  const { left, price, title } = PURCHASE_CONFIRM_ROOMS;
   return [
     ...rowRole("shop row's name", (row) => row.name),
     ...rowRole("shop row's line", (row) => row.line, true),
@@ -400,35 +392,6 @@ function shopRoles(): TextRoleCase[] {
       SHOP_MESSAGE_FIT.room,
       messages.flatMap((text) => (text === null ? [] : [text])),
     ),
-    ...confirm.flatMap(({ title: value }) => {
-      const heading = modalTitleLayout(
-        {
-          font: TITLE,
-          inkOf: (line) => modalTitleInk(gameFont("font-title"), line),
-          widthOf: (line) => inkWidth("font-title", TEXT_STYLE, shownIn("font-title", line)),
-        },
-        title.room,
-        value,
-      );
-      return plainRole(
-        "purchase confirm's title",
-        "font-title",
-        { room: title.room, style: { lines: heading.lines.length, scale: MODAL_TITLE_SCALE } },
-        [value],
-      );
-    }),
-    ...plainRole(
-      "purchase confirm's price",
-      "font-title",
-      { room: price.room, style: TEXT_STYLE },
-      confirm.map((lines) => lines.price),
-    ),
-    ...plainRole(
-      "purchase confirm's bank after",
-      "font-body",
-      { room: left.room, style: TEXT_STYLE },
-      confirm.map((lines) => lines.left),
-    ),
   ];
 }
 
@@ -437,14 +400,15 @@ function shopRoles(): TextRoleCase[] {
 // its short form.
 function cashRole(): TextRoleCase[] {
   const cash = [0, 111, 888, 999].map((dollars) => `$${dollarAmountText(cents(dollars * 100))}`);
-  const width = (text: string) => inkWidth("font-title", { scale: 1 }, text);
+  const width = (scale: number, text: string) => inkWidth("font-title", { scale }, text);
+  const section = topSectionLayout(HOME_BAR_BUTTONS, { currency: true });
   const bank = [
     0, 5, 88, 888, 999, 1_000, 1_234, 12_345, 99_999, 123_456, 1_000_000, 123_456_789,
     90_071_992_547_409,
   ].map((dollars) => {
     const amount = cents(dollars * 100);
     const texts = { full: dollarAmountText(amount), short: shortDollarAmountText(amount) };
-    return `$${bankAmountText(width, texts)}`;
+    return `$${topSectionCurrencyText(width, section, texts)}`;
   });
   const { room, scale } = WALK_BAR.cash;
   return [
@@ -452,7 +416,10 @@ function cashRole(): TextRoleCase[] {
     ...plainRole(
       "home screen's bank",
       "font-title",
-      { room: BANK_ROOM, style: { scale: HOME_LAYOUT.topBar.bank.scale } },
+      {
+        room: topSectionCurrency(section, 0).room,
+        style: { scale: HOME_LAYOUT.topBar.bank.scale },
+      },
       bank,
     ),
   ];
@@ -500,8 +467,12 @@ function pauseNoteRoles(): TextRoleCase[] {
     fillLine(fields, words, "noteAll", { cash }),
     ...amounts.map((kept) => fillLine(fields, words, "note", { cash, kept })),
   ]);
+  const { notePlate } = pauseMenuLayout(BODY, SCREEN_LAYOUT.walkView, {
+    buttonCount: PAUSE_MENU_ITEMS.length,
+    noteLines: PAUSE_NOTE_LINES,
+  });
   const fit = {
-    room: PAUSE_NOTE_WIDTH - 2 * NOTE_PLATE.padX,
+    room: noteTextRoom(notePlate),
     style: { lines: PAUSE_NOTE_LINES, scale: NOTE_PLATE.scale },
   };
   return plainRole("pause menu's note", "font-body", fit, notes);
@@ -525,6 +496,18 @@ function questionPanelRoles(): TextRoleCase[] {
       menus.flatMap((labels) => labels.map((label, i) => `${i + 1} ${label}`)),
     ),
   ];
+}
+
+// The update notice over the home screen, as UpdateScene lays it out. Each button is as wide as its
+// label's ink and the label's padding either side (modalActionWidth), at most the card's inside.
+function updateNotice() {
+  const ink = (text: string) => inkWidth("font-title", TEXT_STYLE, shownIn("font-title", text));
+  const { shop, update } = gameData.homeText;
+  return updateModalLayout(overlayRegion("home"), {
+    action: ink(update.button),
+    cancel: ink(shop.confirmCancel),
+    title: ink(update.title),
+  });
 }
 
 // A card with a title row and a close control, and every title the data puts on it.
@@ -598,6 +581,11 @@ export function cardTitles(): CardTitles[] {
       card: settingsLayout({ body: BODY, title: TITLE }, screen, []).panel,
       role: "settings title",
       titles: [title],
+    },
+    {
+      card: updateNotice().panel,
+      role: "update notice's title",
+      titles: [gameData.homeText.update.title, gameData.homeText.update.failure],
     },
   ];
 }
@@ -718,16 +706,10 @@ export function textRoleCases(): TextRoleCase[] {
       [gameData.homeText.startWalk, gameData.homeText.startLoading],
     ),
     ...plainRole(
-      "update modal's title",
+      "update notice's buttons",
       "font-title",
-      { room: UPDATE_MODAL_ROOM.title, style: TEXT_STYLE },
-      [gameData.homeText.update.title],
-    ),
-    ...plainRole(
-      "update modal's button",
-      "font-title",
-      { room: UPDATE_MODAL_ROOM.label, style: TEXT_STYLE },
-      [gameData.homeText.update.button],
+      { room: updateNotice().panel.width - 4 * MODAL.pad, style: TEXT_STYLE },
+      [gameData.homeText.update.button, gameData.homeText.shop.confirmCancel],
     ),
     ...endRoles(),
     ...shopRoles(),

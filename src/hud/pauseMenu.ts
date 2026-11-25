@@ -16,15 +16,14 @@ const TITLE_Y = MODAL.titleTop;
 const BUTTON = { ...BUTTON_SIZE.wide, gap: BUTTON_SIZE.stackGap, x: MODAL.pad, y: MODAL.header };
 
 // The width a button's label has, its key number included, 4px in from each side. The panel's
-// title is placed beside its close control, as on every modal card (addCardTitle).
+// title is placed beside its close control, as on every modal card (panelTitle).
 export const PANEL_TEXT_ROOM = {
   label: BUTTON.width - PAUSE_PANEL.labelPad,
 } as const;
-// The note plate is as wide as the buttons, gap under the last one. The note is body text at
-// scale, wrapped to the plate's width less padX each side, its first line's capitals padTop
-// under the plate's top, a line of the body font apart, and the last line's lowest ink
-// padBottom over its bottom.
-export const PAUSE_NOTE_WIDTH = BUTTON.width;
+// The note plate spans the panel inside its padding. The note is body text at scale, wrapped to
+// the plate's width less padX each side (noteTextRoom), its first line's capitals padTop under
+// the plate's top, a line of the body font apart, and the last line's lowest ink padBottom over
+// its bottom.
 export const NOTE_PLATE = {
   gap: MODAL.gap,
   padBottom: MODAL.rowGap,
@@ -32,6 +31,11 @@ export const NOTE_PLATE = {
   padX: MODAL.rowGap,
   scale: PAUSE_PANEL.noteScale,
 } as const;
+
+// The width a note's lines wrap to on plate.
+export function noteTextRoom(plate: Pick<Rect, "width">): number {
+  return plate.width - 2 * NOTE_PLATE.padX;
+}
 
 // The pause menu's own note, a sentence a line, takes this many lines.
 export const PAUSE_NOTE_LINES = PAUSE_PANEL.noteLines;

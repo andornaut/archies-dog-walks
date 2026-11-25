@@ -6,24 +6,21 @@ import {
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { HIT_RULE } from "@andornaut/game-kit/runtime/ui/hitAreas";
 
-import { BUTTON_FACE_EDGE, HOME_SCREEN, MIN_PRESS, TOP_BAR_SIZES } from "../data/layout.ts";
+import { BUTTON_FACE_EDGE, HOME_SCREEN, MIN_PRESS } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId } from "../data/types.ts";
 import { ownerPhotoRect, WALK_BAR } from "../hud/walkHud.ts";
 import type { PackPlacement } from "../layout/packFormation.ts";
-import { barTitleRoom } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { closeControl } from "../ui/closeControl.ts";
 import type { GridSpec } from "../ui/grid.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { MARK_OFFSET } from "../ui/mark.ts";
 import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
-import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { hasPill, PILL_IMAGE_GAP, pillDropUnderInk, pillRiseOverCaps } from "../ui/namePills.ts";
 import { BUTTON_LIP_PX } from "../ui/selection.ts";
 import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { TOP_BAR_FACE, TOP_BAR_HEIGHT, TOP_BAR_MID, TOP_BAR_WELL } from "../ui/topBarTrim.ts";
-import { topSectionCurrency, topSectionLayout } from "../ui/topSection.ts";
+import { topSectionLayout } from "../ui/topSection.ts";
 import { FEEDBACK } from "./feedback.ts";
 import type { SectionId } from "./sections.ts";
 
@@ -31,16 +28,6 @@ import type { SectionId } from "./sections.ts";
 // the stacked button gap apart both ways.
 const HOME = HOME_SCREEN;
 const HERO_SECTION_GAP = HOME.heroSectionGap;
-// The dismissible update notice uses the same card and compact control as other home modals.
-const UPDATE_PANEL = modalRect({ ...SCREEN_CONFIG, x: 0, y: 0 }, undefined, {
-  height: MODAL.header + BUTTON_SIZE.compact.height + MODAL.pad,
-  width: SCREEN_CONFIG.width - 2 * MODAL.margin,
-});
-const UPDATE_BUTTON = {
-  ...BUTTON_SIZE.compact,
-  x: UPDATE_PANEL.x + (UPDATE_PANEL.width - BUTTON_SIZE.compact.width) / 2,
-  y: UPDATE_PANEL.y + UPDATE_PANEL.height - MODAL.pad - BUTTON_SIZE.compact.height,
-};
 
 // Section padding is measured from card edges; badges keep a separate non-touch gutter.
 const SECTION_CONTENT_PADDING = HOME.sectionContentPadding;
@@ -203,14 +190,6 @@ export type HomeBarButton = (typeof HOME_BAR_BUTTONS)[number];
 interface HomeBarButtonPlace {
   face: Point;
   hit: Rect;
-}
-
-// The top bar's button fromRight columns in from the screen's right edge (1 the last): the last
-// face where the walk bar's Pause face is, and each face before it a MIN_PRESS column left of the
-// next, each in a hit area the column wide and TOP_BAR_PRESS_HEIGHT tall centred across it, cut
-// at the screen's edge.
-function topBarButton(fromRight: number): HomeBarButtonPlace {
-  return topSectionLayout(HOME_BAR_BUTTONS).controls[HOME_BAR_BUTTONS.length - fromRight]![1];
 }
 
 // The home screen's geometry, in screen pixels. Each icon button is drawn at its icon spot
@@ -433,18 +412,16 @@ export const HOME_LAYOUT = {
   // The backing begins this far below the section's top, after its header.
   tileOffset: TILE_OFFSET,
   // The top bar, plum with every top bar's trim (topBarRects): the bank in its well at the left,
-  // then plain plum, then the buttons, the faces centred on row mid. The well is as wide as the
-  // bank needs (bankWell), at most well.maxWidth, which ends wellClear columns before the first
-  // face with Exit shown and is the same with it hidden. It is drawn from wellKeys: its left column, the
-  // middle column repeated, and its right column. It is ink on its first
-  // well.height - lip rows and well.width - lip columns, its lip on the rest. The bank, the title
-  // font's "$" and amount one font advance apart, is set at bank.scale in full with thousands
-  // separated (bankAmountText), its ink bank.pad columns in from the well's left, its capitals'
-  // top at bank.capsY.
+  // then plain plum, then the buttons, the faces centred on row mid. The well is well.maxWidth
+  // wide (topSectionCurrency), ending before the first face with Exit shown and the same with it
+  // hidden. It is drawn from wellKeys: its left column, the middle column repeated, and its right
+  // column. It is ink on its first well.height - lip rows and well.width - lip columns, its lip on
+  // the rest. The bank, the title font's "$" and amount one font advance apart, is set at
+  // bank.scale in full with thousands separated where it fits (topSectionCurrencyText), its ink
+  // centred across the well's ink, its capitals' top at bank.capsY.
   topBar: {
     bank: {
       capsY: WALK_BAR.cash.capsY,
-      pad: TOP_BAR_SIZES.well.padding,
       scale: WALK_BAR.cash.scale,
     },
     faceSize: TOP_BAR_FACE.size,
@@ -464,14 +441,6 @@ export const HOME_LAYOUT = {
       mid: "ui-home-cash-well-mid",
       right: "ui-home-cash-well-right",
     },
-  },
-  // The update notice's modal card and primary button. The existing home close and outside
-  // controls dismiss it; accepting keeps the PWA update action unchanged.
-  updateModal: {
-    button: UPDATE_BUTTON,
-    hit: UPDATE_BUTTON,
-    labelPad: HOME.updateModal.labelPad,
-    panel: UPDATE_PANEL,
   },
   walkerAtGate: { footY: GATE.y + GATE.height, x: HOME.walkerAtGate.x },
   walkerOrigin: { x: GRID_ORIGIN_X, y: sectionTilesY(WALKER_SECTION, WALKER_TILES.inset.y) },
@@ -501,41 +470,15 @@ export const HOME_LAYOUT = {
   sectionFillKeys: Readonly<Record<SectionId, string>>;
   sections: Readonly<Record<SectionId, Rect>>;
   slotSign: { readonly [key: string]: unknown; board: Rect; hit: Rect };
-  updateModal: { readonly [key: string]: unknown; button: Rect; hit: Rect; panel: Rect };
   walkerTiles: GridSpec;
   yardSign: Rect;
 };
-
-// The last visible control shares the rightmost face across capability states.
-export const HOME_BAR_LAST_FACE: Point = topBarButton(1).face;
 
 // Every home overlay uses the same visible controls and targets.
 export function homeBarButtons(
   exit: boolean,
 ): readonly (readonly [HomeBarButton, HomeBarButtonPlace])[] {
   return topSectionLayout(HOME_BAR_BUTTONS.filter((id) => exit || id !== "exit")).controls;
-}
-
-// How wide the bank's ink may be: the widest well less its lip and padding. A bank wider shows
-// its short form (bankAmountText).
-export const BANK_ROOM =
-  HOME_LAYOUT.topBar.well.maxWidth - HOME_LAYOUT.topBar.well.lip - 2 * HOME_LAYOUT.topBar.bank.pad;
-
-// The bank's well for its ink inkWidth wide on screen: bank.pad ink columns either side of the
-// bank's ink, then the lip, at most well.maxWidth wide.
-export function bankWell(inkWidth: number): Rect {
-  return topSectionCurrency(topSectionLayout(HOME_BAR_BUTTONS, { currency: true }), inkWidth).well;
-}
-
-// Which of the bank's texts, without its "$", it shows: full, the amount with thousands
-// separated, where "$" and it at bank.scale fit BANK_ROOM as inkWidthAt1x measures them at 1x,
-// else short, its short form.
-export function bankAmountText(
-  inkWidthAt1x: (text: string) => number,
-  texts: { full: string; short: string },
-): string {
-  const fits = inkWidthAt1x(`$${texts.full}`) * HOME_LAYOUT.topBar.bank.scale <= BANK_ROOM;
-  return fits ? texts.full : texts.short;
 }
 
 // How wide a line of the walker's speech may be, as a label measures it: a bubble that wide
@@ -732,17 +675,9 @@ export function slotSignText(body: FontMetrics): {
   return { cream, headCapY, priceCapY: headCapY + linePitch, x: cream.x + cream.width / 2 };
 }
 
-// The update modal's title beside its close control, and the compact button's label.
-export const UPDATE_MODAL_ROOM = {
-  label: HOME_LAYOUT.updateModal.button.width - 2 * HOME_LAYOUT.updateModal.labelPad,
-  title: barTitleRoom(cardTitleRow(UPDATE_PANEL), closeControl(UPDATE_PANEL)),
-} as const;
-
-// The compact button label's capitals, centred on the raised face above its lip.
-export function updateModalText(
-  title: FontMetrics,
-  button: Rect = HOME_LAYOUT.updateModal.button,
-): { capY: number } {
+// The update notice's compact button label's capitals, centred on the raised face above its lip
+// (updateModalLayout's button).
+export function updateModalText(title: FontMetrics, button: Rect): { capY: number } {
   const caps = title.capHeight * 2;
   return { capY: button.y + Math.floor((button.height - BUTTON_LIP_PX - caps) / 2) };
 }

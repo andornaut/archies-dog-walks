@@ -9,16 +9,10 @@ const SHAKE_KEYFRAMES = refuseShakeSteps()
   )
   .join("");
 
-// The HTML interface's styles for a control's states beyond pressed and focused: a disabled
-// button's grey face (ui-button's disabled art, its colour showing only while the art loads),
-// and a refusal, which shakes a control right and back (adw-refusing, or adw-shaking for the shake
-// alone) and flashes its label red, or, under reduced motion, holds its label red, as
-// refuseControl does on the canvas. The panel sets the flash's times on the control.
+// The HTML interface's styles for a refused control: it shakes right and back (adw-refusing, or
+// adw-shaking for the shake alone) and flashes its label red, or, under reduced motion, holds its
+// label red, as refuseControl does on the canvas. The panel sets the flash's times on the control.
 export const CONTROL_STATE_STYLE = `
-.adw-button.adw-disabled .adw-face:not(.adw-standard-button-face){border-image-source:var(--adw-ui-button-disabled);
-  background-color:var(--adw-neutralGrey)}
-.adw-button.adw-go.adw-disabled .adw-face:not(.adw-standard-button-face){
-  border-image-source:var(--adw-ui-button-go-disabled)}
 .adw-refusing,.adw-shaking{animation:adw-shake ${2 * REFUSE.shakeMs}ms step-end ${REFUSE_SHAKES}}
 .adw-refusing .adw-text{animation:adw-flash var(--adw-flash-ms) step-end var(--adw-flashes)}
 .adw-refusing-still .adw-text{animation:adw-red var(--adw-refuse-ms) step-end}

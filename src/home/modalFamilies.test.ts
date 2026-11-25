@@ -27,7 +27,6 @@ import { dogDetail, gearDetail, walkerDetail } from "./detail.ts";
 import { detailCardView, type DetailMeasure } from "./detailCardView.ts";
 import { updateModalLayout } from "./homeLayout.ts";
 import { logbookView } from "./logbookView.ts";
-import { purchaseConfirmLayout } from "./purchaseConfirmLayout.ts";
 import { installStepsLayout, settingsLayout } from "./settings.ts";
 import {
   rowRects,
@@ -81,25 +80,17 @@ it("selects Medium navigation and confirmations, Large settings and steps", () =
 });
 
 it("stacks full-size paired actions against the selected Medium inner width", () => {
-  const update = updateModalLayout(SCREEN_LAYOUT.screen, { action: 120, cancel: 80, title: 60 });
-  const purchase = purchaseConfirmLayout(fonts, {
-    buy: 120,
+  const { button, cancel, panel } = updateModalLayout(SCREEN_LAYOUT.screen, {
+    action: 120,
     cancel: 80,
-    left: 60,
-    price: 60,
     title: 60,
   });
-  for (const [panel, first, second] of [
-    [update.panel, update.cancel, update.button],
-    [purchase.card, purchase.buttons.cancel, purchase.buttons.buy],
-  ] as const) {
-    expect(panel.width).toBe(264);
-    expect(first.x).toBe(second.x);
-    expect(first.width).toBe(second.width);
-    expect(first.width).toBeLessThanOrEqual(panel.width - 2 * MODAL.pad);
-    expect(first.height).toBe(48);
-    expect(second.y).toBeGreaterThanOrEqual(first.y + first.height);
-  }
+  expect(panel.width).toBe(264);
+  expect(cancel.x).toBe(button.x);
+  expect(cancel.width).toBe(button.width);
+  expect(cancel.width).toBeLessThanOrEqual(panel.width - 2 * MODAL.pad);
+  expect(cancel.height).toBe(48);
+  expect(button.y).toBeGreaterThanOrEqual(cancel.y + cancel.height);
 });
 
 it("chooses every detail family using reflowed full-size content", () => {

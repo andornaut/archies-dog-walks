@@ -1,17 +1,15 @@
 import { readdirSync, readFileSync } from "node:fs";
 
-import { fillNames } from "@andornaut/game-kit/runtime/lines";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { dollarText } from "../presentation/currency.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { defined } from "../testing/defined.ts";
 import { newPlayerSave } from "../testing/saves.ts";
 import { TEST_TUNING } from "../testing/tuning.ts";
 import { cents } from "../units.ts";
 import { type Purchase, purchasePrice } from "./home.ts";
-import { answerPurchase, confirmLines, keyAnswer, requestPurchase } from "./purchaseConfirm.ts";
+import { answerPurchase, requestPurchase } from "./purchaseConfirm.ts";
 import { dogRows, gearRows, slotRows } from "./shop.ts";
 
 const data = { ...gameData, tuning: TEST_TUNING };
@@ -85,36 +83,6 @@ describe("answerPurchase", () => {
       expect(answered(item, "cancel").result).toEqual({ kind: "cancelled" });
     },
   );
-});
-
-// One key of each answer: the keyBindings tests check every confirm and pause key.
-describe("keyAnswer", () => {
-  it.each([
-    ["Enter", "buy"],
-    ["Escape", "cancel"],
-    ["KeyB", undefined],
-  ] as const)("answers %j with %j", (code, choice) => {
-    expect(keyAnswer(code)).toBe(choice);
-  });
-});
-
-describe("confirmLines", () => {
-  it.each(forSale)("names the $kind, its price and the bank after it", (item) => {
-    const text = data.homeText.shop;
-    const pending = {
-      bankAfter: cents(1_234),
-      name: item.name,
-      price: cents(500),
-      purchase: item.purchase,
-    };
-    expect(confirmLines(data, pending)).toEqual({
-      buy: text.confirmBuy,
-      cancel: text.confirmCancel,
-      left: fillNames(text.confirmLeft, { amount: dollarText(pending.bankAfter) }),
-      price: dollarText(pending.price),
-      title: fillNames(text.confirmTitle, { name: item.name }),
-    });
-  });
 });
 
 // Every source file, from src/, but tests.

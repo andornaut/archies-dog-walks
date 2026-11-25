@@ -23,7 +23,7 @@ import type { RunState } from "../state/runState.ts";
 import { GAME_PROGRESS, GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
 import { TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { TOP_BAR_FACE, wellCapsTop } from "../ui/topBarTrim.ts";
-import { topSectionCurrency, topSectionGapLeft, topSectionLayout } from "../ui/topSection.ts";
+import { topSectionLayout } from "../ui/topSection.ts";
 import { type EffectItem, maxEffects } from "./effectIcons.ts";
 import { heartRows } from "./hudView.ts";
 
@@ -42,13 +42,6 @@ const CASH_SCALE = WALK_BAR_PARTS.cash.scale;
 // The most effects a walk can have, one well each: the walker's perk, the Pocket's gear, the
 // found gear and an upgrade from each fork.
 export const EFFECT_WELLS = maxEffects(gameData);
-
-// The left edge of a section width wide set between left and right (the first column past the
-// section before it and the first of the section after it) with an equal gap on either side,
-// an odd leftover column going to the gap on its right.
-export function evenGapLeft(left: number, right: number, width: number): number {
-  return topSectionGapLeft(left, right, width);
-}
 
 // The walk bar's three sections, left to right: the cash well, the effect wells and the
 // buttons. The cash well and the buttons keep their places at the bar's ends, and the effect
@@ -145,12 +138,6 @@ export function walkBarLayout(bar: Rect, wells = EFFECT_WELLS): WalkBarLayout {
     effectHolds: shared.effectHolds.map(move),
     effectWells: shared.effectWells.map(move),
   };
-}
-
-// The first ink column of the cash, or the home top bar's bank, for ink inkWidth wide on
-// screen: centred across the well's ink, a half pixel rounded left.
-export function cashLeft(inkWidth: number): number {
-  return topSectionCurrency(SHARED_BAR, inkWidth).left;
 }
 
 // A native debuff bar: its icon and full-size name precede the draining duration track.

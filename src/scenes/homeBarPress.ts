@@ -19,7 +19,7 @@ import { nativeTopSectionButtons } from "./topSection.ts";
 
 // Emitted on game.events as the top bar opens help, the Logbook or the settings: the settings and
 // the badge celebration close, and the start screen, the Pet shop and the Logbook close any detail
-// card, badge card or purchase confirm, so the page opens alone over the page beneath, dimmed once.
+// card or badge card, so the page opens alone over the page beneath, dimmed once.
 // Help over them stays open: what the bar opens over it opens over help.
 export const HOME_PAGE_OPENING_EVENT = "home-page-opening";
 

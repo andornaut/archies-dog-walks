@@ -18,8 +18,8 @@ import {
   homeQuestionLayout,
   NOTE_PLATE,
   notePartTops,
+  noteTextRoom,
   PAUSE_NOTE_LINES,
-  PAUSE_NOTE_WIDTH,
   pauseMenuLayout,
   QUIT_QUESTION_ANSWERS,
 } from "./pauseMenu.ts";
@@ -103,13 +103,11 @@ describe("the Home question's panel", () => {
       fillNames(words.lose, { lost: money, zone }),
       fillNames(words.zonesLeft, { count: String(walkLength(gameData) - 1) }),
     ];
-    const room = PAUSE_NOTE_WIDTH - 2 * NOTE_PLATE.padX;
+    const parts = { buttonCount: 2, noteLines: 0 };
+    const room = noteTextRoom(homeQuestionLayout(BODY, walkView, parts).notePlate);
     const lines = note.flatMap((text) => wrapWords(bodyWidth, room, text));
     expect(lines.filter((line) => bodyWidth(line) > room)).toEqual([]);
-    const { panel } = homeQuestionLayout(BODY, walkView, {
-      buttonCount: 2,
-      noteLines: lines.length,
-    });
+    const { panel } = homeQuestionLayout(BODY, walkView, { ...parts, noteLines: lines.length });
     expect(panel.y).toBeGreaterThanOrEqual(walkView.y);
     expect(panel.y + panel.height).toBeLessThanOrEqual(walkView.y + walkView.height);
   });
@@ -170,12 +168,12 @@ describe("the pause menu's note", () => {
     ["keeping some of the cash", fillNames(words.note, { cash, kept: cash })],
     ["keeping all the cash", fillNames(words.noteAll, { cash })],
   ])("sets its note %s on the lines of its plate", (_name, note) => {
-    const room = PAUSE_NOTE_WIDTH - 2 * NOTE_PLATE.padX;
+    const parts = { buttonCount: PAUSE_MENU_ITEMS.length, noteLines: PAUSE_NOTE_LINES };
+    const { buttons, notePlate, panel } = pauseMenuLayout(BODY, walkView, parts);
+    const room = noteTextRoom(notePlate);
     const lines = sentences(note).flatMap((sentence) => wrapWords(bodyWidth, room, sentence));
     expect(lines.filter((line) => bodyWidth(line) > room)).toEqual([]);
     expect(lines.length).toBeLessThanOrEqual(PAUSE_NOTE_LINES);
-    const parts = { buttonCount: PAUSE_MENU_ITEMS.length, noteLines: PAUSE_NOTE_LINES };
-    const { buttons, notePlate, panel } = pauseMenuLayout(BODY, walkView, parts);
     const first = buttons[0]!;
     const resume = buttons.at(-1)!;
     expect(notePlate.y + notePlate.height).toBeLessThan(first.y);

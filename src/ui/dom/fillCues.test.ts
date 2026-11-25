@@ -171,12 +171,6 @@ describe("control state cues", () => {
       "color:var(--adw-selection-focus-ink)!important;forced-color-adjust:none",
     ],
     [
-      "a pressed primary button's label",
-      "ui",
-      ".adw-button:not(.adw-standard-button).adw-go[data-pressed] .adw-text",
-      "color:var(--adw-white)!important",
-    ],
-    [
       "a focused speech bubble",
       "ui",
       ".adw-button:focus-visible :is(.adw-speech-focus,.adw-speech-tail-focus)",

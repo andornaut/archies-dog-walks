@@ -54,11 +54,10 @@ export function createPanelButton(
   doc: Document,
   input: {
     readonly fonts: Readonly<Record<"body" | "title", BitmapFont>>;
-    readonly press?: PanelPress;
+    readonly press: PanelPress;
   },
   button: PanelButton,
 ): { readonly element: HTMLElement; dispose(): void; place(scale: DomScale): void } {
-  const passive = input.press === undefined;
   const content = doc.createElement("span");
   content.className = "adw-lines";
   const className = [
@@ -68,46 +67,33 @@ export function createPanelButton(
     ...(button.available === false ? ["adw-disabled"] : []),
   ].join(" ");
   const control: { element?: HTMLElement } = {};
-  const view = passive
-    ? undefined
-    : createGameButton(doc, {
-        appearance: {
-          className,
-          face: { className: "adw-face" },
-          role: button.primary ? "primary" : "secondary",
-        },
-        content: { icon: content, kind: "icon", name: button.label },
-        getAction: () => (input.press!.accepts() ? { activate: input.press!.press } : null),
-        getState: () => ({
-          availability:
-            control.element?.hidden === true
-              ? { kind: "omitted" }
-              : button.available === false
-                ? { kind: "pointer-refusal" }
-                : { kind: "available" },
-        }),
-        onPointerRefusal: () => {
-          if (input.press!.accepts()) {
-            input.press!.press();
-          }
-        },
-      });
-  const element = view?.element ?? doc.createElement("span");
+  const view = createGameButton(doc, {
+    appearance: {
+      className,
+      face: { className: "adw-face" },
+      role: button.primary ? "primary" : "secondary",
+    },
+    content: { icon: content, kind: "icon", name: button.label },
+    getAction: () => (input.press.accepts() ? { activate: input.press.press } : null),
+    getState: () => ({
+      availability:
+        control.element?.hidden === true
+          ? { kind: "omitted" }
+          : button.available === false
+            ? { kind: "pointer-refusal" }
+            : { kind: "available" },
+    }),
+    onPointerRefusal: () => {
+      if (input.press.accepts()) {
+        input.press.press();
+      }
+    },
+  });
+  const { element, face } = view;
   control.element = element;
-  const face = view?.face ?? doc.createElement("span");
-  const stopFeedback = view === undefined ? undefined : bindPanelFeedback(view, input.press!);
-  if (passive) {
-    element.className = className;
-    element.setAttribute("aria-hidden", "true");
-    face.className = "adw-face";
-    element.append(face, content);
-  }
+  const stopFeedback = bindPanelFeedback(view, input.press);
   if (button.pressed === true && button.available !== false) {
-    if (view === undefined) {
-      element.setAttribute("data-pressed", "");
-    } else {
-      view.setPressed(true);
-    }
+    view.setPressed(true);
   }
   const lines = (button.key === undefined ? [button.text] : [button.key, button.text]).map(
     (line) => {
@@ -119,15 +105,15 @@ export function createPanelButton(
   );
   return {
     dispose() {
-      stopFeedback?.();
-      view?.dispose();
+      stopFeedback();
+      view.dispose();
     },
     element,
     place(scale) {
       placeBox(scale, ORIGIN, element, button.hit);
       placeFrame(scale, button.hit, face, button.rect);
       for (const { line, text } of lines) {
-        placeText(input.fonts[line.font], scale, passive ? button.hit : button.rect, text, line);
+        placeText(input.fonts[line.font], scale, button.rect, text, line);
       }
     },
   };

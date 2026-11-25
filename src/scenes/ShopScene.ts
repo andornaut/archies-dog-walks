@@ -7,6 +7,7 @@ import { Scene } from "phaser";
 import { domArtUrl } from "../assets/domArtFiles.ts";
 import { dogFaceKey, gearIconKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
+import { PLATE_PAD } from "../data/layout.ts";
 import { FEEDBACK, shakeOffset } from "../home/feedback.ts";
 import { focusDirectionForKey } from "../home/focus.ts";
 import type { Purchase } from "../home/home.ts";
@@ -83,7 +84,7 @@ import { cents } from "../units.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
 import { listenHomeBar, sceneRegionOutside } from "./homeBarPress.ts";
 import { detailView } from "./homePanels.ts";
-import { BADGE_KEYS, PLATE_PAD, purchasePicture, SHOP_ART } from "./itemArt.ts";
+import { BADGE_KEYS, purchasePicture, SHOP_ART } from "./itemArt.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { closeOverlay, listenDismiss, openOverlay, type OverlayData } from "./overlay.ts";
 import {
@@ -898,7 +899,7 @@ export class ShopScene extends Scene {
     const close = () => this.back();
     const presses = item.pending === undefined ? [] : [close, () => this.answer("buy")];
     this.htmlDetail = keepPanel(this.htmlDetail, JSON.stringify(layout()), () =>
-      addHtmlDetailCard(this, layout, close, false, close, presses),
+      addHtmlDetailCard(this, layout, close, close, presses),
     );
   }
 }

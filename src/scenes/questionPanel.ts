@@ -10,7 +10,6 @@ import type { BadgeCardView } from "../home/badgeCardView.ts";
 import type { DetailCardView } from "../home/detailCardView.ts";
 import type { EndScreenView } from "../home/endScreenView.ts";
 import { showBadgeCard } from "../hud/dom/badgeCard.ts";
-import { type BadgeCelebrationView, showBadgeCelebration } from "../hud/dom/celebration.ts";
 import { showDetailCard } from "../hud/dom/detailCard.ts";
 import { type DomEndScreen, type DomEndScreenInput, showEndScreen } from "../hud/dom/endScreen.ts";
 import { type DomHelpInput, showHelpScreen } from "../hud/dom/helpScreen.ts";
@@ -224,7 +223,6 @@ export function addHtmlDetailCard(
   scene: Scene,
   layout: () => DetailCardView,
   close: (() => void) | undefined,
-  closePressed = false,
   dismiss?: () => void,
   presses?: readonly (() => void)[],
 ): DomQuestionPanel | undefined {
@@ -235,8 +233,7 @@ export function addHtmlDetailCard(
   const mount = (view: DetailCardView) =>
     showDetailCard(place.layer, {
       ...htmlArtInput(place),
-      close,
-      closePressed,
+      ...(close === undefined ? {} : { close }),
       ...(dismiss === undefined ? {} : { backgroundCancel: dismiss, dismiss }),
       ...(presses === undefined ? {} : { presses }),
       view,
@@ -427,21 +424,6 @@ function dimOver(panel: DomQuestionPanel): DomQuestionPanel {
       panel.setShown(shown);
     },
   };
-}
-
-// Native badge celebration text and controls share the caller's close action.
-export function addHtmlBadgeCelebration(
-  scene: Scene,
-  view: BadgeCelebrationView,
-  close: () => void,
-): DomQuestionPanel | undefined {
-  const place = htmlPanelPlace(scene);
-  return place === undefined
-    ? undefined
-    : followScene(
-        scene,
-        showBadgeCelebration(place.layer, { ...htmlArtInput(place), close, view }),
-      );
 }
 
 // Native End results use the scene's fonts, assets, clock and action ownership.

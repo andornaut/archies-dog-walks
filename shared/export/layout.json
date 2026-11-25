@@ -2010,7 +2010,6 @@
       "topBar": {
         "bank": {
           "capsY": 11,
-          "pad": 6,
           "scale": 3
         },
         "faceSize": 20,
@@ -2029,33 +2028,6 @@
           "mid": "ui-home-cash-well-mid",
           "right": "ui-home-cash-well-right"
         }
-      },
-      "updateModal": {
-        "button": {
-          "height": 48,
-          "width": 144,
-          "x": 108,
-          "y": 308
-        },
-        "cancel": {
-          "height": 48,
-          "width": 144,
-          "x": 108,
-          "y": 252
-        },
-        "hit": {
-          "height": 48,
-          "width": 144,
-          "x": 108,
-          "y": 308
-        },
-        "panel": {
-          "height": 183,
-          "width": 264,
-          "x": 48,
-          "y": 189
-        },
-        "capY": 325
       },
       "walkerAtGate": {
         "footY": 138,
@@ -2235,6 +2207,33 @@
           "y": 447
         }
       ],
+      "updateModal": {
+        "button": {
+          "height": 48,
+          "width": 144,
+          "x": 108,
+          "y": 308
+        },
+        "cancel": {
+          "height": 48,
+          "width": 144,
+          "x": 108,
+          "y": 252
+        },
+        "hit": {
+          "height": 48,
+          "width": 144,
+          "x": 108,
+          "y": 308
+        },
+        "panel": {
+          "height": 183,
+          "width": 264,
+          "x": 48,
+          "y": 189
+        },
+        "capY": 325
+      },
       "walkerRects": [
         {
           "height": 50,
@@ -2713,9 +2712,9 @@
         "lineHeight": 16,
         "lines": 3,
         "pad": 4,
-        "width": 292,
         "x": 38,
-        "y": 4
+        "y": 4,
+        "width": 292
       },
       "tabRects": [
         {

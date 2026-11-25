@@ -4,6 +4,7 @@ import { Math as PhaserMath, Scene } from "phaser";
 
 import { ZONE_CELEBRATION_ART as ART } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
+import { MENU_BUTTON_KEY_GAP } from "../data/layout.ts";
 import { CELEBRATION_LAYOUT as LAYOUT } from "../hud/celebrationLayout.ts";
 import { zoneCelebrationView } from "../hud/celebrationView.ts";
 import { showZoneCelebration } from "../hud/dom/celebration.ts";
@@ -26,7 +27,6 @@ import { followScene, htmlArtInput, htmlPanelPlace } from "./questionPanel.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { playFirstTag } from "./sprites.ts";
-import { MENU_BUTTON_KEY_GAP } from "./uiKit.ts";
 
 export interface ZoneCelebrationSceneData extends OverlayData {
   celebration: ZoneCelebration;

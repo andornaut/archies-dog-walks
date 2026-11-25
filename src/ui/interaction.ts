@@ -120,10 +120,3 @@ export function itemTileLook(tile: ItemTile): ItemLook {
       return tile satisfies never;
   }
 }
-
-export function buttonState(input: Pick<InteractionInput, "available" | "primary">): ButtonState {
-  if (!input.available) {
-    return "disabled";
-  }
-  return input.primary ? "primary" : "normal";
-}

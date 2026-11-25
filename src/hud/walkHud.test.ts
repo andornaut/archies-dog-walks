@@ -12,7 +12,7 @@ import { gameData } from "../data/index.ts";
 import { MIN_PRESS } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DebuffId, DogId } from "../data/types.ts";
-import { HOME_BAR_LAST_FACE, HOME_LAYOUT } from "../home/homeLayout.ts";
+import { HOME_LAYOUT, homeBarButtons } from "../home/homeLayout.ts";
 import { dollarAmountText } from "../presentation/currency.ts";
 import { maxHearts } from "../rules/dogs.ts";
 import { modifiersOf } from "../rules/modifiers.ts";
@@ -21,18 +21,17 @@ import { fontInk, gameFont } from "../testing/fontInk.ts";
 import { LONE } from "../testing/packPlaces.ts";
 import { inside } from "../testing/rects.ts";
 import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
+import { topSectionCurrency, topSectionGapLeft, topSectionLayout } from "../ui/topSection.ts";
 import { cents } from "../units.ts";
 import { maxEffects } from "./effectIcons.ts";
 import {
   cardHearts,
-  cashLeft,
   DEBUFF_BAR,
   debuffBarFill,
   debuffBarRects,
   debuffFillWidth,
   DOG_CARD,
   EFFECT_WELLS,
-  evenGapLeft,
   type ExplainShown,
   type ExplainTarget,
   explainTargetAt,
@@ -158,7 +157,7 @@ describe("the walk bar", () => {
   it("sets its button faces, cash well and cash as the start screen's top bar sets its own", () => {
     const home = HOME_LAYOUT.topBar;
     for (const id of WALK_BAR_BUTTONS) {
-      expect(BAR.buttons[id].face.y - topBar.y).toBe(HOME_BAR_LAST_FACE.y);
+      expect(BAR.buttons[id].face.y - topBar.y).toBe(homeBarButtons(true).at(-1)![1].face.y);
     }
     const { cash } = WALK_BAR;
     expect([cash.well.x, cash.well.y, cash.well.height]).toEqual([
@@ -202,14 +201,14 @@ describe("the walk bar", () => {
   );
 });
 
-describe("evenGapLeft", () => {
+describe("topSectionGapLeft", () => {
   // Left and right are the first columns past the sections on either side.
   it.each<[string, number, number, number, number]>([
     ["an even leftover", 10, 30, 10, 15],
     ["an odd leftover, its extra column on the right", 10, 31, 10, 15],
     ["no leftover", 10, 20, 10, 10],
   ])("splits %s evenly", (_name, left, right, width, expected) => {
-    expect(evenGapLeft(left, right, width)).toBe(expected);
+    expect(topSectionGapLeft(left, right, width)).toBe(expected);
   });
 });
 
@@ -235,7 +234,7 @@ describe("the cash", () => {
   );
   it.each(centred)("centres %s across the well's ink", (cash) => {
     const inkWidth = titleWidth(cash) * scale;
-    const left = cashLeft(inkWidth);
+    const { left } = topSectionCurrency(topSectionLayout([], { currency: true }), inkWidth);
     const right = left + inkWidth - 1;
     expect(left).toBeGreaterThanOrEqual(ink.left);
     expect(right).toBeLessThanOrEqual(ink.right);

@@ -20,8 +20,7 @@ import type {
 
 // A modal card's or panel's title in plum on its title row beside the close control in its
 // top-right corner, or with none where it does not close, each line's ink centred in the room
-// the control leaves, its first line's capitals at capTop, as the canvas draws it
-// (addCardTitle).
+// the control leaves, its first line's capitals at capTop.
 export function panelTitle(
   measure: PanelMeasure,
   panel: Rect,
@@ -56,8 +55,7 @@ export function panelTitle(
 }
 
 // A button with text as its label, primary or normal, its hit its face: the label's line
-// centred on the face over the lip, as the canvas centres a one-line label on its height, a font
-// line, its capitals capTop rows into the line (addMenuButton).
+// centred on the face over the lip, a font line, its capitals capTop rows into the line.
 export function panelButton(
   measure: Pick<PanelMeasure, "title">,
   rect: Rect,

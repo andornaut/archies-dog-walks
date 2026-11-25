@@ -144,7 +144,7 @@ export function showBadgeCard(layer: UiLayer, input: DomBadgeCardInput): DomQues
     },
   ];
   const shown = showQuestionPanel(layer, {
-    close: input.dismiss,
+    close: input.dismiss ?? null,
     ...(input.dismiss === undefined
       ? {}
       : { backgroundCancel: input.dismiss, dismiss: input.dismiss }),

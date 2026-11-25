@@ -3,8 +3,6 @@ import { describe, expect, it } from "vitest";
 import { cents } from "../units.ts";
 import {
   type ArtLook,
-  type ButtonState,
-  buttonState,
   type InteractionInput,
   type ItemTile,
   itemTile,
@@ -27,19 +25,6 @@ describe("tileState", () => {
       ["an unpicked item in a full choice", "disabled", { full: true }],
     ] satisfies readonly [string, TileState, Partial<InteractionInput>][]) {
       expect(tileState({ ...PLAIN_ITEM, ...input })).toBe(expected);
-    }
-  });
-});
-
-describe("buttonState", () => {
-  it("shows a button as normal, primary or disabled", () => {
-    for (const [, expected, input] of [
-      ["an available button", "normal", {}],
-      ["the call to action", "primary", { primary: true }],
-      ["an unavailable button", "disabled", { available: false }],
-      ["an unavailable call to action", "disabled", { available: false, primary: true }],
-    ] satisfies readonly [string, ButtonState, Partial<InteractionInput>][]) {
-      expect(buttonState({ ...PLAIN_ITEM, ...input })).toBe(expected);
     }
   });
 });

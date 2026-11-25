@@ -537,7 +537,6 @@ export class HudScene extends Scene {
       overlay,
       () => detailView(overlay, LAYOUT.screen, detail),
       undefined,
-      false,
       () => this.run?.closeExplanation(),
     );
     this.explained = html === undefined ? NOT_EXPLAINED : { html, key, scene: overlay };

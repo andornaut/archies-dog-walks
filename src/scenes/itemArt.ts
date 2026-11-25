@@ -5,13 +5,10 @@ import { dogPortraitKey, gearIconKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import type { DetailPicture } from "../home/detail.ts";
 import type { Purchase } from "../home/home.ts";
-import { LABEL_ALIGN_DATA } from "../ui/dom/labelBlock.ts";
 import type { Badge } from "../ui/interaction.ts";
 import { PALETTE } from "../ui/palette.ts";
-import { fillCutRect, fillRect } from "../ui/phaser/draw.ts";
-import { addPixelText, pixelFontMetrics } from "../ui/phaser/pixelText.ts";
-import { PLATE_LOOKS, type PlateKind } from "../ui/selection.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { fillRect } from "../ui/phaser/draw.ts";
+import { addPixelText } from "../ui/phaser/pixelText.ts";
 
 // The home screen's and the shop's art keys, each with a drawn stand-in below while missing.
 export const SHOP_ART = {
@@ -26,21 +23,8 @@ export const BADGE_KEYS: Readonly<Record<Badge, string>> = {
   lock: "icon-lock",
 };
 
-// The badge over an item's top-left corner, or nothing while the art is missing.
-export function addTileBadge(
-  scene: Scene,
-  parent: GameObjects.Container,
-  badge: Badge,
-  at: { x: number; y: number },
-): void {
-  const key = BADGE_KEYS[badge];
-  if (scene.textures.exists(key)) {
-    parent.add(scene.add.image(at.x, at.y, key).setOrigin(0));
-  }
-}
-
-// A purchase's picture on its detail card and its confirm: a dog's portrait, a gear item's
-// icon or the slot's art at 2x.
+// A purchase's picture on its detail card: a dog's portrait, a gear item's icon or the slot's art
+// at 2x.
 export function purchasePicture(purchase: Purchase): DetailPicture {
   switch (purchase.kind) {
     case "dog":
@@ -52,66 +36,6 @@ export function purchasePicture(purchase: Purchase): DetailPicture {
     default:
       return purchase satisfies never;
   }
-}
-
-// How far a plate's edge sits outside its text's capitals on every side.
-export const PLATE_PAD = 3;
-
-// A plate's colours: its 1px edge, its face, the face's top (lit) and bottom (shade) rows
-// where they differ from it, and its text.
-interface PlateColours {
-  readonly edge: number;
-  readonly face: number;
-  readonly lit?: number;
-  readonly shade?: number;
-  readonly text: number;
-}
-
-// The colours of a price's or goal's plate, from PLATE_LOOKS.
-export function plateColours(kind: PlateKind): PlateColours {
-  const { edge, face, lit, shade, text } = PLATE_LOOKS[kind];
-  return {
-    edge: PALETTE[edge],
-    face: PALETTE[face],
-    text: PALETTE[text],
-    ...(lit === null ? {} : { lit: PALETTE[lit] }),
-    ...(shade === null ? {} : { shade: PALETTE[shade] }),
-  };
-}
-
-// A price or goal on a small plate: a 1px edge round a face, the text in font-body 2x with
-// its caps at capY, the plate reaching PLATE_PAD past the capitals above and below, so it is
-// as tall as the font's capitals make it. originX places the plate by its left (0), centre
-// (0.5) or right (1).
-export function addPlate(
-  scene: Scene,
-  parent: GameObjects.Container,
-  at: { capY: number; originX: number; x: number },
-  text: string,
-  colours: PlateColours,
-): Rect {
-  const label = addPixelText(scene, 0, at.capY, text, { colour: colours.text, scale: TEXT_SCALE });
-  const width = Math.ceil(label.width) + 2 * PLATE_PAD;
-  const height = pixelFontMetrics(scene, "body").capHeight * TEXT_SCALE + 2 * PLATE_PAD;
-  const left = Math.round(at.x - at.originX * width);
-  const top = at.capY - PLATE_PAD;
-  label.setX(left + PLATE_PAD);
-  // Centred on its plate, which hugs it, so the HTML centres its narrower text there too.
-  label.setData(LABEL_ALIGN_DATA, "centre");
-  const g = scene.add.graphics();
-  const face = { height: height - 2, width: width - 2, x: left + 1, y: top + 1 };
-  // Square corners cut by a pixel.
-  fillCutRect(g, colours.edge, { height, width, x: left, y: top }, 1);
-  fillRect(g, colours.face, face);
-  // The face's top and bottom rows, lit and shaded where the plate says.
-  if (colours.lit !== undefined) {
-    fillRect(g, colours.lit, { ...face, height: 1 });
-  }
-  if (colours.shade !== undefined) {
-    fillRect(g, colours.shade, { ...face, height: 1, y: face.y + face.height - 1 });
-  }
-  parent.add([g, label]);
-  return { height, width, x: left, y: top };
 }
 
 // The pet shop building drawn in code while ui-pet-shop is missing: green walls, a striped
@@ -147,23 +71,4 @@ export function drawPetShopFallback(
     }),
   );
   return focusFace;
-}
-
-// The dog slot icon drawn in code while icon-dog-slot is missing: a doghouse with a plus.
-export function drawDogSlotFallback(
-  scene: Scene,
-  parent: GameObjects.Container,
-  at: { x: number; y: number },
-): void {
-  const { x, y } = at;
-  const g = scene.add.graphics();
-  for (let row = 0; row < 10; row += 1) {
-    fillRect(g, PALETTE.red, { height: 1, width: 4 + row * 2, x: x + 14 - row, y: y + 5 + row });
-  }
-  fillRect(g, PALETTE.tan, { height: 13, width: 20, x: x + 6, y: y + 15 });
-  fillRect(g, PALETTE.plum, { height: 8, width: 6, x: x + 13, y: y + 20 });
-  fillRect(g, PALETTE.green, { height: 9, width: 9, x: x + 22, y: y + 1 });
-  fillRect(g, PALETTE.white, { height: 5, width: 1, x: x + 26, y: y + 3 });
-  fillRect(g, PALETTE.white, { height: 1, width: 5, x: x + 24, y: y + 5 });
-  parent.add(g);
 }

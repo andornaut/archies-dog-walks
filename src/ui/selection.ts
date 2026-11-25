@@ -28,7 +28,7 @@ export const GREYED = {
   text: "neutralDarkSlate",
 } as const;
 
-export interface SelectLook {
+interface SelectLook {
   face: "cream" | typeof GREYED.face | "yellow";
   state: TileState;
   text: typeof GREYED.text | "plum";
@@ -44,7 +44,7 @@ const LOOKS: Readonly<Record<TileState, Omit<SelectLook, "state">>> = {
 
 // A button's look: its interaction state, or secondary, the cream button a card's own
 // controls wear in place of normal, with ui-button's secondary tags.
-export type ButtonLook = ButtonState | "secondary";
+type ButtonLook = ButtonState | "secondary";
 
 // How ui-button colours each look: its face, the lip under a raised one, and the label, then
 // the face and label while pressed. Primary is the green go button, forest with a white label

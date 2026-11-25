@@ -28,5 +28,4 @@ export const SETTINGS_STYLE = `
     color:HighlightText!important}
 }
 .adw-separator{background:var(--adw-tan)}
-.adw-face.adw-secondary:not(.adw-standard-button-face){border-image-source:var(--adw-ui-button-secondary)}
 `;

@@ -12,7 +12,7 @@ import { gameData } from "../data/index.ts";
 import { HOME_SCREEN, MIN_PRESS } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { WalkerId } from "../data/types.ts";
-import { cashLeft, ownerPhotoRect, WALK_BAR } from "../hud/walkHud.ts";
+import { ownerPhotoRect, WALK_BAR } from "../hud/walkHud.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
 import { dollarAmountText, dollarText, shortDollarAmountText } from "../presentation/currency.ts";
 import { unlockPrice } from "../rules/shop.ts";
@@ -29,6 +29,7 @@ import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { AFFORD_OUTSET } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
+import { topSectionCurrency, topSectionCurrencyText, topSectionLayout } from "../ui/topSection.ts";
 import { cents } from "../units.ts";
 import {
   type DetailCard,
@@ -39,10 +40,8 @@ import {
   walkerDetail,
 } from "./detail.ts";
 import { FEEDBACK } from "./feedback.ts";
+import { overlayRegion } from "./homeBar.ts";
 import {
-  BANK_ROOM,
-  bankAmountText,
-  bankWell,
   CARD_TEXT_ROOM,
   detailCardLayout,
   detailOwner,
@@ -50,13 +49,14 @@ import {
   type DetailRow,
   dogTileNameY,
   dogTilePlateY,
-  HOME_BAR_LAST_FACE,
+  HOME_BAR_BUTTONS,
   HOME_LAYOUT,
   homeBarButtons,
   sectionFill,
   slotSignText,
   tileFace,
   tileStrip,
+  updateModalLayout,
   updateModalText,
 } from "./homeLayout.ts";
 
@@ -380,7 +380,6 @@ describe("home top bar buttons", () => {
     const ends = hits.map((hit) => hit.x + hit.width);
     expect(hits.slice(1).map((hit) => hit.x)).toEqual(ends.slice(0, -1));
     expect(ends.at(-1)).toBe(SCREEN_CONFIG.width);
-    expect(buttons.at(-1)?.[1].face).toEqual(HOME_BAR_LAST_FACE);
     const { well } = HOME_LAYOUT.topBar;
     expect(well.x + well.maxWidth).toBeLessThan(buttons[0]?.[1].face.x ?? 0);
   });
@@ -419,14 +418,16 @@ describe("top bar", () => {
 });
 
 // The bank as the game writes it, in full where it fits and else in its short form, measured on
-// the title font at 1x (each amount's fit in the room: ui/textRoles.test.ts).
+// the title font (each amount's fit in the room: ui/textRoles.test.ts).
 describe("the top bar's bank", () => {
   const { bank } = HOME_LAYOUT.topBar;
-  const width = (text: string) => inkWidth("font-title", { scale: 1 }, text);
+  const section = topSectionLayout(HOME_BAR_BUTTONS, { currency: true });
+  const { room } = topSectionCurrency(section, 0);
+  const width = (scale: number, text: string) => inkWidth("font-title", { scale }, text);
   const shown = (dollars: number) => {
     const amount = cents(dollars * 100);
     const texts = { full: dollarAmountText(amount), short: shortDollarAmountText(amount) };
-    return `$${bankAmountText(width, texts)}`;
+    return `$${topSectionCurrencyText(width, section, texts)}`;
   };
   // From nothing to the most a save can hold.
   const amounts = [
@@ -435,40 +436,28 @@ describe("the top bar's bank", () => {
   ].map(shown);
 
   it.each<[string, number, string]>([
-    ["in full where it fits", BANK_ROOM / bank.scale, "full"],
-    [
-      "in its short form where the full amount is a pixel too wide",
-      BANK_ROOM / bank.scale + 1,
-      "short",
-    ],
+    ["in full where it fits", room, "full"],
+    ["in its short form where the full amount is a pixel too wide", room + 1, "short"],
   ])("sets the bank %s", (_case, fullWidth, expected) => {
-    const measure = (text: string) => (text === "$full" ? fullWidth : 0);
-    expect(bankAmountText(measure, { full: "full", short: "short" })).toBe(expected);
+    const measure = (scale: number, text: string) =>
+      text === "$full" && scale === bank.scale ? fullWidth : 0;
+    expect(topSectionCurrencyText(measure, section, { full: "full", short: "short" })).toBe(
+      expected,
+    );
   });
 
-  // The well ends wellClear columns before the first button's face.
   it.each([
     [9_999, "$9.9k"],
     [10_000, "$10k"],
     [99_999, "$99k"],
-  ])("shows %i dollars as %s, its well clear of the buttons", (dollars, text) => {
+  ])("shows %i dollars as %s", (dollars, text) => {
     expect(shown(dollars)).toBe(text);
-    const well = bankWell(width(text) * bank.scale);
-    const first = homeBarButtons(true)[0]?.[1].face.x ?? 0;
-    expect(first - well.x - well.width).toBeGreaterThanOrEqual(HOME_SCREEN.topBar.wellClear);
   });
 
   // The bank keeps the same backing width for every amount.
-  const { maxWidth } = HOME_LAYOUT.topBar.well;
-  it.each<[number, number]>([
-    [0, maxWidth],
-    [1, maxWidth],
-    [BANK_ROOM - 1, maxWidth],
-    [BANK_ROOM, maxWidth],
-    [BANK_ROOM + 1, maxWidth],
-  ])("sets the well for %ipx of ink %ipx wide", (ink, wellWidth) => {
-    const { height, x, y } = HOME_LAYOUT.topBar.well;
-    expect(bankWell(ink)).toEqual({ height, width: wellWidth, x, y });
+  it.each([0, 1, room - 1, room, room + 1])("sets the well for %ipx of ink", (ink) => {
+    const { height, maxWidth, x, y } = HOME_LAYOUT.topBar.well;
+    expect(topSectionCurrency(section, ink).well).toEqual({ height, width: maxWidth, x, y });
   });
 
   // Each of the well's pieces, a column each, as the colour of each row, or null where clear.
@@ -498,8 +487,8 @@ describe("the top bar's bank", () => {
     start: start + flags.indexOf(true),
   });
 
-  // Each amount's ink as the font inks it, from bank.pad columns into its well and its capitals'
-  // top on bank.capsY, as clear of the well's ink edges on the right as on the left, along the
+  // Each amount's ink as the font inks it, centred across its well's ink and its capitals' top on
+  // bank.capsY, as clear of the well's ink edges on the right as on the left, along the
   // well's middle row, and below as above, down its middle column, an odd row left over going
   // above.
   it.each(amounts)(
@@ -507,7 +496,7 @@ describe("the top bar's bank", () => {
     (text) => {
       const style = { scale: bank.scale };
       const columns = fontInk("font-title", style, text);
-      const well = bankWell(columns.right - columns.left);
+      const { left, well } = topSectionCurrency(section, columns.right - columns.left);
       const middleRow = Math.floor(well.height / 2);
       const across = inkEdges(well.x, [
         pieces.left(middleRow),
@@ -518,7 +507,6 @@ describe("the top bar's bank", () => {
         well.y,
         Array.from({ length: well.height }, (_, row) => pieces.mid(row)),
       );
-      const left = cashLeft(columns.right - columns.left);
       const rows = fontInkRows("font-title", style, text);
       const clear = {
         above: bank.capsY + rows.top - down.start,
@@ -858,20 +846,30 @@ describe("the dog slot sign", () => {
 });
 
 describe("the update modal", () => {
-  const { button, hit, panel } = HOME_LAYOUT.updateModal;
   const TITLE = fontFileMetrics("font-title");
-  const { capY } = updateModalText(TITLE);
+  const titleInk = (text: string) =>
+    inkWidth("font-title", { scale: TEXT_SCALE }, plainMarks(text).toUpperCase());
+  const { button, cancel, hit, panel } = updateModalLayout(overlayRegion("home"), {
+    action: titleInk(gameData.homeText.update.button),
+    cancel: titleInk(gameData.homeText.shop.confirmCancel),
+    title: titleInk(gameData.homeText.update.title),
+  });
+  const { capY } = updateModalText(TITLE, button);
 
-  it("centres the button inside its card, under the top bar, clear of its title and close control", () => {
+  it("centres its actions inside its card, under the top bar, clear of its title and close control", () => {
     expect(
       inside(panel, { height: SCREEN_CONFIG.height, width: SCREEN_CONFIG.width, x: 0, y: 0 }),
     ).toBe(true);
     expect(panel.y).toBeGreaterThan(HOME_LAYOUT.topBar.height);
-    expect(inside(button, panel)).toBe(true);
-    expect(button.x + button.width / 2).toBe(panel.x + panel.width / 2);
+    const left = Math.min(button.x, cancel.x);
+    const right = Math.max(button.x + button.width, cancel.x + cancel.width);
+    expect(left - panel.x).toBe(panel.x + panel.width - right);
     const close = closeControl(panel).hit;
-    expect(rectsOverlap(hit, close)).toBe(false);
-    expect(button.y).toBeGreaterThan(cardTitleRow(panel).y + cardTitleRow(panel).height);
+    for (const action of [button, cancel]) {
+      expect(inside(action, panel)).toBe(true);
+      expect(rectsOverlap(action, close)).toBe(false);
+      expect(action.y).toBeGreaterThan(cardTitleRow(panel).y + cardTitleRow(panel).height);
+    }
   });
 
   it("covers the button with a full tap target, its fixed-size label inside its face", () => {

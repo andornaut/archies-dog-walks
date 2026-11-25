@@ -34,8 +34,10 @@ import {
 
 export interface DomDetailCardInput extends Pick<
   DomQuestionPanelInput,
-  "backgroundCancel" | "close" | "closeLabel" | "closePressed" | "fonts" | "dismiss" | "toGame"
+  "backgroundCancel" | "closeLabel" | "fonts" | "dismiss" | "toGame"
 > {
+  // What the close control does, dismiss where the card has no close of its own.
+  readonly close?: () => void;
   // An art file's URL by its path under /art/.
   readonly artUrl: (path: string) => string;
   // A sheet's JSON by its URL, once it has loaded.
@@ -314,9 +316,8 @@ export function showDetailCard(layer: UiLayer, input: DomDetailCardInput): DomQu
   ];
   return showQuestionPanel(layer, {
     ...(input.backgroundCancel === undefined ? {} : { backgroundCancel: input.backgroundCancel }),
-    close: input.close === undefined ? input.dismiss : input.close,
+    close: input.close ?? input.dismiss ?? null,
     closeLabel: input.closeLabel,
-    ...(input.closePressed === undefined ? {} : { closePressed: input.closePressed }),
     ...(input.dismiss === undefined ? {} : { dismiss: input.dismiss }),
     describedBy: texts.id,
     fonts: input.fonts,
