@@ -178,6 +178,8 @@ describe("settingsView", () => {
       });
       expect(fps.texts[0]!.x - fps.icon!.x).toBe(LABEL_ICON + ICON_LABEL_GAP);
       expect(fps.texts[0]!.x - fps.rect.x).toBe(SETTINGS_ROW.label.dx);
+      expect(fps.texts[0]!.capTop - fps.rect.y).toBe(SETTINGS_ROW.label.dy);
+      expect(sound.texts[0]!.capTop - sound.rect.y).toBe(SETTINGS_ROW.label.dy);
       expect(fps.texts[0]!.x).toBe(sound.texts[0]!.x);
       expect(fps.switch!.art.x).toBe(sound.switch!.art.x);
     },

@@ -297,10 +297,8 @@ function controlRow(
   const { x, y } = rect;
   const room = noteRoomForControl(control?.width ?? SETTINGS_ROW[row.kind].width);
   const description = row.note === undefined ? "" : words[row.note];
-  const inline = noteY === null;
-  const labelTop = inline
-    ? y + Math.floor((rect.height - measure.title.capHeight * TEXT_SCALE) / 2)
-    : y + LABEL.dy;
+  // Every switch row's capitals sit LABEL.dy down, with or without a note.
+  const labelTop = y + LABEL.dy;
   const view: SettingsRowView = {
     description,
     dip,
@@ -308,7 +306,7 @@ function controlRow(
     ...(row.icon === undefined
       ? {}
       : {
-          // The icon centres on its label's capitals on every row, inline or noted.
+          // The icon centres on its label's capitals on every row.
           icon: {
             key: row.icon,
             tag: "idle",
