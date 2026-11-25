@@ -99,6 +99,8 @@ export const MENU_TEXT = {
   settings: {
     effects: "Sound effects",
     fpsCounter: "FPS counter",
+    // The FPS counter's state below its switch, worded for a display control.
+    hidden: "Hidden",
     install: "Install",
     installDescription: "A cozy pixel-art lane runner about walking dogs.",
     installSteps: {
@@ -135,6 +137,7 @@ export const MENU_TEXT = {
     muted: "Muted",
     off: "Off",
     on: "On",
+    shown: "Shown",
     sound: "Sound",
     soundNote: "Controls music and sound effects",
     title: "Settings",
