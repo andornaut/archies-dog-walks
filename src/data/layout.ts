@@ -575,9 +575,6 @@ export const HOME_SCREEN = {
     lockedNameY: 6,
     // The text's right end in from the tile's right.
     padRight: 3,
-    // A locked dog's plate's lowest ink over the tile's bottom: its foot on the portrait box's
-    // bottom row.
-    plateFoot: 4,
     // The text's left edge.
     textX: 39,
   },

@@ -241,8 +241,8 @@ export const HOME_LAYOUT = {
   dogOrigin: { x: gridOriginX(DOG_TILES), y: sectionTilesY(DOGS_SECTION, DOG_TILES.inset.y) },
   // A dog tile's face sits face.dx and face.dy inside the drawn tile, on a box 1px wider each
   // side. A locked dog's name and price plate start textX in and keep padRight inside its right
-  // edge, the name's capitals lockedNameY down and the plate's lowest ink plateFoot above the
-  // tile's bottom (dogTilePlateY), so the pair keeps the box's padding above and below. An owned
+  // edge, the name's capitals lockedNameY down and the plate's bottom edge on the box's bottom
+  // row, so the pair keeps the box's padding above and below. An owned
   // dog's name has its ink centred in the space right of the box, as tall as the box, keeping
   // the box's left padding at the right. A locked dog's badge sits over the tile's top-left
   // corner.
@@ -637,20 +637,6 @@ export function tileStrip(tile: Rect, rows: number): Rect {
 // How wide a dog tile's name may be: from its text column to padRight inside its face's edge.
 export const DOG_TILE_TEXT_ROOM =
   HOME.dogTiles.face.width - HOME_LAYOUT.dogTile.textX - HOME_LAYOUT.dogTile.padRight;
-
-// The top of an owned dog's name's capitals, from the drawn tile's top, so its 2x body
-// capitals are centred on the face's middle row.
-export function dogTileNameY(body: FontMetrics): number {
-  const { face } = HOME_LAYOUT.dogTile;
-  return face.dy + face.size / 2 - body.capHeight;
-}
-
-// The top of a locked dog tile's price plate's capitals, from the drawn tile's top, with its
-// 2x body text's lowest ink plateFoot above the tile's bottom.
-export function dogTilePlateY(body: FontMetrics): number {
-  const height = HOME.dogTiles.face.height;
-  return height - HOME_LAYOUT.dogTile.plateFoot - inkRowsFromCapTop(body) * 2;
-}
 
 // The dog slot sign's cream inside its board's frame and lit and shaded rows, and where its two
 // lines go: each line's ink centred on the cream's middle column, the block from the call's

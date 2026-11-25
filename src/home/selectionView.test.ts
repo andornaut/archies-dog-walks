@@ -2,10 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import { dogFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
+import { PLATE_PAD } from "../data/layout.ts";
 import { fontFileMetrics } from "../testing/fontInk.ts";
 import { newPlayerSave } from "../testing/saves.ts";
 import { cents } from "../units.ts";
-import { dogTileNameY, dogTilePlateY, HOME_LAYOUT } from "./homeLayout.ts";
+import { HOME_LAYOUT } from "./homeLayout.ts";
 import { type HomeSelectionSnapshot, homeSelectionViews } from "./selectionView.ts";
 const BODY = fontFileMetrics("font-body");
 const RECT = { height: 64, width: 92, x: 12, y: 240 };
@@ -23,7 +24,11 @@ describe("native home selections", () => {
     expect(tile?.art).toBe("grey");
     expect(tile?.badge?.kind).toBe("lock");
     expect(tile?.name?.text).toBe(gameData.dogs.kilo.name);
-    expect(tile?.plate?.capTop).toBe(RECT.y + dogTilePlateY(BODY) - 1);
+    // The plate's bottom edge on the portrait box's bottom row.
+    const { face } = HOME_LAYOUT.dogTile;
+    expect(tile?.plate).toMatchObject({
+      capTop: RECT.y + face.dy + face.size + 1 - PLATE_PAD - BODY.capHeight * 2,
+    });
     expect(tile?.pictures[0]).toMatchObject({
       key: dogFaceKey(gameData, "kilo"),
       moving: false,
@@ -43,7 +48,7 @@ describe("native home selections", () => {
     expect(tile?.art).toBe("colour");
     expect(tile?.plate).toBeUndefined();
     expect(tile?.badge).toBeUndefined();
-    expect(tile?.name?.capTop).toBe(RECT.y + dogTileNameY(BODY));
+    expect(tile?.name).toMatchObject({ centreIn: { y: RECT.y + HOME_LAYOUT.dogTile.face.dy - 1 } });
     expect(tile?.pictures[0]).toMatchObject({ moving: true, tag: "happy" });
     expect(homeSelectionViews(gameData, BODY, true, snapshot(save))[0]?.pictures[0]?.moving).toBe(
       false,

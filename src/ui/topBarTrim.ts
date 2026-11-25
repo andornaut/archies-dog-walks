@@ -71,9 +71,9 @@ export const TOP_BAR_WELL = {
   x: TOP_BAR_SIZES.well.x,
 } as const;
 
-// The top row of text capRows tall set in the well: centred on its ink rows (the well less its
-// lip's row), a half row lower where their parities differ.
+// The top row of text capRows tall set in the well: centred on its flat face (the well less its
+// lip's row), any odd row under the text.
 export function wellCapsTop(capRows: number): number {
   const { height, lip, y } = TOP_BAR_WELL;
-  return y + Math.ceil((height - lip - capRows) / 2);
+  return y + Math.floor((height - lip - capRows) / 2);
 }

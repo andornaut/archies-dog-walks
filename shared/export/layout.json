@@ -1850,7 +1850,6 @@
         },
         "lockedNameY": 6,
         "padRight": 3,
-        "plateFoot": 4,
         "textX": 39
       },
       "dogTileInset": {
@@ -2100,7 +2099,7 @@
       "tileOffset": 24,
       "topBar": {
         "bank": {
-          "capsY": 11,
+          "capsY": 10,
           "scale": 3
         },
         "faceSize": 20,
@@ -3006,7 +3005,7 @@
         }
       },
       "cash": {
-        "capsY": 11,
+        "capsY": 10,
         "ink": {
           "left": 11,
           "right": 95

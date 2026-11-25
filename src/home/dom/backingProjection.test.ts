@@ -135,7 +135,8 @@ it("projects picker art into the available space with selected and locked treatm
             width: `${dest.width}px`,
           });
           expect(dest.width).toBeGreaterThan(32 * artPixel(scale));
-          const strip = model.plate?.strip;
+          const strip =
+            model.plate !== undefined && "strip" in model.plate ? model.plate.strip : undefined;
           if (strip !== undefined) {
             expect(dest.top + dest.height).toBeLessThanOrEqual(gridY(scale, strip.y));
           }

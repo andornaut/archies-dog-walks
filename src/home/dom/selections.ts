@@ -98,7 +98,8 @@ export function createHomeSelection(
     parts.push((scale) => setBox(box, local(scale, rect)));
     return box;
   };
-  const nameStrip = view.plate?.strip !== undefined && view.plate.text === view.label;
+  const nameStrip =
+    view.plate !== undefined && "strip" in view.plate && view.plate.text === view.label;
   const pictureWell = fill(view.fill.rect, view.fill.colour);
   if (view.name === undefined && !nameStrip) {
     pictureWell.classList.add("adw-selection-focus-fill");
@@ -145,10 +146,12 @@ export function createHomeSelection(
   });
   if (view.name !== undefined) {
     const name = view.name;
+    // A centred name's line starts at its area's corner; its ink is placed on the area.
+    const at = "centreIn" in name ? { capTop: name.centreIn.y, x: name.centreIn.x } : name;
     const line = {
-      capTop: name.capTop,
+      capTop: at.capTop,
       centre: "left",
-      centreX: name.x,
+      centreX: at.x,
       colour: homeSelectionColour(view),
       font: "body",
       scale: TEXT_SCALE,
@@ -156,19 +159,22 @@ export function createHomeSelection(
     } as const;
     const label = createTextLine(doc, line);
     label.classList.add("adw-selection-focus-ink");
-    const nameArea = name.centreIn ?? {
-      height: fontMetrics(body).capHeight * TEXT_SCALE + 2,
-      width: view.rect.x + view.rect.width - 2 - name.x,
-      x: name.x,
-      y: name.capTop - 1,
-    };
+    const nameArea =
+      "centreIn" in name
+        ? name.centreIn
+        : {
+            height: fontMetrics(body).capHeight * TEXT_SCALE + 2,
+            width: view.rect.x + view.rect.width - 2 - name.x,
+            x: name.x,
+            y: name.capTop - 1,
+          };
     fill(nameArea).classList.add("adw-selection-focus-fill", "adw-selection-name-cue");
     paint.append(label);
     parts.push((scale) => {
-      if (name.centreIn === undefined) {
-        placeText(body, scale, origin, label, line);
-      } else {
+      if ("centreIn" in name) {
         placeBackedText(body, scale, origin, name.centreIn, [{ element: label, line }]);
+      } else {
+        placeText(body, scale, origin, label, line);
       }
     });
   }
@@ -180,14 +186,13 @@ export function createHomeSelection(
       width: (text: string) => advanceWidth(body, TEXT_SCALE, plainMarks(text)),
     };
     const plate =
-      view.plate.strip === undefined
-        ? pricePlateView(measure, view.plate, view.plate.kind, view.plate.text)
-        : plateStripView(
-            measure,
+      "strip" in view.plate
+        ? plateStripView(
             view.plate.strip,
             view.tile.kind === "picked" ? "picked" : view.plate.kind,
             view.plate.text,
-          );
+          )
+        : pricePlateView(measure, view.plate, view.plate.kind, view.plate.text);
     for (const part of plate.fills) {
       const backing = fill(part.rect, part.colour);
       if (nameStrip && part.rect === plate.rect) {

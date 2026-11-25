@@ -117,7 +117,8 @@ export function topSectionCurrency(layout: { currency: Rect | undefined }, inkWi
   }
   const well = maximum;
   return {
-    left: well.x + Math.floor((well.width - inkWidth) / 2),
+    // The well's flat face, less its lip column.
+    left: well.x + Math.floor((well.width - TOP_BAR_WELL.lip - inkWidth) / 2),
     room: maximum.width - TOP_BAR_WELL.lip - 2 * TOP_BAR_SIZES.well.padding,
     scale: cash.scale,
     top: wellCapsTop(TITLE_CAP_ROWS * cash.scale),

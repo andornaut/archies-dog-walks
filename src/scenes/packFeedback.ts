@@ -7,9 +7,16 @@ import { SCREEN_CONFIG } from "../data/screen.ts";
 import { chipLeft, FEEDBACK, type LabelAnchor, stackOverPop } from "../hud/feedback.ts";
 import { changeChipAt } from "../hud/hudLanes.ts";
 import { COMIC_WORDS } from "../layout/comicWords.ts";
+import { lineInk } from "../ui/lineInk.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { CREAM_PANEL_COLOURS, drawFramedRect } from "../ui/phaser/draw.ts";
-import { addPixelText, inkSpan, pixelFontMetrics, placePixelText } from "../ui/phaser/pixelText.ts";
+import {
+  addPixelText,
+  inkSpan,
+  pixelBitmapFont,
+  pixelFontMetrics,
+  placePixelText,
+} from "../ui/phaser/pixelText.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { letterEffect } from "./comicWord.ts";
 import { playTagOnce } from "./sprites.ts";
@@ -86,7 +93,14 @@ export function floatLabel(
   const body = pixelFontMetrics(scene, "body");
   const label = addPixelText(scene, 0, 0, text, { colour, scale: TEXT_SCALE });
   const ink = inkSpan(label);
-  const shown = { lines: 1, scale: TEXT_SCALE, width: ink.right - ink.left };
+  const font = pixelBitmapFont(scene, "body");
+  const rows = font === undefined ? undefined : lineInk(font, text, TEXT_SCALE);
+  const shown = {
+    ...(rows === undefined ? {} : { ink: { rows: rows.bottom - rows.top, top: rows.top } }),
+    lines: 1,
+    scale: TEXT_SCALE,
+    width: ink.right - ink.left,
+  };
   const { height, width } = changeChipAt(body, { x: 0, y: 0 }, shown).chip;
   const x = chipLeft(SCREEN_CONFIG.width, anchor.centreX, width);
   const placed = changeChipAt(body, { x, y: anchor.lineBottom - height }, shown);

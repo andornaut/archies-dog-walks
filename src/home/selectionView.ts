@@ -3,6 +3,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { dogFaceKey, gearIconKey } from "../assets/spriteKeys.ts";
+import { PLATE_PAD } from "../data/layout.ts";
 import type { DogId, GameData, GearId, WalkerId } from "../data/types.ts";
 import { hudEffectIconKey, walkerEffectItems } from "../hud/effectIcons.ts";
 import { dollarText } from "../presentation/currency.ts";
@@ -16,6 +17,7 @@ import {
 } from "../ui/interaction.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { pictureBox, type PlateKind, selectLook } from "../ui/selection.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 import { type GearPictureFallback, gearPictureFallback } from "./gearPictureView.ts";
 import {
   type HomeLoadout,
@@ -24,7 +26,7 @@ import {
   type Purchase,
   purchasePrice,
 } from "./home.ts";
-import { dogTileNameY, dogTilePlateY, HOME_LAYOUT, tileStrip } from "./homeLayout.ts";
+import { HOME_LAYOUT, tileStrip } from "./homeLayout.ts";
 import { walkerTile } from "./walkers.ts";
 export interface HomeSelectionCell<Id> {
   readonly id: Id;
@@ -60,22 +62,21 @@ export interface HomeSelectionView {
     readonly rect: Rect;
   };
   readonly pictures: readonly HomeSelectionPicture[];
-  readonly name?: {
-    readonly text: string;
-    readonly x: number;
-    readonly capTop: number;
-    // Where the name's ink is centred across and down, when it is.
-    readonly centreIn?: Rect;
-  };
-  readonly plate?: {
-    readonly text: string;
-    readonly kind: PlateKind;
-    readonly x: number;
-    readonly capTop: number;
-    readonly originX: number;
-    // The label strip across the tile's foot that carries the text, when it has one.
-    readonly strip?: Rect;
-  };
+  // A name left-aligned at x, its capitals at capTop, or its ink centred across and down centreIn.
+  readonly name?:
+    | { readonly capTop: number; readonly text: string; readonly x: number }
+    | { readonly centreIn: Rect; readonly text: string };
+  // A price or goal plate placed from its text at x, its capitals at capTop and originX of its
+  // width left of x, or the label strip across the tile's foot that carries the text.
+  readonly plate?:
+    | {
+        readonly capTop: number;
+        readonly kind: PlateKind;
+        readonly originX: number;
+        readonly text: string;
+        readonly x: number;
+      }
+    | { readonly kind: PlateKind; readonly strip: Rect; readonly text: string };
   readonly badge?: {
     readonly kind: Badge;
     readonly x: number;
@@ -133,16 +134,22 @@ export function homeSelectionViews(
         : { badge: { kind: look.badge, x: x + badgeAt.dx, y: y + badgeAt.dy } }),
     };
   };
-  const pricePlate = (tile: ItemTile, x: number, capTop: number, originX: number, strip?: Rect) => {
+  const plateText = (tile: ItemTile) => {
     const kind = itemTileLook(tile).plate;
     const text =
       tile.kind === "locked" ? dollarText(tile.price) : tile.kind === "goal" ? tile.goal : null;
-    return text === null || kind === null
-      ? {}
-      : { plate: { capTop, kind, originX, text, x, ...(strip === undefined ? {} : { strip }) } };
+    return text === null || kind === null ? undefined : { kind, text };
+  };
+  const pricePlate = (tile: ItemTile, x: number, capTop: number) => {
+    const plate = plateText(tile);
+    return plate === undefined ? {} : { plate: { ...plate, capTop, originX: 0, x } };
+  };
+  const stripPlate = (tile: ItemTile, strip: Rect) => {
+    const plate = plateText(tile);
+    return plate === undefined ? {} : { plate: { ...plate, strip } };
   };
   for (const cell of snapshot.walkers) {
-    const { width, x, y } = cell.rect;
+    const { x, y } = cell.rect;
     const { badge, box, face, icons, strip } = HOME_LAYOUT.walkerTile;
     const walkerStrip = tileStrip(cell.rect, strip);
     const tile = walkerTile(data, save, cell.id);
@@ -169,14 +176,7 @@ export function homeSelectionViews(
       ...make(cell, tile, box, badge),
       label: walker.name,
       pictures,
-      plate: {
-        capTop: walkerStrip.y + 1,
-        kind: "goal",
-        originX: 0.5,
-        strip: walkerStrip,
-        text: walker.name,
-        x: x + width / 2,
-      },
+      plate: { kind: "goal", strip: walkerStrip, text: walker.name },
     });
   }
   for (const cell of snapshot.dogs) {
@@ -201,21 +201,17 @@ export function homeSelectionViews(
     result.push({
       ...view,
       label: dog.name,
-      name: {
-        capTop: y + (locked ? lockedNameY : dogTileNameY(body)),
-        text: dog.name,
-        x: x + textX,
-        ...(locked
-          ? {}
-          : {
-              centreIn: {
-                height: box.size,
-                width: cell.rect.width - beside - box.dx,
-                x: x + beside,
-                y: y + box.dy,
-              },
-            }),
-      },
+      name: locked
+        ? { capTop: y + lockedNameY, text: dog.name, x: x + textX }
+        : {
+            centreIn: {
+              height: box.size,
+              width: cell.rect.width - beside - box.dx,
+              x: x + beside,
+              y: y + box.dy,
+            },
+            text: dog.name,
+          },
       pictures: [
         {
           key: dogFaceKey(data, cell.id),
@@ -226,11 +222,18 @@ export function homeSelectionViews(
           y: y + face.dy,
         },
       ],
-      ...(locked ? pricePlate(tile, x + textX, y + dogTilePlateY(body) - 1, 0) : {}),
+      // A locked dog's plate's bottom edge on the portrait box's bottom row.
+      ...(locked
+        ? pricePlate(
+            tile,
+            x + textX,
+            y + box.dy + box.size - PLATE_PAD - body.capHeight * TEXT_SCALE,
+          )
+        : {}),
     });
   }
   for (const cell of snapshot.gear) {
-    const { height, width, x, y } = cell.rect;
+    const { height, x, y } = cell.rect;
     const purchase: Purchase = { gear: cell.id, kind: "gear" };
     const tile = itemTile({
       affordable: isAffordable(data, save.owned, save.bankCents, purchase),
@@ -263,7 +266,7 @@ export function homeSelectionViews(
           y: iconY,
         },
       ],
-      ...pricePlate(tile, x + width / 2, gearStrip.y + 1, 0.5, gearStrip),
+      ...stripPlate(tile, gearStrip),
     });
   }
   return result;

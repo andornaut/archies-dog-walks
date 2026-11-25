@@ -54,21 +54,29 @@ export function changeLabelRoom(laneWidth: number): number {
 }
 
 // A change label's chip at the top-left of at, and where its ink's left edge and capitals' top
-// go, for text on lines lines at scale, its ink width wide.
+// go, for text on lines lines at scale, its ink width wide: the text's measured ink (ink, or its
+// lines' rows from the capitals' top) centred inside the chip's 1-pixel frame, any odd row under
+// it.
 export function changeChipAt(
   body: FontMetrics,
   at: Point,
-  text: { lines: number; scale: number; width: number },
+  text: ChipText,
 ): { chip: Rect; text: Point } {
   const { height: least, padX, padY } = CHANGE_CHIP;
-  const ink = inkRowsOfLines(body, text.lines) * text.scale;
-  const height = Math.max(least, ink + 2 * padY);
+  const rows = inkRowsOfLines(body, text.lines) * text.scale;
+  const height = Math.max(least, rows + 2 * padY);
   const chip = { height, width: text.width + 2 * padX, x: at.x, y: at.y };
-  return { chip, text: { x: at.x + padX, y: at.y + Math.floor((height - ink) / 2) } };
+  const ink = text.ink ?? { rows, top: 0 };
+  return {
+    chip,
+    text: { x: at.x + padX, y: at.y + 1 + Math.floor((height - 2 - ink.rows) / 2) - ink.top },
+  };
 }
 
-// The text a change label's chip is placed for: on lines lines at scale, its ink width wide.
+// The text a change label's chip is placed for: on lines lines at scale, its ink width wide, and
+// its measured ink's rows and top under the first line's capitals' top where it is known.
 export interface ChipText {
+  ink?: { readonly rows: number; readonly top: number };
   lines: number;
   scale: number;
   width: number;

@@ -21,6 +21,7 @@ import { fontInk, gameFont } from "../testing/fontInk.ts";
 import { LONE } from "../testing/packPlaces.ts";
 import { inside } from "../testing/rects.ts";
 import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
+import { TOP_BAR_WELL } from "../ui/topBarTrim.ts";
 import { topSectionCurrency, topSectionGapLeft, topSectionLayout } from "../ui/topSection.ts";
 import { cents } from "../units.ts";
 import { maxEffects } from "./effectIcons.ts";
@@ -233,14 +234,16 @@ describe("the cash", () => {
         (other) => (titleWidth(other) * scale) % 2 === (titleWidth(cash) * scale) % 2,
       ) === i,
   );
-  it.each(centred)("centres %s across the well's ink", (cash) => {
+  it.each(centred)("centres %s across the well's flat face", (cash) => {
     const inkWidth = titleWidth(cash) * scale;
     const { left } = topSectionCurrency(topSectionLayout([], { currency: true }), inkWidth);
     const right = left + inkWidth - 1;
+    // The face's room for ink, less the well's lip column.
+    const faceRight = ink.right - TOP_BAR_WELL.lip;
     expect(left).toBeGreaterThanOrEqual(ink.left);
-    expect(right).toBeLessThanOrEqual(ink.right);
+    expect(right).toBeLessThanOrEqual(faceRight);
     // Centred, a half pixel at most to the left when the widths' parities differ.
-    const offCentre = (ink.left + ink.right) / 2 - (left + right) / 2;
+    const offCentre = (ink.left + faceRight) / 2 - (left + right) / 2;
     expect(offCentre).toBeGreaterThanOrEqual(0);
     expect(offCentre).toBeLessThanOrEqual(0.5);
   });

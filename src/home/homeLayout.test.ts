@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 
 import { ownerFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { HOME_SCREEN, MIN_PRESS } from "../data/layout.ts";
+import { HOME_SCREEN, MIN_PRESS, PLATE_PAD } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { WalkerId } from "../data/types.ts";
 import { ownerPhotoRect, WALK_BAR } from "../hud/walkHud.ts";
@@ -48,8 +48,6 @@ import {
   detailOwner,
   detailOwnerHeight,
   type DetailRow,
-  dogTileNameY,
-  dogTilePlateY,
   HOME_BAR_BUTTONS,
   HOME_LAYOUT,
   homeBarButtons,
@@ -408,14 +406,14 @@ describe("top bar", () => {
   // The title font's capitals, centred on the well's ink rows, a half pixel at most lower when
   // their parities differ.
   const capHeight = fontFileMetrics("font-title").capHeight;
-  it("centres the bank's capitals on the well's ink rows", () => {
+  it("centres the bank's capitals on the well's ink rows, any odd row under them", () => {
     const { capsY: top, scale } = bank;
     const bottom = top + capHeight * scale - 1;
     expect(top).toBeGreaterThan(well.y);
     expect(bottom).toBeLessThan(wellInk.bottom);
     const offCentre = (top + bottom) / 2 - (well.y + wellInk.bottom) / 2;
-    expect(offCentre).toBeGreaterThanOrEqual(0);
-    expect(offCentre).toBeLessThanOrEqual(0.5);
+    expect(offCentre).toBeLessThanOrEqual(0);
+    expect(offCentre).toBeGreaterThanOrEqual(-0.5);
   });
 });
 
@@ -492,7 +490,7 @@ describe("the top bar's bank", () => {
   // Each amount's ink as the font inks it, centred across its well's ink and its capitals' top on
   // bank.capsY, as clear of the well's ink edges on the right as on the left, along the
   // well's middle row, and below as above, down its middle column, an odd row left over going
-  // above.
+  // below.
   it.each(amounts)(
     "sets %s as clear of its well's ink edges right as left and below as above",
     (text) => {
@@ -519,13 +517,13 @@ describe("the top bar's bank", () => {
       expect(clear.left).toBeGreaterThan(0);
       expect(Math.abs(clear.right - clear.left)).toBeLessThanOrEqual(1);
       expect(clear.above).toBeGreaterThan(0);
-      expect(clear.above - clear.below).toBe((clear.above + clear.below) % 2);
+      expect(clear.below - clear.above).toBe((clear.above + clear.below) % 2);
     },
   );
 });
 
-// An owned dog's name sits centred on its face, a locked dog's over its price plate, and each
-// fits the tile's text column, measured on the body font.
+// A locked dog's name sits over its price plate, the plate's bottom edge on the portrait box's
+// bottom row, measured on the body font.
 describe("a dog tile's text", () => {
   const body = fontFileMetrics("font-body");
   const ink = inkRowsFromCapTop(body) * 2;
@@ -533,15 +531,12 @@ describe("a dog tile's text", () => {
   const tileHeight = dogTiles.cellHeight - 2 * dogTileInset.y;
   expect(tileHeight).toBe(HOME_SCREEN.dogTiles.face.height);
 
-  it("centres an owned dog's capitals on the face's middle row, its ink inside the tile", () => {
-    const nameY = dogTileNameY(body);
-    expect(nameY + body.capHeight).toBe(dogTile.face.dy + dogTile.face.size / 2);
-    expect(nameY + ink).toBeLessThanOrEqual(tileHeight);
-  });
-
   it("keeps a locked dog's name over its plate and the plate inside the tile", () => {
-    const plateY = dogTilePlateY(body);
-    expect(plateY + ink).toBe(tileHeight - dogTile.plateFoot);
+    const boxBottom = dogTile.face.dy + dogTile.face.size + 1;
+    const plateY = boxBottom - PLATE_PAD - body.capHeight * 2;
+    // Art's row for the plate's capitals.
+    expect(plateY).toBe(23);
+    expect(boxBottom).toBeLessThanOrEqual(tileHeight);
     expect(dogTile.lockedNameY + ink).toBeLessThan(plateY);
   });
 });

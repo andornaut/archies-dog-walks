@@ -3,6 +3,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { PanelText } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { PLATE_LOOKS, type PlateKind } from "../ui/selection.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 
 export interface PricePlateMeasure {
   readonly capHeight: number;
@@ -68,7 +69,6 @@ export function pricePlateView(
 // A label strip across a tile's foot: a rule in the plate's edge colour along its top row, the
 // plate's face under it, and the label centred on its ink in the face (rect).
 export function plateStripView(
-  measure: Pick<PricePlateMeasure, "capHeight" | "scale">,
   strip: Rect,
   kind: PlateKind | "picked",
   text: string,
@@ -83,14 +83,15 @@ export function plateStripView(
       { colour: PALETTE[colours.edge], rect: { ...strip, height: 1 } },
       { colour: PALETTE[colours.face], rect },
     ],
+    // The label's ink is centred on the strip's face (placeBackedText on rect).
     label: {
-      capTop: rect.y + Math.floor((rect.height - measure.capHeight * measure.scale) / 2),
+      capTop: rect.y,
       centre: "ink",
       centreX: rect.x + rect.width / 2,
       colour: PALETTE[colours.text],
       font: "body",
       line: 0,
-      scale: measure.scale,
+      scale: TEXT_SCALE,
       text,
     },
     rect,
