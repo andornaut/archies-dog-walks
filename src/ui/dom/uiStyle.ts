@@ -140,13 +140,14 @@ export const UI_STYLE = `
 .adw-close:not(.adw-standard-button)[data-pressed] .adw-close-face{
   background-image:${skinFrame("ui-icon-button-pressed")}}
 .adw-close-glyph:empty{background:var(--adw-icon-close) 0 0/100% 100%;image-rendering:pixelated}
-/* A keyboard focus only: a cyan band in ink keylines inside the control's face, clear of the gap
-   and the next control. */
-.adw-button:not(.adw-standard-button):focus-visible .adw-face::after,
-.adw-close:not(.adw-standard-button):focus-visible .adw-close-face::after{
-
-  content:"";position:absolute;inset:${px(1)};border:${px(2)} solid var(--adw-cyan);
-  box-shadow:0 0 0 ${px(1)} var(--adw-ink),inset 0 0 0 ${px(1)} var(--adw-ink)}
+/* A focused speech bubble fills its inside cyan, its owner's name in plum to keep contrast. */
+.adw-speech-focus{display:none;clip-path:polygon(${cutCorners(px(1))})}
+.adw-button:focus-visible .adw-speech-focus{display:block}
+.adw-button:focus-visible .adw-speech-name{color:var(--adw-plum)!important}
+@media (forced-colors:active){
+  .adw-button:focus-visible .adw-speech-focus{forced-color-adjust:none;background-color:Highlight!important}
+  .adw-button:focus-visible:has(.adw-speech-focus) .adw-text{forced-color-adjust:none;color:HighlightText!important}
+}
 /* The shade under a modal panel: ink at the canvas's modal shade's alpha, blended as it blends. */
 /* A list's view: its content clipped to it and moved up by its scroll. */
 .adw-clip,.adw-scrolled{position:absolute;pointer-events:none}

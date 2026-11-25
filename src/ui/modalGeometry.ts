@@ -21,5 +21,6 @@ export const MODAL = {
   margin: MODAL_SPACING.margin,
   pad: PAD,
   rowGap: MODAL_SPACING.rowGap,
+  scrollGap: MODAL_SPACING.scrollGap,
   titleTop: TITLE_PAD,
 } as const;

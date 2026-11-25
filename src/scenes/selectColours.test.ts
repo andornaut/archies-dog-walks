@@ -38,6 +38,19 @@ function contrast(a: number, b: number): number {
   return (light + 0.05) / (dark + 0.05);
 }
 
+// top over bottom at share, as CSS color-mix blends them in sRGB.
+function mix(top: number, bottom: number, share: number): number {
+  return [16, 8, 0].reduce((colour, shift) => {
+    const channel = Math.round(
+      ((top >> shift) & 0xff) * share + ((bottom >> shift) & 0xff) * (1 - share),
+    );
+    return colour | (channel << shift);
+  }, 0);
+}
+
+// The Logbook row's focus and press fill over the cream page (logbook.css).
+const LOGBOOK_FOCUS = mix(PALETTE.cyan, PALETTE.cream, 0.35);
+
 // Text that says what an item is or costs holds 4.5:1. A disabled label, and a locked badge's
 // goal and progress, are exempt and hold the 3:1 an icon needs.
 const TEXT = 4.5;
@@ -111,6 +124,16 @@ describe("interaction-state colours", () => {
         TEXT,
       ]),
       ["a locked badge's status", PALETTE[BADGE_TEXT_COLOURS.locked.status], PALETTE.cream, TEXT],
+      ...(["name", "status"] as const).map((text): [string, number, number, number] => [
+        `a focused or pressed locked badge's ${text}`,
+        PALETTE[BADGE_TEXT_COLOURS.locked[text]],
+        LOGBOOK_FOCUS,
+        TEXT,
+      ]),
+      ["a focused Settings row's label", PALETTE[normal.text], PALETTE.cyan, TEXT],
+      ["a focused Settings row's note", PALETTE.darkBrown, PALETTE.cyan, TEXT],
+      ["a pressed Settings row's text", PALETTE.ink, PALETTE.green, TEXT],
+      ["a focused speech bubble's words and owner", PALETTE.plum, PALETTE.cyan, TEXT],
       [
         "a locked badge's goal and progress",
         PALETTE[BADGE_TEXT_COLOURS.locked.goal],

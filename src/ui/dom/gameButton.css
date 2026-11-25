@@ -72,7 +72,8 @@
   --adw-button-fill: var(--adw-darkGreen);
   --adw-button-text: var(--adw-white);
 }
-.adw-standard-button[data-ui-pressed] .adw-standard-button-face {
+.adw-standard-button[data-ui-pressed]:not(:disabled, [aria-disabled="true"])
+  .adw-standard-button-face {
   transform: translateY(calc(2 * var(--adw-button-unit)));
 }
 .adw-standard-button:is(:disabled, [aria-disabled="true"]) {

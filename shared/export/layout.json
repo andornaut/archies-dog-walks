@@ -942,6 +942,7 @@
     "margin": 16,
     "pad": 16,
     "rowGap": 4,
+    "scrollGap": 4,
     "titleTop": 24
   },
   "pack": {
@@ -2466,6 +2467,13 @@
         "x": 32,
         "y": 102
       },
+      "scrollbar": {
+        "thumbInset": 1,
+        "thumbMin": 16,
+        "thumbWidth": 6,
+        "trackWidth": 8,
+        "x": 332
+      },
       "separators": [
         {
           "height": 1,
@@ -2885,6 +2893,12 @@
     ],
     "parts": {
       "buttonFace": {
+        "fill": {
+          "height": 16,
+          "width": 18,
+          "x": 1,
+          "y": 1
+        },
         "size": 20,
         "y": 8
       },

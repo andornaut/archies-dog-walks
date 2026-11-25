@@ -2,7 +2,7 @@ import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { MIN_PRESS, SETTINGS_CARD } from "../data/layout.ts";
+import { MIN_PRESS, SETTINGS_CARD, SHOP_PAGE } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { laneDirectionForKey } from "../input/keyBindings.ts";
 import type { Settings } from "../save/settings.ts";
@@ -11,6 +11,7 @@ import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { helpCapDy, LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
+import type { ScrollbarSpec } from "../ui/scrollbar.ts";
 import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
 import { topSectionButtonBacking, topSectionLayout } from "../ui/topSection.ts";
 import { HOME_BAR_BUTTONS, HOME_LAYOUT } from "./homeLayout.ts";
@@ -95,6 +96,8 @@ export interface SettingsLayout {
   rowsContentHeight: number;
   // Only rows and separators scroll inside this absolute logical rectangle.
   rowsViewport: Rect;
+  // The rows' scrollbar in the panel's right padding, shown while the rows overflow.
+  scrollbar: ScrollbarSpec;
   // A tan rule in the gap over every row after the first, centred down it (an odd row under it),
   // SEPARATOR_INSET in from the row's sides.
   separators: Rect[];
@@ -303,6 +306,7 @@ export function settingsLayout(
       x: rowX,
       y: y + ROWS_TOP,
     },
+    scrollbar: { ...SHOP_PAGE.scrollbar, x: rowX + SETTINGS_ROW.width + MODAL.scrollGap },
     separators: rows.slice(1).map(({ rect }) => ({
       height: 1,
       width: rect.width - 2 * SEPARATOR_INSET,

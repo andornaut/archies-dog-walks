@@ -32,6 +32,7 @@ import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridX, gridY, wholeArtPixels } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { REFUSE } from "../../ui/refuse.ts";
+import { bodyScrollbarPart } from "./bodyScrollbar.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
 import {
   addTapBurst,
@@ -213,8 +214,9 @@ function rowPart(
   description.id = `adw-settings-row-${described}`;
   element.setAttribute("aria-describedby", description.id);
   element.setAttribute("role", first.kind);
+  // The row's face carries its focus and press fills; a slider row's is clear until focused.
   const face = doc.createElement("span");
-  face.className = "adw-framed";
+  face.className = "adw-framed adw-row-face";
   const icon = first.icon === undefined ? undefined : sheetArt(doc, input, first.icon.key);
   const texts = first.texts.map(() => textElement(doc, input.fonts));
   const parts = texts.map(({ element: text }) => text);
@@ -232,7 +234,7 @@ function rowPart(
           knob: sheetArt(doc, input, first.slider.knob.key),
         };
   element.append(
-    ...(first.face === undefined ? [] : [face]),
+    face,
     ...parts,
     ...(control === undefined ? [] : [control.element]),
     ...(slider === undefined
@@ -245,10 +247,9 @@ function rowPart(
     const row = view();
     const { rect } = row;
     placeBox(scale, origin(), element, rect);
-    if (row.face !== undefined) {
-      face.style.backgroundColor = hex(row.face.colour);
-      placeBox(scale, rect, face, row.face.rect);
-    }
+    face.style.backgroundColor = row.face === undefined ? "" : hex(row.face.colour);
+    placeBox(scale, rect, face, row.face?.rect ?? rect);
+    element.toggleAttribute("data-ui-pressed", row.dip > 0);
     if (row.icon !== undefined) {
       icon?.place(scale, rect, row.icon);
     }
@@ -497,6 +498,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
     addTapBurst(layer, input.toGame({ x: event.clientX, y: event.clientY }));
   const viewport = doc.createElement("div");
   viewport.className = "adw-settings-rows adw-framed";
+  Object.assign(viewport.style, { scrollbarWidth: "none" });
   const content = doc.createElement("div");
   content.className = "adw-framed";
   viewport.append(content);
@@ -513,6 +515,11 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
   );
   const separators = current.separators.map(() => createContentSeparator(doc));
   const build = createTextLine(doc, current.build);
+  const scrollbar = bodyScrollbarPart(doc, viewport, () => ({
+    contentHeight: current.rowsContentHeight,
+    scrollbar: current.rowsScrollbar,
+    viewport: current.rowsViewport,
+  }));
   content.append(...rows.map((row) => row.element), ...separators);
   const revealRow = (index: number | undefined) => {
     const row = index === undefined ? undefined : current.rows[index];
@@ -557,6 +564,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
       },
       ready: Promise.all(rows.map((row) => row.ready)).then((urls) => urls.flat()),
     },
+    scrollbar,
     {
       element: build,
       place: (scale) =>

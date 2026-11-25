@@ -2,7 +2,7 @@ import { rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { SETTINGS_CARD } from "../data/layout.ts";
+import { MODAL_WIDTHS, SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { SWITCH_STATE_GAP } from "../home/settings.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
@@ -130,12 +130,12 @@ describe("Cheats actions", () => {
 describe("Cheats layout", () => {
   const current = view(HOME);
 
-  it("keeps the 344px width, clamps to safe sides, and caps measured height only for overflow", () => {
+  it("takes the Large width, clamps to safe sides, and caps measured height only for overflow", () => {
     const { layout } = current;
     expect(layout.panel).toMatchObject({
       height: SCREEN_CONFIG.height - 2 * MODAL.margin,
-      width: 344,
-      x: 8,
+      width: MODAL_WIDTHS.large,
+      x: MODAL.margin,
     });
     expect(layout.contentHeight).toBeGreaterThan(layout.viewport.height);
     const footer = current.card.footer!;
@@ -145,8 +145,8 @@ describe("Cheats layout", () => {
     expect(layout.viewport.y).toBe(layout.panel.y + MODAL.header);
     expect(current.card.close?.hit.x).toBeGreaterThan(footer.rect.x);
     expect(view(HOME, { ...SCREEN_CONFIG, width: 352 }).layout.panel).toMatchObject({
-      width: 336,
-      x: 8,
+      width: 352 - 2 * MODAL.margin,
+      x: MODAL.margin,
     });
     const tall = view(HOME, { height: 3000, width: SCREEN_CONFIG.width }).layout;
     expect(tall.contentHeight).toBe(tall.viewport.height);
@@ -194,7 +194,7 @@ describe("Cheats layout", () => {
     expect(after!.y - (line + 1)).toBe(16);
   });
 
-  it("lays out the neighbourhood pairs and Unlocks/Money columns with equal safe gaps and full ink", () => {
+  it("lays out the neighbourhood pairs and Unlocks/Money columns in the body room with full ink", () => {
     const all = current.rows.flatMap((row) => row.buttons);
     const zones = all.filter(({ action }) => action.kind === "startAt");
     const unlocks = all.filter(({ action }) => action.kind === "own");
@@ -205,7 +205,12 @@ describe("Cheats layout", () => {
     ]) {
       for (const [left, right] of pairs) {
         expect(left!.rect.y).toBe(right!.rect.y);
-        expect(right!.rect.x - (left!.rect.x + left!.rect.width)).toBe(16);
+        expect([left!.rect.x, left!.rect.width, right!.rect.x, right!.rect.width]).toEqual([
+          current.layout.panel.x + MODAL.pad,
+          144,
+          current.layout.panel.x + MODAL.pad + 144 + MODAL.gap,
+          144,
+        ]);
         expect(rectsOverlap(left!.rect, right!.rect)).toBe(false);
       }
     }

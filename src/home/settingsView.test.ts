@@ -1,4 +1,3 @@
-import { insetRect } from "@andornaut/game-kit/runtime/rect";
 import { describe, expect, it } from "vitest";
 
 import { DOM_ART_KEYS } from "../assets/domArt.ts";
@@ -177,14 +176,9 @@ describe("settingsView", () => {
     ]);
   });
 
-  it("rings the focused row outside its edge, and nothing under the install steps", () => {
-    const focused = view({ focus: 2 });
-    expect(focused.ring).toEqual(
-      insetRect(-SETTINGS_CARD.focusOutset, layout.rows[2]?.rect ?? layout.panel),
-    );
+  it("draws the install steps' glyph over the card", () => {
     const steps = { ...installStepsLayout(SCREEN_CONFIG, 1), kind: "ios" } as const;
-    const covered = view({ focus: 2, steps });
-    expect([covered.ring, covered.steps?.icon?.key]).toEqual([undefined, "icon-share"]);
+    expect(view({ focus: 2, steps }).steps?.icon?.key).toBe("icon-share");
   });
 
   it("draws only art the HTML interface ships", () => {

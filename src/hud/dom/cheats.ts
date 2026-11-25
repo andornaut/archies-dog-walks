@@ -4,11 +4,11 @@ import type { CheatAction, CheatRowView, CheatsView } from "../../dev/cheatsView
 import { type DomArtSource, sheetArt } from "../../ui/dom/artElements.ts";
 import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
-import { createTextLine, placeBox, placeFrame, placeText, setBox } from "../../ui/dom/pixelLine.ts";
+import { createTextLine, placeBox, placeFrame, placeText } from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { type DomScale, gridRect, gridX, gridY, scrollbarBoxes } from "../../ui/domScale.ts";
+import { type DomScale, gridY } from "../../ui/domScale.ts";
 import { REFUSE } from "../../ui/refuse.ts";
-import { scrollbarRects } from "../../ui/scrollbar.ts";
+import { bodyScrollbarPart } from "./bodyScrollbar.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
 import {
   type DomPart,
@@ -264,43 +264,6 @@ function settingRowPart(
   };
 }
 
-// The body's scrollbar beside clip, following its scroll; hidden while the body fits.
-function scrollbarPart(doc: Document, clip: HTMLElement, current: () => CheatsView): DomPart {
-  const element = doc.createElement("div");
-  element.className = "adw-lines";
-  const track = doc.createElement("div");
-  track.className = "adw-scroll-track";
-  const thumb = doc.createElement("div");
-  thumb.className = "adw-scroll-thumb";
-  element.append(track, thumb);
-  let at: DomScale | undefined;
-  const follow = () => {
-    const { layout } = current();
-    const { viewport } = layout;
-    const shown = at;
-    const box = shown === undefined ? undefined : gridRect(shown, viewport);
-    const perGame = box === undefined || box.height === 0 ? 1 : box.height / viewport.height;
-    const max = layout.contentHeight - viewport.height;
-    const bar = scrollbarRects(layout.scrollbar, viewport, max, (clip.scrollTop || 0) / perGame);
-    element.hidden = bar === null;
-    if (shown === undefined || bar === null) {
-      return;
-    }
-    const corner = { left: gridX(shown, bar.track.x), top: gridY(shown, bar.track.y) };
-    const boxes = scrollbarBoxes(shown, corner, bar);
-    setBox(track, boxes.track);
-    setBox(thumb, boxes.thumb);
-  };
-  clip.addEventListener("scroll", follow, { passive: true });
-  return {
-    element,
-    place: (scale) => {
-      at = scale;
-      follow();
-    },
-  };
-}
-
 // The Cheats modal in layer, shown and its dialog focused.
 export function showCheats(layer: UiLayer, input: DomCheatsInput): DomCheats {
   const doc = layer.element.ownerDocument;
@@ -348,7 +311,7 @@ export function showCheats(layer: UiLayer, input: DomCheatsInput): DomCheats {
       }
     });
   };
-  const scrollbar = scrollbarPart(doc, clip, () => current);
+  const scrollbar = bodyScrollbarPart(doc, clip, () => current.layout);
   const controls = rows.flatMap((row) => row.controls);
   const resetRow = current.rows.findIndex((row) =>
     row.buttons.some(({ action }) => action.kind === "resetSave"),

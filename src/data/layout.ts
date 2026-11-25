@@ -146,6 +146,8 @@ export const MODAL_SPACING = {
   margin: 16,
   // The gap between stacked rows within a group.
   rowGap: 4,
+  // The gap between a scrolling body's rows and its scrollbar, which sits in the right padding.
+  scrollGap: 4,
 } as const;
 
 // Ordinary modal families in this game's logical pixels.
@@ -829,8 +831,6 @@ export const LOGBOOK_PAGE = {
 
 // The settings card.
 export const SETTINGS_CARD = {
-  // The keyboard ring's outset, inside the panel's margin.
-  focusOutset: 3,
   // The install steps card: the glyph's drop, gap and side, the steps' line pitch and most lines,
   // and the steps' top under the title row.
   installSteps: {

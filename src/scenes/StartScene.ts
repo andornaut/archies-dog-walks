@@ -1689,8 +1689,8 @@ export class StartScene extends Scene {
     this.quips.clear();
     this.render();
   }
-  // The Pet shop on the yard's right lot: ui-pet-shop, its front sinking while pressed, under
-  // ui-pet-shop-board, which bobs while up, with the gold outline while anything inside is
+  // The Pet shop on the yard's right lot: ui-pet-shop under ui-pet-shop-board, which bobs while
+  // up and alone sinks while pressed, with the gold outline while anything inside is
   // affordable. Drawn in code while the art is missing, when the whole building dips instead.
   private drawPetShop(root: GameObjects.Container, save: SaveDocument): void {
     const container = this.add.container(0, 0);
@@ -1725,7 +1725,9 @@ export class StartScene extends Scene {
         if (focusFace !== undefined) {
           view.container.add(focusFace);
         }
-        view.shopBoard = addShopBoard(shop, board, focusFace);
+        // The building stays up; only the board presses.
+        shop.setPressed(false);
+        view.shopBoard = addShopBoard(board, focusFace);
         view.iconButton = view.shopBoard;
       }
       view.iconButton.setPressed(false);

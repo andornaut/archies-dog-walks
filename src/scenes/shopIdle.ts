@@ -17,10 +17,9 @@ export interface ShopBoard extends IconButton {
   place(reducedMotion: boolean, nowMs: number): void;
 }
 
-// The board's faces follow shop's press; while up the board bobs from its resting row as the
-// ready Start walk button does, and the building under it stays still.
+// The board alone shows the press, with its pressed face; while up it bobs from its resting row
+// as the ready Start walk button does, and the building under it stays still throughout.
 export function addShopBoard(
-  shop: IconButton,
   faces: readonly [GameObjects.Image, GameObjects.Image],
   focusFace?: GameObjects.Image,
 ): ShopBoard {
@@ -39,7 +38,6 @@ export function addShopBoard(
     },
     setPressed(next) {
       down = next;
-      shop.setPressed(next);
       up.setVisible(!next);
       pressed.setVisible(next);
     },

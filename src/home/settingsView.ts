@@ -1,14 +1,12 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { fillLine } from "@andornaut/game-kit/runtime/lines";
-import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { InstallStepsKind } from "@andornaut/game-kit/runtime/web/pwa/installState";
 
 import { BUILD_LABEL } from "../buildLabel.ts";
-import { SETTINGS_CARD } from "../data/layout.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
 import type { MenuText } from "../data/types.ts";
 import type { Settings } from "../save/settings.ts";
-import { closeFace } from "../ui/closeControl.ts";
 import { dismissFooter } from "../ui/modal/dismissFooter.ts";
 import {
   type PanelButton,
@@ -144,8 +142,6 @@ export const SETTINGS_ART_KEYS: readonly string[] = [
   ...new Set(Object.values(STEPS_ICONS)),
 ];
 
-// The ring stays inside the panel's 8px margin.
-const FOCUS_OUTSET = SETTINGS_CARD.focusOutset;
 const { icon: ICON, label: LABEL, note: NOTE } = SETTINGS_ROW;
 
 // A switch is on when its setting is: sound is on while not muted.
@@ -237,10 +233,9 @@ export interface InstallStepsView {
 export interface SettingsView {
   readonly build: PanelText;
   readonly card: QuestionPanelView;
-  // The keyboard's ring, cyan round a focused row or the close control, while no steps show.
-  readonly ring: Rect | undefined;
   readonly rows: readonly SettingsRowView[];
   readonly rowsContentHeight: number;
+  readonly rowsScrollbar: SettingsLayout["scrollbar"];
   readonly rowsViewport: Rect;
   readonly separators: readonly Rect[];
   readonly steps: InstallStepsView | undefined;
@@ -491,7 +486,7 @@ function settingsCard(
 
 // The settings card as it stands: the modal card, each row, the separators over the rows (a
 // switch row's face covers its top row), the build's label centred across the panel under the
-// rows, the keyboard's ring, and the install steps' card.
+// rows, and the install steps' card.
 export function settingsView(
   measure: SettingsMeasure,
   context: {
@@ -505,12 +500,6 @@ export function settingsView(
 ): SettingsView {
   const { layout, rows, words } = context;
   const { panel } = layout;
-  const focused =
-    state.focus === null || state.steps !== undefined
-      ? undefined
-      : state.focus < rows.length
-        ? itemAt(layout.rows, state.focus).rect
-        : closeFace(layout.close);
   return {
     build: {
       capTop: layout.buildLabelY,
@@ -523,7 +512,6 @@ export function settingsView(
       text: BUILD_LABEL,
     },
     card: settingsCard(measure, panel, words.title, context.footerLabel ?? MENU_TEXT.common.close),
-    ring: focused === undefined ? undefined : insetRect(-FOCUS_OUTSET, focused),
     rows: rows.map((row, i) => {
       const at = itemAt(layout.rows, i);
       return row.kind === "slider"
@@ -531,6 +519,7 @@ export function settingsView(
         : controlRow(measure, words, at, row, state);
     }),
     rowsContentHeight: layout.rowsContentHeight,
+    rowsScrollbar: layout.scrollbar,
     rowsViewport: layout.rowsViewport,
     separators: layout.separators,
     steps: stepsView(measure, words, state, context.art),

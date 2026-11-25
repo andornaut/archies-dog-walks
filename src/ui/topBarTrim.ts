@@ -55,7 +55,13 @@ const TOP_BAR_ROWS = topBarContentRows(TOP_BAR_HEIGHT);
 export const TOP_BAR_MID =
   TOP_BAR_ROWS.top + Math.floor((TOP_BAR_ROWS.bottom - TOP_BAR_ROWS.top) / 2);
 const FACE_SIZE = TOP_BAR_SIZES.faceSize;
-export const TOP_BAR_FACE = { size: FACE_SIZE, y: TOP_BAR_MID - FACE_SIZE / 2 } as const;
+// art: fill is ui-icon-button's navy face inside its tan rim, from its highlight row to its lip,
+// on the normal frame; the pressed frame has it BUTTON_SIZE.press rows lower.
+export const TOP_BAR_FACE = {
+  fill: { height: 16, width: 18, x: 1, y: 1 },
+  size: FACE_SIZE,
+  y: TOP_BAR_MID - FACE_SIZE / 2,
+} as const;
 
 // The well at a top bar's left that shows the money (the start screen's bank, the walk's cash):
 // clear of the trim, x columns in from the bar's left, ink on all but its lip's last row.

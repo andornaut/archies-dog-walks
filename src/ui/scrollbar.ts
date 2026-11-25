@@ -3,7 +3,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 // Beside a list longer than its view: a trackWidth-wide track at x, as tall as the view, and in
 // it a thumbWidth-wide thumb thumbInset inside the track's edges, at least thumbMin tall.
-interface ScrollbarSpec {
+export interface ScrollbarSpec {
   readonly thumbInset: number;
   readonly thumbMin: number;
   readonly thumbWidth: number;

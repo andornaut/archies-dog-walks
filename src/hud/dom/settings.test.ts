@@ -235,6 +235,13 @@ it("keeps the card chrome fixed while revealing whole focused rows inside its na
     current.rows[last]!.rect.y + current.rows[last]!.rect.height - rect.y - rect.height,
   );
   expect(viewport.style.height).toBe(`${rect.height}px`);
+  // The overflowing rows show Cheats' scrollbar beside the viewport, in the panel's padding.
+  const track = element.all().find((part) => part.className === "adw-scroll-track")!;
+  const bar = element.all().find((part) => part.children.includes(track))!;
+  expect(bar.hidden).toBe(false);
+  expect(parseFloat(track.style.left ?? "")).toBeGreaterThan(
+    parseFloat(viewport.style.left ?? "") + parseFloat(viewport.style.width ?? ""),
+  );
   expect(rows[0]!.style.top).toBe("0px");
   expect(footer.style.top).toBe(footerTop);
   shown.update(small, 0);

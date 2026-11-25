@@ -119,11 +119,12 @@ function sheetPart(
   };
 }
 
+// A card's parts; stateBand adds the label band that focus and an enabled card's press fill.
 function surfaceParts(
   doc: Document,
   original: Source,
   surface: ChoiceCardSurface,
-  pressCue = false,
+  stateBand = false,
 ) {
   const source: Source = surface.grey
     ? { ...original, artUrl: (path) => original.artUrl(cardGreyPath(path)) }
@@ -202,7 +203,7 @@ function surfaceParts(
       text,
     ),
   );
-  if (pressCue) {
+  if (stateBand) {
     const band = doc.createElement("span");
     band.className = "adw-art adw-choice-press-band";
     band.setAttribute("aria-hidden", "true");
@@ -375,10 +376,11 @@ export function showChoiceCards(
   label(input.subtitle, centre, header.subtitleTop, 1, PALETTE.white);
   const small = input.entries.map((entry, index) => {
     const surface = choiceCardSurface(input.data, input.fonts, input.view, entry, rects[index]!);
-    const rendered = surfaceParts(doc, input, surface, !input.picture && entry.enabled);
+    const rendered = surfaceParts(doc, input, surface, !input.picture);
     const group = doc.createElement("div");
     group.className = "adw-choice-group";
     const button = doc.createElement(input.picture ? "span" : "button");
+    button.className = "adw-choice-option";
     Object.assign(button.style, {
       appearance: "none",
       background: "transparent",

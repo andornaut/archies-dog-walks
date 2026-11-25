@@ -1,20 +1,34 @@
+/* An option shows focus and press as its label band's fill: cyan for focus, green for an enabled
+   card's press. */
+.adw-choice-option:focus-visible {
+  outline: none;
+}
+
 .adw-choice-press-band {
   display: none;
+}
+
+.adw-choice-group:has(.adw-choice-option:focus-visible) .adw-choice-press-band {
+  display: block;
+  background: var(--adw-cyan);
+}
+
+.adw-choice-pressed:has(.adw-choice-option[aria-disabled="false"]) .adw-choice-press-band {
+  display: block;
   background: var(--adw-green);
 }
 
-.adw-choice-pressed .adw-choice-press-band {
-  display: block;
-}
-
 @media (forced-colors: active) {
-  .adw-choice-pressed .adw-choice-press-band {
+  .adw-choice-group:has(.adw-choice-option:focus-visible) .adw-choice-press-band,
+  .adw-choice-pressed:has(.adw-choice-option[aria-disabled="false"]) .adw-choice-press-band {
     forced-color-adjust: none;
     background: Highlight;
   }
 
-  .adw-choice-pressed .adw-choice-press-label,
-  .adw-choice-pressed .adw-choice-press-label * {
+  .adw-choice-group:has(.adw-choice-option:focus-visible) .adw-choice-press-label,
+  .adw-choice-group:has(.adw-choice-option:focus-visible) .adw-choice-press-label *,
+  .adw-choice-pressed:has(.adw-choice-option[aria-disabled="false"]) .adw-choice-press-label,
+  .adw-choice-pressed:has(.adw-choice-option[aria-disabled="false"]) .adw-choice-press-label * {
     forced-color-adjust: none;
     color: HighlightText !important;
   }

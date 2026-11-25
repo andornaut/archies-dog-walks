@@ -140,6 +140,8 @@ const titleFont = fontFileMetrics("font-title");
 const layout = settingsLayout({ body: bodyFont, title: titleFont }, SCREEN_CONFIG, shapes);
 const screen: Rect = { ...SCREEN_CONFIG, x: 0, y: 0 };
 const TWO_X = { scale: 2 };
+// art: ui-detail-card's frame columns along its right edge.
+const CARD_FRAME = 3;
 const KNOB_RISE = 3;
 const KNOB_HEIGHT = 16;
 
@@ -483,6 +485,10 @@ it("bounds centred Settings under the shared top bar and scrolls only its full-s
   expect(placed.buildLabelY - (placed.rowsViewport.y + placed.rowsViewport.height)).toBe(
     LABEL_HELP_GAP - Math.floor(LABEL_HELP_GAP / 2),
   );
+  // The overflow's scrollbar stands in the right padding, clear of the rows and the card's frame.
+  const { trackWidth, x } = placed.scrollbar;
+  expect(x - (last.x + last.width)).toBe(MODAL.scrollGap);
+  expect(x + trackWidth).toBeLessThan(placed.panel.x + placed.panel.width - CARD_FRAME);
 });
 
 it("keeps shorter Settings rows unscrolled and honours a tighter caller capacity", () => {

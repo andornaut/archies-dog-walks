@@ -182,6 +182,11 @@ export function createNativeTopSection(
       content.append(art.element);
       return art;
     });
+    // The face's state fill over its art and under its glyph: ink while pressed, Highlight in
+    // forced colours while focused or pressed.
+    const fill = doc.createElement("span");
+    fill.className = "adw-framed adw-top-section-fill";
+    content.append(fill);
     const glyphRoot = doc.createElement("span");
     glyphRoot.className = "adw-art";
     content.append(glyphRoot);
@@ -247,6 +252,13 @@ export function createNativeTopSection(
           width: TOP_BAR_FACE.size,
         });
       }
+      // The face inside its tan rim, from its highlight row down to its lip.
+      placeBox(scale, face, fill, {
+        height: TOP_BAR_FACE.fill.height,
+        width: TOP_BAR_FACE.fill.width,
+        x: face.x + TOP_BAR_FACE.fill.x,
+        y: face.y + TOP_BAR_FACE.fill.y + (pressed ? BUTTON_SIZE.press : 0),
+      });
       const glyphRect = {
         height: 16,
         width: 16,

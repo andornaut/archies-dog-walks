@@ -11,7 +11,7 @@ import { SWITCH_STATE_GAP } from "../home/settings.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { dismissFooter } from "../ui/modal/dismissFooter.ts";
-import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
+import { MODAL, modalActionWidth, modalFamilyWidth } from "../ui/modal/layout.ts";
 import type { PanelButton, PanelMeasure, PanelText, QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView, panelButton } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -155,15 +155,12 @@ export function cheatRows(
 
 const { compact, stackGap } = BUTTON_SIZE;
 const ROW = SETTINGS_CARD.row;
-const PANEL_WIDTH = 344;
-const SIDE_INSET = 8;
 const HEADING_HEIGHT = 24;
 const TOGGLE_HEIGHT = 48;
-const COLUMN_GAP = 16;
+const COLUMN_GAP = MODAL.gap;
 const SECTION_GAP = 16;
 const DIVIDER_HEIGHT = 8;
 const SCROLLBAR = SHOP_PAGE.scrollbar;
-const SCROLL_GAP = 4;
 
 export interface CheatsLayout {
   readonly panel: Rect;
@@ -295,20 +292,20 @@ function layoutCheats(
   screen: { readonly height: number; readonly width: number },
   rows: readonly CheatRow[],
 ): { layout: CheatsLayout; rows: readonly CheatRowView[] } {
-  const width = Math.min(PANEL_WIDTH, screen.width - 2 * SIDE_INSET);
+  const width = modalFamilyWidth(screen.width - 2 * MODAL.margin, "large");
   const x = Math.round((screen.width - width) / 2);
-  const edge = x + width - SIDE_INSET;
-  const trackX = edge - SCROLLBAR.trackWidth;
   const left = x + MODAL.pad;
+  const rowWidth = width - 2 * MODAL.pad;
+  // The scrollbar sits in the right padding, so the rows keep the body's whole room.
+  const trackX = left + rowWidth + MODAL.scrollGap;
   const maxHeight = screen.height - 2 * MODAL.margin;
   const chrome = MODAL.header + MODAL.gap + compact.height + MODAL.pad;
   const available = maxHeight - chrome;
-  const natural = placeRows(measure, { width: width - 2 * MODAL.pad, x: left, y: 0 }, rows);
+  const natural = placeRows(measure, { width: rowWidth, x: left, y: 0 }, rows);
   const scrolls = natural.contentHeight > available;
   const height = Math.min(maxHeight, chrome + natural.contentHeight);
   const y = Math.round((screen.height - height) / 2);
   const top = y + MODAL.header;
-  const rowWidth = scrolls ? trackX - SCROLL_GAP - left : width - 2 * MODAL.pad;
   const placed = placeRows(measure, { width: rowWidth, x: left, y: top }, rows);
   return {
     layout: {
@@ -317,7 +314,7 @@ function layoutCheats(
       scrollbar: { ...SCROLLBAR, x: trackX },
       viewport: {
         height: height - chrome,
-        width: scrolls ? edge - left : rowWidth,
+        width: scrolls ? trackX + SCROLLBAR.trackWidth - left : rowWidth,
         x: left,
         y: top,
       },

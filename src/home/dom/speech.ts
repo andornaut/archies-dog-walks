@@ -55,6 +55,20 @@ export function createHomeSpeech(
   } else {
     parts.push(framedPart(doc, { border: PALETTE.plum, fill: PALETTE.cream, rect: view.rect }));
   }
+  // The keyboard focus's fill over the bubble's cream inside, which uiStyle shows while the
+  // bubble is focused. art: ui-quip's inside, 2 rows in from its top and left and 3 from its
+  // right and bottom, clear of the frame's plum line and tan shade.
+  const focus = fillPart(doc, {
+    colour: PALETTE.cyan,
+    rect: {
+      height: view.rect.height - 5,
+      width: view.rect.width - 5,
+      x: view.rect.x + 2,
+      y: view.rect.y + 2,
+    },
+  });
+  focus.element.classList.add("adw-speech-focus");
+  parts.push(focus);
   const words = textPart(
     doc,
     { fonts, pillColours },
@@ -99,6 +113,7 @@ export function createHomeSpeech(
       text: owner.name.text,
     } as const;
     const name = createTextLine(doc, line);
+    name.classList.add("adw-speech-name");
     parts.push({
       element: name,
       place: (scale) => placeText(fonts.body, scale, origin, name, line),

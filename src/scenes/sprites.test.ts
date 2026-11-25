@@ -248,15 +248,9 @@ function shopBoardScene(focused = false) {
   const { board: rest, y: shopY } = HOME_LAYOUT.petShop;
   const shopFaces = [face(shopY), face(shopY)] as const;
   const boardFaces = [face(rest.y), face(rest.y)] as const;
-  const shop = {
-    setPressed(down: boolean) {
-      shopFaces[0].setVisible(!down);
-      shopFaces[1].setVisible(down);
-    },
-  };
+  shopFaces[1].setVisible(false);
   const focusFace = face(rest.y);
   const board = addShopBoard(
-    shop,
     boardFaces as unknown as [GameObjects.Image, GameObjects.Image],
     focused ? (focusFace as unknown as GameObjects.Image) : undefined,
   );
@@ -292,14 +286,14 @@ describe("Pet shop board", () => {
     expect(rows(beat, down, reduced)).toEqual({ board: [0, 0], shop: [0, 0] });
   });
 
-  it("shows the pressed faces of the board and the shop together", () => {
+  it("shows the board's pressed face and keeps the building up", () => {
     const { boardFaces, rows, shopFaces } = shopBoardScene();
     rows(0, true);
     expect([...boardFaces, ...shopFaces].map(({ visible }) => visible)).toEqual([
       false,
       true,
-      false,
       true,
+      false,
     ]);
     rows(0, false);
     expect([...boardFaces, ...shopFaces].map(({ visible }) => visible)).toEqual([
@@ -318,7 +312,7 @@ describe("Pet shop board", () => {
     rows(beat, true);
     expect(focusFace.visible).toBe(false);
     expect(boardFaces[1].visible).toBe(true);
-    expect(shopFaces[1].visible).toBe(true);
+    expect(shopFaces[1].visible).toBe(false);
     rows(beat, false);
     expect(focusFace.visible).toBe(true);
     expect(boardFaces[1].visible).toBe(false);
