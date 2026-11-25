@@ -69,3 +69,4 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0243 | Ship the game assets as prebuilt group archives                              | [adw-0243.md](../work/adw-0243.md) |
 | adw-0244 | Select a walk's new neighbourhood in Cheats the moment it is pressed         | [adw-0244.md](../work/adw-0244.md) |
 | adw-0245 | Let cheats change the save like normal play                                  | [adw-0245.md](../work/adw-0245.md) |
+| adw-0250 | Name the chosen neighbourhood after a live Cheats switch                     | [adw-0250.md](../work/adw-0250.md) |
