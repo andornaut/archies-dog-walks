@@ -852,8 +852,8 @@ export const SETTINGS_CARD = {
     slider: { height: 56 },
     // art: the switch's size.
     switch: { height: 16, width: 32 },
-    // The slider's track: its top, height and knob's width.
-    track: { dy: 30, height: 10, knobWidth: 10 },
+    // The slider's track: its top and height, and art: the knob's size.
+    track: { dy: 30, height: 10, knobHeight: 16, knobWidth: 10 },
     // The row's width.
     width: 296,
   },

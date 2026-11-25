@@ -35,7 +35,6 @@ import {
   INSTALL_STEPS,
   INSTALL_STEPS_FIT,
   installStepsLayout,
-  knobX,
   noteRoomForControl,
   SETTINGS_BUILD_LABEL,
   SETTINGS_NOTE_STYLE,
@@ -44,9 +43,7 @@ import {
   settingsLayout,
   type SettingsRowShape,
   setVolumeSteps,
-  type SliderTrack,
   SWITCH_STATE_GAP,
-  volumeStepAt,
   volumeStepForKey,
   volumeSteps,
 } from "./settings.ts";
@@ -57,41 +54,23 @@ const belowTitleRow = (card: Rect): number => {
   return row.y + row.height;
 };
 
-const TRACK: SliderTrack = { knobWidth: 10, width: 216, x: 112 };
-
 describe("the volume slider", () => {
-  it("runs the knob end to end, reads each step back under the finger and holds past the ends", () => {
-    expect(knobX(TRACK, 0)).toBe(112);
-    expect(knobX(TRACK, 20)).toBe(112 + 216 - 10);
-    for (let steps = 0; steps <= 20; steps++) {
-      expect(volumeStepAt(TRACK, knobX(TRACK, steps) + TRACK.knobWidth / 2)).toBe(steps);
-    }
-    expect(volumeStepAt(TRACK, 0)).toBe(0);
-    expect(volumeStepAt(TRACK, 400)).toBe(20);
-  });
-
   it("sets and counts a volume in 5% steps, held within 0 and 1", () => {
     expect(setVolumeSteps("musicVolume", 3, DEFAULT_SETTINGS).musicVolume).toBeCloseTo(0.15);
     expect(setVolumeSteps("sfxVolume", 24, DEFAULT_SETTINGS).sfxVolume).toBe(1);
     expect(volumeSteps(0.85)).toBe(17);
   });
-});
 
-describe("volumeStepForKey", () => {
-  it("steps the volume down and up by lane keys, stops at the ends, jumps with Home and End", () => {
-    const cases: readonly [string, string[], number, number | undefined][] = [
-      ["steps down", ["ArrowLeft", "KeyA", "KeyH"], 12, 11],
-      ["steps up", ["ArrowRight", "KeyD", "KeyL"], 12, 13],
-      ["stops at 0", ["ArrowLeft"], 0, 0],
-      ["stops at the top", ["ArrowRight"], 20, 20],
-      ["goes to 0", ["Home"], 12, 0],
-      ["goes to 100%", ["End"], 12, 20],
-      ["ignores the key", ["ArrowUp", "Enter"], 12, undefined],
-    ];
-    for (const [, codes, from, expected] of cases) {
-      for (const code of codes) {
-        expect(volumeStepForKey(code, from), code).toBe(expected);
-      }
+  it.each([
+    ["steps down", ["KeyA", "KeyH"], 12, 11],
+    ["steps up", ["KeyD", "KeyL"], 12, 13],
+    ["stops at 0", ["KeyA"], 0, 0],
+    ["stops at the top", ["KeyD"], 20, 20],
+    ["leaves the kit's keys to the kit", ["ArrowLeft", "ArrowRight", "Home", "End"], 12, undefined],
+    ["ignores the key", ["ArrowUp", "Enter"], 12, undefined],
+  ] as const)("%s with Archie's extra keys", (_, codes, from, expected) => {
+    for (const code of codes) {
+      expect(volumeStepForKey(code, from), code).toBe(expected);
     }
   });
 });

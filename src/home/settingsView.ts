@@ -25,14 +25,12 @@ import {
   INSTALL_ICON_SIZE,
   INSTALL_STEPS_FIT,
   type InstallStepsLayout,
-  knobX,
   noteRoomForControl,
   SETTINGS_BUILD_LABEL,
   SETTINGS_NOTE_STYLE,
   SETTINGS_ROW,
   type SettingsLayout,
   SWITCH_STATE_GAP,
-  VOLUME_STEPS,
   type VolumeKey,
   volumePercent,
   volumeSteps,
@@ -196,20 +194,18 @@ export interface SettingsRowView {
   // The label and the note, or the label and the volume.
   readonly texts: readonly SettingsText[];
   readonly rect: Rect;
-  // A switch row's switch and whether it is on.
-  readonly switch?: { readonly art: SettingsArt; readonly on: boolean };
+  // A switch row's switch, whether it is on and its state word.
+  readonly switch?: { readonly art: SettingsArt; readonly on: boolean; readonly word: string };
   // The install row's secondary button.
   readonly button?: PanelButton;
-  // A slider row's track (its empty and filled tags' rects) and knob, its volume in percent,
-  // and whether it is disabled, the sound being muted.
+  // A slider row's volume in steps of VOLUME_STEPS and in percent, its track's rect, the
+  // track's and knob's frame tags, and whether it is disabled, the sound being muted.
   readonly slider?: {
     readonly disabled: boolean;
-    readonly empty: SettingsArt & { readonly width: number };
-    readonly filled: SettingsArt & { readonly width: number };
-    readonly knob: SettingsArt;
     readonly percent: number;
-    // How far along its travel the knob is, from 0 to 1, and its width.
-    readonly travel: { readonly along: number; readonly knobWidth: number };
+    readonly step: number;
+    readonly tags: { readonly empty: string; readonly filled: string; readonly knob: string };
+    readonly track: Rect;
   };
 }
 
@@ -244,7 +240,6 @@ export interface SettingsView {
 
 export interface SettingsState {
   readonly dim: Rect;
-  readonly dragging: VolumeKey | undefined;
   // The focused row's index, the rows' count for the close control, or null for none.
   readonly focus: number | null;
   readonly pressed: SettingsTarget | undefined;
@@ -350,7 +345,7 @@ function controlRow(
   const word = words[on ? row.states.on : row.states.off];
   return {
     ...view,
-    switch: { art, on },
+    switch: { art, on, word },
     texts: [
       ...view.texts,
       {
@@ -386,10 +381,7 @@ function sliderRow(
     ? fillLine(MENU_TEXT_FIELDS.settings, words, "volume", { percent: String(percent) })
     : words.muted;
   const title = { capTop: y + LABEL.dy, colour, font: "title", scale: TEXT_SCALE } as const;
-  const trackY = y + slider.dy;
-  const kx = knobX(slider, steps);
   const suffix = active ? "" : "-disabled";
-  const knobTag = !active ? "disabled" : state.dragging === row.key ? "pressed" : "normal";
   return {
     description: value,
     dip: 0,
@@ -406,23 +398,14 @@ function sliderRow(
     rect,
     slider: {
       disabled: !active,
-      empty: {
-        key: "ui-slider",
-        tag: `empty${suffix}`,
-        width: slider.width,
-        x: slider.x,
-        y: trackY,
-      },
-      filled: {
-        key: "ui-slider",
-        tag: `filled${suffix}`,
-        width: kx + slider.knobWidth - slider.x,
-        x: slider.x,
-        y: trackY,
-      },
-      knob: { key: "ui-slider-knob", tag: knobTag, x: kx, y: trackY - 3 },
       percent,
-      travel: { along: steps / VOLUME_STEPS, knobWidth: slider.knobWidth },
+      step: steps,
+      tags: {
+        empty: `empty${suffix}`,
+        filled: `filled${suffix}`,
+        knob: active ? "normal" : "disabled",
+      },
+      track: { height: slider.height, width: slider.width, x: slider.x, y: y + slider.dy },
     },
     texts: [
       { ...title, anchor: "ink", lines: [words[row.label]], x: x + LABEL.dx },

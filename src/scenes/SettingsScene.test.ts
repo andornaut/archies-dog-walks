@@ -56,7 +56,6 @@ function fixture(install = false, width = 360, dpr = 1) {
       },
       {
         dim: SCREEN_LAYOUT.screen,
-        dragging: undefined,
         focus: null,
         pressed: undefined,
         settings: DEFAULT_SETTINGS,
@@ -66,11 +65,13 @@ function fixture(install = false, width = 360, dpr = 1) {
   const doc = new FakeDocument();
   const scale = domScale(dpr, { ...SCREEN_LAYOUT.screen, height: (width * 560) / 360, width });
   const { element, layer } = fakeLayer(doc, scale);
-  const slide = { end: vi.fn(), move: vi.fn(), start: vi.fn() };
+  const slide = {
+    change: vi.fn<DomSettingsInput["slide"]["change"]>(),
+    commit: vi.fn<DomSettingsInput["slide"]["commit"]>(),
+  };
   const press = {
     activate: vi.fn<DomSettingsInput["press"]["activate"]>(),
-    down: vi.fn<DomSettingsInput["press"]["down"]>(),
-    up: vi.fn<DomSettingsInput["press"]["up"]>(),
+    hold: vi.fn<DomSettingsInput["press"]["hold"]>(),
   };
   const close = vi.fn();
   const shown = showSettings(layer, {
@@ -89,6 +90,7 @@ function fixture(install = false, width = 360, dpr = 1) {
       }),
     onFocus: vi.fn(),
     press,
+    reducedMotion: () => true,
     slide,
     toGame: (point) => point,
     view: view(),

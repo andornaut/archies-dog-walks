@@ -130,6 +130,25 @@ export class FakeElement extends FakeTarget {
     }
   }
 
+  prepend(...nodes: FakeElement[]): void {
+    for (const node of nodes) {
+      node.remove();
+      node.parent = this;
+    }
+    this.children.unshift(...nodes);
+  }
+
+  // Its box as its inline style places it, in px from its container's corner.
+  getBoundingClientRect(): { height: number; left: number; top: number; width: number } {
+    const px = (value: string | undefined) => Number.parseFloat(value ?? "") || 0;
+    return {
+      height: px(this.style.height),
+      left: px(this.style.left),
+      top: px(this.style.top),
+      width: px(this.style.width),
+    };
+  }
+
   replaceChildren(...nodes: FakeElement[]): void {
     for (const child of [...this.children]) {
       child.remove();
@@ -292,6 +311,8 @@ export class FakeDocument extends FakeTarget {
     clearTimeout: (timer?: number) => {
       void timer;
     },
+    // An element's inline style stands for its computed style.
+    getComputedStyle: (element: FakeElement) => element.style,
     performance: { now: () => 0 },
     setTimeout: (callback: () => void, delay?: number) => {
       void callback;

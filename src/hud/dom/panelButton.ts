@@ -16,7 +16,7 @@ export interface PanelPress {
 
 // The enclosing native surface owns pointer admission and modal lifetime.
 export function bindPanelFeedback(
-  view: ButtonView,
+  view: Pick<ButtonView, "element" | "setPressed">,
   input: Pick<PanelPress, "accepts" | "burst">,
 ): () => void {
   const control = view.element;

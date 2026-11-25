@@ -1,9 +1,9 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
 import type { CheatAction, CheatRowView, CheatsView } from "../../dev/cheatsView.ts";
-import { type DomArtSource, sheetArt } from "../../ui/dom/artElements.ts";
+import { type DomArtSource, paintSheetArt } from "../../ui/dom/artElements.ts";
 import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";
-import { createGameButton } from "../../ui/dom/gameButton.ts";
+import { createGameButton, createGameFormRow } from "../../ui/dom/gameButton.ts";
 import type { DomPart } from "../../ui/dom/parts.ts";
 import { createTextLine, placeBox, placeFrame, placeText } from "../../ui/dom/pixelLine.ts";
 import { refuse } from "../../ui/dom/refusal.ts";
@@ -179,7 +179,9 @@ function buttonsPart(
   };
 }
 
-// A switch and its label and value, as one native button that a press acts on.
+// A switch row: Game Kit's form row (one button, role switch, its label its name and its value
+// its state word), over its face, which carries its focus and press fills, its text and the
+// ui-switch frame on the kit's switch, at the places the row's view lays out.
 function settingRowPart(
   doc: Document,
   input: DomCheatsInput,
@@ -188,18 +190,13 @@ function settingRowPart(
   press: { readonly accepts: () => boolean; readonly burst: (event: PointerEvent) => void },
   current: () => CheatRowView,
 ): RowPart {
-  const content = doc.createElement("span");
-  content.className = "adw-lines";
+  const face = doc.createElement("span");
+  face.className = "adw-framed adw-row-face";
   const texts = doc.createElement("span");
   texts.className = "adw-lines";
-  const art = first.switch === undefined ? undefined : sheetArt(doc, input, "ui-switch");
-  content.append(texts, ...(art === undefined ? [] : [art.element]));
-  const view = createGameButton(doc, {
-    appearance: {
-      className: "adw-button adw-row",
-      face: { className: "adw-framed" },
-    },
-    content: { icon: content, kind: "icon", name: `${first.label}: ${first.value}` },
+  texts.setAttribute("aria-hidden", "true");
+  const view = createGameFormRow(doc, {
+    className: "adw-row",
     getAction: () => {
       const row = current();
       return press.accepts() && row.action !== undefined
@@ -211,18 +208,25 @@ function settingRowPart(
         current().enabled && current().action !== undefined
           ? { kind: "available" }
           : { kind: "pointer-refusal" },
+      checked: current().switch?.on === true,
+      value: current().value,
     }),
+    label: first.label,
     onPointerRefusal: () => {
       if (press.accepts()) {
         refuse(input.reducedMotion(), texts);
       }
     },
-    skin: "authored",
+    switch: true,
   });
-  const element = view.element;
-  const face = view.face;
-  element.setAttribute("role", "switch");
-  element.style.setProperty("--ui-button-focus-fill", "var(--adw-cyan)");
+  const { element } = view;
+  for (const part of [view.label, view.note, view.state]) {
+    part.classList.add("visually-hidden");
+  }
+  const art =
+    view.switch === undefined ? undefined : paintSheetArt(input, "ui-switch", view.switch);
+  element.prepend(face);
+  element.append(texts);
   const stopFeedback = bindPanelFeedback(view, press);
   return {
     controls: [element],
@@ -236,12 +240,11 @@ function settingRowPart(
       placeBox(scale, origin, element, rect);
       placeBox(scale, rect, face, rect);
       textLines(doc, input, texts, rect, scale, row);
-      view.setContent({ icon: content, kind: "icon", name: `${row.label}: ${row.value}` });
+      view.setLabel(row.label);
       view.refresh();
       if (art !== undefined && row.switch !== undefined) {
         const tag = row.switch.on ? "on" : "off";
         art.place(scale, rect, { tag, x: row.switch.x, y: row.switch.y });
-        element.setAttribute("aria-checked", String(row.switch.on));
       }
     },
     ready: art?.ready ?? Promise.resolve([]),

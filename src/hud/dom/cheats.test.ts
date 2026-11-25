@@ -119,10 +119,14 @@ it("keeps Cheats actions guarded and disposable and renders only the approved co
 it("accepts a single press on Invincible and the selected neighbourhood during a walk", async () => {
   const { act, element, pointerClick, shown, view } = await cheatsScreen(true);
   const row = view.rows.find(({ action }) => action?.kind === "invincible")!;
-  const toggle = element
-    .all()
-    .find((node) => node.getAttribute("aria-label") === `${row.label}: ${row.value}`)!;
-  expect(toggle.tabIndex).toBe(0);
+  const toggle = element.all().find((node) => node.getAttribute("role") === "switch")!;
+  expect([toggle.tabIndex, toggle.getAttribute("aria-checked")]).toEqual([
+    0,
+    String(row.switch?.on),
+  ]);
+  expect(toggle.all().map(({ textContent }) => textContent)).toEqual(
+    expect.arrayContaining([row.label, row.value]),
+  );
   pointerClick(toggle);
   expect(act).toHaveBeenCalledExactlyOnceWith(row.action);
 

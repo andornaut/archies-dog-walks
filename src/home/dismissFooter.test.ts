@@ -65,7 +65,6 @@ it("keeps settings rows, build text and install steps above their centred dismis
     },
     {
       dim: SCREEN_LAYOUT.screen,
-      dragging: undefined,
       focus: null,
       pressed: undefined,
       settings: DEFAULT_SETTINGS,

@@ -1,10 +1,9 @@
-import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { type SliderArt, sliderStepForKey } from "@andornaut/game-kit/runtime/ui/slider";
 
-import { MIN_PRESS, SETTINGS_CARD, SHOP_PAGE } from "../data/layout.ts";
+import { MIN_PRESS, SETTINGS_CARD, SHOP_PAGE, SLICES } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
-import { laneDirectionForKey } from "../input/keyBindings.ts";
 import type { Settings } from "../save/settings.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
@@ -26,41 +25,38 @@ export function volumeSteps(volume: number): number {
   return Math.min(VOLUME_STEPS, Math.max(0, Math.round(volume * VOLUME_STEPS)));
 }
 
-// A volume slider's track, in screen pixels, and the width of the knob that slides along it.
+// A volume slider's track, in screen pixels.
 export interface SliderTrack {
-  knobWidth: number;
   width: number;
   x: number;
 }
 
-// The step a finger at x picks: the knob's centre follows the finger, held to the track.
-export function volumeStepAt(track: SliderTrack, x: number): number {
-  const fraction = (x - track.x - track.knobWidth / 2) / (track.width - track.knobWidth);
-  return Math.round(clamp01(fraction) * VOLUME_STEPS);
-}
-
-// The knob's left edge at a step.
-export function knobX(track: SliderTrack, steps: number): number {
-  return track.x + Math.round(((track.width - track.knobWidth) * steps) / VOLUME_STEPS);
-}
+// The slider's art for the kit slider: its knob, and its track's height and three-slice caps.
+export const SLIDER_ART: SliderArt = {
+  thumb: { height: SETTINGS_CARD.row.track.knobHeight, width: SETTINGS_CARD.row.track.knobWidth },
+  track: {
+    caps: { left: SLICES["ui-slider"].left, right: SLICES["ui-slider"].right },
+    height: SETTINGS_CARD.row.track.height,
+  },
+};
 
 export function volumePercent(steps: number): number {
   return Math.round((steps * 100) / VOLUME_STEPS);
 }
 
-// The step a key moves a focused slider to: the arrows, A/D and H/L one step down or up,
-// Home to 0 and End to the top. Undefined for any other key.
+// Archie's extra slider keys, A/D and H/L, as the kit slider's arrows: the step one moves a
+// focused slider to, or undefined for any other key. The kit slider takes the arrows, Home and
+// End itself.
+const EXTRA_SLIDER_KEYS: Readonly<Record<string, string>> = {
+  KeyA: "ArrowLeft",
+  KeyD: "ArrowRight",
+  KeyH: "ArrowLeft",
+  KeyL: "ArrowRight",
+};
+
 export function volumeStepForKey(code: string, steps: number): number | undefined {
-  if (code === "Home") {
-    return 0;
-  }
-  if (code === "End") {
-    return VOLUME_STEPS;
-  }
-  const direction = laneDirectionForKey(code);
-  return direction === undefined
-    ? undefined
-    : Math.min(VOLUME_STEPS, Math.max(0, steps + direction));
+  const key = EXTRA_SLIDER_KEYS[code];
+  return key === undefined ? undefined : sliderStepForKey(VOLUME_STEPS, steps, key);
 }
 
 export function setVolumeSteps(key: VolumeKey, steps: number, settings: Settings): Settings {
@@ -313,7 +309,12 @@ export function settingsLayout(
       x: rect.x + SEPARATOR_INSET,
       y: rect.y - ROW_GAP + Math.floor((ROW_GAP - 1) / 2),
     })),
-    track: { ...track, width: SETTINGS_ROW.width - 2 * pad, x: rowX + pad },
+    track: {
+      dy: track.dy,
+      height: track.height,
+      width: SETTINGS_ROW.width - 2 * pad,
+      x: rowX + pad,
+    },
   };
 }
 

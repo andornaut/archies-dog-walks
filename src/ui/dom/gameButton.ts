@@ -7,6 +7,11 @@ import {
   type ButtonView,
   createButton,
 } from "@andornaut/game-kit/runtime/web/ui/dom/button";
+import {
+  createFormRow,
+  type FormRowOptions,
+  type FormRowView,
+} from "@andornaut/game-kit/runtime/web/ui/dom/formRow";
 
 import { gameData } from "../../data/index.ts";
 import { holdRule, TILE_SLOP_PX } from "../../holdRule.ts";
@@ -62,6 +67,37 @@ export function createGameButton(document: Document, options: GameButtonOptions)
           onUnavailable: (reason: string) => {
             if (gameButtonAccepts(view.element)) {
               options.onUnavailable!(reason);
+            }
+          },
+        }),
+    rule: holdRule(gameData.tuning, TILE_SLOP_PX),
+  });
+  const unregister = registerGameButton(view);
+  return {
+    ...view,
+    dispose() {
+      unregister();
+      view.dispose();
+    },
+  };
+}
+
+// A form row (one kit button) in the game's reset skin, admitted and held as a standard button
+// is: the game places its parts and draws its art; the kit owns its role, state and activation.
+export function createGameFormRow(
+  document: Document,
+  options: Omit<FormRowOptions, "rule">,
+): FormRowView {
+  const view: FormRowView = createFormRow(document, {
+    ...options,
+    className: ["adw-reset-button", options.className].filter(Boolean).join(" "),
+    getAction: (element) => (gameButtonAccepts(element) ? options.getAction(element) : null),
+    ...(options.onPointerRefusal === undefined
+      ? {}
+      : {
+          onPointerRefusal: () => {
+            if (gameButtonAccepts(view.element)) {
+              options.onPointerRefusal!();
             }
           },
         }),

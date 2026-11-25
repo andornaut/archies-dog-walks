@@ -42,7 +42,6 @@ function fixture(install = false, width = 360, dpr = 1) {
       },
       {
         dim: SCREEN_LAYOUT.screen,
-        dragging: undefined,
         focus: null,
         pressed: undefined,
         settings: DEFAULT_SETTINGS,
@@ -52,11 +51,13 @@ function fixture(install = false, width = 360, dpr = 1) {
   const doc = new FakeDocument();
   const scale = domScale(dpr, { ...SCREEN_LAYOUT.screen, height: (width * 560) / 360, width });
   const { element, layer } = fakeLayer(doc, scale);
-  const slide = { end: vi.fn(), move: vi.fn(), start: vi.fn() };
+  const slide = {
+    change: vi.fn<DomSettingsInput["slide"]["change"]>(),
+    commit: vi.fn<DomSettingsInput["slide"]["commit"]>(),
+  };
   const press = {
     activate: vi.fn<DomSettingsInput["press"]["activate"]>(),
-    down: vi.fn<DomSettingsInput["press"]["down"]>(),
-    up: vi.fn<DomSettingsInput["press"]["up"]>(),
+    hold: vi.fn<DomSettingsInput["press"]["hold"]>(),
   };
   const close = vi.fn();
   const shown = showSettings(layer, {
@@ -75,6 +76,7 @@ function fixture(install = false, width = 360, dpr = 1) {
       }),
     onFocus: vi.fn(),
     press,
+    reducedMotion: () => true,
     slide,
     toGame: (point) => point,
     view: view(),
@@ -82,28 +84,35 @@ function fixture(install = false, width = 360, dpr = 1) {
   return { close, doc, element, layer, press, scale, shown, slide, view };
 }
 
-it("cancels a carried settings drag when install steps take ownership and restores guarded input", () => {
+const pointer = (target: unknown, pointerId: number, x: number, y: number, type: string) => ({
+  button: 0,
+  clientX: x,
+  clientY: y,
+  detail: 1,
+  pointerId,
+  pointerType: "mouse",
+  preventDefault: vi.fn(),
+  stopImmediatePropagation: vi.fn(),
+  target,
+  timeStamp: 10,
+  type,
+});
+
+it("sets a volume through the kit slider's keys and drags, and drops a drag that install steps take over", () => {
   const { doc, element, layer, shown, slide, view } = fixture();
   const row = element.all().find((part) => part.getAttribute("role") === "slider")!;
-  const event = {
-    clientX: 10,
-    clientY: 10,
-    pointerId: 1,
-    preventDefault: vi.fn(),
-    stopImmediatePropagation: vi.fn(),
-    target: row,
-    type: "pointerdown",
-  };
-  row.fire("pointerdown", event);
-  expect(slide.start).toHaveBeenCalledOnce();
+  expect(row.getAttribute("aria-valuenow")).toBe("9");
+  row.fire("keydown", { key: "ArrowRight" });
+  expect(slide.change).toHaveBeenCalledExactlyOnceWith("musicVolume", 10);
+  slide.change.mockClear();
+  row.fire("pointerdown", pointer(row, 1, 10, 10, "pointerdown"));
+  expect(slide.change).toHaveBeenCalledExactlyOnceWith("musicVolume", 0);
   shown.update(view(true), null);
-  expect(layerViews(element)[0]?.hidden).toBe(false);
   expect(layerViews(element)[0]?.inert).toBe(true);
-  expect(slide.end).toHaveBeenCalledExactlyOnceWith(true);
-  doc.fire("pointermove", { ...event, clientX: 30, type: "pointermove" } as typeof event);
-  doc.fire("pointerup", { ...event, type: "pointerup" } as typeof event);
-  expect(slide.move).not.toHaveBeenCalled();
-  expect(slide.end).toHaveBeenCalledOnce();
+  doc.fire("pointermove", pointer(row, 1, 300, 10, "pointermove"));
+  doc.fire("pointerup", pointer(row, 1, 300, 10, "pointerup"));
+  expect(slide.change).toHaveBeenCalledOnce();
+  expect(slide.commit).not.toHaveBeenCalled();
   shown.setEnabled(false);
   expect(shown.accepts()).toBe(false);
   shown.update(view(), null);
@@ -114,50 +123,54 @@ it("cancels a carried settings drag when install steps take ownership and restor
   expect(layer.input.accepts()).toBe(true);
 });
 
-it("cancels a Settings touch across hiding and restores its switch, X and Close actions once", () => {
+it("refuses a muted slider's press with the kit's cue on the row's face, leaving its volume", () => {
+  const { element, shown, slide, view } = fixture();
+  const muted = view();
+  shown.update(
+    {
+      ...muted,
+      rows: muted.rows.map((row) =>
+        row.slider === undefined ? row : { ...row, slider: { ...row.slider, disabled: true } },
+      ),
+    },
+    null,
+  );
+  const row = element.all().find((part) => part.getAttribute("role") === "slider")!;
+  expect(row.getAttribute("aria-disabled")).toBe("true");
+  row.fire("pointerdown", pointer(row, 2, 10, 10, "pointerdown"));
+  expect(slide.change).not.toHaveBeenCalled();
+  expect(row.hasAttribute("data-ui-refusal-red")).toBe(true);
+  expect(row.children[0]?.className).toBe("adw-framed adw-row-face");
+  shown.destroy();
+});
+
+it("holds a Settings switch through a touch lost to hiding and flips it once by the kit's click", () => {
   const { close, doc, element, layer, press, shown } = fixture();
   const root = layerViews(element)[0]!;
   const row = element.all().find((part) => part.getAttribute("role") === "switch")!;
-  Object.assign(row, { closest: (selector: string) => (selector === ".adw-row" ? row : null) });
-  const action = vi.fn();
-  press.up.mockImplementation((target, cancelled) => {
-    if (!cancelled && target?.kind === "switch") {
-      action();
-    }
-  });
-  const event = (pointerId: number, type: string, target = row) => ({
-    clientX: 10,
-    clientY: 10,
-    detail: 1,
-    pointerId,
-    preventDefault: vi.fn(),
-    stopImmediatePropagation: vi.fn(),
-    target,
-    timeStamp: 10,
-    type,
-  });
-  const lost = event(31, "pointerdown");
+  expect([row.tagName, row.getAttribute("aria-checked")]).toEqual(["button", "true"]);
+  const target = { key: "muted", kind: "switch" };
+  const lost = pointer(row, 31, 10, 10, "pointerdown");
   root.fire("pointerdown", lost);
   row.fire("pointerdown", lost);
-  expect(press.down).toHaveBeenCalledOnce();
+  expect(press.hold).toHaveBeenLastCalledWith(target);
   expect(layer.press.canvasAllowed()).toBe(false);
   Object.assign(doc, { hidden: true });
   doc.fire("visibilitychange");
   expect(layer.press.canvasAllowed()).toBe(true);
-  expect(press.up).toHaveBeenCalledExactlyOnceWith(undefined, true);
-  expect(action).not.toHaveBeenCalled();
+  expect(press.hold).toHaveBeenLastCalledWith(undefined);
+  expect(press.activate).not.toHaveBeenCalled();
 
   Object.assign(doc, { hidden: false });
   doc.fire("visibilitychange");
   doc.defaultView.fire("focus");
-  const fresh = event(32, "pointerdown");
+  const fresh = pointer(row, 32, 10, 10, "pointerdown");
   root.fire("pointerdown", fresh);
   row.fire("pointerdown", fresh);
-  doc.fire("pointerup", event(31, "pointerup"));
-  expect(action).not.toHaveBeenCalled();
-  doc.fire("pointerup", event(32, "pointerup"));
-  expect(action).toHaveBeenCalledOnce();
-  expect(press.down).toHaveBeenCalledTimes(2);
+  doc.fire("pointerup", pointer(row, 32, 10, 10, "pointerup"));
+  expect(press.hold).toHaveBeenLastCalledWith(undefined);
+  row.fire("click", pointer(row, 32, 10, 10, "click"));
+  expect(press.activate).toHaveBeenCalledExactlyOnceWith(target);
   const controls = root
     .all()
     .filter(
@@ -167,9 +180,9 @@ it("cancels a Settings touch across hiding and restores its switch, X and Close 
     );
   expect(controls).toHaveLength(2);
   controls.forEach((control, index) => {
-    root.fire("pointerdown", event(40 + index, "pointerdown", control));
-    doc.fire("pointerup", event(40 + index, "pointerup", control));
-    const click = event(40 + index, "click", control);
+    root.fire("pointerdown", pointer(control, 40 + index, 10, 10, "pointerdown"));
+    doc.fire("pointerup", pointer(control, 40 + index, 10, 10, "pointerup"));
+    const click = pointer(control, 40 + index, 10, 10, "click");
     root.fire("click", click);
     expect(click.stopImmediatePropagation).not.toHaveBeenCalled();
     control.fire("click", click);
@@ -179,45 +192,11 @@ it("cancels a Settings touch across hiding and restores its switch, X and Close 
   expect(layer.press.canvasAllowed()).toBe(true);
 });
 
-it("scrolls touch slider rows without changing volume until horizontal intent or a tap release", () => {
-  const { doc, element, shown, slide } = fixture();
-  const row = element.all().find((part) => part.getAttribute("role") === "slider")!;
-  const event = (pointerId: number, x: number, y: number) => ({
-    clientX: x,
-    clientY: y,
-    pointerId,
-    pointerType: "touch",
-    preventDefault: vi.fn(),
-    stopImmediatePropagation: vi.fn(),
-    target: row,
-    type: "pointerdown",
-  });
-  row.fire("pointerdown", event(41, 100, 150));
-  expect(slide.start).not.toHaveBeenCalled();
-  doc.fire("pointermove", event(41, 102, 180));
-  doc.fire("pointerup", event(41, 102, 180));
-  expect(slide.start).not.toHaveBeenCalled();
-  expect(slide.move).not.toHaveBeenCalled();
-  expect(slide.end).not.toHaveBeenCalled();
-  row.fire("pointerdown", event(42, 100, 150));
-  doc.fire("pointermove", event(42, 130, 152));
-  expect(slide.start).toHaveBeenCalledExactlyOnceWith("musicVolume", 130);
-  doc.fire("pointerup", event(42, 140, 152));
-  expect(slide.end).toHaveBeenCalledExactlyOnceWith(false);
-  slide.start.mockClear();
-  slide.end.mockClear();
-  row.fire("pointerdown", event(43, 100, 150));
-  doc.fire("pointerup", event(43, 103, 151));
-  expect(slide.start).toHaveBeenCalledExactlyOnceWith("musicVolume", 103);
-  expect(slide.end).toHaveBeenCalledExactlyOnceWith(false);
-  shown.destroy();
-});
-
 it("keeps the card chrome fixed while revealing whole focused rows inside its native viewport", () => {
   const { element, shown, view } = fixture(true);
   const current = view();
   const viewport = element.all().find((part) => part.className.includes("adw-settings-rows"))!;
-  const rows = element.all().filter((part) => part.className === "adw-row");
+  const rows = element.all().filter((part) => part.classList.contains("adw-row"));
   const last = current.rows.length - 1;
   const rect = { ...current.rowsViewport, height: current.rows[last]!.rect.height };
   const small = { ...current, rowsViewport: rect };

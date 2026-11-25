@@ -95,12 +95,33 @@ export function sheetArt(
   ) => void;
 } {
   const element = doc.createElement("span");
-  element.className = "adw-art";
+  return { element, ...paintSheetArt(source, key, element, imageKey) };
+}
+
+// A sheet's frame drawn on element, which another part (a Game Kit control) made: as sheetArt
+// places its own. With art.alternate, the property holds a second frame's background position,
+// for a state CSS shows in its place.
+export function paintSheetArt(
+  source: DomArtSource,
+  key: string,
+  element: HTMLElement,
+  imageKey = key,
+): {
+  readonly ready: Promise<readonly string[]>;
+  readonly place: (
+    scale: DomScale,
+    origin: Point,
+    art: SheetArtPlace & {
+      readonly alternate?: { readonly property: string; readonly tag: string };
+    },
+    at?: { readonly left: number; readonly top: number },
+  ) => void;
+} {
+  element.classList.add("adw-art");
   element.style.backgroundImage = backgroundOf(source, imageKey);
 
   const loaded = sheetOf(source, key, element, imageKey);
   return {
-    element,
     place: (scale, origin, art, at) =>
       loaded((json) => {
         const frame =
@@ -134,6 +155,13 @@ export function sheetArt(
         const down = art.projection === "layout" ? box.height / frame.height : pixel;
         element.style.backgroundSize = `${frame.sheet.width * across}px ${frame.sheet.height * down}px`;
         element.style.backgroundPosition = `${-frame.x * across}px ${-frame.y * down}px`;
+        if (art.alternate !== undefined) {
+          const other = sheetFrame(json, art.alternate.tag);
+          element.style.setProperty(
+            art.alternate.property,
+            `${-other.x * across}px ${-other.y * down}px`,
+          );
+        }
       }),
     ready: loaded.ready,
   };
@@ -142,12 +170,13 @@ export function sheetArt(
 // A sheet's frame stretched across, as a nine-slice cut only at its sides draws it: its left
 // and right columns whole, the columns between them stretched, which holds for art whose
 // middle columns are alike, since the stretch then samples none but them. width, where given,
-// is its width in device pixels.
+// is its width in device pixels. It draws in element where another part made it.
 export function sheetThreeSlice(
   doc: Document,
   source: DomArtSource,
   key: string,
   slices: { readonly left: number; readonly right: number },
+  element: HTMLElement = doc.createElement("span"),
 ): {
   readonly element: HTMLElement;
   readonly ready: Promise<readonly string[]>;
@@ -158,8 +187,7 @@ export function sheetThreeSlice(
     width?: number,
   ) => void;
 } {
-  const element = doc.createElement("span");
-  element.className = "adw-art";
+  element.classList.add("adw-art");
   element.style.backgroundImage = "none";
   const parts = ["left", "middle", "right"].map(() => {
     const part = doc.createElement("span");

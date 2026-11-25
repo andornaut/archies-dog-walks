@@ -144,13 +144,13 @@ describe("control state cues", () => {
     [
       "a pressed Settings or Cheats switch row's face",
       "ui",
-      '.adw-row.ui-standard-button:not(.adw-standard-button,[aria-disabled="true"])[data-ui-pressed]>.ui-button-face',
+      '.adw-row:not([role=slider],[aria-disabled="true"],.adw-standard-button)[data-ui-pressed]>.adw-row-face',
       "background-color:var(--adw-green)!important",
     ],
     [
       "a focused or pressed row in forced colours",
       "ui",
-      ".adw-row:not(.adw-standard-button):is(:focus-visible,[data-ui-pressed])>:is(.adw-row-face,.ui-button-face)",
+      ".adw-row:not(.adw-standard-button):is(:focus-visible,[data-ui-pressed]:not([role=slider]))>.adw-row-face",
       "background-color:Highlight!important",
     ],
     [

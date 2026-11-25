@@ -43,7 +43,6 @@ const layout = settingsLayout(
 );
 const STATE: SettingsState = {
   dim: SCREEN_LAYOUT.screen,
-  dragging: undefined,
   focus: null,
   pressed: undefined,
   settings: DEFAULT_SETTINGS,
@@ -188,11 +187,13 @@ describe("settingsView", () => {
     [true, "filled-disabled", "disabled", gameData.menuText.settings.muted],
   ])("draws a slider muted %s with its %s fill, %s knob and %s", (muted, fill, knob, value) => {
     const music = view({ settings: { ...DEFAULT_SETTINGS, musicVolume: 0.45, muted } }).rows[1];
-    expect([music?.slider?.filled.tag, music?.slider?.knob.tag, music?.texts[1]?.lines]).toEqual([
-      fill,
-      knob,
-      [value],
-    ]);
+    expect([
+      music?.slider?.tags.filled,
+      music?.slider?.tags.knob,
+      music?.slider?.step,
+      music?.slider?.disabled,
+      music?.texts[1]?.lines,
+    ]).toEqual([fill, knob, 9, muted, [value]]);
   });
 
   it("draws the install steps' glyph over the card", () => {

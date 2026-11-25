@@ -26,7 +26,10 @@ export interface GameAction {
 }
 
 const actions = new WeakMap<HTMLElement, GameAction>();
-const buttons = new WeakMap<HTMLElement, ButtonView>();
+// A kit control the root dispatches holds to: a standard button or a form row.
+type HoldControl = Pick<ButtonView, "element" | "holdAction">;
+
+const buttons = new WeakMap<HTMLElement, HoldControl>();
 const roots = new WeakMap<HTMLElement, { readonly accepts: () => boolean }>();
 
 // A standard control needs its nearest live input root before it accepts native clicks.
@@ -52,7 +55,7 @@ export function gameButtonAccepts(element: HTMLElement): boolean {
 }
 
 // The kit owns the native click handler; the existing root owns hold dispatch.
-export function registerGameButton(view: ButtonView): () => void {
+export function registerGameButton(view: HoldControl): () => void {
   const { element } = view;
   if (actions.has(element) || buttons.has(element)) {
     throw new Error("A control must have one action binding");

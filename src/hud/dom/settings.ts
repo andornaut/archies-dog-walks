@@ -1,9 +1,12 @@
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { sliderGeometry, sliderLane } from "@andornaut/game-kit/runtime/ui/slider";
+import { refuse } from "@andornaut/game-kit/runtime/web/ui/dom/refusalCue";
+import { createSlider } from "@andornaut/game-kit/runtime/web/ui/dom/slider";
 
 import { gameData } from "../../data/index.ts";
 import { SLICES } from "../../data/layout.ts";
-import type { VolumeKey } from "../../home/settings.ts";
+import { SLIDER_ART, VOLUME_STEPS, type VolumeKey } from "../../home/settings.ts";
 import type {
   SettingsRowView,
   SettingsTarget,
@@ -11,15 +14,15 @@ import type {
   SettingsView,
 } from "../../home/settingsView.ts";
 import { read } from "../../rules/units.ts";
-import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import {
   type DomArtSource,
   imageArt,
+  paintSheetArt,
   sheetArt,
   sheetThreeSlice,
 } from "../../ui/dom/artElements.ts";
 import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";
-import { createGameButton } from "../../ui/dom/gameButton.ts";
+import { createGameButton, createGameFormRow } from "../../ui/dom/gameButton.ts";
 import { guardNativeInput } from "../../ui/dom/modalLifecycle.ts";
 import type { DomPart } from "../../ui/dom/parts.ts";
 import {
@@ -28,10 +31,11 @@ import {
   placeBox,
   placeFrame,
   placeText,
+  setBox,
 } from "../../ui/dom/pixelLine.ts";
-import { refuse } from "../../ui/dom/refusal.ts";
+import { REFUSAL_CUE } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, type DomScale, gridX, gridY, wholeArtPixels } from "../../ui/domScale.ts";
+import { type DomScale, gridX, gridY } from "../../ui/domScale.ts";
 import { cssHex } from "../../ui/palette.ts";
 import { bodyScrollbarPart } from "./bodyScrollbar.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
@@ -44,10 +48,13 @@ import {
 
 // The settings card in HTML over the canvas: the ui-detail-card, its title and close control
 // drawn as a modal card is (showQuestionPanel), and each row as its view (settingsView) lays it
-// out at the places the canvas draws it. A switch row is a switch, the install row a button and
-// a volume row a slider; their presses and drags go to the scene, which keeps the settings, the
-// press's dip and the keyboard's focus, and every key goes through to it, which moves its focus
-// and the page's with it. The install steps' card opens over the card in a dialog of its own.
+// out at the places the canvas draws it. A switch row is Game Kit's form row, the install row a
+// button and a volume row Game Kit's slider; the kit owns their roles, activation, slider keys
+// (the arrows, Home and End) and drags, and the game places their parts on its art-pixel grid
+// and draws their art. Activations, volumes and a held switch's dip go to the scene, which keeps
+// the settings and the keyboard's focus; every other key goes through to it, which moves its
+// focus and the page's with it. The install steps' card opens over the card in a dialog of its
+// own.
 
 export interface DomSettingsInput
   extends Pick<DomQuestionPanelInput, "closeLabel" | "fonts" | "toGame">, DomArtSource {
@@ -56,19 +63,18 @@ export interface DomSettingsInput
   readonly closeSteps: () => void;
   // Told the row (by index) or close control (the rows' count) focus moves to, or null.
   readonly onFocus: (index: number | null) => void;
-  // What Open Cheats does, where the view shows it.
-  // A press on a switch or install row, followed until it lifts, as the scene follows one on
-  // the canvas.
+  // A switch or install row's activation, and the switch row a pointer holds, shown pressed
+  // until it lifts (undefined).
   readonly press: {
     readonly activate: (target: SettingsTarget) => void;
-    readonly down: (target: SettingsTarget) => void;
-    readonly up: (released: SettingsTarget | undefined, cancelled: boolean) => void;
+    readonly hold: (target: SettingsTarget | undefined) => void;
   };
-  // A drag along a volume row, at game x.
+  // Whether a refusal plays without its shake.
+  readonly reducedMotion: () => boolean;
+  // A volume slider's step as a key, a drag or a tap sets it, and the end of that change.
   readonly slide: {
-    readonly end: (cancelled: boolean) => void;
-    readonly move: (x: number) => void;
-    readonly start: (key: VolumeKey, x: number) => void;
+    readonly change: (key: VolumeKey, step: number) => void;
+    readonly commit: (key: VolumeKey) => void;
   };
   readonly view: SettingsView;
 }
@@ -114,18 +120,20 @@ function textElement(doc: Document, fonts: Readonly<Record<SettingsText["font"],
   };
 }
 
-// The target a row's press lands on: a switch row's or the install row's.
-function rowTarget(row: SettingsRowView): SettingsTarget | undefined {
-  if (row.key === "install") {
-    return { kind: "install" };
-  }
+// The target a switch row's press lands on.
+function switchTarget(row: SettingsRowView): SettingsTarget | undefined {
   return row.key === "fpsCounter" || row.key === "muted" || row.key === "reducedMotion"
     ? { key: row.key, kind: "switch" }
     : undefined;
 }
 
-// Ids that tie each row to its description.
-let described = 0;
+// The kit's own text in a row: its name, note and value word, for screen readers only, since
+// the row draws its text in the game's pixel font at the places its view lays out.
+function hideKitText(...parts: readonly HTMLElement[]): void {
+  for (const part of parts) {
+    part.classList.add("visually-hidden");
+  }
+}
 
 function installPart(
   layer: UiLayer,
@@ -186,6 +194,244 @@ function installPart(
   };
 }
 
+// A row's face, which carries its focus, press and refusal fills, and its icon and text drawn at
+// the places its view lays out, in front of the kit row's own parts.
+function rowArt(doc: Document, input: DomSettingsInput, first: SettingsRowView) {
+  const face = doc.createElement("span");
+  face.className = "adw-framed adw-row-face";
+  const icon = first.icon === undefined ? undefined : sheetArt(doc, input, first.icon.key);
+  const texts = first.texts.map(() => textElement(doc, input.fonts));
+  return {
+    face,
+    icon,
+    place(scale: DomScale, row: SettingsRowView) {
+      const { rect } = row;
+      face.style.backgroundColor = row.face === undefined ? "" : cssHex(row.face.colour);
+      placeBox(scale, rect, face, row.face?.rect ?? rect);
+      if (row.icon !== undefined) {
+        icon?.place(scale, rect, row.icon);
+      }
+      row.texts.forEach((text, i) => texts[i]?.place(scale, rect, text));
+    },
+    texts: texts.map(({ element }) => element),
+  };
+}
+
+// A switch row: the kit form row (one button, role switch, its label its name and its note its
+// description) over the row's face, icon, text and the ui-switch frame on the kit's switch. A
+// press dips the row while held, through the scene, and the kit's activation flips it.
+function switchPart(
+  layer: UiLayer,
+  input: DomSettingsInput,
+  view: () => SettingsRowView,
+  panel: () => DomQuestionPanel,
+  origin: () => Point,
+  burst: (event: PointerEvent) => void,
+) {
+  const doc = layer.element.ownerDocument;
+  const first = view();
+  const art = rowArt(doc, input, first);
+  const control = createGameFormRow(doc, {
+    className: "adw-row",
+    getAction: () => {
+      const target = switchTarget(view());
+      return panel().accepts() && target !== undefined
+        ? { activate: () => input.press.activate(target) }
+        : null;
+    },
+    getState: () => ({ checked: view().switch?.on === true, value: view().switch?.word ?? "" }),
+    ...(art.icon === undefined ? {} : { icon: art.icon.element }),
+    label: first.label,
+    ...(first.description === "" ? {} : { note: first.description }),
+    switch: true,
+  });
+  const { element } = control;
+  hideKitText(control.label, control.note, control.state);
+  const toggle =
+    control.switch === undefined ? undefined : paintSheetArt(input, "ui-switch", control.switch);
+  element.prepend(art.face);
+  element.append(...art.texts);
+  const stopInput = guardNativeInput(
+    {
+      cancel: () => input.press.hold(undefined),
+      down: (event) => {
+        burst(event);
+        if (element.hasPointerCapture(event.pointerId)) {
+          element.releasePointerCapture(event.pointerId);
+        }
+        input.press.hold(switchTarget(view()));
+      },
+      gate: { accepts: () => panel().accepts(), capture: () => panel().capture() },
+      holdUnit: () => layer.scale().unit,
+      subscribe: layer.input.subscribe,
+      up: () => {
+        input.press.hold(undefined);
+      },
+    },
+    element,
+  );
+  return {
+    destroy() {
+      stopInput();
+      control.dispose();
+    },
+    element,
+    place(scale: DomScale) {
+      const row = view();
+      placeBox(scale, origin(), element, row.rect);
+      element.toggleAttribute("data-ui-pressed", row.dip > 0);
+      art.place(scale, row);
+      if (row.switch !== undefined) {
+        toggle?.place(scale, row.rect, row.switch.art);
+      }
+      control.refresh();
+    },
+    ready: Promise.all([
+      ...(art.icon === undefined ? [] : [art.icon.ready]),
+      ...(toggle === undefined ? [] : [toggle.ready]),
+    ]).then((urls) => urls.flat()),
+    refuse: (reducedMotion: boolean) => refuse(REFUSAL_CUE, reducedMotion, element),
+  };
+}
+
+// A volume row: the kit slider (role slider, its keys, drag and refusal) over the row's face,
+// icon and text, with the track's and knob's frames on the kit's track, fill and thumb, placed
+// by the kit's slider geometry on the art-pixel grid. A muted slider is refused.
+function sliderPart(
+  layer: UiLayer,
+  input: DomSettingsInput,
+  view: () => SettingsRowView,
+  panel: () => DomQuestionPanel,
+  origin: () => Point,
+  burst: (event: PointerEvent) => void,
+) {
+  const doc = layer.element.ownerDocument;
+  const first = view();
+  const { key } = first;
+  if (key !== "musicVolume" && key !== "sfxVolume") {
+    throw new Error("A slider row sets a volume");
+  }
+  const art = rowArt(doc, input, first);
+  const slider = createSlider(doc, {
+    active: () => panel().accepts(),
+    change: (step) => input.slide.change(key, step),
+    className: "adw-row",
+    commit: () => input.slide.commit(key),
+    getState: () => {
+      const row = view();
+      return {
+        refused: row.slider?.disabled === true,
+        step: row.slider?.step ?? 0,
+        value: row.description,
+      };
+    },
+    ...(art.icon === undefined ? {} : { icon: art.icon.element }),
+    label: first.label,
+    layout: { art: SLIDER_ART, height: first.rect.height },
+    refusal: { cue: REFUSAL_CUE, reducedMotion: input.reducedMotion },
+    slop: read(gameData.tuning, "pixels", "tapMaxDistance"),
+    steps: VOLUME_STEPS,
+  });
+  const { element, thumb, track } = slider;
+  hideKitText(slider.label, slider.note, slider.value);
+  const lane = track.parentElement as HTMLElement;
+  lane.classList.add("adw-framed");
+  track.classList.add("adw-framed");
+  const [emptyPart, fillPart] = [...track.children] as HTMLElement[];
+  const parts = {
+    empty: sheetThreeSlice(doc, input, "ui-slider", SLICES["ui-slider"], emptyPart),
+    fill: sheetThreeSlice(doc, input, "ui-slider", SLICES["ui-slider"], fillPart),
+    knob: paintSheetArt(input, "ui-slider-knob", thumb),
+  };
+  element.prepend(art.face);
+  element.append(...art.texts);
+  const stopInput = guardNativeInput(
+    {
+      down: burst,
+      gate: { accepts: () => panel().accepts(), capture: () => panel().capture() },
+      holdUnit: () => layer.scale().unit,
+      subscribe: layer.input.subscribe,
+    },
+    element,
+  );
+  return {
+    destroy() {
+      stopInput();
+      slider.dispose();
+    },
+    element,
+    place(scale: DomScale) {
+      const row = view();
+      const { rect } = row;
+      placeBox(scale, origin(), element, rect);
+      // The kit reads presses in page px: one game pixel is unit CSS px.
+      element.style.setProperty("--ui-unit", String(scale.unit));
+      art.place(scale, row);
+      const volume = row.slider;
+      if (volume !== undefined) {
+        const lanes = sliderLane(SLIDER_ART);
+        const placed = sliderGeometry(
+          {
+            art: SLIDER_ART,
+            origin: { x: volume.track.x, y: volume.track.y - lanes.trackTop },
+            project: { x: (edge) => gridX(scale, edge), y: (edge) => gridY(scale, edge) },
+            steps: VOLUME_STEPS,
+            width: volume.track.width,
+          },
+          volume.step,
+        );
+        const at = (box: { x: number; y: number }, from: { x: number; y: number }) => ({
+          left: box.x - from.x,
+          top: box.y - from.y,
+        });
+        const rowCorner = { x: gridX(scale, rect.x), y: gridY(scale, rect.y) };
+        setBox(lane, {
+          ...at(placed.lane, rowCorner),
+          height: placed.lane.height,
+          width: placed.lane.width,
+        });
+        setBox(track, {
+          ...at(placed.track, placed.lane),
+          height: placed.track.height,
+          width: placed.track.width,
+        });
+        const trackOrigin = { x: volume.track.x, y: volume.track.y };
+        parts.empty.place(
+          scale,
+          trackOrigin,
+          { ...trackOrigin, tag: volume.tags.empty, width: volume.track.width },
+          placed.track.width,
+        );
+        parts.fill.place(
+          scale,
+          trackOrigin,
+          { ...trackOrigin, tag: volume.tags.filled, width: volume.track.width },
+          placed.fill.width,
+        );
+        parts.knob.place(
+          scale,
+          trackOrigin,
+          {
+            alternate: { property: "--adw-pressed-frame", tag: "pressed" },
+            tag: volume.tags.knob,
+            x: 0,
+            y: 0,
+          },
+          at(placed.thumb, placed.track),
+        );
+      }
+      slider.refresh();
+    },
+    ready: Promise.all([
+      ...(art.icon === undefined ? [] : [art.icon.ready]),
+      parts.empty.ready,
+      parts.fill.ready,
+      parts.knob.ready,
+    ]).then((urls) => urls.flat()),
+    refuse: (reducedMotion: boolean) => refuse(REFUSAL_CUE, reducedMotion, element),
+  };
+}
+
 // A row's element and its parts, placed from the row's view as it stands.
 function rowPart(
   layer: UiLayer,
@@ -196,229 +442,16 @@ function rowPart(
   origin: () => Point,
   burst: (event: PointerEvent) => void,
 ) {
-  const doc = layer.element.ownerDocument;
   const view = () => current().rows[index] as SettingsRowView;
   const first = view();
-  if (first.kind === "button") {
-    return installPart(layer, input, panel, origin, burst, first);
+  switch (first.kind) {
+    case "button":
+      return installPart(layer, input, panel, origin, burst, first);
+    case "slider":
+      return sliderPart(layer, input, view, panel, origin, burst);
+    default:
+      return switchPart(layer, input, view, panel, origin, burst);
   }
-  const element = doc.createElement("div");
-  element.className = "adw-row";
-  element.tabIndex = -1;
-  element.setAttribute("aria-label", first.label);
-  const description = doc.createElement("span");
-  description.className = "visually-hidden";
-  described += 1;
-  description.id = `adw-settings-row-${described}`;
-  element.setAttribute("aria-describedby", description.id);
-  element.setAttribute("role", first.kind);
-  // The row's face carries its focus and press fills; a slider row's is clear until focused.
-  const face = doc.createElement("span");
-  face.className = "adw-framed adw-row-face";
-  const icon = first.icon === undefined ? undefined : sheetArt(doc, input, first.icon.key);
-  const texts = first.texts.map(() => textElement(doc, input.fonts));
-  const parts = texts.map(({ element: text }) => text);
-  if (icon !== undefined) {
-    parts.unshift(icon.element);
-  }
-  const control =
-    first.switch === undefined ? undefined : sheetArt(doc, input, first.switch.art.key);
-  const slider =
-    first.slider === undefined
-      ? undefined
-      : {
-          empty: sheetThreeSlice(doc, input, first.slider.empty.key, SLICES["ui-slider"]),
-          filled: sheetThreeSlice(doc, input, first.slider.filled.key, SLICES["ui-slider"]),
-          knob: sheetArt(doc, input, first.slider.knob.key),
-        };
-  element.append(
-    face,
-    ...parts,
-    ...(control === undefined ? [] : [control.element]),
-    ...(slider === undefined
-      ? []
-      : [slider.empty.element, slider.filled.element, slider.knob.element]),
-    description,
-  );
-
-  const place = (scale: DomScale) => {
-    const row = view();
-    const { rect } = row;
-    placeBox(scale, origin(), element, rect);
-    face.style.backgroundColor = row.face === undefined ? "" : cssHex(row.face.colour);
-    placeBox(scale, rect, face, row.face?.rect ?? rect);
-    element.toggleAttribute("data-ui-pressed", row.dip > 0);
-    if (row.icon !== undefined) {
-      icon?.place(scale, rect, row.icon);
-    }
-    row.texts.forEach((text, i) => texts[i]?.place(scale, rect, text));
-    if (control !== undefined && row.switch !== undefined) {
-      control.place(scale, rect, row.switch.art);
-      element.setAttribute("aria-checked", String(row.switch.on));
-    }
-    if (slider !== undefined && row.slider !== undefined) {
-      // The track whole art pixels long from its snapped start, and the knob whole art pixels
-      // along it and over it, its travel the track less the knob's art, so it meets both ends.
-      const { empty, filled, knob, travel } = row.slider;
-      const pixel = artPixel(scale);
-      const start = gridX(scale, empty.x) - gridX(scale, rect.x);
-      const track = wholeArtPixels(
-        scale,
-        gridX(scale, empty.x + empty.width) - gridX(scale, empty.x),
-      );
-      const knobWidth = travel.knobWidth * pixel;
-      const along = wholeArtPixels(scale, travel.along * (track - knobWidth));
-      slider.empty.place(scale, rect, empty, track);
-      slider.filled.place(scale, rect, filled, along + knobWidth);
-      slider.knob.place(scale, rect, knob, {
-        left: start + along,
-        top: gridY(scale, empty.y) - gridY(scale, rect.y) + (knob.y - empty.y) * pixel,
-      });
-      element.setAttribute("aria-valuemin", "0");
-      element.setAttribute("aria-valuemax", "100");
-      element.setAttribute("aria-valuenow", String(row.slider.percent));
-      element.setAttribute("aria-valuetext", row.description);
-      element.setAttribute("aria-disabled", String(row.slider.disabled));
-    }
-    description.textContent = row.description;
-  };
-
-  // A press on the row: a switch or install row's, followed until it lifts, or a drag along a
-  // volume row.
-  const at = (event: PointerEvent) => input.toGame({ x: event.clientX, y: event.clientY });
-  element.addEventListener("mousedown", (event) => event.preventDefault());
-  let pressing: SettingsTarget | undefined;
-  let sliding = false;
-  let touch: { start: Point; key?: VolumeKey; vertical: boolean } | undefined;
-  const slop = read(gameData.tuning, "pixels", "tapMaxDistance");
-  const cancel = () => {
-    const wasPressing = pressing !== undefined;
-    const wasSliding = sliding;
-    pressing = undefined;
-    sliding = false;
-    touch = undefined;
-    if (wasPressing) {
-      input.press.up(undefined, true);
-    }
-    if (wasSliding) {
-      input.slide.end(true);
-    }
-  };
-  if (view().kind !== "slider") {
-    bindGameAction(
-      {
-        activate: () => {
-          const target = rowTarget(view());
-          if (target !== undefined) {
-            input.press.activate(target);
-          }
-        },
-        available: () => panel().accepts() && rowTarget(view()) !== undefined,
-        pointer: "release",
-      },
-      element,
-    );
-  }
-  const stopInput = guardNativeInput(
-    {
-      cancel,
-      down: (event) => {
-        burst(event);
-        if (element.hasPointerCapture(event.pointerId)) {
-          element.releasePointerCapture(event.pointerId);
-        }
-        touch = event.pointerType === "touch" ? { start: at(event), vertical: false } : undefined;
-        const target = rowTarget(view());
-        if (target !== undefined) {
-          pressing = target;
-          input.press.down(target);
-        } else if (view().kind === "slider") {
-          const { key } = view();
-          if (key === "musicVolume" || key === "sfxVolume") {
-            if (touch !== undefined) {
-              touch.key = key;
-            } else {
-              sliding = true;
-              input.slide.start(key, at(event).x);
-            }
-          }
-        }
-      },
-      gate: { accepts: () => panel().accepts(), capture: () => panel().capture() },
-      holdUnit: () => layer.scale().unit,
-      move: (event) => {
-        if (touch !== undefined && !sliding && !touch.vertical) {
-          const point = at(event);
-          const dx = Math.abs(point.x - touch.start.x);
-          const dy = Math.abs(point.y - touch.start.y);
-          if (Math.max(dx, dy) > slop) {
-            if (dy >= dx) {
-              touch.vertical = true;
-              if (pressing !== undefined) {
-                pressing = undefined;
-                input.press.up(undefined, true);
-              }
-            } else if (touch.key !== undefined) {
-              sliding = true;
-              input.slide.start(touch.key, point.x);
-            }
-          }
-        }
-        if (sliding) {
-          input.slide.move(at(event).x);
-        }
-      },
-      subscribe: layer.input.subscribe,
-      up: (event, cancelled) => {
-        if (touch !== undefined && !sliding) {
-          const point = at(event);
-          const dx = Math.abs(point.x - touch.start.x);
-          const dy = Math.abs(point.y - touch.start.y);
-          if (dy > slop && dy >= dx) {
-            touch.vertical = true;
-          }
-          if (touch.vertical && pressing !== undefined) {
-            pressing = undefined;
-            input.press.up(undefined, true);
-          }
-        }
-        const target = pressing;
-        if (!cancelled && touch?.key !== undefined && !touch.vertical && !sliding) {
-          sliding = true;
-          input.slide.start(touch.key, at(event).x);
-        }
-        const wasSliding = sliding;
-        touch = undefined;
-        pressing = undefined;
-        sliding = false;
-        if (target !== undefined) {
-          const over = (event.target as Element | null)?.closest?.(".adw-row");
-          input.press.up(!cancelled && over === element ? target : undefined, cancelled);
-        }
-        if (wasSliding) {
-          input.slide.end(cancelled);
-        }
-      },
-    },
-    element,
-  );
-
-  return {
-    destroy: stopInput,
-    element,
-    place,
-    ready: Promise.all([
-      ...(icon === undefined ? [] : [icon.ready]),
-      ...(control === undefined ? [] : [control.ready]),
-      ...(slider === undefined ? [] : [slider.empty.ready, slider.filled.ready, slider.knob.ready]),
-    ]).then((urls) => urls.flat()),
-    refuse: (reducedMotion: boolean) =>
-      refuse(
-        reducedMotion,
-        element,
-        texts.map(({ element: text }) => text),
-      ),
-  };
 }
 
 // The install steps' card: its title and close control, the glyph of the button the steps start

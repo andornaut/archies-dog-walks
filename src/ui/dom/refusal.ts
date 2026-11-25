@@ -1,4 +1,17 @@
+import type { RefusalCue } from "@andornaut/game-kit/runtime/web/ui/dom/refusalCue";
+
 import { refusalRed, REFUSE, REFUSE_SHAKES, refuseShakeSteps } from "../refuse.ts";
+
+// The kit's refusal cue (refusalCue) for a kit control, in REFUSE's times: while it shakes, a
+// row steps through the canvas's whole-art-pixel offsets (adw-shake), and its red phases fill
+// its face dark red.
+export const REFUSAL_CUE: RefusalCue = {
+  shake: REFUSE.shake,
+  shakeMs: REFUSE.shakeMs,
+  shakeShape: "yoyo",
+  stepMs: REFUSE.flashMs,
+  steps: REFUSE.flashes,
+};
 
 // The refusal cue on a DOM control that plays it on the page's own clock. adw-refusing shakes the
 // control right and back in whole art pixels (--adw-slice-1) at the canvas's offsets and times
@@ -20,8 +33,11 @@ export const REFUSAL_RED = "data-refusal-red";
 export const REFUSAL_STYLE = `
 .${MOVING}{animation:adw-shake ${2 * REFUSE.shakeMs}ms step-end ${REFUSE_SHAKES}}
 @keyframes adw-shake{${SHAKE_KEYFRAMES}}
-.adw-row[${REFUSAL_RED}]>.adw-row-face{background-color:var(--adw-darkRed)!important}
-.adw-row[${REFUSAL_RED}]:is(*,[data-ui-pressed],:focus-visible) .adw-text{color:var(--adw-white)!important}
+.adw-row:is([${REFUSAL_RED}],[data-ui-refusal-red])>.adw-row-face{background-color:var(--adw-darkRed)!important}
+.adw-row:is([${REFUSAL_RED}],[data-ui-refusal-red]):is(*,[data-ui-pressed],:focus-visible) .adw-text{
+  color:var(--adw-white)!important}
+.adw-row[data-ui-refusal-shake]{translate:none;transition:none;
+  animation:adw-shake ${2 * REFUSE.shakeMs}ms step-end ${REFUSE_SHAKES}}
 `;
 
 // Controls whose refusal is under way.

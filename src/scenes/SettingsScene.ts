@@ -22,7 +22,6 @@ import {
   type SettingsRowShape,
   setVolumeSteps,
   type VolumeKey,
-  volumeStepAt,
   volumeStepForKey,
   volumeSteps,
 } from "../home/settings.ts";
@@ -74,7 +73,7 @@ import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { addHtmlSettings } from "./settingsHtml.ts";
 import { canvasSettingsMeasure } from "./settingsMeasure.ts";
 import { soundboardOf } from "./soundboard.ts";
-import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress.ts";
+import { listenTargetPress, sameByValue } from "./targetPress.ts";
 import { BODY_TEXT } from "./uiKit.ts";
 
 // Emitted on game.events when settings close.
@@ -149,14 +148,13 @@ export interface SettingsData extends OverlayData {
 // Install, reachable from the home screen and the pause menu. The card draws over the screen it
 // opens from, its dim part ramp-dimmed as under the pause menu. Every change is saved and applied
 // at once. The build's label sits under the rows. A switch row is normal and shows its setting in
-// its switch; a tap dips the row, then flips it. A tap anywhere on the Install row, its Get button
-// included, dips it, then opens the browser's install prompt or, where the browser holds none, a
+// its switch; it dips while held and flips as the tap lifts. A tap anywhere on the Install row,
+// its Get button included, opens the browser's install prompt or, where the browser holds none, a
 // card with that browser's own install steps over the settings. Up and Down move the keyboard's
 // focus through the rows and the close control; Enter or Space presses the focused row, and on a
-// slider the left and right keys, Home and End set the volume.
+// slider the left and right keys, Home and End (the kit slider's) and A/D and H/L set the volume.
 export class SettingsScene extends Scene {
   private dim: Rect = SCREEN_LAYOUT.screen;
-  private dragging: VolumeKey | undefined;
   private focus: Focus | null = null;
   // No rows until create measures their notes, so no font is read.
   private layout: SettingsLayout = settingsLayout(NO_FONTS, SCREEN_CONFIG, []);
@@ -167,7 +165,6 @@ export class SettingsScene extends Scene {
   private steps: OpenSteps | undefined;
   // The scene owns settings and gestures; the native view owns their rendering.
   private html: DomSettings | undefined;
-  private presses: TargetPressListener<Target> | undefined;
 
   constructor() {
     super(SCENE_KEYS.settings);
@@ -182,7 +179,6 @@ export class SettingsScene extends Scene {
     this.dim = overlayRegion(data.region);
     this.rows = settingsRows(offersInstall(installState()));
     this.layout = settingsLayout(settingsFonts(this), SCREEN_CONFIG, rowShapes(this, this.rows));
-    this.dragging = undefined;
     this.focus = null;
     this.pressed = undefined;
     this.steps = undefined;
@@ -194,13 +190,15 @@ export class SettingsScene extends Scene {
       },
       press: {
         activate: (target) => this.tap(target),
-        down: (target) => this.presses?.down(target),
-        up: (released, cancelled) => this.presses?.up(released, cancelled),
+        hold: (target) => {
+          this.pressed = target;
+          this.render();
+        },
       },
+      reducedMotion: () => currentSettings(this).reducedMotion,
       slide: {
-        end: (cancelled) => this.slideEnd(cancelled),
-        move: (x) => this.slideTo(x),
-        start: (key, x) => this.slideFrom(key, x),
+        change: (key, steps) => this.change(setVolumeSteps(key, steps, currentSettings(this))),
+        commit: (key) => this.sample(key),
       },
       view: this.view(),
     });
@@ -217,7 +215,7 @@ export class SettingsScene extends Scene {
     // The close control, the switch rows, which dip before they act, the install row, which
     // dips as it opens the browser's prompt or the steps' card, and the steps' card's close
     // control.
-    this.presses = listenTargetPress<Target>(this, {
+    listenTargetPress<Target>(this, {
       dipMs: (target) =>
         target.kind === "switch" || target.kind === "install" ? FEEDBACK.pressDipMs : 0,
       onPressed: (target) => {
@@ -274,10 +272,7 @@ export class SettingsScene extends Scene {
         }
         if (!settings.muted && steps !== current) {
           this.change(setVolumeSteps(focusedRow.key, steps, settings));
-          // A sample at the new level, as after a drag.
-          if (focusedRow.key === "sfxVolume") {
-            soundboardOf(this).play("tip");
-          }
+          this.sample(focusedRow.key);
         }
         return;
       }
@@ -422,42 +417,11 @@ export class SettingsScene extends Scene {
     this.change({ ...settings, [key]: !settings[key] });
   }
 
-  // A press on a slider's row drags it, or, muted, is refused.
-  private slideFrom(key: VolumeKey, x: number): void {
-    if (this.steps !== undefined) {
-      return;
-    }
-    if (currentSettings(this).muted) {
-      this.refuseSlider(key);
-      return;
-    }
-    this.dragging = key;
-    this.slideTo(x);
-    // The knob shows pressed while held.
-    this.render();
-  }
-
-  private slideEnd(cancelled: boolean): void {
-    if (this.dragging === undefined) {
-      return;
-    }
-    // A sample at the new level, so the player hears what they picked.
-    if (!cancelled && this.dragging === "sfxVolume") {
+  // A sample at a changed effects volume, after a key or as a drag or tap ends, so the player
+  // hears what they picked.
+  private sample(key: VolumeKey): void {
+    if (key === "sfxVolume") {
       soundboardOf(this).play("tip");
-    }
-    this.dragging = undefined;
-    this.render();
-  }
-
-  private slideTo(x: number): void {
-    const key = this.dragging;
-    if (key === undefined) {
-      return;
-    }
-    const settings = currentSettings(this);
-    const steps = volumeStepAt(this.layout.track, x);
-    if (steps !== volumeSteps(settings[key])) {
-      this.change(setVolumeSteps(key, steps, settings));
     }
   }
 
@@ -495,7 +459,6 @@ export class SettingsScene extends Scene {
       },
       {
         dim: this.dim,
-        dragging: this.dragging,
         focus: this.focus?.row ?? null,
         pressed: this.pressed,
         settings: currentSettings(this),
