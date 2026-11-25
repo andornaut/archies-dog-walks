@@ -1,8 +1,19 @@
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
+
 import type { GameData, GearId } from "../data/types.ts";
 import type { PanelText } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";
 
-// Missing gear art keeps the item's authored initials at the picture's centre.
+// A gear item's authored initials, shown in place of its missing art, their ink centred on the
+// picture they stand in for (placeBackedText).
+export interface GearPictureFallback {
+  readonly line: PanelText;
+  readonly picture: Rect;
+}
+
+// art: a gear icon's side at scale 1.
+const GEAR_ICON_SIDE = 32;
+
 export function gearPictureFallback(
   data: Pick<GameData, "shopGear">,
   picture: {
@@ -11,18 +22,22 @@ export function gearPictureFallback(
     readonly x: number;
     readonly y: number;
   },
-): PanelText {
+): GearPictureFallback {
+  const side = GEAR_ICON_SIDE * picture.scale;
   return {
-    capTop: picture.y + 11 * picture.scale,
-    centre: "ink",
-    centreX: picture.x + 16 * picture.scale,
-    colour: PALETTE.cream,
-    font: "title",
-    line: 0,
-    scale: 1,
-    text: data.shopGear[picture.gear].name
-      .split(" ")
-      .map((word) => word.charAt(0))
-      .join(""),
+    line: {
+      capTop: picture.y,
+      centre: "ink",
+      centreX: picture.x + side / 2,
+      colour: PALETTE.cream,
+      font: "title",
+      line: 0,
+      scale: 1,
+      text: data.shopGear[picture.gear].name
+        .split(" ")
+        .map((word) => word.charAt(0))
+        .join(""),
+    },
+    picture: { height: side, width: side, x: picture.x, y: picture.y },
   };
 }

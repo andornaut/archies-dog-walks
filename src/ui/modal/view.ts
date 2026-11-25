@@ -2,9 +2,10 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { HOME_SCREEN } from "../../data/layout.ts";
 import { barTitleLeft, barTitleRoom } from "../barTitle.ts";
+import { type LabelInk, raisedLabelCapTop } from "../buttonGeometry.ts";
 import { closeControl } from "../closeControl.ts";
 import { PALETTE } from "../palette.ts";
-import { BUTTON_COLOURS, BUTTON_LIP_PX } from "../selection.ts";
+import { BUTTON_COLOURS } from "../selection.ts";
 import { MODAL_TITLE_SCALE, TEXT_SCALE } from "../textFit.ts";
 import { arrangePanelActions } from "./actionGroup.ts";
 import { modalTitleLayout } from "./layout.ts";
@@ -54,23 +55,39 @@ export function panelTitle(
   });
 }
 
-// A button with text as its label, primary or normal, its hit its face: the label's line
-// centred on the face over the lip, a font line, its capitals capTop rows into the line.
+// The ink block of a title-font label's lines at TEXT_SCALE, a font line apart, from the first
+// line's capitals' top: the glyphs' visible rows, punctuation included.
+export function titleLabelInk(
+  measure: Pick<PanelMeasure, "title" | "titleInk">,
+  lines: readonly string[],
+): LabelInk {
+  const pitch = measure.title.lineHeight * TEXT_SCALE;
+  const inks = lines.map((line, i) => {
+    const ink = measure.titleInk(line);
+    return {
+      bottom: i * pitch + (ink.bottom * TEXT_SCALE) / MODAL_TITLE_SCALE,
+      top: i * pitch + (ink.top * TEXT_SCALE) / MODAL_TITLE_SCALE,
+    };
+  });
+  const top = Math.min(...inks.map((ink) => ink.top));
+  return { rows: Math.max(...inks.map((ink) => ink.bottom)) - top, top };
+}
+
+// A button with text as its label, primary or normal, its hit its face: the label's ink centred
+// across the face and down its flat fill (raisedLabelCapTop).
 export function panelButton(
-  measure: Pick<PanelMeasure, "title">,
+  measure: Pick<PanelMeasure, "title" | "titleInk">,
   rect: Rect,
   primary: boolean,
   text: string,
 ): PanelButton {
-  const { capTop, lineHeight } = measure.title;
-  const lineToCaps = (capTop - lineHeight / 2) * TEXT_SCALE;
   return {
     hit: rect,
     label: text,
     primary,
     rect,
     text: {
-      capTop: Math.round(rect.y + (rect.height - BUTTON_LIP_PX) / 2 + lineToCaps),
+      capTop: raisedLabelCapTop(rect, titleLabelInk(measure, [text])),
       centre: "ink",
       centreX: rect.x + rect.width / 2,
       colour: PALETTE[BUTTON_COLOURS[primary ? "primary" : "normal"].label],

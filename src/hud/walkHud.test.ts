@@ -31,6 +31,7 @@ import {
   debuffBarRects,
   debuffFillWidth,
   DOG_CARD,
+  dogCardEmptyFace,
   EFFECT_WELLS,
   type ExplainShown,
   type ExplainTarget,
@@ -438,10 +439,10 @@ describe("the dog cards", () => {
     expect(rectsOverlap(area, ownerPhoto)).toBe(false);
   });
 
-  it("centres Empty's capitals in the card's outline", () => {
-    const { empty, size } = DOG_CARD;
-    expect(empty.x).toBe(size.width / 2);
-    expect(empty.y + Math.floor(TITLE_CAP_ROWS / 2)).toBe(Math.floor(size.height / 2));
+  it("puts FIRED's plate and Empty's face inside the card", () => {
+    const { firedPlate } = DOG_CARD;
+    expect(inside(firedPlate, card)).toBe(true);
+    expect(inside(dogCardEmptyFace(card), card)).toBe(true);
   });
 
   it("keeps LEAD and the owner's photo inside the card, the photo right of the dog's", () => {
@@ -458,14 +459,14 @@ describe("the dog cards", () => {
     });
   });
 
-  it("centres FIRED in the dog's photo, clear of the owner's", () => {
-    const width = titleWidth(gameData.runText.fired);
-    const { dogFace, fired } = DOG_CARD;
-    const left = fired.x - Math.floor(width / 2);
-    const text = { height: TITLE_CAP_ROWS, width, x: left, y: fired.y };
+  it("puts FIRED's plate in the dog's photo, wide enough for FIRED, clear of the owner's", () => {
+    const { dogFace, firedPlate } = DOG_CARD;
     const photo = { ...frameSize(dogFaceKey(gameData, "kilo")), ...dogFace };
-    expect(inside(text, photo)).toBe(true);
-    expect(rectsOverlap(text, ownerPhoto)).toBe(false);
+    expect(inside(firedPlate, photo)).toBe(true);
+    expect(rectsOverlap(firedPlate, ownerPhoto)).toBe(false);
+    const fired = fontInk("font-title", { scale: 1 }, gameData.runText.fired);
+    expect(fired.right - fired.left).toBeLessThanOrEqual(firedPlate.width);
+    expect(TITLE_CAP_ROWS).toBeLessThanOrEqual(firedPlate.height);
   });
 
   it.each(owners)("centres %s's owner name %s below the portraits", (_dog, name) => {

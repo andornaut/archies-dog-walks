@@ -191,6 +191,7 @@ export function createHudChrome(
             native: { height: 13, width: 13 },
             slices: SLICES["ui-zone-pill"],
           });
+          // Each text's ink is centred on its part of the pill (backing).
           group.text({
             anchor: "ink",
             backing: {
@@ -199,7 +200,7 @@ export function createHudChrome(
               x: layout.nameLeft,
               y: layout.pill.y,
             },
-            capTop: layout.nameCapsY,
+            capTop: layout.pill.y,
             colour: PALETTE.cream,
             font: "body",
             lines: [name],
@@ -214,7 +215,7 @@ export function createHudChrome(
               x: layout.countRight - ink.count.width,
               y: layout.pill.y,
             },
-            capTop: layout.countCapsY,
+            capTop: layout.pill.y,
             colour: PALETTE.lightGrey,
             font: "body",
             lines: [count],

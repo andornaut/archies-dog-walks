@@ -121,14 +121,26 @@ export function choiceCardSurface(
     scale: number,
     colour: number = bodyColour,
     align: "centre" | "left" = "centre",
-  ) => texts.push({ align, capTop, colour, font, lines, scale, x });
-  add(
-    "body",
-    [label],
-    rect.x + rect.width / 2,
-    rect.y + (large ? CARD.large.band.y + 5 : CARD.band.y + 3),
-    1,
-  );
+    backing?: Rect,
+  ) =>
+    texts.push({
+      align,
+      capTop,
+      colour,
+      font,
+      lines,
+      scale,
+      x,
+      ...(backing === undefined ? {} : { backing }),
+    });
+  // The label's ink is centred on the band's margin above the picture.
+  const band = large ? CARD.large.band : CARD.band;
+  add("body", [label], rect.x + rect.width / 2, rect.y + band.y, 1, bodyColour, "centre", {
+    height: band.height,
+    width: band.room,
+    x: rect.x + (rect.width - band.room) / 2,
+    y: rect.y + band.y,
+  });
   if (large) {
     const x = rect.x + CARD.large.body.x;
     const top = rect.y + CARD.large.body.y;
@@ -207,13 +219,22 @@ export function choiceCardSurface(
       options.at(-1) ??
       "";
     plaqueText = marks.plaque === null ? texts.length : undefined;
+    // The text's ink is centred on the plaque's face, right of the marker where there is one.
+    const left = edge ?? plaque.x;
     add(
       "title",
       [selected],
       centre,
-      plaque.y + (large ? 9 : 4),
+      plaque.y + plaque.face.y,
       1,
       marks.plaque !== null ? PALETTE.forest : grey ? PALETTE[GREYED.plateText] : PALETTE.plum,
+      "centre",
+      {
+        height: plaque.face.height,
+        width: plaque.x + plaque.width - left,
+        x: left,
+        y: plaque.y + plaque.face.y,
+      },
     );
   }
   const widths = marks.charms.map((charm) =>

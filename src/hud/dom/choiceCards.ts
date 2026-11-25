@@ -22,6 +22,7 @@ import { createTextLine, placeBox, placeText, setBox } from "../../ui/dom/pixelL
 import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridRect } from "../../ui/domScale.ts";
+import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { panelButton } from "../../ui/modal/view.ts";
 import { cssHex, PALETTE } from "../../ui/palette.ts";
 import {
@@ -207,10 +208,10 @@ function surfaceParts(
     const band = doc.createElement("span");
     band.className = "adw-art adw-choice-press-band";
     band.setAttribute("aria-hidden", "true");
-    const { height, room, y } = CARD_LAYOUT.band;
+    const { press, room, y } = CARD_LAYOUT.band;
     all.push(
       gridBoxPart(ORIGIN, band, {
-        height,
+        height: press,
         width: room,
         x: rect.x + (rect.width - room) / 2,
         y: rect.y + y,
@@ -483,7 +484,10 @@ export function showChoiceCards(
           ? []
           : [
               panelButton(
-                { title: fontMetrics(input.fonts.title) },
+                {
+                  title: fontMetrics(input.fonts.title),
+                  titleInk: (line) => modalTitleInk(input.fonts.title, line),
+                },
                 homeRect,
                 false,
                 input.data.runText.homeQuestion.headHome,

@@ -6,18 +6,17 @@ import {
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { HIT_RULE } from "@andornaut/game-kit/runtime/ui/hitAreas";
 
-import { BUTTON_FACE_EDGE, HOME_SCREEN, MIN_PRESS } from "../data/layout.ts";
+import { HOME_SCREEN, MIN_PRESS } from "../data/layout.ts";
 import { SCREEN_CONFIG, SCREEN_LAYOUT } from "../data/screen.ts";
 import type { DogId } from "../data/types.ts";
 import { ownerPhotoRect, WALK_BAR } from "../hud/walkHud.ts";
 import type { PackPlacement } from "../layout/packFormation.ts";
-import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
+import { BUTTON_SIZE, raisedLabelCapTop } from "../ui/buttonGeometry.ts";
 import type { GridSpec } from "../ui/grid.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { MARK_OFFSET } from "../ui/mark.ts";
 import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 import { hasPill, PILL_IMAGE_GAP, pillDropUnderInk, pillRiseOverCaps } from "../ui/namePills.ts";
-import { BUTTON_LIP_PX } from "../ui/selection.ts";
 import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import { TOP_BAR_FACE, TOP_BAR_HEIGHT, TOP_BAR_MID, TOP_BAR_WELL } from "../ui/topBarTrim.ts";
 import { topSectionLayout } from "../ui/topSection.ts";
@@ -387,20 +386,13 @@ export const HOME_LAYOUT = {
   },
   startButton: START_BUTTON,
   startGap: START_GAP,
-  // Start walk's label caps at readyY on its raised face, its ink centred down the flat face
-  // between the outline and lit row over it and the lip under it, any odd row left under them;
-  // the label sinks with the face.
+  // Start walk's label caps at readyY on its raised face (raisedLabelCapTop); the label sinks
+  // with the face.
   startLabel: {
-    readyY:
-      BUTTON_FACE_EDGE.top +
-      Math.floor(
-        (START_BUTTON.height -
-          BUTTON_FACE_EDGE.top -
-          BUTTON_LIP_PX -
-          BUTTON_FACE_EDGE.bottom -
-          TITLE_CAP_ROWS * HOME.startLabel.scale) /
-          2,
-      ),
+    readyY: raisedLabelCapTop(
+      { height: START_BUTTON.height, y: 0 },
+      { rows: TITLE_CAP_ROWS * HOME.startLabel.scale, top: 0 },
+    ),
     scale: HOME.startLabel.scale,
   },
   // The pressed face's label while the walk waits for its art: the ready label's, at its size
@@ -681,11 +673,10 @@ export function slotSignText(body: FontMetrics): {
   return { cream, headCapY, priceCapY: headCapY + linePitch, x: cream.x + cream.width / 2 };
 }
 
-// The update notice's compact button label's capitals, centred on the raised face above its lip
-// (updateModalLayout's button).
+// The update notice's compact button label's capitals on its raised face (raisedLabelCapTop),
+// as panelButton places them (updateModalLayout's button).
 export function updateModalText(title: FontMetrics, button: Rect): { capY: number } {
-  const caps = title.capHeight * 2;
-  return { capY: button.y + Math.floor((button.height - BUTTON_LIP_PX - caps) / 2) };
+  return { capY: raisedLabelCapTop(button, { rows: title.capHeight * TEXT_SCALE, top: 0 }) };
 }
 
 // The notice contains its title and actions, Cancel then Update now, without an empty body row.

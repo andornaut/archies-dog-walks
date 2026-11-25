@@ -122,13 +122,11 @@
         "x": 5,
         "y": 17
       },
-      "empty": {
-        "x": 60,
-        "y": 33
-      },
-      "fired": {
-        "x": 21,
-        "y": 30
+      "firedPlate": {
+        "height": 7,
+        "width": 26,
+        "x": 8,
+        "y": 29
       },
       "hearts": {
         "perRow": 3,
@@ -1178,13 +1176,18 @@
         "y": 16
       },
       "badge": {
+        "face": {
+          "height": 8,
+          "y": 2
+        },
         "height": 13,
         "width": 71,
         "x": 20,
         "y": 136
       },
       "band": {
-        "height": 11,
+        "height": 13,
+        "press": 11,
         "room": 106,
         "y": 2
       },
@@ -1226,13 +1229,17 @@
           "y": 32
         },
         "badge": {
+          "face": {
+            "height": 16,
+            "y": 4
+          },
           "height": 26,
           "width": 142,
           "x": 12,
           "y": 242
         },
         "band": {
-          "height": 18,
+          "height": 26,
           "room": 154,
           "y": 4
         },

@@ -228,8 +228,9 @@ function writeTextPlace(
   }
 }
 
-// A label's or note's lines centred inside the backing actually drawn on this device. Text and
-// frames round their pixels independently, so centring only their logical coordinates drifts.
+// A label's or note's lines, their measured ink centred inside the backing actually drawn on this
+// device in whole art pixels, any odd row under the ink (centredInkOffsets). Text and frames round
+// their pixels independently, so centring only their logical coordinates drifts.
 export function backedTextPlaces(
   bitmap: BitmapFont,
   scale: DomScale,
@@ -269,6 +270,7 @@ export function backedTextPlaces(
       y: frame.top - gridY(scale, origin.y),
     },
     ink,
+    artPixel(scale),
   );
   return placed.map((place, i) => ({
     ...place,

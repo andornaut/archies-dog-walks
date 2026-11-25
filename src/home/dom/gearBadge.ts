@@ -3,10 +3,10 @@ import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { type DomArtSource, imageArt } from "../../ui/dom/artElements.ts";
 import { colourBox } from "../../ui/dom/parts.ts";
-import { createTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
+import { createTextLine, placeBackedText, setBox } from "../../ui/dom/pixelLine.ts";
 import { artPixel, type DomScale, frameRect } from "../../ui/domScale.ts";
-import type { PanelText } from "../../ui/modal/types.ts";
 import { PALETTE } from "../../ui/palette.ts";
+import type { GearPictureFallback } from "../gearPictureView.ts";
 export function createGearBadge(
   doc: Document,
   source: DomArtSource & {
@@ -18,7 +18,7 @@ export function createGearBadge(
   },
   title: BitmapFont,
   view: {
-    readonly fallback: PanelText;
+    readonly fallback: GearPictureFallback;
     readonly rect: Rect;
     readonly key: string;
     readonly scale: number;
@@ -36,7 +36,7 @@ export function createGearBadge(
 } {
   const element = colourBox(doc, PALETTE.plum, "span");
   const art = source.hasArt(view.key) ? imageArt(doc, source, view.key) : undefined;
-  const fallback = art === undefined ? createTextLine(doc, view.fallback) : undefined;
+  const fallback = art === undefined ? createTextLine(doc, view.fallback.line) : undefined;
   if (art !== undefined) {
     element.append(art.element);
   }
@@ -63,7 +63,9 @@ export function createGearBadge(
       });
       const size = source.imageSize(view.key);
       if (fallback !== undefined) {
-        placeText(title, scale, view.rect, fallback, view.fallback);
+        placeBackedText(title, scale, view.rect, view.fallback.picture, [
+          { element: fallback, line: view.fallback.line },
+        ]);
       }
       art?.place(scale, view.rect, {
         height: size.height * view.scale,

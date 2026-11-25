@@ -8,6 +8,7 @@ import { gameData } from "../../data/index.ts";
 import { SLICES } from "../../data/layout.ts";
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
 import { fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
+import { expectInkCentredAcross, expectInkCentredDown } from "../../testing/inkCentring.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
 import { newPlayerSave, testContext } from "../../testing/saves.ts";
 import { setRampDimmed } from "../../ui/dom/rampDim.ts";
@@ -224,9 +225,11 @@ it("aligns picker band labels by visible ink at fractional fits", async () => {
       for (const label of bandLabels) {
         const rows = fontInkRows("font-title", { scale: pixel }, label.textContent);
         const capTop = Number.parseFloat(label.style.top!) + fontMetrics(title).capTop * pixel;
-        expect(
-          Math.abs(capTop + (rows.top + rows.bottom) / 2 - (top + boundary) / 2),
-        ).toBeLessThanOrEqual(0.5);
+        expectInkCentredDown(
+          capTop + (rows.top + rows.bottom) / 2,
+          (top + boundary) / 2,
+          artPixel(scale),
+        );
       }
       if (section.id === "dogs") {
         const heartLeft = Number.parseFloat(heart.style.left!);
@@ -333,18 +336,18 @@ it("projects the slot sign frame without changing hit or pressed-tag geometry", 
           right: left + columns.right,
           top: cap + rows.top,
         };
-        expect(
-          Math.abs((ink.left + ink.right) / 2 - backing.left - backing.width / 2),
-        ).toBeLessThanOrEqual(0.500001);
+        expectInkCentredAcross(
+          (ink.left + ink.right) / 2,
+          backing.left + backing.width / 2,
+          artPixel(scale),
+        );
         expect(ink.left).toBeGreaterThanOrEqual(backing.left);
         expect(ink.right).toBeLessThanOrEqual(backing.left + backing.width);
         return ink;
       });
       const top = Math.min(...bounds.map((ink) => ink.top));
       const bottom = Math.max(...bounds.map((ink) => ink.bottom));
-      expect(Math.abs((top + bottom) / 2 - backing.top - backing.height / 2)).toBeLessThanOrEqual(
-        0.500001,
-      );
+      expectInkCentredDown((top + bottom) / 2, backing.top + backing.height / 2, artPixel(scale));
       expect(top).toBeGreaterThanOrEqual(backing.top);
       expect(bottom).toBeLessThanOrEqual(backing.top + backing.height);
       expect(view.element.style.width).toBe(`${hit.width}px`);

@@ -14,9 +14,17 @@ import {
 import { shopPageView } from "../../home/shopPageView.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
+import { expectInkCentredDown } from "../../testing/inkCentring.ts";
 import { newPlayerSave } from "../../testing/saves.ts";
 import { guardNativeInput } from "../../ui/dom/modalLifecycle.ts";
-import { type DomScale, domScale, fontPixel, gridRect, gridX } from "../../ui/domScale.ts";
+import {
+  artPixel,
+  type DomScale,
+  domScale,
+  fontPixel,
+  gridRect,
+  gridX,
+} from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { type ShopScreenInput, type ShopScreenView, showShopScreen } from "./shopScreen.ts";
@@ -424,9 +432,11 @@ it("centres Shop heading ink in each strip from the rows' left edge to their rig
         }
         const cap = Number.parseFloat(label.style.top!) + fontFileMetrics(font).capTop * pixel;
         const rows = fontInkRows(font, { scale: pixel }, text);
-        expect(
-          Math.abs(cap + (rows.top + rows.bottom) / 2 - strip.top - strip.height / 2),
-        ).toBeLessThanOrEqual(0.5);
+        expectInkCentredDown(
+          cap + (rows.top + rows.bottom) / 2,
+          strip.top + strip.height / 2,
+          artPixel(scale),
+        );
       }
     }
     screen.destroy();

@@ -56,7 +56,10 @@ const BADGE_SCALE = 2;
 // shows a still frame of it.
 export function badgeCardView(
   data: Pick<GameData, "menuText">,
-  measure: Pick<DetailMeasure, "art" | "body" | "hasTag" | "inkWidth" | "title" | "wrapBody">,
+  measure: Pick<
+    DetailMeasure,
+    "art" | "body" | "hasTag" | "inkWidth" | "title" | "titleInk" | "wrapBody"
+  >,
   dim: Rect,
   card: { readonly badge: BadgeView; readonly burst: boolean; readonly reduced: boolean },
 ): BadgeCardView {

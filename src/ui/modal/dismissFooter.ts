@@ -9,7 +9,7 @@ import { panelButton } from "./view.ts";
 export const DISMISS_FOOTER_SPACE = MODAL.gap + BUTTON_SIZE.compact.height;
 
 export function dismissFooter(
-  measure: Pick<PanelMeasure, "inkWidth" | "title">,
+  measure: Pick<PanelMeasure, "inkWidth" | "title" | "titleInk">,
   options: { readonly label: string; readonly primary: boolean },
   panel: Rect,
 ): PanelButton {

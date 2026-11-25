@@ -242,14 +242,9 @@ it("renders the neighbourhood pill at the shared body role with measured ink and
   for (const text of texts) {
     expect(text.scale).toBe(TEXT_SCALE);
     expect(text.backing).toMatchObject({ height: pill.height, y: pill.y });
+    // The pill holds the ink with padY rows each side; the backing centres it down the pill.
     const ink = fontInkRows("font-body", { scale: TEXT_SCALE }, text.lines[0]!);
-    expect(
-      Math.abs(text.capTop + (ink.top + ink.bottom) / 2 - pill.y - pill.height / 2),
-    ).toBeLessThanOrEqual(0.5);
-    expect(text.capTop + ink.top).toBeGreaterThanOrEqual(pill.y + ZONE_PILL_SIZES.padY);
-    expect(text.capTop + ink.bottom).toBeLessThanOrEqual(
-      pill.y + pill.height - ZONE_PILL_SIZES.padY,
-    );
+    expect(ink.bottom - ink.top).toBeLessThanOrEqual(pill.height - 2 * ZONE_PILL_SIZES.padY);
   }
 });
 

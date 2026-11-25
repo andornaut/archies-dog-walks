@@ -18,11 +18,9 @@ export const ZONE_PILL = {
   textGap: PILL.textGap,
 } as const;
 
-// Where the pill and its texts go: the pill, the left edge of the name's ink, the column past
-// the count's ink, and the row their capitals start on.
+// Where the pill and its texts go: the pill, the left edge of the name's ink and the column past
+// the count's ink. Each text's ink is centred down the pill (its backing).
 interface ZonePillLayout {
-  readonly countCapsY: number;
-  readonly nameCapsY: number;
   readonly countRight: number;
   readonly nameLeft: number;
   readonly pill: Rect;
@@ -52,9 +50,7 @@ export function zonePillLayout(
     y: above.y + above.height + gap,
   };
   return {
-    countCapsY: pill.y + Math.round((height - countHeight) / 2) - ink.count.top,
     countRight: pill.x + width - pad,
-    nameCapsY: pill.y + Math.round((height - nameHeight) / 2) - ink.name.top,
     nameLeft: pill.x + pad,
     pill,
   };

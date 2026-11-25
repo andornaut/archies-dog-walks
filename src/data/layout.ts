@@ -228,10 +228,8 @@ export const DEBUFF_BAR = {
 export const DOG_CARD_PARTS = {
   // The dog's face's top-left.
   dogFace: { x: 5, y: 17 },
-  // "Empty"'s centre column and capitals' top.
-  empty: { x: 60, y: 33 },
-  // FIRED's centre column and capitals' top.
-  fired: { x: 21, y: 30 },
+  // The flat face of the red plate on a fired dog's empty photo, which FIRED is centred on.
+  firedPlate: { height: 7, width: 26, x: 8, y: 29 },
   // The hearts' rows: hearts to a row, their pitch, and the first heart's top-left.
   hearts: { perRow: 3, pitch: 9, x: 85, y: 26 },
   // The LEAD tag's top-left.
@@ -478,10 +476,12 @@ const CHOICE_CARD_GAP = 6;
 export const CHOICE_CARDS = {
   // art: card-frame's illustration window and its outline's rows.
   art: { height: 56, outline: 1, width: 75, x: 18, y: 16 },
-  // art: card-frame's plaque.
-  badge: { height: 13, width: 71, x: 20, y: 136 },
-  // art: card-frame's band: its height, its label's widest ink and its top.
-  band: { height: 11, room: 106, y: 2 },
+  // art: card-frame's plaque, and the rows of the card-cost face its text is centred on.
+  badge: { face: { height: 8, y: 2 }, height: 13, width: 71, x: 20, y: 136 },
+  // art: card-frame's band: the margin between the frame and the picture's outline, its top and
+  // height, which the label is centred on, the press fill's rows from its top, and its label's
+  // widest ink.
+  band: { height: 13, press: 11, room: 106, y: 2 },
   // The effect: its rows over the plaque, its width and left edge.
   effect: { plaqueGap: 1, width: 100, x: 6 },
   // art: ui-fires: its top ink's row, side and top-left.
@@ -493,8 +493,8 @@ export const CHOICE_CARDS = {
   // art: card-frame-large's parts, and the rows round its body's text.
   large: {
     art: { outline: 2, x: 8, y: 32 },
-    badge: { height: 26, width: 142, x: 12, y: 242 },
-    band: { height: 18, room: 154, y: 4 },
+    badge: { face: { height: 16, y: 4 }, height: 26, width: 142, x: 12, y: 242 },
+    band: { height: 26, room: 154, y: 4 },
     body: { height: 82, width: 142, x: 12, y: 152 },
     bodyGap: 4,
     fires: { x: 8, y: 238 },

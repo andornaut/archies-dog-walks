@@ -9,6 +9,7 @@ import { badgeWall } from "../../home/badgesView.ts";
 import { FakeDocument, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
+import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { showBadgeCard } from "./badgeCard.ts";
 
 const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
@@ -18,6 +19,7 @@ const MEASURE = {
   hasTag: () => true,
   inkWidth: () => 40,
   title: fontMetrics(fonts.title),
+  titleInk: (line: string) => modalTitleInk(fonts.title, line),
   wrapBody: (_width: number, text: string) => [text],
 };
 const CONFETTI_JSON = JSON.parse(

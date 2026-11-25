@@ -29,7 +29,7 @@ export const PAGE_LAYOUT = {
 
 // A page's Back: its label's button centred across the page in the Back slot.
 export function pageBack(
-  measure: Pick<PanelMeasure, "inkWidth" | "title">,
+  measure: Pick<PanelMeasure, "inkWidth" | "title" | "titleInk">,
   label: string,
 ): PanelButton {
   const [back] = arrangePanelActions(measure, RECT, "row", [

@@ -222,8 +222,8 @@ export function zoneProgressLayout(strip: Rect, share: number): ZoneProgressLayo
 // a dog, a fired dog's included, inside the card art's photo: its white mat and ink frame, each
 // photo's pixels wide, round the face. The owner's name is centred below the photo.
 // The hearts sit beside the photo in rows of perRow, pitch apart. The LEAD tag is pinned across the
-// foot of the front dog's photo, and FIRED is centred on fired.x across a fired dog's empty photo.
-// An owned slot with no dog shows "Empty" centred on empty.x in its outline.
+// foot of the front dog's photo, and FIRED is centred on the plate across a fired dog's empty
+// photo (firedPlate). An owned slot with no dog shows "Empty" centred inside its outline.
 export const DOG_CARD = {
   ...DOG_CARD_PARTS,
   size: {
@@ -231,6 +231,12 @@ export const DOG_CARD = {
     width: SCREEN_CONFIG.width / SCREEN_CONFIG.dogSlotCount,
   },
 } as const;
+
+// The face inside an empty slot's dashed outline: the outline runs a column in from the card's
+// sides and along its top and bottom rows.
+export function dogCardEmptyFace(card: Rect): Rect {
+  return { height: card.height - 2, width: card.width - 4, x: card.x + 2, y: card.y + 1 };
+}
 
 interface CardLine extends OwnerNameLine {
   // The top of the line's capitals, from the card's top.

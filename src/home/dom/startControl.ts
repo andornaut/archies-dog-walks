@@ -20,7 +20,8 @@ export interface NativeStartControl {
     },
   ): void;
 }
-// The published button skin supplies chrome; the home controller supplies only state and copy.
+// The standard button skin (gameButton.css) supplies chrome; the home controller supplies only
+// state and copy.
 export function createStartControl(
   doc: Document,
   title: BitmapFont,

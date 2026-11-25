@@ -11,6 +11,7 @@ import {
   placeText,
   setBox,
   shownText,
+  textPlace,
 } from "../../ui/dom/pixelLine.ts";
 import {
   artPixel,
@@ -68,7 +69,8 @@ export function createHomeSections(
     }
     const colour = (key: keyof typeof PALETTE) => PALETTE[key];
     // Match the measured ink to the drawn band edges. A logical width projects differently
-    // from the text's whole device glyph pixels at a fractional fit.
+    // from the text's whole device glyph pixels at a fractional fit. The heading, the note and
+    // the bonus are one block, its ink centred down the band; the heart follows the block.
     const label = (
       text: string,
       x: number,
@@ -90,64 +92,75 @@ export function createHomeSections(
       } as const;
       const span = createTextLine(doc, line);
       element.append(span);
-      return (scale: DomScale, edge: number) => {
-        placeText(title, scale, origin, span, line);
-        const centred = backedTextPlaces(title, scale, origin, band, [line], "layout")[0]!;
-        const shiftY = centred.top - Number.parseFloat(span.style.top);
-        const pixel = fontPixel(scale, TEXT_SCALE);
-        const left = align === "left" ? edge : edge - width * pixel;
-        span.style.left = `${left - (last - width) * pixel}px`;
-        span.style.top = `${centred.top}px`;
-        return { left, shiftY };
+      return {
+        line,
+        place: (scale: DomScale, edge: number, top: number) => {
+          placeText(title, scale, origin, span, line);
+          const pixel = fontPixel(scale, TEXT_SCALE);
+          const left = align === "left" ? edge : edge - width * pixel;
+          span.style.left = `${left - (last - width) * pixel}px`;
+          span.style.top = `${top}px`;
+          return left;
+        },
       };
     };
-    const placeHeading = label(
+    const heading = label(
       section.heading.text,
       section.heading.x,
       section.heading.capTop,
       colour(section.heading.colour),
       "left",
     );
-    const placeNote = label(
+    const note = label(
       section.note.text,
       section.note.x,
       section.note.capTop,
       colour(section.note.colour),
       "right",
     );
-    const bonus = section.id === "dogs" ? snapshot.bonus : null;
-    const placeBonus =
-      bonus === null
+    const bonusText = section.id === "dogs" ? snapshot.bonus : null;
+    const bonus =
+      bonusText === null
         ? undefined
-        : label(bonus, section.note.x, section.note.capTop, PALETTE.ink, "right");
+        : label(bonusText, section.note.x, section.note.capTop, PALETTE.ink, "right");
     const heart =
-      placeBonus !== undefined && source.hasArt("ui-heart")
+      bonus !== undefined && source.hasArt("ui-heart")
         ? sheetArt(doc, source, "ui-heart")
         : undefined;
     if (heart !== undefined) {
       element.append(heart.element);
       ready.push(heart.ready);
     }
+    const block = [heading, note, ...(bonus === undefined ? [] : [bonus])];
     parts.push((scale) => {
       const { left, width } = gridRect(scale, band);
       const deviceLength = (length: number) => Math.round(length * scale.unit * scale.dpr);
       const inset = deviceLength(HOME_LAYOUT.bandText.inset);
-      placeHeading(scale, left + inset);
-      const note = placeNote(scale, left + width - inset);
-      if (placeBonus === undefined) {
+      const laid = textPlace(title, scale, origin, heading.line);
+      const [centred] = backedTextPlaces(
+        title,
+        scale,
+        origin,
+        band,
+        block.map(({ line }) => line),
+        "layout",
+      );
+      const top = centred!.top;
+      heading.place(scale, left + inset, top);
+      const noteLeft = note.place(scale, left + width - inset, top);
+      if (bonus === undefined) {
         return;
       }
       const { countGap, gap, heartInk, rise, scale: heartScale } = HOME_LAYOUT.bonus;
-      const heartLeft =
-        note.left - deviceLength(countGap) - heartInk * heartScale * artPixel(scale);
+      const heartLeft = noteLeft - deviceLength(countGap) - heartInk * heartScale * artPixel(scale);
       const y = section.note.capTop - rise;
       heart?.place(
         scale,
         origin,
         { scale: heartScale, tag: "full", x: 0, y },
-        { left: heartLeft, top: gridY(scale, y) + note.shiftY },
+        { left: heartLeft, top: gridY(scale, y) + top - laid.top },
       );
-      placeBonus(scale, heartLeft - deviceLength(gap));
+      bonus.place(scale, heartLeft - deviceLength(gap), top);
     });
   }
   for (const section of homeSectionViews(snapshot.sections)) {

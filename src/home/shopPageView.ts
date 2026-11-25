@@ -1,9 +1,10 @@
 import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { MENU_TEXT } from "../data/menuText.ts";
+import { raisedLabelCapTop } from "../ui/buttonGeometry.ts";
 import { PLAIN_ITEM, tileState } from "../ui/interaction.ts";
 import { type PanelButton, type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
-import { panelTitle } from "../ui/modal/view.ts";
+import { panelTitle, titleLabelInk } from "../ui/modal/view.ts";
 import { pageBack } from "../ui/pageLayout.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { GREYED, SELECT_OUTSET, selectLook } from "../ui/selection.ts";
@@ -55,14 +56,13 @@ export interface ShopPageTab {
 const PANEL = SHOP_LAYOUT.panel;
 
 // A tab on face: its face drawn in code with a slate edge; selected while open, its edge ink and
-// lifted onto a plum shadow; a pressed one dipped; its label centred in the title font.
+// lifted onto a plum shadow; a pressed one dipped; its label's ink centred on its raised face.
 function pageTab(measure: PanelMeasure, face: Rect, tab: ShopPageTab): PageTab {
   const look = selectLook(tileState({ ...PLAIN_ITEM, picked: tab.open }));
   const selected = look.state === "selected";
   const fill = PALETTE[look.face];
   const border = selected ? PALETTE.ink : PALETTE[GREYED.edge];
   const outer = selected ? insetRect(-SELECT_OUTSET, face) : face;
-  const { capTop, lineHeight } = measure.title;
   return {
     border,
     dy: (selected ? -FEEDBACK.liftPx : 0) + (tab.pressed ? FEEDBACK.pressDipPx : 0),
@@ -70,8 +70,7 @@ function pageTab(measure: PanelMeasure, face: Rect, tab: ShopPageTab): PageTab {
     fill,
     framed: selected,
     label: {
-      // As a label with originY 0.5 on the face's middle, its line's capitals capTop rows in.
-      capTop: Math.round(face.y + face.height / 2) + (capTop - lineHeight / 2) * TEXT_SCALE,
+      capTop: raisedLabelCapTop(face, titleLabelInk(measure, [tab.label])),
       centre: "ink",
       centreX: face.x + face.width / 2,
       colour: PALETTE[look.text],

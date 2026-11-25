@@ -8,11 +8,11 @@ import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom
 import { gameFont } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
 import { testState } from "../../testing/runState.ts";
-import { shownText } from "../../ui/dom/pixelLine.ts";
+import { backedTextPlaces, shownText } from "../../ui/dom/pixelLine.ts";
 import { sheetFrame, sheetTagFrames } from "../../ui/dom/sheetFrames.ts";
 import { domScale, exactDeviceX, fontPixel, gridRect, wholeArtPixels } from "../../ui/domScale.ts";
 import { FEEDBACK } from "../feedback.ts";
-import { DOG_CARD } from "../walkHud.ts";
+import { DOG_CARD, dogCardEmptyFace } from "../walkHud.ts";
 import { createHudCards, type HudCardsContext } from "./hudCards.ts";
 
 const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
@@ -28,7 +28,9 @@ const flush = () =>
     setTimeout(resolve, 0);
   });
 
-function fixture(scale = domScale(1, { height: 560, width: 360, x: 0, y: 0 })) {
+const scale1 = domScale(1, { height: 560, width: 360, x: 0, y: 0 });
+
+function fixture(scale = scale1) {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, scale);
   let unlock: () => void = () => undefined;
@@ -125,18 +127,30 @@ describe("native HUD cards", () => {
     expect(backing?.style.backgroundPosition).toBe(`${-expected.x}px ${-expected.y}px`);
     // Title-font captions centre their ink; each glyph's bearing is a font pixel each side, so
     // at a whole scale this is also their advance's centre.
-    for (const [index, label, at, scale] of [
-      [0, gameData.dogs.archie.name, DOG_CARD.name, DOG_CARD.name.scale],
-      [1, gameData.dogs.ginger.name, DOG_CARD.name, DOG_CARD.name.scale],
-      [0, gameData.runText.fired, DOG_CARD.fired, 1],
-      [2, gameData.runText.empty, DOG_CARD.empty, 1],
+    for (const [index, label] of [
+      [0, gameData.dogs.archie.name],
+      [1, gameData.dogs.ginger.name],
     ] as const) {
       const value = shownText("title", label);
       const line = shown[index]?.all().find((node) => node.textContent === value);
-      const centre = SCREEN_LAYOUT.dogSlots[index]!.x + at.x;
+      const centre = SCREEN_LAYOUT.dogSlots[index]!.x + DOG_CARD.name.x;
       expect(line?.style.left).toBe(
-        `${Math.round(centre - advanceWidth(fonts.title, scale, value) / 2)}px`,
+        `${Math.round(centre - advanceWidth(fonts.title, DOG_CARD.name.scale, value) / 2)}px`,
       );
+    }
+    // FIRED and Empty centre their ink on the plate and the outline's face they sit on.
+    const plate = DOG_CARD.firedPlate;
+    const slot0 = SCREEN_LAYOUT.dogSlots[0]!;
+    for (const [index, label, backing] of [
+      [0, gameData.runText.fired, { ...plate, x: slot0.x + plate.x, y: slot0.y + plate.y }],
+      [2, gameData.runText.empty, dogCardEmptyFace(SCREEN_LAYOUT.dogSlots[2]!)],
+    ] as const) {
+      const value = shownText("title", label);
+      const node = shown[index]?.all().find((n) => n.textContent === value);
+      const [place] = backedTextPlaces(fonts.title, scale1, { x: 0, y: 0 }, backing, [
+        { capTop: 0, centre: "ink", centreX: 0, colour: 0, font: "title", scale: 1, text: label },
+      ]);
+      expect([node?.style.left, node?.style.top]).toEqual([`${place!.left}px`, `${place!.top}px`]);
     }
     const fractionalScale = domScale(3, { height: 560, width: 575, x: 0, y: 0 });
     const fractional = fixture(fractionalScale);

@@ -26,13 +26,8 @@ const ZONES = gameData.world.zones.flatMap((zone) =>
 
 describe("zonePillLayout", () => {
   it.each(ZONES)("fits %j and %j inside the screen, centred, padded and apart", (_n, _c, ink) => {
-    const { countCapsY, countRight, nameCapsY, nameLeft, pill } = zonePillLayout(
-      topBar,
-      screen,
-      0,
-      ink,
-    );
-    const { pad, textGap } = ZONE_PILL;
+    const { countRight, nameLeft, pill } = zonePillLayout(topBar, screen, 0, ink);
+    const { pad, padY, textGap } = ZONE_PILL;
     expect(inside(pill, screen)).toBe(true);
     const left = pill.x - screen.x;
     const right = screen.x + screen.width - (pill.x + pill.width);
@@ -41,16 +36,8 @@ describe("zonePillLayout", () => {
     expect(nameLeft - pill.x).toBe(pad);
     expect(pill.x + pill.width - countRight).toBe(pad);
     expect(countRight - ink.count.width - (nameLeft + ink.name.width)).toBe(textGap);
-    for (const [caps, box] of [
-      [nameCapsY, ink.name],
-      [countCapsY, ink.count],
-    ] as const) {
-      expect(
-        Math.abs(caps + (box.top + box.bottom) / 2 - pill.y - pill.height / 2),
-      ).toBeLessThanOrEqual(0.5);
-      expect(caps + box.top).toBeGreaterThanOrEqual(pill.y + ZONE_PILL.padY);
-      expect(caps + box.bottom).toBeLessThanOrEqual(pill.y + pill.height - ZONE_PILL.padY);
-    }
+    const tallest = Math.max(ink.name.bottom - ink.name.top, ink.count.bottom - ink.count.top);
+    expect(pill.height).toBe(tallest + 2 * padY);
   });
 
   // No debuff up, and each count of debuff bars up to every debuff at once.

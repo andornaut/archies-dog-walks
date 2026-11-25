@@ -16,8 +16,8 @@ import {
   gridX,
   gridY,
 } from "../../ui/domScale.ts";
-import type { PanelText } from "../../ui/modal/types.ts";
 import { PALETTE } from "../../ui/palette.ts";
+import type { GearPictureFallback } from "../gearPictureView.ts";
 import { HOME_LAYOUT } from "../homeLayout.ts";
 import type { Sections } from "../sections.ts";
 import type { HomeSelectionView } from "../selectionView.ts";
@@ -91,7 +91,7 @@ export function createNativeHomeView(
           readonly rect: Rect;
           readonly key: string;
           readonly scale: number;
-          readonly fallback: PanelText;
+          readonly fallback: GearPictureFallback;
         }
       | undefined;
     readonly focus: string | undefined;

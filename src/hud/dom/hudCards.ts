@@ -11,14 +11,27 @@ import { faceMood } from "../../rules/treats.ts";
 import type { RunState } from "../../state/runState.ts";
 import { type DomArtSource, imageArt, sheetArt } from "../../ui/dom/artElements.ts";
 import { gridFillPart } from "../../ui/dom/parts.ts";
-import { createTextLine, type DomTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
+import {
+  createTextLine,
+  type DomTextLine,
+  placeBackedText,
+  placeText,
+  setBox,
+} from "../../ui/dom/pixelLine.ts";
 import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, deviceX, deviceY, type DomScale, gridTransform } from "../../ui/domScale.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { FEEDBACK } from "../feedback.ts";
 import { cardOwnerMood } from "../moments.ts";
-import { cardHearts, DOG_CARD, hudOwnerName, leadSlot, slotShown } from "../walkHud.ts";
+import {
+  cardHearts,
+  DOG_CARD,
+  dogCardEmptyFace,
+  hudOwnerName,
+  leadSlot,
+  slotShown,
+} from "../walkHud.ts";
 
 export interface HudCardsContext {
   readonly momentNow: number;
@@ -139,13 +152,18 @@ export function createHudCards(
     const ready: Promise<readonly string[]>[] = [];
     const part = run.pack[index];
     const shown = slotShown(context.ownedSlots, index, part !== undefined);
-    const text = (line: CardText, spoken = true) => {
+    // A line placed as laid out, or its ink centred on the backing it sits on.
+    const text = (line: CardText, spoken = true, backing?: Rect) => {
       const element = createTextLine(doc, line);
       if (!spoken) {
         element.setAttribute("aria-hidden", "true");
       }
       holder.append(element);
-      draws.push((scale) => placeText(fonts[line.font], scale, ORIGIN, element, line));
+      draws.push((scale) =>
+        backing === undefined
+          ? placeText(fonts[line.font], scale, ORIGIN, element, line)
+          : placeBackedText(fonts[line.font], scale, ORIGIN, backing, [{ element, line }]),
+      );
     };
     const sprite = (key: string, tag: string, at: Point) => {
       const art = sheetArt(doc, source, key);
@@ -203,15 +221,19 @@ export function createHudCards(
           });
         }
       }
-      text({
-        capTop: rect.y + DOG_CARD.empty.y,
-        centre: "ink",
-        centreX: rect.x + DOG_CARD.empty.x,
-        colour: PALETTE.cream,
-        font: "title",
-        scale: 1,
-        text: data.runText.empty,
-      });
+      text(
+        {
+          capTop: rect.y,
+          centre: "ink",
+          centreX: rect.x,
+          colour: PALETTE.cream,
+          font: "title",
+          scale: 1,
+          text: data.runText.empty,
+        },
+        true,
+        dogCardEmptyFace(rect),
+      );
     } else {
       const dog = data.dogs[part.dog];
       const fired = part.status === "fired";
@@ -273,15 +295,20 @@ export function createHudCards(
       ownerName.textContent = dog.owner.name;
       holder.append(ownerName);
       if (fired) {
-        text({
-          capTop: rect.y + DOG_CARD.fired.y,
-          centre: "ink",
-          centreX: rect.x + DOG_CARD.fired.x,
-          colour: PALETTE.white,
-          font: "title",
-          scale: 1,
-          text: data.runText.fired,
-        });
+        const plate = DOG_CARD.firedPlate;
+        text(
+          {
+            capTop: rect.y,
+            centre: "ink",
+            centreX: rect.x,
+            colour: PALETTE.white,
+            font: "title",
+            scale: 1,
+            text: data.runText.fired,
+          },
+          true,
+          { ...plate, x: rect.x + plate.x, y: rect.y + plate.y },
+        );
       }
       for (const cell of cardHearts(fired ? 0 : part.hearts, max)) {
         sprite("ui-heart", cell.full ? "full-dark" : "empty-dark", {

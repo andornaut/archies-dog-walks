@@ -112,7 +112,8 @@ export interface DomQuestionPanel {
 
 const ORIGIN = { x: 0, y: 0 } as const;
 
-// art: the close control's 16x16 glyph on its 20x20 ui-icon-button face, from the face's corner.
+// art: the close control's 16x16 glyph on its 20x20 ui-icon-button-normal face, from the face's
+// corner.
 const CLOSE_GLYPH_SIZE = 16;
 
 // art: fx-tap's side.

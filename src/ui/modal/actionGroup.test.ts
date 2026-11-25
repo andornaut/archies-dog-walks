@@ -2,15 +2,17 @@ import { expect, it } from "vitest";
 
 import { gameData } from "../../data/index.ts";
 import { SCREEN_LAYOUT } from "../../data/screen.ts";
-import { fontFileMetrics, inkWidth } from "../../testing/fontInk.ts";
+import { fontFileMetrics, gameFont, inkWidth } from "../../testing/fontInk.ts";
 import { BUTTON_SIZE } from "../buttonGeometry.ts";
 import { arrangePanelActions } from "./actionGroup.ts";
 import { modalActionWidth } from "./layout.ts";
+import { modalTitleInk } from "./titleRole.ts";
 import { panelButton } from "./view.ts";
 
 const measure = {
   inkWidth: (_font: "body" | "title", text: string) => inkWidth("font-title", { scale: 2 }, text),
   title: fontFileMetrics("font-title"),
+  titleInk: (line: string) => modalTitleInk(gameFont("font-title"), line),
 };
 const panel = { height: 300, width: 328, x: 16, y: 100 };
 const labels = [gameData.runText.homeQuestion.keepWalking, gameData.runText.homeQuestion.headHome];

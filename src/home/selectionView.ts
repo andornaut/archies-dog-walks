@@ -14,10 +14,9 @@ import {
   itemTile,
   itemTileLook,
 } from "../ui/interaction.ts";
-import type { PanelText } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { pictureBox, type PlateKind, selectLook } from "../ui/selection.ts";
-import { gearPictureFallback } from "./gearPictureView.ts";
+import { type GearPictureFallback, gearPictureFallback } from "./gearPictureView.ts";
 import {
   type HomeLoadout,
   isAffordable,
@@ -41,7 +40,7 @@ export interface HomeSelectionSnapshot {
   readonly walkers: readonly HomeSelectionCell<WalkerId>[];
 }
 export interface HomeSelectionPicture {
-  readonly fallback?: PanelText;
+  readonly fallback?: GearPictureFallback;
   readonly key: string;
   readonly x: number;
   readonly y: number;

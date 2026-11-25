@@ -10,6 +10,7 @@ import { gameFont } from "../../testing/fontInk.ts";
 import { bindGameAction, bindGameActionHolds } from "../../ui/dom/actionBinding.ts";
 import { guardNativeInput } from "../../ui/dom/modalLifecycle.ts";
 import { domScale } from "../../ui/domScale.ts";
+import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { panelButton } from "../../ui/modal/view.ts";
 import { createPanelButton } from "./panelButton.ts";
 
@@ -35,7 +36,10 @@ function fixture() {
       press: { accepts: gate.accepts, burst: vi.fn(), press: activate },
     },
     panelButton(
-      { title: fontMetrics(gameFont("font-title")) },
+      {
+        title: fontMetrics(gameFont("font-title")),
+        titleInk: (line) => modalTitleInk(gameFont("font-title"), line),
+      },
       { height: 48, width: 128, x: 0, y: 0 },
       true,
       MENU_TEXT.pause.resume,

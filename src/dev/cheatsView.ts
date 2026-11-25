@@ -9,14 +9,14 @@ import type { DebuffId, GameData, MenuText, UpgradeId, ZoneId } from "../data/ty
 import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
 import { SWITCH_STATE_GAP } from "../home/settings.ts";
 import { dollarText } from "../presentation/currency.ts";
-import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
+import { BUTTON_SIZE, raisedLabelCapTop } from "../ui/buttonGeometry.ts";
 import { dismissFooter } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalActionWidth, modalFamilyWidth } from "../ui/modal/layout.ts";
 import type { PanelButton, PanelMeasure, PanelText, QuestionPanelView } from "../ui/modal/types.ts";
-import { modalCardView, panelButton } from "../ui/modal/view.ts";
+import { modalCardView, panelButton, titleLabelInk } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { BUTTON_LIP_PX, GREYED, selectLook } from "../ui/selection.ts";
-import { MODAL_TITLE_SCALE, TEXT_SCALE } from "../ui/textFit.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 import type { Cents } from "../units.ts";
 import { BANK_GRANTS, type NextWalk, type OwnGrant, startZones } from "./cheats.ts";
 
@@ -217,27 +217,18 @@ function rowButtons(
     }
     const room = Math.max(width - 2 * MODAL.gap, longest);
     const lines = balancedWords(measureLine, room, item.label);
-    const pitch = measure.title.lineHeight * TEXT_SCALE;
-    const inks = lines.map((line, i) => {
-      const ink = measure.titleInk(line);
-      return {
-        bottom: i * pitch + (ink.bottom * TEXT_SCALE) / MODAL_TITLE_SCALE,
-        top: i * pitch + (ink.top * TEXT_SCALE) / MODAL_TITLE_SCALE,
-      };
-    });
-    const top = Math.min(...inks.map((ink) => ink.top));
-    const bottom = Math.max(...inks.map((ink) => ink.bottom));
-    return { block: bottom - top, item, lines, pitch, top, width, x };
+    return { ink: titleLabelInk(measure, lines), item, lines, width, x };
   });
   const height = Math.max(
     compact.height,
     rect.height,
-    ...available.map(({ block }) => block + BUTTON_LIP_PX + 2 * MODAL.rowGap),
+    ...available.map(({ ink }) => ink.rows + BUTTON_LIP_PX + 2 * MODAL.rowGap),
   );
-  return available.map(({ block, item, lines, pitch, top, width, x }) => {
+  const pitch = measure.title.lineHeight * TEXT_SCALE;
+  return available.map(({ ink, item, lines, width, x }) => {
     const face = { height, width, x, y: rect.y };
     const button = panelButton(measure, face, false, item.label);
-    const capTop = rect.y + Math.floor((height - BUTTON_LIP_PX - block) / 2) - top;
+    const capTop = raisedLabelCapTop(face, ink);
     return {
       ...button,
       action: item.action,

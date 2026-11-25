@@ -106,14 +106,16 @@ export function createHomeSelection(
   view.pictures.forEach((picture, index) => {
     const key = view.art === "grey" ? source.disabledKey(picture.key) : picture.key;
     if (!source.hasArt(picture.key) && picture.fallback !== undefined) {
-      const line = picture.fallback;
+      const { line, picture: backing } = picture.fallback;
       const label = createTextLine(doc, line);
       paint.append(label);
       parts.push((scale, motion) =>
-        placeText(fonts[line.font], scale, origin, label, {
-          ...line,
-          colour: motion.refusing ? PALETTE.red : line.colour,
-        }),
+        placeBackedText(fonts[line.font], scale, origin, backing, [
+          {
+            element: label,
+            line: { ...line, colour: motion.refusing ? PALETTE.red : line.colour },
+          },
+        ]),
       );
     } else if (source.isSheet(picture.key)) {
       const art = sheetArt(doc, source, picture.key, key);

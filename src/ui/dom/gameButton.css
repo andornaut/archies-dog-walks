@@ -46,6 +46,11 @@
   color: var(--adw-button-text);
   pointer-events: none;
 }
+/* A label is placed from the face's outer corner, as its layout is: its block takes the face's
+   border box, not the padding box inside the ink frame. */
+.adw-standard-button .adw-standard-button-content > :is(.adw-lines, .adw-text) {
+  margin: calc(-1 * var(--adw-button-unit)) 0 0 calc(-1 * var(--adw-button-unit));
+}
 .adw-standard-button .adw-text {
   color: var(--adw-button-text) !important;
 }

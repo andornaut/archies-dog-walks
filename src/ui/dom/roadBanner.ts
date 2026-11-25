@@ -3,7 +3,7 @@ import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { deviceX, deviceY, frameRect, gridTransform } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
-import { createTextLine, type DomTextLine, placeText, setBox } from "./pixelLine.ts";
+import { createTextLine, type DomTextLine, placeBackedText, setBox } from "./pixelLine.ts";
 import { followModalUnderlay } from "./rampDim.ts";
 import { type SheetFrame, sheetFrame } from "./sheetFrames.ts";
 import type { UiLayer } from "./uiLayer.ts";
@@ -14,6 +14,13 @@ interface BannerPose {
   readonly x: number;
   readonly y: number;
 }
+
+// art: ui-zone-banner's plate, and the rows of its face above and below the dotted rule across
+// it, on which the heading's and the name's ink are each centred: the glyph body, without the
+// display font's drop shadow.
+const PLATE = { height: 48, width: 248 } as const;
+const HEADING_FACE = { height: 19, y: 2 } as const;
+const NAME_FACE = { height: 23, y: 22 } as const;
 
 // A passive view follows the scene's existing tween. It takes no input and never owns time.
 export function mountRoadBanner(
@@ -45,25 +52,21 @@ export function mountRoadBanner(
     imageRendering: "pixelated",
     position: "absolute",
   });
-  const line = (
-    font: "display" | "title",
-    text: string,
-    capTop: number,
-    scale: number,
-  ): DomTextLine => ({
-    capTop,
-    centre: "advance",
-    centreX: 124,
+  const line = (font: "display" | "title", text: string, scale: number): DomTextLine => ({
+    capTop: 0,
+    centre: "ink",
+    centreX: 0,
     colour: font === "display" ? PALETTE.yellow : PALETTE.plum,
     font,
     scale,
     text,
   });
   const lines = [
-    { bitmap: view.title, line: line("title", view.heading, 11, 1) },
+    { bitmap: view.title, face: HEADING_FACE, line: line("title", view.heading, 1) },
     {
       bitmap: view.nameFont.bitmap,
-      line: line(view.nameFont.font, view.name, 27, view.nameFont.scale),
+      face: NAME_FACE,
+      line: line(view.nameFont.font, view.name, view.nameFont.scale),
     },
   ].map((item) => ({ ...item, element: createTextLine(doc, item.line) }));
   for (const { element } of lines) {
@@ -104,7 +107,7 @@ export function mountRoadBanner(
       transform: gridTransform(scale),
       width: `${deviceX(scale, SCREEN_CONFIG.width)}px`,
     });
-    const box = frameRect(scale, { height: 48, width: 248, x: pose.x, y: pose.y });
+    const box = frameRect(scale, { ...PLATE, x: pose.x, y: pose.y });
     setBox(plate, box);
     if (frame !== undefined) {
       const across = box.width / frame.width;
@@ -112,12 +115,14 @@ export function mountRoadBanner(
       plate.style.backgroundSize = `${frame.sheet.width * across}px ${frame.sheet.height * down}px`;
       plate.style.backgroundPosition = `${-frame.x * across}px ${-frame.y * down}px`;
     }
-    for (const { bitmap, element, line } of lines) {
-      placeText(bitmap, scale, { x: 0, y: 0 }, element, {
-        ...line,
-        capTop: pose.y + line.capTop,
-        centreX: pose.x + line.centreX,
-      });
+    for (const { bitmap, element, face, line } of lines) {
+      placeBackedText(
+        bitmap,
+        scale,
+        { x: 0, y: 0 },
+        { height: face.height, width: PLATE.width, x: pose.x, y: pose.y + face.y },
+        [{ element, line }],
+      );
     }
   };
   const offScale = layer.onScale(update);
