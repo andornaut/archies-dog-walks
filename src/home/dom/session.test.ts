@@ -39,8 +39,10 @@ function fixture() {
       return { cancel, revealed };
     },
   });
+  // Whether the screen takes input: false while it is paused under an overlay.
+  const screen = { active: true };
   const context = {
-    accepts: () => true,
+    accepts: () => screen.active,
     activate: vi.fn(),
     cancel: vi.fn(),
     down: vi.fn(),
@@ -49,19 +51,22 @@ function fixture() {
     up: vi.fn(),
   };
   const session = createNativeHomeSession(layer, context);
-  const view = () => {
+  const view = (ids: readonly string[] = ["start"]) => {
     const element = doc.createElement("div");
-    const button = doc.createElement("button");
-    element.append(button);
+    const controls = new Map(ids.map((id) => [id, doc.createElement("button")]));
+    element.append(...controls.values());
     return {
-      controls: new Map([["start", button]]),
+      controls,
       dispose: vi.fn(() => element.remove()),
       element,
       ready: Promise.resolve([]),
       selections: new Map(),
     } as unknown as NativeHomeView;
   };
-  return { context, doc, frames, layer, reveals, session, view };
+  const setActive = (active: boolean) => {
+    screen.active = active;
+  };
+  return { context, doc, frames, layer, reveals, session, setActive, view };
 }
 describe("native home visit", () => {
   it("admits only the current decoded paint across view replacements", async () => {
@@ -121,6 +126,88 @@ describe("native home visit", () => {
     f.reveals[1]!.settle(true);
     await Promise.resolve();
     f.frames.shift()?.();
+    expect(f.doc.activeElement).toBe(f.doc.body);
+    f.session.dispose();
+  });
+  // Each overlay over the Start screen as the screen sees it open and close: paused (holdFocus)
+  // or, for a detail card, redrawn with the card open; for Cheats, redrawn and painted while still
+  // paused; then, in order, its modal leaving (focus drops to the page), the resume, a redraw
+  // after it, or the card's close.
+  type Step = "cardCloses" | "modalLeaves" | "redraw" | "resumes";
+  const overlays: [string, "card" | "pause", boolean, Step[]][] = [
+    ["a detail card", "card", false, ["cardCloses", "modalLeaves"]],
+    ["Cheats from the Menu", "pause", true, ["resumes", "modalLeaves"]],
+    ["Settings", "pause", false, ["resumes", "modalLeaves", "redraw"]],
+    ["the Menu", "pause", false, ["resumes", "modalLeaves"]],
+    ["the Update available prompt", "pause", false, ["modalLeaves", "resumes"]],
+  ];
+  // Cancel, the X, Escape and back close with focus in the modal; a tap outside drops it first.
+  const routes: [string, boolean][] = [
+    ["Cancel, the X, Escape or back", false],
+    ["a tap outside", true],
+  ];
+  it.each(
+    overlays.flatMap(([overlay, opens, pausedRedraw, steps]) =>
+      routes.map(([route, outside]) => ({ opens, outside, overlay, pausedRedraw, route, steps })),
+    ),
+  )("focuses the Start control again after $route closes $overlay", async (row) => {
+    const f = fixture();
+    const ids = ["dog:archie", "start", "gear:ball"];
+    const paint = async () => {
+      f.reveals.forEach(({ settle }) => settle(true));
+      await Promise.resolve();
+      f.frames.splice(0).forEach((frame) => frame());
+    };
+    const views = [f.view(ids)];
+    const current = () => views.at(-1)!;
+    const redraw = (restoreFocus?: string) => {
+      views.push(f.view(ids));
+      f.session.replace(current(), Promise.resolve(), restoreFocus);
+    };
+    f.session.replace(current());
+    await paint();
+    current().controls.get("dog:archie")?.focus();
+    f.setActive(false);
+    if (row.opens === "pause") {
+      f.session.holdFocus();
+    } else {
+      redraw();
+      await paint();
+    }
+    const modal = f.doc.createElement("button");
+    f.doc.body.append(modal);
+    modal.focus();
+    if (row.outside) {
+      f.doc.body.focus();
+    }
+    if (row.pausedRedraw) {
+      redraw();
+      await paint();
+    }
+    for (const step of row.steps) {
+      switch (step) {
+        case "cardCloses":
+          f.setActive(true);
+          redraw("dog:archie");
+          break;
+        case "modalLeaves":
+          modal.remove();
+          f.doc.body.focus();
+          break;
+        case "redraw":
+          redraw();
+          break;
+        case "resumes":
+          f.setActive(true);
+          redraw();
+          break;
+      }
+    }
+    await paint();
+    expect(f.doc.activeElement).toBe(current().controls.get("dog:archie"));
+    f.doc.body.focus();
+    redraw();
+    await paint();
     expect(f.doc.activeElement).toBe(f.doc.body);
     f.session.dispose();
   });

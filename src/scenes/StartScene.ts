@@ -579,6 +579,8 @@ export class StartScene extends Scene {
     // a press still down, whose release lands on the overlay. The dip of the tap that opened
     // the page plays on under it, on a clock that runs while this screen is paused.
     onSceneEvent(this, this.events, "pause", () => {
+      // The Start control focused as an overlay opens is focused again once it closes.
+      this.nativeHome?.holdFocus();
       this.pending.forEach((timer) => timer.remove());
       this.pending.clear();
       this.artWait = undefined;

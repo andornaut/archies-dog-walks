@@ -29,6 +29,11 @@ export function createNativeHomeSession(
   let view: NativeHomeView | undefined;
   let removeActions: (() => void)[] = [];
   let paint: ReturnType<typeof revealPaint> | undefined;
+  // The control focused as the screen paused under an overlay, kept through the redraws while it
+  // is paused until a paint that takes input focuses it again.
+  let held: string | undefined;
+  const focusedControl = () =>
+    [...(view?.controls ?? [])].find(([, control]) => control === doc.activeElement)?.[0];
   const accepts = () =>
     alive && shown && paint?.painted() === true && context.accepts() && layer.input.accepts();
   const gate = {
@@ -85,6 +90,9 @@ export function createNativeHomeSession(
       element.remove();
     },
     element,
+    holdFocus: () => {
+      held = focusedControl();
+    },
     replace: (
       next: NativeHomeView,
       ready: Promise<unknown> = Promise.resolve(),
@@ -94,9 +102,7 @@ export function createNativeHomeSession(
       context.cancel();
       paint?.destroy();
       const previousFocus = doc.activeElement;
-      const focused =
-        restoreFocus ??
-        [...(view?.controls ?? [])].find(([, control]) => control === previousFocus)?.[0];
+      const focused = restoreFocus ?? held ?? focusedControl();
       removeActions.forEach((remove) => remove());
       removeActions = [];
       view?.dispose();
@@ -132,12 +138,14 @@ export function createNativeHomeSession(
           if (alive && view === next) {
             stopUnderlay.refresh();
             context.painted();
-            if (
-              focused !== undefined &&
-              accepts() &&
-              (doc.activeElement === previousFocus || doc.activeElement === doc.body)
-            ) {
-              next.controls.get(focused)?.focus();
+            if (accepts()) {
+              held = undefined;
+              if (
+                focused !== undefined &&
+                (doc.activeElement === previousFocus || doc.activeElement === doc.body)
+              ) {
+                next.controls.get(focused)?.focus();
+              }
             }
           }
         },
