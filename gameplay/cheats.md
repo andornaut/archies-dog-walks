@@ -6,10 +6,10 @@ Browser tabs and installed apps offer one **Cheats** entry in the applicable Men
 
 Cheats act on the real save, as normal play does. Cash and unlocks they grant, and walks played with cheats on, walks started from a run link included, save, bank and earn badges like any other walk. Reset save is the way back to a new save.
 
-## Modal
+## Page
 
-- **Size** follows measured content within the safe viewport. The body scrolls when needed and text stays full size. See the [Layout guide](../art/layout.md#modals) for interface measurements.
-- **Frame** has a Cheats title, a top-right X and a centred primary Back at the bottom. Back and X return one layer to the invoking Menu or Pause and restore focus to Cheats.
+- **Page** is a frameless page titled Cheats under the live top bar, like Help. Its body scrolls when needed and text stays full size. See the [Layout guide](../art/layout.md#page-boundsalignment) for interface measurements.
+- **Leaving** uses the page Back, Escape or browser or device Back. Each returns to the invoking Menu or Pause and restores focus to Cheats.
 - **Order** starts with Invincible owners and Start at, followed by Unlocks and Money side by side. Reset save follows without a section heading.
 - **Controls** show On or Off directly below the right-aligned switch. Add buttons are repeatable. All cheats are available from Start and during a walk.
 
