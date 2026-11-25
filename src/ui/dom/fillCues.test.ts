@@ -82,7 +82,7 @@ const KIT_FOCUSED_ARTWORK =
 const REFUSING_BUTTON =
   '.adw-standard-button.ui-standard-button[data-refusal-red]:is(*, :focus-visible, [aria-disabled="true"])';
 const REFUSING_ROW =
-  ".adw-row:not(.adw-standard-button):is([data-refusal-red],[data-ui-refusal-red])" +
+  ".adw-row:not(.adw-standard-button)[data-refusal-red]" +
   ":is(*,:focus-visible,[data-ui-pressed]:not([role=slider]))";
 const REFUSING_CHOICE_GROUP =
   ".adw-choice-group[data-refusal-red]:is(*, :has(.adw-choice-option:focus-visible))";
@@ -241,7 +241,7 @@ describe("control state cues", () => {
     [
       "a refused row's icon, a white silhouette on the dark red face",
       "ui",
-      ".adw-row:is([data-refusal-red],[data-ui-refusal-red]) .ui-form-row-icon>*",
+      ".adw-row[data-refusal-red] .ui-form-row-icon>*",
       "filter:brightness(0)invert(1)",
     ],
     [
@@ -312,6 +312,12 @@ describe("control state cues", () => {
       "color:HighlightText!important;forced-color-adjust:none",
     ],
     [
+      "a refusing row's parts in the game's own forced colours",
+      "uiForced",
+      ".adw-row[data-refusal-red] *",
+      "forced-color-adjust:none",
+    ],
+    [
       "a refusing row's inverse face in forced colours",
       "uiForced",
       `${REFUSING_ROW}>.adw-row-face`,
@@ -326,7 +332,7 @@ describe("control state cues", () => {
     [
       "a refusing row's icon, a ButtonFace silhouette masked from its frame, in forced colours",
       "uiForced",
-      ".adw-row:is([data-refusal-red],[data-ui-refusal-red]) .ui-form-row-icon>*",
+      ".adw-row[data-refusal-red] .ui-form-row-icon>*",
       "filter:none;background:ButtonFace!important;" +
         "mask:var(--adw-art-image)var(--adw-art-position)/var(--adw-art-size)",
     ],

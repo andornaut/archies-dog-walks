@@ -6,8 +6,9 @@ import { overlayRegion } from "../../home/homeBar.ts";
 import { installStepsLayout, settingsLayout } from "../../home/settings.ts";
 import { type SettingsMeasure, settingsRows, settingsView } from "../../home/settingsView.ts";
 import { DEFAULT_SETTINGS } from "../../save/settings.ts";
-import { FakeDocument, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
+import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, fontInk, gameFont } from "../../testing/fontInk.ts";
+import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
 import { artPixel, domScale, gridRect } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { type DomSettingsInput, showSettings } from "./settings.ts";
@@ -123,26 +124,50 @@ it("sets a volume through the kit slider's keys and drags, and drops a drag that
   expect(layer.input.accepts()).toBe(true);
 });
 
-it("refuses a muted slider's press with the kit's cue on the row's face, leaving its volume", () => {
-  const { element, shown, slide, view } = fixture();
-  const muted = view();
-  shown.update(
-    {
-      ...muted,
-      rows: muted.rows.map((row) =>
-        row.slider === undefined ? row : { ...row, slider: { ...row.slider, disabled: true } },
-      ),
-    },
-    null,
-  );
-  const row = element.all().find((part) => part.getAttribute("role") === "slider")!;
-  expect(row.getAttribute("aria-disabled")).toBe("true");
-  row.fire("pointerdown", pointer(row, 2, 10, 10, "pointerdown"));
-  expect(slide.change).not.toHaveBeenCalled();
-  expect(row.hasAttribute("data-ui-refusal-red")).toBe(true);
-  expect(row.children[0]?.className).toBe("adw-framed adw-row-face");
-  shown.destroy();
-});
+it.each([
+  [
+    "a muted slider's press",
+    "slider",
+    (row: FakeElement) => row.fire("pointerdown", pointer(row, 2, 10, 10, "pointerdown")),
+  ],
+  [
+    "a muted slider's step key",
+    "slider",
+    (row: FakeElement) => row.fire("keydown", { key: "ArrowRight" }),
+  ],
+  ["a switch row the scene refuses", "switch", undefined],
+] as const)(
+  "refuses %s with the game's cue on the whole row, leaving its volume",
+  (_what, role, act) => {
+    const { element, shown, slide, view } = fixture();
+    const muted = view();
+    shown.update(
+      {
+        ...muted,
+        rows: muted.rows.map((row) =>
+          row.slider === undefined ? row : { ...row, slider: { ...row.slider, disabled: true } },
+        ),
+      },
+      null,
+    );
+    const row = element.all().find((part) => part.getAttribute("role") === role)!;
+    if (act === undefined) {
+      shown.refuse(
+        muted.rows.findIndex(({ kind }) => kind === role),
+        true,
+      );
+    } else {
+      expect(row.getAttribute("aria-disabled")).toBe("true");
+      act(row);
+    }
+    expect(slide.change).not.toHaveBeenCalled();
+    expect(row.hasAttribute(REFUSAL_RED)).toBe(true);
+    expect(row.classList.contains("adw-refusing-still")).toBe(true);
+    expect(row.hasAttribute("data-ui-refusal-red")).toBe(false);
+    expect(row.children[0]?.className).toBe("adw-framed adw-row-face");
+    shown.destroy();
+  },
+);
 
 it("holds a Settings switch through a touch lost to hiding and flips it once by the kit's click", () => {
   const { close, doc, element, layer, press, shown } = fixture();

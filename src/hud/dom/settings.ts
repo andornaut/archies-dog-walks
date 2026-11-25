@@ -1,7 +1,6 @@
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { sliderGeometry, sliderLane } from "@andornaut/game-kit/runtime/ui/slider";
-import { refuse } from "@andornaut/game-kit/runtime/web/ui/dom/refusalCue";
 import { createSlider } from "@andornaut/game-kit/runtime/web/ui/dom/slider";
 
 import { gameData } from "../../data/index.ts";
@@ -33,7 +32,7 @@ import {
   placeText,
   setBox,
 } from "../../ui/dom/pixelLine.ts";
-import { REFUSAL_CUE } from "../../ui/dom/refusal.ts";
+import { refuse } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { type DomScale, gridX, gridY } from "../../ui/domScale.ts";
 import { cssHex } from "../../ui/palette.ts";
@@ -83,7 +82,7 @@ export interface DomSettings extends Pick<
   DomQuestionPanel,
   "accepts" | "capture" | "destroy" | "setEnabled" | "setInert" | "setDimmed"
 > {
-  // The row (by index) whose label and volume shake and flash, refused, as the canvas's do.
+  // Plays the game's refusal cue (refuse) on the row (by index).
   refuse(index: number, reducedMotion: boolean): void;
   setShown(shown: boolean): void;
   // Shows view as it now stands, and moves the page's focus to the scene's.
@@ -290,13 +289,14 @@ function switchPart(
       ...(art.icon === undefined ? [] : [art.icon.ready]),
       ...(toggle === undefined ? [] : [toggle.ready]),
     ]).then((urls) => urls.flat()),
-    refuse: (reducedMotion: boolean) => refuse(REFUSAL_CUE, reducedMotion, element),
+    refuse: (reducedMotion: boolean) => refuse(reducedMotion, element),
   };
 }
 
 // A volume row: the kit slider (role slider, its keys, drag and refusal) over the row's face,
 // icon and text, with the track's and knob's frames on the kit's track, fill and thumb, placed
-// by the kit's slider geometry on the art-pixel grid. A muted slider is refused.
+// by the kit's slider geometry on the art-pixel grid. A muted slider is refused: a press, drag,
+// tap or step key plays the game's refusal cue (refuse) on the row.
 function sliderPart(
   layer: UiLayer,
   input: DomSettingsInput,
@@ -328,7 +328,7 @@ function sliderPart(
     ...(art.icon === undefined ? {} : { icon: art.icon.element }),
     label: first.label,
     layout: { art: SLIDER_ART, height: first.rect.height },
-    refusal: { cue: REFUSAL_CUE, reducedMotion: input.reducedMotion },
+    refusal: { reducedMotion: input.reducedMotion, refuse },
     slop: read(gameData.tuning, "pixels", "tapMaxDistance"),
     steps: VOLUME_STEPS,
   });
@@ -428,7 +428,7 @@ function sliderPart(
       parts.fill.ready,
       parts.knob.ready,
     ]).then((urls) => urls.flat()),
-    refuse: (reducedMotion: boolean) => refuse(REFUSAL_CUE, reducedMotion, element),
+    refuse: (reducedMotion: boolean) => refuse(reducedMotion, element),
   };
 }
 

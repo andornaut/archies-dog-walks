@@ -1,17 +1,4 @@
-import type { RefusalCue } from "@andornaut/game-kit/runtime/web/ui/dom/refusalCue";
-
 import { refusalRed, REFUSE, REFUSE_SHAKES, refuseShakeSteps } from "../refuse.ts";
-
-// The kit's refusal cue (refusalCue) for a kit control, in REFUSE's times: while it shakes, a
-// row steps through the canvas's whole-art-pixel offsets (adw-shake), and its red phases fill
-// its face dark red.
-export const REFUSAL_CUE: RefusalCue = {
-  shake: REFUSE.shake,
-  shakeMs: REFUSE.shakeMs,
-  shakeShape: "yoyo",
-  stepMs: REFUSE.flashMs,
-  steps: REFUSE.flashes,
-};
 
 // The refusal cue on a DOM control that plays it on the page's own clock. adw-refusing shakes the
 // control right and back in whole art pixels (--adw-slice-1) at the canvas's offsets and times
@@ -36,7 +23,7 @@ export const REFUSAL_RED = "data-refusal-red";
 // A row in a red phase, focused or pressed alike: outranks the focus and press fills
 // (SETTINGS_STYLE), in forced colours too.
 const ROW_RED_STATES =
-  `.adw-row:not(.adw-standard-button):is([${REFUSAL_RED}],[data-ui-refusal-red])` +
+  `.adw-row:not(.adw-standard-button)[${REFUSAL_RED}]` +
   ":is(*,:focus-visible,[data-ui-pressed]:not([role=slider]))";
 
 export const REFUSAL_STYLE = `
@@ -44,15 +31,12 @@ export const REFUSAL_STYLE = `
 @keyframes adw-shake{${SHAKE_KEYFRAMES}}
 ${ROW_RED_STATES}>.adw-row-face{background-color:var(--adw-darkRed)!important}
 ${ROW_RED_STATES} .adw-text{color:var(--adw-white)!important}
-.adw-row:is([${REFUSAL_RED}],[data-ui-refusal-red]) .ui-form-row-icon>*{filter:brightness(0) invert(1)}
-.adw-row[data-ui-refusal-shake]{translate:none;transition:none;
-  animation:adw-shake ${2 * REFUSE.shakeMs}ms step-end ${REFUSE_SHAKES}}
+.adw-row[${REFUSAL_RED}] .ui-form-row-icon>*{filter:brightness(0) invert(1)}
 @media (forced-colors:active){
-  .adw-row:is([${REFUSAL_RED}],[data-ui-refusal-red]),.adw-row:is([${REFUSAL_RED}],[data-ui-refusal-red]) *{
-    forced-color-adjust:none}
+  .adw-row[${REFUSAL_RED}],.adw-row[${REFUSAL_RED}] *{forced-color-adjust:none}
   ${ROW_RED_STATES}>.adw-row-face{background-color:ButtonText!important}
   ${ROW_RED_STATES} .adw-text{color:ButtonFace!important}
-  .adw-row:is([${REFUSAL_RED}],[data-ui-refusal-red]) .ui-form-row-icon>*{filter:none;
+  .adw-row[${REFUSAL_RED}] .ui-form-row-icon>*{filter:none;
     background:ButtonFace!important;
     mask:var(--adw-art-image) var(--adw-art-position)/var(--adw-art-size) no-repeat}
 }
