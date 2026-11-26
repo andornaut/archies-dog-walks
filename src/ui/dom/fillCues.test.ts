@@ -181,19 +181,26 @@ describe("control state cues", () => {
       "a focused choice card's band",
       "choice",
       ".adw-choice-group:has(.adw-choice-option:focus-visible) .adw-choice-press-band",
-      "background:var(--adw-cyan)",
+      "background:var(--ui-colour-button-focus-face)",
     ],
     [
       "an enabled pressed choice card's band",
       "choice",
       '.adw-choice-pressed:has(.adw-choice-option:not([aria-disabled="true"])) .adw-choice-press-band',
-      "background:var(--adw-green)",
+      "background:var(--ui-colour-button-pressed-face)",
     ],
     [
-      "a focused or pressed choice label in forced colours",
-      "choice",
+      "a choice card's focus and press in forced colours",
+      "choiceForced",
+      ".adw-choice-group",
+      "--ui-colour-button-focus-face:Highlight;--ui-colour-button-focus-text:HighlightText;" +
+        "--ui-colour-button-pressed-face:Highlight;--ui-colour-button-pressed-text:HighlightText",
+    ],
+    [
+      "a pressed choice label in forced colours",
+      "choiceForced",
       '.adw-choice-pressed:has(.adw-choice-option:not([aria-disabled="true"])) .adw-choice-press-label *',
-      "color:HighlightText!important",
+      "color:var(--ui-colour-button-pressed-text)!important",
     ],
     [
       "a focused or pressed Logbook row's content",

@@ -1,5 +1,6 @@
 /* An option shows focus and press as its label band's fill: cyan for focus, green for an enabled
-   card's press. */
+   card's press, from Game Kit's theme state slots on the card's group, Highlight in forced
+   colours. */
 .adw-choice-option:focus-visible {
   outline: none;
 }
@@ -7,6 +8,8 @@
 /* A card's group is its parts' containing block and stacking context, still or shaking in a
    refusal (refusal.ts). */
 .adw-choice-group {
+  --ui-colour-button-focus-face: var(--adw-cyan);
+  --ui-colour-button-pressed-face: var(--adw-green);
   transform: translateX(0);
 }
 
@@ -16,12 +19,12 @@
 
 .adw-choice-group:has(.adw-choice-option:focus-visible) .adw-choice-press-band {
   display: block;
-  background: var(--adw-cyan);
+  background: var(--ui-colour-button-focus-face);
 }
 
 .adw-choice-pressed:has(.adw-choice-option:not([aria-disabled="true"])) .adw-choice-press-band {
   display: block;
-  background: var(--adw-green);
+  background: var(--ui-colour-button-pressed-face);
 }
 
 /* A refusal's red phases on the group (refusal.ts): the label band fills dark red under a white
@@ -37,20 +40,29 @@
 }
 
 @media (forced-colors: active) {
-  .adw-choice-group:has(.adw-choice-option:focus-visible) .adw-choice-press-band,
-  .adw-choice-pressed:has(.adw-choice-option:not([aria-disabled="true"])) .adw-choice-press-band {
+  .adw-choice-group {
+    --ui-colour-button-focus-face: Highlight;
+    --ui-colour-button-focus-text: HighlightText;
+    --ui-colour-button-pressed-face: Highlight;
+    --ui-colour-button-pressed-text: HighlightText;
+  }
+
+  .adw-choice-press-band {
     forced-color-adjust: none;
-    background: Highlight;
   }
 
   .adw-choice-group:has(.adw-choice-option:focus-visible) .adw-choice-press-label,
-  .adw-choice-group:has(.adw-choice-option:focus-visible) .adw-choice-press-label *,
+  .adw-choice-group:has(.adw-choice-option:focus-visible) .adw-choice-press-label * {
+    forced-color-adjust: none;
+    color: var(--ui-colour-button-focus-text) !important;
+  }
+
   .adw-choice-pressed:has(.adw-choice-option:not([aria-disabled="true"])) .adw-choice-press-label,
   .adw-choice-pressed:has(.adw-choice-option:not([aria-disabled="true"]))
     .adw-choice-press-label
     * {
     forced-color-adjust: none;
-    color: HighlightText !important;
+    color: var(--ui-colour-button-pressed-text) !important;
   }
 
   /* A refusal's red phases fill the band ButtonText under a ButtonFace label, the inverse of the
