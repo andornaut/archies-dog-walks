@@ -11,6 +11,7 @@ import {
   setBox,
   shownText,
   spokenText,
+  WEB_FONT_EM,
 } from "./pixelLine.ts";
 const ORIGIN = { x: 0, y: 0 };
 // One immutable text block. Shared font layout owns anchors, ink centring and name-pill bounds.
@@ -76,7 +77,7 @@ export function textBlock(
           top: `${run.top - top}px`,
         });
         if (block.font === "display") {
-          span.style.setProperty("--adw-k", `${place.fontSize / 8}px`);
+          span.style.setProperty("--adw-k", `${place.fontSize / WEB_FONT_EM}px`);
         }
       });
     },

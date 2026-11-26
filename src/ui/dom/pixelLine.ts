@@ -34,6 +34,9 @@ import { cssHex, PALETTE } from "../palette.ts";
 import { plainMarks } from "../pixelFont.ts";
 import { WEB_FONTS } from "./uiLayer.ts";
 
+// The web fonts' em, in font pixels: a line's font size is this many device pixels a font pixel.
+export const WEB_FONT_EM = 8;
+
 // A line of pixel text in the HTML interface: its web font draws the bitmap font's glyphs, so it
 // is laid out by them. The capitals' top and the middle across are game pixels, as the canvas
 // places its labels: the middle of the ink, or of the glyphs' advances where the canvas centres a
@@ -125,8 +128,8 @@ export function textPlace(
     deviceY(scale, blockTop) +
     (index * bitmap.lineHeight - capRows(bitmap, line.font)) * pixel -
     gridY(scale, origin.y);
-  // The web fonts' em is 8 font pixels and their line the bitmap font's.
-  return { fontSize: 8 * pixel, left, lineHeight: bitmap.lineHeight * pixel, top };
+  // The web fonts' line is the bitmap font's.
+  return { fontSize: WEB_FONT_EM * pixel, left, lineHeight: bitmap.lineHeight * pixel, top };
 }
 
 // Places element over rect, its edges on the grid (gridRect), in device pixels from its
@@ -230,7 +233,7 @@ function writeTextPlace(
   });
   // The display font's ring and shadow, a font pixel a step (uiStyle.ts).
   if (line.font === "display") {
-    element.style.setProperty("--adw-k", `${place.fontSize / 8}px`);
+    element.style.setProperty("--adw-k", `${place.fontSize / WEB_FONT_EM}px`);
   }
 }
 
@@ -577,7 +580,7 @@ export function blockPlace(
   });
   return {
     cut: pixel,
-    fontSize: 8 * pixel,
+    fontSize: WEB_FONT_EM * pixel,
     lineHeight: bitmap.lineHeight * pixel,
     pills: lines.flatMap(({ left, shown, top }) =>
       namePillBoxes(bitmap, pixel, { x: left, y: top }, shown),

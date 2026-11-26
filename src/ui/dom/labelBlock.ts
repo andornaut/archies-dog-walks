@@ -12,7 +12,15 @@ import {
   wholeArtPixels,
 } from "../domScale.ts";
 import { cssHex } from "../palette.ts";
-import { displayGlyphs, inkEnd, namePillBoxes, penRuns, setBox, spokenText } from "./pixelLine.ts";
+import {
+  displayGlyphs,
+  inkEnd,
+  namePillBoxes,
+  penRuns,
+  setBox,
+  spokenText,
+  WEB_FONT_EM,
+} from "./pixelLine.ts";
 import type { WEB_FONTS } from "./uiLayer.ts";
 
 // A canvas label as the HTML interface draws it in its web font: its text as the bitmap font
@@ -86,7 +94,7 @@ export function labelPlace(
   });
   return {
     cut: pixel,
-    fontSize: 8 * pixel,
+    fontSize: WEB_FONT_EM * pixel,
     lineHeight: bitmap.lineHeight * pixel,
     pills: lines.flatMap(({ left, text, top: lineTop }) =>
       namePillBoxes(bitmap, pixel, { x: left, y: lineTop }, text),
@@ -139,7 +147,7 @@ export function drawLabel(
     if (label.font === "display") {
       span.append(...displayGlyphs(doc, run.text));
       // The display font's ring and shadow, a font pixel a step (uiStyle.ts).
-      span.style.setProperty("--adw-k", `${place.fontSize / 8}px`);
+      span.style.setProperty("--adw-k", `${place.fontSize / WEB_FONT_EM}px`);
     } else {
       span.textContent = run.text;
     }
