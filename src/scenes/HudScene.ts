@@ -5,11 +5,7 @@ import { perkIconKey } from "../assets/index.ts";
 import type { AchievementId, DebuffId, DogId } from "../data/ids.ts";
 import { gameData, type HintTrigger } from "../data/index.ts";
 import { FEEDBACK as MENU_FEEDBACK } from "../home/index.ts";
-import {
-  createHudChrome,
-  type HudCards,
-  type HudMomentPainter,
-} from "../hud/dom/index.ts";
+import { createHudChrome, type HudCards, type HudMomentPainter } from "../hud/dom/index.ts";
 import {
   achievementLine,
   cardHearts,
