@@ -34,6 +34,7 @@ import { pageSearch } from "../cheats/browserTools.ts";
 import { pageRunSetup } from "../cheats/pageRunSetup.ts";
 import { namesRunSetup, runLinkLoadout } from "../cheats/runLink.ts";
 import { gameData } from "../data/index.ts";
+import { FACE_SIZE, OWNER_CARD_FACE } from "../data/layout.ts";
 import type { EncounterId } from "../data/types.ts";
 import { hudArtResources } from "../hud/dom/prepareHudArt.ts";
 import { waitedLoad } from "../loadingProgress.ts";
@@ -111,9 +112,12 @@ function placeholderSizes(): Map<string, Size> {
   for (const dog of keysOf(gameData.dogs)) {
     const dogSide = DOG_FRAME_SIDES[gameData.dogs[dog].size];
     sizes.set(dogSpriteKey(gameData, dog), box(dogSide, dogSide, PALETTE.slate));
-    sizes.set(dogFaceKey(gameData, dog), box(32, 32, PALETTE.slate));
-    sizes.set(ownerFaceKey(gameData, dog), box(32, 32, PALETTE.brown));
-    sizes.set(ownerCardFaceKey(gameData, dog), box(20, 20, PALETTE.brown));
+    sizes.set(dogFaceKey(gameData, dog), box(FACE_SIZE, FACE_SIZE, PALETTE.slate));
+    sizes.set(ownerFaceKey(gameData, dog), box(FACE_SIZE, FACE_SIZE, PALETTE.brown));
+    sizes.set(
+      ownerCardFaceKey(gameData, dog),
+      box(OWNER_CARD_FACE, OWNER_CARD_FACE, PALETTE.brown),
+    );
   }
   const tall: readonly EncounterId[] = [
     "droppedIceCream",

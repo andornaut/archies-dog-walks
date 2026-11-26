@@ -4,6 +4,7 @@ import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/te
 import { LABEL_VALUE_GAP, LOGBOOK_PAGE, MIN_PRESS } from "../data/layout.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { MODAL } from "../ui/modal/layout.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 import { BADGE_STRIP, type WallCellLines } from "./badgesView.ts";
 import { SHOP_LAYOUT, shopListFrame, shopTabRects } from "./shopLayout.ts";
 
@@ -132,9 +133,9 @@ export function detailTextTops(
   goalLines: number,
 ): { goal: number; line: number; status: number } {
   const { gap, goalDy, nameY } = STATS_LAYOUT.detailText;
-  const status = nameY + helpCapDy(fonts.title, 2);
+  const status = nameY + helpCapDy(fonts.title, TEXT_SCALE);
   const goal = status + goalDy;
-  return { goal, line: goal + goalLines * fonts.body.lineHeight * 2 + gap, status };
+  return { goal, line: goal + goalLines * fonts.body.lineHeight * TEXT_SCALE + gap, status };
 }
 
 // The open badge's content height, its frame detailText.foot under its line's lowest ink, under
@@ -146,7 +147,7 @@ export function detailPanelHeight(
 ): number {
   const { detailText } = STATS_LAYOUT;
   const line = detailTextTops(fonts, goalLines).line;
-  const inkBottom = line + inkRowsOfLines(fonts.body, lineLines) * 2;
+  const inkBottom = line + inkRowsOfLines(fonts.body, lineLines) * TEXT_SCALE;
   return inkBottom + detailText.foot + detailText.frame;
 }
 
@@ -195,7 +196,7 @@ export function wallLineTops(
 ): number[] {
   const { lineHeight, y } = STATS_LAYOUT.wallText;
   const name = cell.name.map((_, i) => y + i * lineHeight);
-  const below = y + (cell.name.length - 1) * lineHeight + helpCapDy(body, 2);
+  const below = y + (cell.name.length - 1) * lineHeight + helpCapDy(body, TEXT_SCALE);
   const rest = [...cell.goal, ...cell.progress].map((_, i) => below + i * lineHeight);
   return [...name, ...rest];
 }

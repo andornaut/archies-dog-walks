@@ -7,7 +7,7 @@ import {
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { DOG_SLOTS } from "../data/dogSlots.ts";
-import { BODY_PITCH, LABEL_VALUE_GAP, SHOP_PAGE } from "../data/layout.ts";
+import { BODY_PITCH, LABEL_VALUE_GAP, PAGE, SHOP_PAGE } from "../data/layout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { PAGE_LAYOUT, PAGE_TITLE_ROW } from "../ui/pageLayout.ts";
@@ -25,11 +25,11 @@ const SHOP = SHOP_PAGE;
 const PANEL = PAGE_LAYOUT.rect;
 const BACK = PAGE_LAYOUT.back;
 const TRACK_X = PAGE_LAYOUT.scrollbar.x;
-// The tabs span the page's inset. Rows start at the inset and stop scrollGap short of the
+// The tabs span the page's inset. Rows start at the inset and stop PAGE.trackGap short of the
 // scrollbar's track whether or not the list scrolls, so its room is always reserved.
 const ROW_X = PANEL.x + PAGE_LAYOUT.inset;
 const TAB_SPAN = PANEL.width - 2 * PAGE_LAYOUT.inset;
-const ROW_WIDTH = TRACK_X - SHOP.row.scrollGap - ROW_X;
+const ROW_WIDTH = TRACK_X - PAGE.trackGap - ROW_X;
 // The tabs' targets sit under the heading, each selected face lifted below it and centred in its
 // target.
 const TAB_Y =

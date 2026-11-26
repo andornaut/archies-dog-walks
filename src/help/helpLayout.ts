@@ -1,7 +1,7 @@
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { arrangePager, type PagerArrangement } from "@andornaut/game-kit/runtime/ui/pager";
 
-import { HELP_SCREEN, MIN_PRESS } from "../data/layout.ts";
+import { HELP_SCREEN, MIN_PRESS, PAGE } from "../data/layout.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
@@ -20,13 +20,13 @@ export const FRAME_LINES = 2;
 export const WELL_RINGS = 2;
 
 // Help is a page under the live top bar: it covers the screen from the bar's foot down.
-const PAGE = PAGE_LAYOUT.rect;
+const PAGE_RECT = PAGE_LAYOUT.rect;
 // The picture at full size, centred across the screen, its columns those of the walk screen
 // under it; its well's rings round it, the cream pad round them and the frame's lines round that.
 const PICTURE = {
   ...HELP.picture,
   x: (width - HELP.picture.width) / 2,
-  y: PAGE.y + HELP.frame.top + FRAME_LINES + HELP.frame.pad + WELL_RINGS,
+  y: PAGE_RECT.y + HELP.frame.top + FRAME_LINES + HELP.frame.pad + WELL_RINGS,
 } as const;
 const grow = (rect: Rect, by: number): Rect => ({
   height: rect.height + 2 * by,
@@ -59,8 +59,8 @@ const BODY_VIEWPORT = { height: BODY_HEIGHT, width, x: 0, y: BODY_TOP } as const
 // The framed picture comes first, its caption centred across the well under it, then the page's
 // title and body, then the pager: Previous, the page dots and Next in one row centred in its room,
 // over Back. The body's lines, at most maxLines of them, are lineHeight apart, its capitals
-// the label gap under the title's actual ink, and stop scrollGap short of the pages' scrollbar
-// track.
+// the label gap under the title's actual ink, and stop PAGE.trackGap short of the pages'
+// scrollbar track.
 // The body scrolls in its viewport, whole lines at a time.
 // The page's own presses (swipes and taps) start under the top bar's press columns, which reach
 // MIN_PRESS rows down.
@@ -68,7 +68,7 @@ export const HELP_LAYOUT = {
   body: {
     ...HELP.body,
     viewport: BODY_VIEWPORT,
-    width: PAGE_LAYOUT.scrollbar.x - HELP.body.scrollGap - HELP.body.x,
+    width: PAGE_LAYOUT.scrollbar.x - PAGE.trackGap - HELP.body.x,
     y: BODY_Y,
   },
   caption: { centreX: WELL.x + WELL.width / 2, y: CAPTION_Y },
@@ -76,7 +76,7 @@ export const HELP_LAYOUT = {
   footer: PAGE_LAYOUT.back,
   frame: FRAME,
   illustration: PICTURE,
-  page: PAGE,
+  page: PAGE_RECT,
   // The pager's row: its room, the row's top, and the dots' side and gap.
   pager: {
     dots: HELP.dots,
@@ -85,7 +85,7 @@ export const HELP_LAYOUT = {
     x: PAGER_X,
     y: BUTTONS_Y,
   },
-  presses: { ...PAGE, height: PAGE.y + PAGE.height - MIN_PRESS, y: MIN_PRESS },
+  presses: { ...PAGE_RECT, height: PAGE_RECT.y + PAGE_RECT.height - MIN_PRESS, y: MIN_PRESS },
   screen: SCREEN,
   // The page's title, centred across the screen on its visible ink.
   title: { ...HELP.title, centreX: width / 2, y: TITLE_Y },

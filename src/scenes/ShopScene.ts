@@ -7,7 +7,7 @@ import { Scene } from "phaser";
 import { domArtUrl } from "../assets/domArtFiles.ts";
 import { dogFaceKey, gearIconKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { PLATE_PAD } from "../data/layout.ts";
+import { CHECK_SIZE, PLATE_PAD } from "../data/layout.ts";
 import { FEEDBACK, shakeOffset } from "../home/feedback.ts";
 import type { Purchase } from "../home/home.ts";
 import { overlayRegion } from "../home/homeBar.ts";
@@ -501,7 +501,12 @@ export class ShopScene extends Scene {
         );
         art.push({
           key: "ui-check",
-          rect: { height: 16, width: 16, x: right - 16, y: mid - 8 },
+          rect: {
+            height: CHECK_SIZE,
+            width: CHECK_SIZE,
+            x: right - CHECK_SIZE,
+            y: mid - CHECK_SIZE / 2,
+          },
           sheet: true,
           tag: "tick",
         });

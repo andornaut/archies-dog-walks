@@ -499,8 +499,11 @@ export function speechPads(
   if (!first && !last) {
     return { bottom: padBottom, top: padTop };
   }
-  const rise = Math.max((body.capTop - body.letterTop) * 2, first ? pillRiseOverCaps(body, 2) : 0);
-  const drop = last ? pillDropUnderInk(body, 2) : 0;
+  const rise = Math.max(
+    (body.capTop - body.letterTop) * TEXT_SCALE,
+    first ? pillRiseOverCaps(body, TEXT_SCALE) : 0,
+  );
+  const drop = last ? pillDropUnderInk(body, TEXT_SCALE) : 0;
   return {
     bottom: Math.max(padBottom, drop + PILL_IMAGE_GAP + rim.bottom),
     top: Math.max(padTop, rim.top + PILL_IMAGE_GAP + rise),
@@ -510,7 +513,7 @@ export function speechPads(
 // The speech bubble's height for lines of 2x body text.
 export function speechBubbleHeight(body: FontMetrics, lines: readonly string[]): number {
   const pads = speechPads(body, lines);
-  return pads.top + inkRowsOfLines(body, lines.length) * 2 + pads.bottom;
+  return pads.top + inkRowsOfLines(body, lines.length) * TEXT_SCALE + pads.bottom;
 }
 
 // The owner's row on a dog's card, with its role on roleLines lines.
@@ -526,7 +529,9 @@ export type DetailRow = number | OwnerRow;
 // lines.
 function ownerTextRows(body: FontMetrics, roleLines: number, nameLines = 1): number {
   return (
-    helpCapDy(body, 2) + (nameLines - 1) * body.lineHeight * 2 + inkRowsOfLines(body, roleLines) * 2
+    helpCapDy(body, TEXT_SCALE) +
+    (nameLines - 1) * body.lineHeight * TEXT_SCALE +
+    inkRowsOfLines(body, roleLines) * TEXT_SCALE
   );
 }
 
@@ -559,9 +564,9 @@ export function detailOwner(
     name: { x, y: nameY },
     photo,
     role: {
-      pitch: body.lineHeight * 2,
+      pitch: body.lineHeight * TEXT_SCALE,
       x,
-      y: nameY + helpCapDy(body, 2) + (nameLines - 1) * body.lineHeight * 2,
+      y: nameY + helpCapDy(body, TEXT_SCALE) + (nameLines - 1) * body.lineHeight * TEXT_SCALE,
     },
   };
 }
@@ -579,7 +584,7 @@ function cardRows(
     bottom =
       at +
       (typeof row === "number"
-        ? inkRowsOfLines(body, row) * 2
+        ? inkRowsOfLines(body, row) * TEXT_SCALE
         : detailOwnerHeight(body, row.roleLines, row.nameLines));
     y = bottom + MODAL.gap;
     return at;

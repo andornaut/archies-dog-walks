@@ -58,15 +58,15 @@ export const PAGE_LAYOUT = {
   scrollbar: { ...SHOP_PAGE.scrollbar, x: width - PAGE.inset - SHOP_PAGE.scrollbar.trackWidth },
 } as const;
 
-// The Settings and Cheats pages: their rows' column, from the page's inset to trackGap short of
-// the scrollbar's track, whether or not the rows scroll; the body's top, titleGap rows under the
+// The Settings and Cheats pages: their rows' column, from the page's inset to PAGE.trackGap short
+// of the scrollbar's track, whether or not the rows scroll; the body's top, titleGap rows under the
 // title row; and the rows' foot over what stays fixed under the body (bodyFoot) and the version
 // label's lowest ink over Back's face (labelFoot).
 export const ROWS_PAGE_LAYOUT = {
   bodyFoot: ROWS_PAGE.bodyFoot,
   bodyTop: PAGE_TITLE_ROW.y + PAGE_TITLE_ROW.height + ROWS_PAGE.titleGap,
   column: {
-    width: PAGE_LAYOUT.scrollbar.x - ROWS_PAGE.trackGap - PAGE.inset,
+    width: PAGE_LAYOUT.scrollbar.x - PAGE.trackGap - PAGE.inset,
     x: PAGE.inset,
   },
   labelInkBottom: BACK.y - ROWS_PAGE.labelFoot,

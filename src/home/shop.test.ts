@@ -3,7 +3,7 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { SHOP_PAGE } from "../data/layout.ts";
+import { PAGE, SHOP_PAGE } from "../data/layout.ts";
 import type { DogId, LiveTuning } from "../data/types.ts";
 import { scrollMax } from "../input/listScroll.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
@@ -422,7 +422,7 @@ describe("the shop's list", () => {
     )) {
       const right = row.x + row.width;
       expect(frame.headingRight).toBe(right);
-      expect(right).toBe(track.x - SHOP_PAGE.row.scrollGap);
+      expect(right).toBe(track.x - PAGE.trackGap);
       const outer = { left: row.x - SELECT_OUTSET, right: right + SELECT_OUTSET };
       expect(outer.left).toBeGreaterThanOrEqual(frame.rect.x);
       expect(outer.right).toBeLessThanOrEqual(frame.rect.x + frame.rect.width);

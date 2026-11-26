@@ -62,10 +62,6 @@ function speechCapTop(body: BitmapFont, lines: readonly string[], rect: Rect): n
   return rect.y + rim.top + Math.floor((cream - (ink.bottom - ink.top)) / 2) - ink.top;
 }
 
-// art: the columns ui-quip's frame inks at its left and right edges, its plum line and, at the
-// right, its tan shade, as HOME_LAYOUT.speech.rim gives the rows at its top and bottom.
-const QUIP_SIDES = { left: 2, right: 3 } as const;
-
 // The column a line's visible ink centres on as the text block's inkCentre places it: centre
 // moved by as far as the line's glyphs' middle is from the middle of its glyphs and pills, so
 // its glyphs and pills together centre on centre.
@@ -133,8 +129,8 @@ export function createHomeSpeech(
     colour: PALETTE.cyan,
     rect: {
       height: view.rect.height - rim.top - rim.bottom,
-      width: view.rect.width - QUIP_SIDES.left - QUIP_SIDES.right,
-      x: view.rect.x + QUIP_SIDES.left,
+      width: view.rect.width - rim.left - rim.right,
+      x: view.rect.x + rim.left,
       y: view.rect.y + rim.top,
     },
   });
@@ -144,7 +140,7 @@ export function createHomeSpeech(
   // sides, or across the text's column beside an owner, the block's ink centred down the cream.
   const centre =
     view.owner === undefined
-      ? view.rect.x + QUIP_SIDES.left + (view.rect.width - QUIP_SIDES.left - QUIP_SIDES.right) / 2
+      ? view.rect.x + rim.left + (view.rect.width - rim.left - rim.right) / 2
       : view.textX;
   const capTop = speechCapTop(fonts.body, view.lines, view.rect);
   const { lineHeight } = fontMetrics(fonts.body);

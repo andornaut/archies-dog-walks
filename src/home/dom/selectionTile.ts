@@ -4,6 +4,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { ButtonView } from "@andornaut/game-kit/runtime/web/ui/dom/button";
 
+import { CHECK_SIZE } from "../../data/layout.ts";
 import { type DomArtSource, sheetArt } from "../../ui/dom/artElements.ts";
 import { createTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import { artPixel, type DomScale, frameRect, gridRect, gridX, gridY } from "../../ui/domScale.ts";
@@ -92,7 +93,7 @@ export function createSelectionTile(
       ? ({
           capTop: view.rect.y + MARK_OFFSET.y + 4,
           centre: "ink",
-          centreX: view.rect.x + MARK_OFFSET.x + 8,
+          centreX: view.rect.x + MARK_OFFSET.x + CHECK_SIZE / 2,
           colour: PALETTE.white,
           font: "title",
           scale: 1,

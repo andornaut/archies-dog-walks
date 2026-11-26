@@ -3,7 +3,7 @@ import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { MIN_PRESS, TOP_BAR_HEIGHT } from "../data/layout.ts";
+import { MIN_PRESS, PAGE, TOP_BAR_HEIGHT } from "../data/layout.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, gameFont, placedInk } from "../testing/fontInk.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
@@ -64,7 +64,7 @@ describe("help's page", () => {
     expect(bar?.thumb.y).toBe(
       body.viewport.y + body.viewport.height - scrollbar.thumbInset - (bar?.thumb.height ?? 0),
     );
-    expect(body.x + body.width + body.scrollGap).toBe(scrollbar.x);
+    expect(body.x + body.width + PAGE.trackGap).toBe(scrollbar.x);
   });
 
   it("fits every page's caption on one line across the picture", () => {

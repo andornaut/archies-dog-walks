@@ -53,6 +53,15 @@ export const ICON_LABEL_GAP = 4;
 // art: the side of an icon beside a label.
 export const LABEL_ICON = 16;
 
+// art: a dog's or owner's face's side, as the face sheets draw it.
+export const FACE_SIZE = 32;
+
+// art: an owner's card face's side (the face shown inline in walk text and on the message strip).
+export const OWNER_CARD_FACE = 20;
+
+// art: a gear icon's side at scale 1.
+export const GEAR_ICON = 32;
+
 // art: a raised button's rows outside its flat face and lip: its ink outline and lit row over the
 // face, and its ink outline under the lip.
 export const BUTTON_FACE_EDGE = { bottom: 1, top: 2 } as const;
@@ -97,6 +106,12 @@ export const AFFORD_OUTSET = 2;
 
 // The ui-check mark's offset from an item's top-left corner.
 export const MARK_OFFSET = { x: -6, y: -1 } as const;
+
+// art: the ui-check mark's side.
+export const CHECK_SIZE = 16;
+
+// A lock badge's offset from its tile's or row's top-left corner, over which it hangs.
+export const LOCK_BADGE_OFFSET = { dx: -2, dy: -3 } as const;
 
 // The clear rows between a label's lowest ink and its help text's capitals.
 export const LABEL_HELP_GAP = 10;
@@ -249,7 +264,7 @@ export const DOG_CARD_PARTS = {
   name: { room: 108, scale: 2, top: 3, x: 60 },
   owner: {
     // The owner's face's side and top-left.
-    face: { size: 32, x: 47, y: 17 },
+    face: { size: FACE_SIZE, x: 47, y: 17 },
     name: { inkTop: 53, scale: 1.75, x: 78 },
     // The photo's ink frame and white mat round the face.
     photo: { frame: 1, mat: 1 },
@@ -267,6 +282,9 @@ export const OWNER_TAB = {
   y: -34,
 } as const;
 
+// The message strip's icon's left edge, from the strip's.
+const MESSAGE_STRIP_ICON_X = 6;
+
 // The message strip under the walk bar, from its top-left corner.
 export const MESSAGE_STRIP = {
   // The strip's top under the last debuff bar.
@@ -275,8 +293,8 @@ export const MESSAGE_STRIP = {
   capsTop: 10,
   // The strip's top under the walk bar.
   gap: 6,
-  // art: the icon's side; and its left edge.
-  icon: { size: 16, x: 6 },
+  // The icon's side and left edge.
+  icon: { size: LABEL_ICON, x: MESSAGE_STRIP_ICON_X },
   // The panel's rows under the last row's lowest ink.
   padBottom: 8,
   // The text's right end short of the panel's right edge.
@@ -285,8 +303,8 @@ export const MESSAGE_STRIP = {
   rows: 2,
   // The text's scale.
   scale: 2,
-  // The text's left edge.
-  textX: 26,
+  // The text's left edge, ICON_LABEL_GAP after the icon's cell.
+  textX: MESSAGE_STRIP_ICON_X + LABEL_ICON + ICON_LABEL_GAP,
   // The panel's width and left edge on screen.
   width: 344,
   x: 8,
@@ -295,7 +313,7 @@ export const MESSAGE_STRIP = {
 // An owner's quip's lead on the message strip.
 export const OWNER_LEAD = {
   // The owner's face's side.
-  face: 20,
+  face: OWNER_CARD_FACE,
   // The name's actual ink gap under the face's frame.
   nameGap: 2,
   // The frame's top above the first row's capitals.
@@ -305,7 +323,7 @@ export const OWNER_LEAD = {
 // An owner's face inline before their name in walk text.
 export const INLINE_FACE = {
   // The face's side.
-  face: 20,
+  face: OWNER_CARD_FACE,
   // The gap from the face's frame to the name.
   gap: 4,
   // The text scale the face shows beside.
@@ -393,6 +411,8 @@ export const MOMENT_PARTS = {
   bubbleGutter: 8,
   // The firing moment, over the dog's card.
   firing: {
+    // The owner's face's scale.
+    faceScale: 2,
     // The owner's face's rise over the owner's tab's centre.
     lift: 50,
     // The fired line's bubble's bottom over the face's top.
@@ -571,7 +591,7 @@ export const HOME_SCREEN = {
     besideDy: 4,
     besideX: 90,
     // A dog's owner's face's side, and the gap from the photo to the name.
-    owner: { face: 32, gap: 6 },
+    owner: { face: FACE_SIZE, gap: 6 },
     // The gap between rows.
     rowGap: 8,
     // The title row's height, and the title's capitals' top in it.
@@ -584,9 +604,9 @@ export const HOME_SCREEN = {
   // A dog tile, from its drawn top-left.
   dogTile: {
     // A locked dog's badge's offset.
-    badge: { dx: -2, dy: -3 },
+    badge: LOCK_BADGE_OFFSET,
     // The face's offset and side.
-    face: { dx: 4, dy: 5, size: 32 },
+    face: { dx: 4, dy: 5, size: FACE_SIZE },
     // A locked dog's name's capitals' top: its letters' top on the portrait box's top row, two
     // rows over its 2x capitals.
     lockedNameY: 6,
@@ -633,9 +653,9 @@ export const HOME_SCREEN = {
   // A Pocket tile: its badge's offset, its icon box's offset and side, its icon's offset and its
   // price strip's rows at the tile's foot.
   pocket: {
-    badge: { dx: -2, dy: -3 },
+    badge: LOCK_BADGE_OFFSET,
     box: { dx: 12, dy: 2, size: 34 },
-    icon: { dx: 13, dy: 2, size: 32 },
+    icon: { dx: 13, dy: 2, size: GEAR_ICON },
     strip: 15,
   },
   // art: the Pocket tiles' faces, each drawn inside a press cell grown round it to MIN_PRESS tall.
@@ -671,18 +691,19 @@ export const HOME_SCREEN = {
     // An owner's column: the foot under the face, the gap from the text, the inset from the
     // bubble's right, the name's capitals under the face, the text's narrowing, the face's side
     // and its top.
-    owner: { foot: 18, gap: 6, inset: 3, nameGap: 3, roomCut: 4, size: 32, top: 4 },
+    owner: { foot: 18, gap: 6, inset: 3, nameGap: 3, roomCut: 4, size: FACE_SIZE, top: 4 },
     // The rows under the last line's lowest ink, and over the first line's capitals: a row of
     // cream clear of the rims beyond the font's lowest ink and its letters' highest.
     padBottom: 4,
     padTop: 5,
     // The text's inset from the bubble's sides.
     padX: 5,
-    // art: the rows the quip art inks at its bottom and top edges.
-    rim: { bottom: 3, top: 2 },
+    // art: the rows the quip art inks at its bottom and top edges, and the columns at its left
+    // and right: its plum line and, at the right and bottom, its tan shade.
+    rim: { bottom: 3, left: 2, right: 3, top: 2 },
   },
   // Start walk's left edge, and the rows under it to the screen's bottom.
-  startButton: { foot: 4, x: 32 },
+  startButton: { foot: 4, x: WIDE_BUTTON_X },
   // The rows between the pocket section and Start walk.
   startGap: 2,
   // Start walk's label's scale.
@@ -701,7 +722,7 @@ export const HOME_SCREEN = {
   // A walker tile: a locked walker's badge's offset, the portrait's offset and side, the perk icon's left
   // edge and tops, and its name strip's rows at the tile's foot.
   walkerTile: {
-    badge: { dx: -2, dy: -3 },
+    badge: LOCK_BADGE_OFFSET,
     face: { dx: 5, dy: 1, size: 30 },
     icons: { dx: 44, dy: [4] },
     strip: 17,
@@ -757,15 +778,19 @@ export const BODY_PITCH = 18;
 // The least clear ink between a page row's label and the value or note on its line.
 export const LABEL_VALUE_GAP = 8;
 
-// The Help, Logbook and Pet shop pages under the top bar: Back's rows over the screen's foot, and
-// the content's side inset, which the scrollbar's track keeps from the screen's right edge too.
-export const PAGE = { backFoot: 12, inset: 8 } as const;
+// The pages under the top bar: Back's rows over the screen's foot; the content's side inset, which
+// the scrollbar's track keeps from the screen's right edge too; the columns from a row's art box
+// to its text; and the rows' and body lines' gap from the scrollbar's track, whether or not it
+// shows.
+export const PAGE = { backFoot: 12, inset: 8, rowTextGap: 8, trackGap: 6 } as const;
 
 // The Settings and Cheats pages: their body's top titleGap rows under the page title row, its foot
-// bodyFoot rows over what stays fixed under it (Settings' version label, else Back's face), the
-// rows' gap from the scrollbar's track, and the version label's lowest ink labelFoot rows over
-// Back's face.
-export const ROWS_PAGE = { bodyFoot: 8, labelFoot: 8, titleGap: 24, trackGap: 6 } as const;
+// bodyFoot rows over what stays fixed under it (Settings' version label, else Back's face), and
+// the version label's lowest ink labelFoot rows over Back's face.
+export const ROWS_PAGE = { bodyFoot: 8, labelFoot: 8, titleGap: 24 } as const;
+
+// A Pet shop row's art box: its left edge in from the row's and its side.
+const SHOP_ROW_BOX = { dx: 4, size: 36 } as const;
 
 // The Pet shop page, which the Logbook wears too.
 export const SHOP_PAGE = {
@@ -783,17 +808,15 @@ export const SHOP_PAGE = {
     // The art's inset in its box.
     art: 2,
     // The badge's offset from the row's top-left.
-    badge: { dx: -2, dy: -3 },
+    badge: LOCK_BADGE_OFFSET,
     // The art box's left edge and side.
-    box: { dx: 4, size: 36 },
+    box: SHOP_ROW_BOX,
     // OWNED's right edge left of the tick's.
     ownedDx: 20,
     // The price plate's inset from the row's right.
     plateInset: 6,
-    // The row's gap from the scrollbar's track.
-    scrollGap: 6,
-    // The text's left edge, 8 right of the art box.
-    textDx: 48,
+    // The text's left edge, rowTextGap right of the art box.
+    textDx: SHOP_ROW_BOX.dx + SHOP_ROW_BOX.size + PAGE.rowTextGap,
   },
   // The scrollbar: the thumb's inset and least height, and the thumb's and track's widths.
   scrollbar: { thumbInset: 1, thumbMin: 16, thumbWidth: 6, trackWidth: 8 },
@@ -827,7 +850,14 @@ export const LOGBOOK_PAGE = {
   },
   // The Dogs tab's block: the face's side, the name's left edge and capitals' top, the rows' top,
   // and the rule's rows over the block and reach past the rows.
-  dogs: { faceSize: 32, nameDx: 40, nameY: 12, rowsY: 38, ruleAbove: 6, ruleDx: 2 },
+  dogs: {
+    faceSize: FACE_SIZE,
+    nameDx: FACE_SIZE + PAGE.rowTextGap,
+    nameY: 12,
+    rowsY: 38,
+    ruleAbove: 6,
+    ruleDx: 2,
+  },
   // The pitch between label and value rows.
   pitch: BODY_PITCH,
   // A Walks tab section's rows under its heading.
@@ -837,7 +867,7 @@ export const LOGBOOK_PAGE = {
     // A badge's top under its row's top.
     badgeTop: 2,
     // An earned badge's band's rows over and under its row, and its tick's offset and side.
-    earned: { bandY: 0, checkDx: 20, checkDy: -1, checkSize: 16 },
+    earned: { bandY: 0, checkDx: 20, checkDy: -1, checkSize: CHECK_SIZE },
     // The rows under the last row.
     foot: 16,
     // The gap between rows, which open their badges as buttons do.
@@ -847,8 +877,17 @@ export const LOGBOOK_PAGE = {
   },
   // A wall row's text: its line pitch, most lines, padding under the last, left edge and first
   // capitals' top.
-  wallText: { lineHeight: BODY_PITCH, lines: 3, pad: 4, x: 40, y: 4 },
+  wallText: {
+    lineHeight: BODY_PITCH,
+    lines: 3,
+    pad: 4,
+    x: BADGE_STRIP.badgeSize + PAGE.rowTextGap,
+    y: 4,
+  },
 } as const;
+
+// The columns a Settings or Cheats row's leading icon, label or note starts in from its left.
+const SETTINGS_ROW_INSET = 6;
 
 // The Settings page's rows and the install steps' card.
 export const SETTINGS_CARD = {
@@ -857,7 +896,7 @@ export const SETTINGS_CARD = {
   // The install steps card: the glyph's drop and side, the steps' line pitch and most lines,
   // and the steps' top under the title row.
   installSteps: {
-    icon: { dy: -2, size: 16 },
+    icon: { dy: -2, size: LABEL_ICON },
     linePitch: 20,
     lines: 3,
     stepsDy: 4,
@@ -867,13 +906,13 @@ export const SETTINGS_CARD = {
     // The columns between a note's room and the control beside it.
     controlGap: 10,
     // The icon's top-left.
-    icon: { dx: 6, dy: 9 },
+    icon: { dx: SETTINGS_ROW_INSET, dy: 9 },
     // The rows under the note's lowest ink.
     inkFoot: 14,
     // The label's capitals' top.
     label: { dy: 12 },
     // The note's left edge and most lines.
-    note: { dx: 6, lines: 3 },
+    note: { dx: SETTINGS_ROW_INSET, lines: 3 },
     // The track's inset from the row's sides, and a slider's value's right edge.
     pad: 8,
     // A slider row's height.
@@ -892,9 +931,8 @@ export const SETTINGS_CARD = {
 
 // The help screen; rows up from the screen's bottom where stated.
 export const HELP_SCREEN = {
-  // The body: its line pitch, most lines, scale and left edge, and its lines' gap from the
-  // scrollbar's track.
-  body: { lineHeight: BODY_PITCH, maxLines: 6, scale: 2, scrollGap: 6, x: 8 },
+  // The body: its line pitch, most lines, scale and left edge.
+  body: { lineHeight: BODY_PITCH, maxLines: 6, scale: 2, x: PAGE.inset },
   // The pager's page dots: their side and the gap between them.
   dots: { gap: 4, size: 8 },
   // The picture's frame: its top under the top bar, the cream pad round the picture's well, and

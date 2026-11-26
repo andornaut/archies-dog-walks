@@ -1585,7 +1585,6 @@
         "lineHeight": 18,
         "maxLines": 6,
         "scale": 2,
-        "scrollGap": 6,
         "x": 8,
         "viewport": {
           "height": 108,
@@ -2072,6 +2071,8 @@
         "padX": 5,
         "rim": {
           "bottom": 3,
+          "left": 2,
+          "right": 3,
           "top": 2
         },
         "top": 40

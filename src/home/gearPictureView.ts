@@ -1,5 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
+import { GEAR_ICON } from "../data/layout.ts";
 import type { GameData, GearId } from "../data/types.ts";
 import type { PanelText } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";
@@ -11,9 +12,6 @@ export interface GearPictureFallback {
   readonly picture: Rect;
 }
 
-// art: a gear icon's side at scale 1.
-const GEAR_ICON_SIDE = 32;
-
 export function gearPictureFallback(
   data: Pick<GameData, "shopGear">,
   picture: {
@@ -23,7 +21,7 @@ export function gearPictureFallback(
     readonly y: number;
   },
 ): GearPictureFallback {
-  const side = GEAR_ICON_SIDE * picture.scale;
+  const side = GEAR_ICON * picture.scale;
   return {
     line: {
       capTop: picture.y,
