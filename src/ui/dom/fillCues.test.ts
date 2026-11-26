@@ -363,17 +363,18 @@ describe("control state cues", () => {
     ],
     ["the forced-colours top-bar artwork", "top", FORCED_TOP_ARTWORK, "opacity:1"],
     [
-      "a pressed Pet shop row's text colour",
+      "a picker tile's or Pet shop row's cyan focus and green press under plum and ink",
       "tile",
-      ".adw-selection-tile[data-ui-pressed]",
-      "--adw-selection-focus-ink:var(--adw-ink)",
+      ".adw-selection-tile",
+      "--ui-colour-button-focus-face:var(--adw-cyan);--ui-colour-button-focus-text:var(--adw-plum);" +
+        "--ui-colour-button-pressed-face:var(--adw-green);--ui-colour-button-pressed-text:var(--adw-ink)",
     ],
     [
       "a pressed Pet shop row's text, an unaffordable one's included",
       "tile",
       ".adw-selection-tile[data-ui-pressed]:not([data-picker-refusing]):not(.adw-refusing)" +
         ":not(.adw-refusing-still) :is(.adw-selection-focus-ink, .adw-selection-press-ink)",
-      "color:var(--adw-selection-focus-ink)!important",
+      "color:var(--ui-colour-button-pressed-text)!important",
     ],
     [
       "a pressed unaffordable Pet shop row's text in forced colours",
@@ -387,7 +388,7 @@ describe("control state cues", () => {
       ".adw-selection-tile:not([data-picker-refusing], .adw-refusing, .adw-refusing-still):is(" +
         ":focus-visible, .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused])" +
         " .adw-selection-press-ink",
-      "color:var(--adw-selection-focus-ink)!important;forced-color-adjust:none",
+      "color:var(--ui-colour-button-focus-text)!important;forced-color-adjust:none",
     ],
     [
       "a focused or pressed Pet shop row's price plate in forced colours",
