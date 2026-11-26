@@ -7,7 +7,7 @@ import { Core, type GameObjects, Scene, Scenes, type Time } from "phaser";
 import { domArtUrl } from "../assets/files/index.ts";
 import { dogSpriteKey, gearIconKey, gearSmallIconKey, walkerPortraitKey } from "../assets/index.ts";
 import { MANIFEST_CACHE_KEY, playEffect, spriteMetrics } from "../assets/phaser/index.ts";
-import { clearRunOverrides } from "../cheats/index.ts";
+import { clearRunOverrides } from "../cheats/dom/index.ts";
 import type { DogId, GearId, WalkerId } from "../data/ids.ts";
 import { gameData, PLATE_PAD } from "../data/index.ts";
 import { startWalkOpensHelp } from "../help/index.ts";

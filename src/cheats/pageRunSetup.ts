@@ -1,12 +1,10 @@
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { DogId, GearId, WalkerId } from "../data/ids.ts";
-import { type GameData, gameData } from "../data/index.ts";
+import type { GameData } from "../data/index.ts";
 import { walkLength } from "../rules/index.ts";
 import { MAX_RUN_DOGS } from "../save/index.ts";
-import { browserToolsOn, pageSearch } from "./browserTools.ts";
-import { homeRunSetup, stripRunOverrides } from "./runLink.ts";
-import { type ParsedRunSetup, parseRunSetup, randomSeed, type RunSetupLimits } from "./runSetup.ts";
+import type { RunSetupLimits } from "./runSetup.ts";
 
 const SPEED_LIMITS = { max: 10, min: 0.1 };
 
@@ -22,37 +20,4 @@ export function runSetupLimitsFor(
     zoneCount: walkLength(data),
     zoneIds: data.world.zones.map(({ id }) => id),
   };
-}
-
-let parsed: ParsedRunSetup<DogId, GearId, WalkerId> | undefined;
-let appParsed: ParsedRunSetup<DogId, GearId, WalkerId> | undefined;
-
-// The setup in this page's URL, parsed on first use and kept for the page's life, so every
-// scene sees the same random seed when the URL has none. Warnings go to the console. The
-// installed app reads no setup from its URL.
-export function pageRunSetup(): ParsedRunSetup<DogId, GearId, WalkerId> {
-  if (!browserToolsOn()) {
-    appParsed ??= parseRunSetup(runSetupLimitsFor(gameData), randomSeed, "");
-    return appParsed;
-  }
-  if (parsed === undefined) {
-    parsed = parseRunSetup(runSetupLimitsFor(gameData), randomSeed, pageSearch());
-    parsed.warnings.forEach((warning) => console.warn(`Run setup: ${warning}`));
-  }
-  return parsed;
-}
-
-// Called when the player is home: the URL's run overrides applied to the walk they started, so
-// they leave the URL and the page's setup, and the start screen's picks decide the next walk.
-export function clearRunOverrides(): void {
-  const current = pageRunSetup();
-  parsed = {
-    setup: homeRunSetup(current.setup, randomSeed()),
-    warnings: [],
-  };
-  const href = globalThis.location.href;
-  const stripped = stripRunOverrides(href, false);
-  if (stripped !== href) {
-    globalThis.history.replaceState(globalThis.history.state, "", stripped);
-  }
 }

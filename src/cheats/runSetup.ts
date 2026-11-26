@@ -73,11 +73,6 @@ type ParamName = (typeof PARAM_NAMES)[number];
 
 const DIGITS = /^\d+$/;
 
-// A seed for a URL without one: uniform over the seeds seededRandom distinguishes.
-export function randomSeed(): number {
-  return Math.floor(Math.random() * (MAX_SEED + 1));
-}
-
 function isParamName(name: string): name is ParamName {
   return (PARAM_NAMES as readonly string[]).includes(name);
 }

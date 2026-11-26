@@ -2,6 +2,7 @@ import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 import type { Scene } from "phaser";
 
 import { domArtUrl } from "../assets/files/index.ts";
+import { pageRunSetup, randomSeed } from "../cheats/dom/index.ts";
 import {
   addToBank,
   type CheatAction,
@@ -11,9 +12,7 @@ import {
   nextChoice,
   type NextWalk,
   nextWalkLink,
-  pageRunSetup,
   pocketChoices,
-  randomSeed,
   seedFrom,
   SPEEDS,
   stripRunOverrides,

@@ -1,6 +1,7 @@
 import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { runSetupLimitsFor } from "../cheats/index.ts";
 import {
   decodeInputLog,
   encodeInputLog,
@@ -9,7 +10,6 @@ import {
   takeCardChoice,
   takeDueInputs,
 } from "../cheats/inputLog.ts";
-import { runSetupLimitsFor } from "../cheats/pageRunSetup.ts";
 import { loadoutFor, withSetupStart } from "../cheats/setupRun.ts";
 import { gameData } from "../data/index.ts";
 import { LANE_COUNT } from "../data/screen.ts";

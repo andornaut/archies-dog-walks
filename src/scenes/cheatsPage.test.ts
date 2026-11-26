@@ -30,7 +30,7 @@ const fake = vi.hoisted(() => ({
   },
   update: vi.fn(),
 }));
-vi.mock("../cheats/browserTools.ts", () => ({ browserToolsOn: () => false }));
+vi.mock("../cheats/dom/browserTools.ts", () => ({ browserToolsOn: () => false }));
 vi.mock("../cheats/cheatsView.ts", () => ({
   cheatsView: (_measure: unknown, _input: unknown, state: CheatsState) => {
     fake.projection(state);

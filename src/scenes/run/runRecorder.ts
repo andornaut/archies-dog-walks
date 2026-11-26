@@ -4,8 +4,8 @@ import {
   sessionWrite,
 } from "@andornaut/game-kit/runtime/web/save/dom/pageSessionStore";
 
+import { browserToolsOn, pageRunSetup } from "../../cheats/dom/index.ts";
 import {
-  browserToolsOn,
   type CardChoice,
   decodeInputLog,
   DEV_LAST_LOG_KEY,
@@ -16,7 +16,6 @@ import {
   NEXT_WALK_OFF,
   type NextWalk,
   nextWalkSetup,
-  pageRunSetup,
   recordInput,
   replayInputs,
   type RunSetup,

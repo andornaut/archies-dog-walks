@@ -1,5 +1,5 @@
 // The public entry of src/cheats/: modules outside it import only this file.
-export { browserToolsOn, DEV_GAME_GLOBAL, pageSearch } from "./browserTools.ts";
+export { DEV_GAME_GLOBAL } from "./browserTools.ts";
 export {
   addToBank,
   DEV_LAST_LOG_KEY,
@@ -40,7 +40,14 @@ export {
   takeCardChoice,
   takeDueInputs,
 } from "./inputLog.ts";
-export { clearRunOverrides, pageRunSetup, runSetupLimitsFor } from "./pageRunSetup.ts";
-export { namesRunSetup, runLinkLoadout, stripRunOverrides } from "./runLink.ts";
-export { devInSearch, randomSeed, type RunSetup } from "./runSetup.ts";
+export { runSetupLimitsFor } from "./pageRunSetup.ts";
+export { homeRunSetup, namesRunSetup, runLinkLoadout, stripRunOverrides } from "./runLink.ts";
+export {
+  devInSearch,
+  MAX_SEED,
+  type ParsedRunSetup,
+  parseRunSetup,
+  type RunSetup,
+  type RunSetupLimits,
+} from "./runSetup.ts";
 export { loadoutFor, withSetupStart } from "./setupRun.ts";

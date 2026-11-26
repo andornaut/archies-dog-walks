@@ -11,7 +11,8 @@ import { MAX_RENDER_SCALE } from "@andornaut/game-kit/runtime/view/renderScale";
 import { followFrameTurn } from "@andornaut/game-kit/runtime/web/view/phaser/followFrameTurn";
 import { Core, Game, Scale, WEBGL } from "phaser";
 
-import { DEV_GAME_GLOBAL, pageRunSetup } from "./cheats/index.ts";
+import { pageRunSetup } from "./cheats/dom/index.ts";
+import { DEV_GAME_GLOBAL } from "./cheats/index.ts";
 import { CRASH_SCREEN } from "./crash/index.ts";
 import { SCREEN_CONFIG } from "./data/index.ts";
 import { lostTouches, noteKeyPress } from "./input/index.ts";

@@ -34,7 +34,8 @@ import {
   queueManifestArt,
   smoothDepthArt,
 } from "../assets/phaser/index.ts";
-import { namesRunSetup, pageRunSetup, pageSearch, runLinkLoadout } from "../cheats/index.ts";
+import { pageRunSetup, pageSearch } from "../cheats/dom/index.ts";
+import { namesRunSetup, runLinkLoadout } from "../cheats/index.ts";
 import type { EncounterId } from "../data/ids.ts";
 import { FACE_SIZE, gameData, OWNER_CARD_FACE } from "../data/index.ts";
 import { hudArtResources } from "../hud/dom/index.ts";
