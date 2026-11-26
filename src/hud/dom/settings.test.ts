@@ -1,3 +1,4 @@
+import type { InstallStepsKind } from "@andornaut/game-kit/runtime/web/pwa/installState";
 import { expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
@@ -37,7 +38,7 @@ function fixture(install = false, width = 360, dpr = 1) {
         : { kind: row.kind, noteLines: row.kind === "button" || row.note === undefined ? 0 : 1 },
     ),
   );
-  const view = (steps = false) =>
+  const view = (steps = false, kind: InstallStepsKind = "ios") =>
     settingsView(
       measure,
       {
@@ -51,7 +52,7 @@ function fixture(install = false, width = 360, dpr = 1) {
         focus: null,
         pressed: undefined,
         settings: DEFAULT_SETTINGS,
-        steps: steps ? { ...installStepsLayout(overlayRegion("home"), 1), kind: "ios" } : undefined,
+        steps: steps ? { ...installStepsLayout(overlayRegion("home"), 1), kind } : undefined,
       },
     );
   const doc = new FakeDocument();
@@ -127,6 +128,43 @@ it("sets a volume through the kit slider's keys and drags, and drops a drag that
   expect(shown.accepts()).toBe(true);
   shown.destroy();
   expect(layer.input.accepts()).toBe(true);
+});
+
+// The words a screen reader reads in node: its text and its children's, in order, but none
+// under aria-hidden.
+const spokenWords = (node: FakeElement): string =>
+  node.getAttribute("aria-hidden") === "true"
+    ? ""
+    : node.children.length === 0
+      ? node.textContent
+      : node.children.map(spokenWords).join("");
+
+it.each(
+  Object.entries(gameData.menuText.settings.installSteps) as [
+    InstallStepsKind,
+    { steps: string; title: string },
+  ][],
+)("names the %s install steps' dialog by its title and reads its steps in order", (kind, text) => {
+  const { element, shown, view } = fixture(true);
+  const current = view(true, kind);
+  // The steps wrapped onto two lines, which a screen reader reads as the one sentence.
+  const words = text.steps.split(" ");
+  const half = Math.ceil(words.length / 2);
+  const lines = [words.slice(0, half).join(" "), words.slice(half).join(" ")];
+  const steps = { ...current.steps!, steps: { ...current.steps!.steps, lines } };
+  shown.update({ ...current, steps }, null);
+  // The card's dialog, over the page's.
+  const dialog = element
+    .all()
+    .filter((node) => node.getAttribute("role") === "dialog")
+    .at(-1)!;
+  const nodes = dialog.all();
+  const title = nodes.find((node) => node.id === dialog.getAttribute("aria-labelledby"));
+  expect(title?.getAttribute("aria-label")).toBe(text.title);
+  const described = nodes.find((node) => node.id === dialog.getAttribute("aria-describedby"));
+  expect(described?.tagName).toBe("p");
+  expect(spokenWords(described!).trim()).toBe(text.steps);
+  shown.destroy();
 });
 
 it.each([

@@ -369,15 +369,25 @@ function rowPart(
   }
 }
 
+// Ids that tie each install steps' card's dialog to its steps.
+let stepCards = 0;
+
 // The install steps' card: its title and close control, the glyph of the button the steps start
-// from, and the steps, a modal over the page.
+// from, and the steps, a modal over the page. As a detail card's texts do, the steps are a
+// paragraph a screen reader reads and the dialog's description; the glyph is drawn for sight.
 function showSteps(
   layer: UiLayer,
   input: DomSettingsInput,
   steps: NonNullable<SettingsView["steps"]>,
 ): DomQuestionPanel {
   const doc = layer.element.ownerDocument;
-  const text = textElement(doc, input.fonts, steps.steps);
+  stepCards += 1;
+  const text = textBlock(
+    doc,
+    { fonts: input.fonts, pillColours: () => undefined, spoken: true, tag: "p" },
+    steps.steps,
+  );
+  text.element.id = `adw-install-steps-${stepCards}`;
   const icon = steps.icon === undefined ? undefined : imageArt(doc, input, steps.icon.key);
   const parts: DomPart[] = [
     ...(icon === undefined || steps.icon === undefined
@@ -399,6 +409,7 @@ function showSteps(
     backgroundCancel: input.closeSteps,
     close: input.closeSteps,
     closeLabel: input.closeLabel,
+    describedBy: text.element.id,
     fonts: input.fonts,
     numberKeys: false,
     parts,
