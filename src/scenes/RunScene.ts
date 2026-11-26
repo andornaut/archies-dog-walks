@@ -53,8 +53,6 @@ import {
   currentZoneId,
   newRun,
   outcomeChanges,
-  previousZone,
-  previousZoneId,
 } from "../rules/index.ts";
 import { pageZonePlanner } from "../runner/dom/index.ts";
 import {
@@ -81,7 +79,7 @@ import {
 } from "../runner/index.ts";
 import { checkpointOf, dogsFinishedWith, type ResumeWalk, runResultOf } from "../save/index.ts";
 import type { Loadout, RunState } from "../state/index.ts";
-import { colourFromHex, PALETTE } from "../ui/index.ts";
+import { PALETTE } from "../ui/index.ts";
 import { noteWalkStarted } from "./cheatChoices.ts";
 import type { HudSceneData } from "./HudScene.ts";
 import type { HudRun, RunHudView } from "./hudWalk.ts";
@@ -94,24 +92,18 @@ import {
   onSettingsChanged,
   profileSave,
   type Settings,
-  walkerSpriteKey,
 } from "./profileStore.ts";
-import { AmbientView } from "./run/ambientView.ts";
-import { BackdropView } from "./run/backdropView.ts";
-import { DistractionView } from "./run/distractionView.ts";
 import { type EndDestination, endSceneFor } from "./run/endDestination.ts";
 import { blendWalk, leadWalk, stepAlpha } from "./run/interpolate.ts";
-import { ensureRoadPlaceholders, ItemViews } from "./run/itemViews.ts";
-import { LightsView } from "./run/lightsView.ts";
+import { ensureRoadPlaceholders } from "./run/itemViews.ts";
 import { MenuFlow } from "./run/menuFlow.ts";
-import { PackView } from "./run/packView.ts";
 import { ZoneBanner, zoneBannerMs } from "./run/roadBanners.ts";
-import { RoadsideView } from "./run/roadsideView.ts";
-import { RoadArt, RoadView } from "./run/roadView.ts";
+import { RoadArt } from "./run/roadView.ts";
 import { RunInput } from "./run/runInput.ts";
 import { RunMoments, showHint } from "./run/runMoments.ts";
 import { RunRecorder } from "./run/runRecorder.ts";
 import { type RunRandom, runRandom } from "./run/runStart.ts";
+import { createRunViews, drawRunViews, type RunViews } from "./run/runViews.ts";
 import { ShadowPool } from "./run/shadowPool.ts";
 import { LAYOUT, overPack, packPoint } from "./run/stage.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
@@ -146,21 +138,13 @@ interface Celebration {
 }
 
 // One run's views, input, menus and cheat hooks, made as it starts.
-interface RunWorld {
-  ambient: AmbientView;
-  backdrop: BackdropView;
+interface RunWorld extends RunViews {
   banner: ZoneBanner;
-  distractions: DistractionView;
   input: RunInput;
-  items: ItemViews;
-  lights: LightsView;
   menus: MenuFlow;
   moments: RunMoments;
-  pack: PackView;
   random: RunRandom;
   recorder: RunRecorder;
-  road: RoadView;
-  roadside: RoadsideView;
   setup: RunSetup;
   shadows: ShadowPool;
   streams: RunStreams;
@@ -325,40 +309,23 @@ export class RunScene extends Scene implements HudRun {
     this.world = undefined;
   }
 
-  // The views are made in draw order: the backdrop and its ambient movers, the road and its
-  // roadside props, the distraction movers, then the pack.
   private createWorld(
     run: Pick<RunWorld, "random" | "recorder" | "setup" | "streams">,
     picked: Pick<RunSceneData, "loadout">,
   ): RunWorld {
     const { random, recorder } = run;
-    const backdrop = new BackdropView(this);
-    const ambient = new AmbientView(this, random.ambient);
-    const road = new RoadView(this, this.roadArt, LAYOUT.rasterView);
-    const roadside = new RoadsideView(this);
-    const lights = new LightsView(this);
-    const distractions = new DistractionView(this, random.distractions);
-    const pack = new PackView(
-      this,
-      picked.loadout.dogs,
-      walkerSpriteKey(this, picked.loadout.walker),
-    );
-    const items = new ItemViews(this, (event) => showHint(this, event));
+    const views = createRunViews(this, { random, roadArt: this.roadArt }, picked.loadout);
     const still = () => this.reducedMotion();
     return {
       ...run,
-      ambient,
-      backdrop,
+      ...views,
       banner: new ZoneBanner(this),
-      distractions,
       input: new RunInput(this, {
         explainShown: () => this.explainShown(),
         replaying: () => recorder.replaying(),
         runPause: () => this.runPause(),
         walk: () => this.session?.walk,
       }),
-      items,
-      lights,
       menus: new MenuFlow(this, {
         dropPress: () => this.world?.input.dropPress(),
         headHome: (destination) => this.headHome(destination),
@@ -368,10 +335,12 @@ export class RunScene extends Scene implements HudRun {
         pauseNote: () =>
           this.session === undefined ? "" : pauseNote(gameData, this.session.walk.run),
       }),
-      moments: new RunMoments(this, { items, pack, quips: random.quips, still }),
-      pack,
-      road,
-      roadside,
+      moments: new RunMoments(this, {
+        items: views.items,
+        pack: views.pack,
+        quips: random.quips,
+        still,
+      }),
       shadows: new ShadowPool(this),
     };
   }
@@ -962,45 +931,9 @@ export class RunScene extends Scene implements HudRun {
       ? session.walk
       : leadWalk(gameData, LANE_COUNT, alpha * STEP_SECONDS, world.input.queued(), session.walk);
     const walk = blendWalk(alpha, before, lead);
-    const zone = currentZone(gameData, walk.run);
     const still = this.reducedMotion();
     const held = halted || session.walk.road.hitStop?.firing === true;
-    world.backdrop.draw(zone);
-    const zoneId = currentZoneId(gameData, walk.run);
     const ambientMs = this.ambientMs + (held ? 0 : alpha * STEP_MS);
-    world.ambient.draw(gameData.ambient[zoneId], zoneId, {
-      halted: held,
-      now: ambientMs / 1000,
-      still,
-      travelled: distanceBeforeZone + walk.run.zoneDistance,
-    });
-    world.road.draw(walk, zone, distanceBeforeZone);
-    const previous = previousZone(gameData, walk.run);
-    world.roadside.draw(
-      zone.art,
-      previous?.art ?? null,
-      distanceBeforeZone,
-      distanceBeforeZone + walk.run.zoneDistance,
-      { ms: ambientMs, still },
-    );
-    const shadow = world.shadows.frame(colourFromHex(zone.roadShadowColour));
-    world.items.draw(walk, held, still, shadow);
-    world.distractions.draw(walk, world.items.vergeItems(walk), { halted: held, still });
-    world.pack.draw(walk, {
-      halted: held,
-      itemPoint: (id) => world.items.point(id),
-      pulls,
-      shadow,
-      still,
-    });
-    world.shadows.hideUnused();
-    // Last, so the lights follow every sprite where this frame has drawn it.
-    world.lights.draw(
-      zoneId,
-      previousZoneId(gameData, walk.run),
-      distanceBeforeZone,
-      distanceBeforeZone + walk.run.zoneDistance,
-      world.roadside.lightCarriers(),
-    );
+    drawRunViews(world, { ambientMs, distanceBeforeZone, held, pulls, still }, walk);
   }
 }
