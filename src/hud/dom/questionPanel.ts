@@ -186,7 +186,15 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   const titleName = input.label ?? view.title.map((line) => line.text).join(" ");
   const nativeCard =
     view.frame === "card"
-      ? createQuestionCardFrame(doc, { id, panel: view.panel, title: titleName })
+      ? createQuestionCardFrame(doc, {
+          actionHits: [...view.buttons, ...(view.footer === undefined ? [] : [view.footer])].map(
+            ({ hit }) => hit,
+          ),
+          id,
+          panel: view.panel,
+          title: titleName,
+          titleLines: view.title,
+        })
       : undefined;
   const dialog = nativeCard?.element ?? doc.createElement("div");
   // Parts with native controls participate independently of modal ownership.
@@ -248,25 +256,32 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   if (nativeCard === undefined) {
     placed.push(panel!.place);
   } else {
-    placed.push(nativeCard.place);
+    placed.push((scale) =>
+      nativeCard.place(
+        scale,
+        close === undefined ? undefined : { element: close, hit: view.close.hit },
+      ),
+    );
   }
 
   // The title, its lines in capitals; a screen reader reads its words as written. It comes first,
   // so the dialog reads in the order it shows: the title, the body, then the actions. It paints
   // over the parts (adw-panel-title), which lie under it.
   const title = nativeCard?.title ?? doc.createElement("h2");
-  title.className = "adw-lines adw-panel-title";
-  title.id = `${id}-title`;
+  if (nativeCard === undefined) {
+    title.className = "adw-lines adw-panel-title";
+    title.id = `${id}-title`;
+    dialog.append(title);
+  }
   title.setAttribute("aria-label", titleName);
-  title.replaceChildren();
   for (const line of view.title) {
-    text(title, ORIGIN, line).setAttribute("aria-hidden", "true");
+    text(nativeCard?.titleLines ?? title, ORIGIN, line).setAttribute("aria-hidden", "true");
   }
   dialog.setAttribute("aria-labelledby", title.id);
-  dialog.append(title);
 
+  const body = nativeCard?.body ?? dialog;
   for (const part of input.parts ?? []) {
-    dialog.append(part.element);
+    body.append(part.element);
     placed.push(part.place);
   }
   if (input.describedBy !== undefined) {
@@ -290,7 +305,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     });
     placed.push((scale) => placeBackedText(input.fonts.body, scale, ORIGIN, backing, lines));
     dialog.setAttribute("aria-describedby", note.id);
-    dialog.append(plate, note);
+    body.append(plate, note);
   }
 
   const burst = (event: PointerEvent) =>
@@ -366,7 +381,9 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     });
     const closeArt = closeFace(view.close);
     const { element, face } = closeView;
-    box(element, ORIGIN, view.close.hit);
+    if (nativeCard === undefined) {
+      box(element, ORIGIN, view.close.hit);
+    }
     // The face and its glyph in whole art pixels, from the face's corner on the art-pixel
     // grid.
     placed.push((scale) => {
@@ -393,7 +410,10 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   };
   // The close control after the buttons, so it is on top where their press areas meet.
   const close = input.close === null ? undefined : closeControlElement(input.close);
-  dialog.append(...buttons, ...(close === undefined ? [] : [close]));
+  (nativeCard?.actions ?? dialog).append(...buttons);
+  if (close !== undefined && nativeCard === undefined) {
+    dialog.append(close);
+  }
 
   // Phaser handles a press on the page outside its canvas as its own; a press here is the menu's.
   for (const type of passive ? [] : ["mousedown", "touchstart"]) {

@@ -7,7 +7,7 @@ import { gameData } from "../../data/index.ts";
 import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { FakeDocument, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
-import { artPixel, domScale } from "../../ui/domScale.ts";
+import { artPixel, domScale, gridRect } from "../../ui/domScale.ts";
 import { dismissFooter } from "../../ui/modal/dismissFooter.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import type { PanelMeasure } from "../../ui/modal/types.ts";
@@ -756,8 +756,9 @@ it("reads a detail card's title first, then its body, then its actions", () => {
     },
   });
   const dialog = layerViews(element)[0]!;
-  const at = (found: (node: (typeof dialog.children)[number]) => boolean) =>
-    dialog.children.findIndex(found);
+  const readingOrder = dialog.all();
+  const at = (found: (node: (typeof readingOrder)[number]) => boolean) =>
+    readingOrder.findIndex(found);
   const title = at((node) => node.id === dialog.getAttribute("aria-labelledby"));
   const body = at((node) => node.id === dialog.getAttribute("aria-describedby"));
   const action = at((node) => node.tagName === "button");
@@ -913,13 +914,34 @@ it.each([
     const face = close.all().find((node) => node.classList.contains("adw-close-face"))!;
     const glyph = close.all().find((node) => node.classList.contains("adw-close-glyph"))!;
     const n = (node: typeof painted, key: string) => Number.parseFloat(node.style[key]!);
-    const faceX = n(close, "left") + n(face, "left");
-    const faceY = n(close, "top") + n(face, "top");
     // Card skin fills the kit card, whose projected bounds are the painted frame.
     const top = frame === "card" ? n(painted.parent!, "--ui-modal-card-y") : n(painted, "top");
     const left = frame === "card" ? n(painted.parent!, "--ui-modal-card-x") : n(painted, "left");
     const paintedWidth =
       frame === "card" ? n(painted.parent!, "--ui-modal-card-width") : n(painted, "width");
+    const hit =
+      frame === "card"
+        ? {
+            height: n(close, "--ui-modal-close-height"),
+            left: left + n(close, "--ui-modal-close-x"),
+            top: top + n(close, "--ui-modal-close-y"),
+            width: n(close, "--ui-modal-close-width"),
+          }
+        : {
+            height: n(close, "height"),
+            left: n(close, "left"),
+            top: n(close, "top"),
+            width: n(close, "width"),
+          };
+    const faceX = hit.left + n(face, "left");
+    const faceY = hit.top + n(face, "top");
+    if (frame === "card") {
+      expect(close.parent).toBe(painted.parent);
+      expect(painted.parent?.children.at(-1)).toBe(close);
+      for (const side of ["top", "right", "bottom", "left"]) {
+        expect(n(close, `--ui-modal-close-outset-${side}`)).toBe(0);
+      }
+    }
     expect(faceY - top).toBe(inset);
     expect(left + paintedWidth - faceX - n(face, "width")).toBe(inset);
     const border = artPixel(scale);
@@ -928,6 +950,7 @@ it.each([
     expect(glyph.children).toHaveLength(1);
     expect(glyph.children[0]!.tagName).toBe("svg");
     expect(view.close.hit).toMatchObject({ height: 48, width: 48 });
+    expect(hit).toEqual(gridRect(scale, view.close.hit));
     shown.destroy();
   }
 });
