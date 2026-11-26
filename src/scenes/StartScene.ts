@@ -1,20 +1,13 @@
-import { clampIndex, itemAt } from "@andornaut/game-kit/runtime/arrays";
+import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
 import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
-import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Core, type GameObjects, Scene, Scenes, type Time } from "phaser";
 
-import { domArtUrl } from "../assets/files/index.ts";
-import { gearIconKey, gearSmallIconKey, walkerPortraitKey } from "../assets/index.ts";
-import { MANIFEST_CACHE_KEY } from "../assets/phaser/index.ts";
+import { walkerPortraitKey } from "../assets/index.ts";
 import { clearRunOverrides } from "../cheats/dom/index.ts";
 import type { DogId, WalkerId } from "../data/ids.ts";
-import { gameData, PLATE_PAD } from "../data/index.ts";
+import { gameData } from "../data/index.ts";
 import { startWalkOpensHelp } from "../help/index.ts";
-import {
-  createNativeHomeSession,
-  createNativeHomeView,
-  type NativeHomeView,
-} from "../home/dom/index.ts";
+import { createNativeHomeSession, type NativeHomeView } from "../home/dom/index.ts";
 import {
   answerPurchase,
   badgePopOffset,
@@ -27,34 +20,25 @@ import {
   FEEDBACK,
   type Focus,
   gearInfo,
-  gearPictureFallback,
   type HomeAction,
   homeBackAction,
-  homeBarButtons,
   type HomeLoadout,
   homeSections,
   type HomeSelectionView,
-  homeSelectionViews,
-  homeSpeechView,
   hopOffset,
   itemModal,
   moveFocus,
-  networkPlayNotice,
   newlyAffordable,
-  noticeOrSpeech,
   overlayRegion,
-  packBonusLine,
   partingSpeech,
   type PendingPurchase,
   pressDip,
   type Purchase,
-  requiredNotice,
   type Sections,
   settleDelay,
   shakeOffset,
   slotSign,
   slotSignPurchase,
-  storageNotice,
   tapDog,
   tapGear,
   tappedBubbleTurn,
@@ -66,7 +50,6 @@ import {
   walkersUnlockedSince,
 } from "../home/index.ts";
 import { nativeFrames, renderHomeBackdrop } from "../home/phaser/index.ts";
-import { downTail } from "../hud/index.ts";
 import {
   focusDirectionForKey,
   type HoldPress,
@@ -84,11 +67,9 @@ import {
   tickHold,
   TILE_SLOP_PX,
 } from "../input/index.ts";
-import { dollarAmountText, pillKind, shortDollarAmountText } from "../presentation/index.ts";
 import {
   exitShown,
   installNudgeDue,
-  networkPlayReason,
   noteInstallNudged,
   PHONE_EVENTS,
   requestGameUpdateCheck,
@@ -98,14 +79,13 @@ import {
 } from "../pwa/index.ts";
 import { type SaveDocument, walksFinished, walksPlayed } from "../save/index.ts";
 import { packDogsOf } from "../state/index.ts";
-import { loadSheet, type NativeTopSection, uiLayer } from "../ui/dom/index.ts";
-import { disabledArtKey, refusalRed, REFUSE } from "../ui/index.ts";
+import { type NativeTopSection, uiLayer } from "../ui/dom/index.ts";
+import { refusalRed, REFUSE } from "../ui/index.ts";
 import type { Cents } from "../units.ts";
 import { artReady } from "./artReady.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
 import { CHEATS_CHANGED_EVENT, clearNextWalkAfterWalk } from "./cheatChoices.ts";
-import { pillColours } from "./effectNameColours.ts";
-import { exitGame, HOME_PAGE_OPENING_EVENT, openHomePage, routeHomeBar } from "./homeBarPress.ts";
+import { exitGame, HOME_PAGE_OPENING_EVENT, openHomePage } from "./homeBarPress.ts";
 import { detailView } from "./homePanels.ts";
 import { purchasePicture } from "./itemArt.ts";
 import { NATIVE_HOME_READY } from "./nativeHomeReady.ts";
@@ -122,11 +102,9 @@ import {
 import { afterMsUnderOverlay } from "./overlayClock.ts";
 import {
   currentSettings,
-  isMuted,
   onSettingsChanged,
   profileSave,
   purchaseInProfile,
-  storageState,
   takeCelebrations,
   toggleMuted,
   updateProfile,
@@ -147,37 +125,20 @@ import {
   type ShopClosed,
   type ShopSceneData,
 } from "./ShopScene.ts";
+import { createStartHomeView } from "./start/nativeHome.ts";
 import {
   type DetailTarget,
-  dogFace,
-  dogTiles,
   focusRows,
-  gearIds,
-  gearSlots,
   homeTargetAt,
   nativeTarget,
-  pocketTile,
-  rosterOrder,
   type Target,
   targetId,
-  walkerFace,
-  walkerIds,
-  walkerTiles,
 } from "./start/targets.ts";
+import { createStartTopBar, refreshStartTopBar } from "./start/topBar.ts";
 import { createWalkLaunch } from "./start/walkLaunch.ts";
-import {
-  drawStartGate,
-  drawStartShop,
-  type GateDog,
-  gearBadgeAtGate,
-  HERO_CROP,
-  type YardShop,
-} from "./start/yard.ts";
-import { addNativeTopSection } from "./topSection.ts";
+import { drawStartGate, drawStartShop, type GateDog, type YardShop } from "./start/yard.ts";
 import { addGraphicsIn, addTapBurst } from "./uiKit.ts";
 const HOME_REGION = overlayRegion("home");
-// Start walk's opacity while it waits for the rest of the art to load.
-const WAITING_ALPHA = 0.6;
 // A held item's detail card, above the home screen.
 interface Overlay {
   rect: Rect | undefined;
@@ -1025,7 +986,7 @@ export class StartScene extends Scene {
     if (place === undefined) {
       return;
     }
-    const { fonts, layer } = place;
+    const { layer } = place;
     const toGame = (event: PointerEvent) =>
       htmlPanelInput(place).toGame({ x: event.clientX, y: event.clientY });
     const activate = (id: string) => {
@@ -1059,115 +1020,30 @@ export class StartScene extends Scene {
       scaled: () => this.place(this.time.now),
       up: (event, cancelled) => this.homePressUp(toGame(event), cancelled, true),
     });
-    const reduced = currentSettings(this).reducedMotion;
-    const selection = <Id>(
-      ids: readonly Id[],
-      rects: Rect[],
-      face: (rect: Rect) => Rect,
-      target: (id: Id) => Target,
-    ) =>
-      ids.map((id, index) => {
-        const hit = itemAt(rects, index);
-        return { feedbackId: targetId(target(id)), hit, id, rect: face(hit) };
-      });
-    const selections = homeSelectionViews(gameData, fontMetrics(fonts.body), reduced, {
-      dogs: selection(rosterOrder(), dogTiles(), dogFace, (dog) => ({ dog, kind: "dog" })),
-      gear: selection(gearIds(), gearSlots(), pocketTile, (gear) => ({ gear, kind: "gear" })),
-      loadout: this.loadout,
-      save,
-      walkers: selection(walkerIds(), walkerTiles(), walkerFace, (walker) => ({
-        kind: "walker",
-        walker,
-      })),
-    });
-    const notices = [
-      ...requiredNotice(gameData.homeText, requiredUpdate()),
-      ...storageNotice(gameData.homeText, storageState(this)),
-      ...networkPlayNotice(gameData.homeText, networkPlayReason()),
-    ];
-    const speech = homeSpeechView(
-      gameData,
-      fonts.body,
-      downTail((key) => this.textures.exists(key)),
-      noticeOrSpeech(notices, this.speech(save)),
-    );
-    this.bubbleHits.push(speech.rect);
-    const sign = slotSign(gameData, save.owned, save.bankCents);
-    const focused = this.focused();
-    const gear = this.loadout.gear;
-    const smallGearKey = gear === null ? undefined : gearSmallIconKey(gear);
-    const smallGear = smallGearKey !== undefined && this.textures.exists(smallGearKey);
-    const gearKey = gear === null ? undefined : smallGear ? smallGearKey : gearIconKey(gear);
-    const gearRect = gearBadgeAtGate(this.loadout);
-    const manifest = this.cache.json.get(MANIFEST_CACHE_KEY) as
-      | {
-          sprites?: {
-            key: string;
-          }[];
-        }
-      | undefined;
-    const sheetKeys = new Set((manifest?.sprites ?? []).map(({ key }) => key));
-    const source = {
-      artUrl: domArtUrl,
-      disabledKey: disabledArtKey,
-      hasArt: (key: string) => this.textures.exists(key),
-      imageSize: (key: string) => {
-        const frame = this.textures.getFrame(key);
-        return { height: frame?.realHeight ?? 16, width: frame?.realWidth ?? 16 };
-      },
-      isSheet: (key: string) => sheetKeys.has(key),
-      loadSheet,
-    };
-    const sections = this.sections(save);
-    const view = createNativeHomeView(
-      layer.element.ownerDocument,
-      source,
-      fonts,
+    const { selections, speech, view } = createStartHomeView(
+      this,
+      place,
       {
         activate,
+        fallbackSpeech: () => this.speech(save),
         hold: (id) => {
           const target = nativeTarget(id);
           if (target !== undefined) {
             this.dispatchHeld(target);
           }
         },
-        pillColours: (index) => {
-          const kind = pillKind(index);
-          return kind === undefined ? undefined : pillColours(kind);
-        },
-        platePadding: PLATE_PAD,
+        startUnavailable: (sections) => this.startUnavailable(sections),
       },
       {
-        bonus: packBonusLine(gameData, this.loadout),
         bubbleInteractive: this.joined.length > 0 && save.walker !== null,
-        focus: focused === undefined ? undefined : targetId(focused),
-        gearBadge:
-          gearKey === undefined || gearRect === undefined || gear === null
-            ? undefined
-            : {
-                fallback: gearPictureFallback(gameData, {
-                  gear,
-                  scale: 0.5,
-                  x: gearRect.x + 1,
-                  y: gearRect.y + 1,
-                }),
-                key: gearKey,
-                rect: gearRect,
-                scale: smallGear ? 1 : 0.5,
-              },
-        sections,
-        selections,
-        slot: sign === null ? undefined : { crop: HERO_CROP, sign },
-        speech,
-        start: {
-          label: gameData.homeText.startWalk,
-          loading: gameData.homeText.startLoading,
-          unavailable: this.startUnavailable(sections),
-          waitingAlpha: WAITING_ALPHA,
-        },
-        streetSign: gameData.homeText.gateSign,
+        focused: this.focused(),
+        loadout: this.loadout,
+        reduced: currentSettings(this).reducedMotion,
+        save,
+        sections: this.sections(save),
       },
     );
+    this.bubbleHits.push(speech.rect);
     this.nativeSelections = selections;
     this.nativeSpeechOwner = speech.owner?.key;
     this.nativeView = view;
@@ -1251,30 +1127,11 @@ export class StartScene extends Scene {
       return;
     }
     if (this.topSection === undefined) {
-      this.topSection = addNativeTopSection(this, {
+      this.topSection = createStartTopBar(this, {
         accepts: () => this.nativeReady,
-        buttons: homeBarButtons(this.exit).map(([id]) => id),
-        currency: true,
-        labels: {
-          exit: gameData.homeText.quit.quit,
-          menu: gameData.menuText.menu.title,
-          mute: gameData.menuText.settings.sound,
-          pause: gameData.menuText.pause.title,
-        },
-        muted: isMuted(this),
-        press: (id, metadata) => {
-          if (
-            ((id === "menu" || id === "mute" || id === "exit") && routeHomeBar(this, id)) ||
-            !this.sys.isActive() ||
-            !this.input.enabled
-          ) {
-            return;
-          }
-          const elapsed =
-            metadata.startedAt === undefined
-              ? 0
-              : Math.max(0, metadata.completedAt - metadata.startedAt);
-          this.press = { held: false, id, startedMs: this.time.now - elapsed };
+        exit: this.exit,
+        press: (id, startedMs) => {
+          this.press = { held: false, id, startedMs };
           if (id !== "pause") {
             this.actAfterDip({ kind: id });
           }
@@ -1282,11 +1139,9 @@ export class StartScene extends Scene {
       });
       this.topSection?.setShown(false);
     }
-    this.topSection?.setAmount(
-      dollarAmountText(save.bankCents),
-      shortDollarAmountText(save.bankCents),
-    );
-    this.topSection?.setMuted(isMuted(this));
+    if (this.topSection !== undefined) {
+      refreshStartTopBar(this, this.topSection, save.bankCents);
+    }
   }
   // The walker's own line (walkerSays): with walkers unlocked since the last visit, the one
   // bubbleTurn has reached.
