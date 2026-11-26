@@ -3240,7 +3240,7 @@
       "dartLanesPerSecond": 3,
       "dartStopLanesMax": 4,
       "dartStopLanesMin": 2,
-      "distractionsPerZone": 21,
+      "distractionsPerZone": 17,
       "fannyPackTreats": 1,
       "gearDropsPerZone": {
         "1": 0.5,
@@ -3322,7 +3322,7 @@
       "dartTurnAtShareMin": 0.5,
       "distractionEndRoadShare": 0.5,
       "distractionLeaveLingerShare": 0.3,
-      "distractionVisitLingerShare": 0.35,
+      "distractionVisitLingerShare": 0.25,
       "goodLeashSquirrelPull": 0,
       "keenEyePickups": 1.5,
       "largeDogAgility": -0.1,

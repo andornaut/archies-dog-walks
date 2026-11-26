@@ -17,7 +17,7 @@ export const TUNING = {
     dartStopLanesMin: 2,
     // About this many distraction movers step on and off each zone's edge lanes as scenery,
     // spread through it.
-    distractionsPerZone: 21,
+    distractionsPerZone: 17,
     // The Fanny pack holds this many spare treats.
     fannyPackTreats: 1,
     // The gear drops a neighbourhood places on average, by its position in the walk from 1: the
@@ -136,7 +136,7 @@ export const TUNING = {
     distractionLeaveLingerShare: 0.3,
     // A visit distraction, once it has stepped into its edge lane, stands there for this share of
     // its time on screen before it steps back off.
-    distractionVisitLingerShare: 0.35,
+    distractionVisitLingerShare: 0.25,
     goodLeashSquirrelPull: 0,
     // How many tips and treats appear while Mr. B's Keen eye walks.
     keenEyePickups: 1.5,
