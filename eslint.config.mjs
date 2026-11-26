@@ -129,25 +129,12 @@ const GROUPS = BANDS.flatMap(({ rows }) => rows).flatMap((groups, row) =>
 const SUPPORT = BANDS.at(-1).rows.flat();
 const LAYER_EXEMPT = [...TEST_FILES, "src/testing/**", "src/**/*.d.ts"];
 
-// Each folder group but src/testing/ has one public entry, its index.ts, and a module outside the
-// group imports only that entry: the group's other modules and its stylesheets stay internal, and
-// a group nested in it has an entry of its own. In src/data/ only these modules sit behind the
-// entry; every other module there is an authored data file, which any group imports directly.
+// Each folder group that other groups import, src/testing/ aside, has one public entry, its
+// index.ts, and a module outside the group imports only that entry: the group's other modules
+// and its stylesheets stay internal, and a group nested in it has an entry of its own. In
+// src/data/ only these modules sit behind the entry; every other module there is an authored data
+// file, which any group imports directly.
 const DATA_BEHIND_ENTRY = ["layout.ts", "screen.ts", "types.ts"];
-// CLEANUP (added 2026-11-25): the bands whose groups have their entry so far. Remove it, holding
-// every group to its entry, once the last band has one (adw-0259 step 9).
-const ENTRY_BANDS = [
-  "Foundation",
-  "Model",
-  "Saving",
-  "Presentation",
-  "Platform",
-  "Engine and views",
-  "Support",
-];
-const ENTRY_GROUPS = BANDS.filter(({ band }) => ENTRY_BANDS.includes(band)).flatMap(({ rows }) =>
-  rows.flat(),
-);
 
 // The band rule reads import declarations, re-exports and dynamic imports, but not import() types.
 const IMPORT_TYPES = {
@@ -237,12 +224,9 @@ function bandConfig({ group, row }) {
       target: "src",
     }),
   );
+  // Each lower folder group the importer is outside holds it to that group's entry.
   const entries = GROUPS.filter(
-    (other) =>
-      other.row < row &&
-      ENTRY_GROUPS.includes(other.group) &&
-      !other.group.endsWith(".ts") &&
-      other.group !== "src/testing",
+    (other) => other.row < row && !other.group.endsWith(".ts") && other.group !== "src/testing",
   ).map(({ group: other }) => entryZone(other));
   return {
     ...IMPORT_X,

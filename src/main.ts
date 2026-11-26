@@ -1,5 +1,3 @@
-// First, so the crash screen catches an error thrown while any other module loads.
-import "./crash/install.ts";
 // Turns the page frame on a touch screen in landscape before any script runs; main.css reads its
 // --inset-* safe-area insets.
 import "@andornaut/game-kit/runtime/web/view/frameTurnPortraitGame.css";
@@ -14,7 +12,7 @@ import { followFrameTurn } from "@andornaut/game-kit/runtime/web/view/phaser/fol
 import { Core, Game, Scale, WEBGL } from "phaser";
 
 import { DEV_GAME_GLOBAL, pageRunSetup } from "./cheats/index.ts";
-import { CRASH_SCREEN } from "./crash/crashScreen.ts";
+import { CRASH_SCREEN } from "./crash/index.ts";
 import { SCREEN_CONFIG } from "./data/index.ts";
 import { lostTouches, noteKeyPress } from "./input/index.ts";
 import { bindPressAdmission, createCanvasPressAdmission } from "./input/phaser/index.ts";

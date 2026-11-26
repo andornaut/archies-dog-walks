@@ -3,7 +3,7 @@
 // whose in-memory state may be corrupt; the walk's last checkpoint is already saved, and the next
 // launch resumes or banks it. A checkpoint the walk writes after the crash, as the page hides,
 // keeps no resume point (stopResuming in src/main.ts), so that launch banks it.
-// src/crash/install.ts imports this module before any other game module.
+// src/crash/index.ts imports this module before any other game module.
 import "@andornaut/game-kit/runtime/web/crash/dom/crash.css";
 import "./crash.css";
 

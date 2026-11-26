@@ -53,6 +53,7 @@ it.each([
   ["homePage/probe.ts", 'import "../pwa/launch.ts";', "import-x/no-restricted-paths"],
   ["tools/probe.ts", 'import "./atlas/atlasLayout.ts";', "import-x/no-restricted-paths"],
   ["tools/plannerAcceptance/probe.ts", 'import "../usage.ts";', "import-x/no-restricted-paths"],
+  ["main.ts", 'import "./crash/crashScreen.ts";', "import-x/no-restricted-paths"],
 ])("holds src/%s with %s to the bands and the entries", async (file, text, rule) => {
   const results = await lint.lintText(text, { filePath: `src/${file}` });
   const found = results.flatMap(({ messages }) =>

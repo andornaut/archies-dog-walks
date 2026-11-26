@@ -1,5 +1,5 @@
 // Install error handling before importing the game's renderer and other modules.
-import "./crash/install.ts";
+import "./crash/index.ts";
 import "@andornaut/game-kit/runtime/web/view/frameTurnPortraitGame.css";
 import "@andornaut/game-kit/runtime/web/progress/dom/progressBar.css";
 import "./main.css";
