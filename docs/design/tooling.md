@@ -78,3 +78,4 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0268 | Reduce redundant test coverage and suite runtime                             | [adw-0268.md](../work/adw-0268.md) |
 | adw-0269 | Align checked guides with the current game                                   | [adw-0269.md](../work/adw-0269.md) |
 | adw-0270 | Pin Delivery Kit 8.6.0 for the existing workspace                            | [adw-0270.md](../work/adw-0270.md) |
+| adw-0271 | Adopt Game Kit 0.92.0 manifest retry                                         | [adw-0271.md](../work/adw-0271.md) |
