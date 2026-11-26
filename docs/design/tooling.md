@@ -76,3 +76,4 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0266 | Add Dependabot coverage for the gate Dockerfile                              | [adw-0266.md](../work/adw-0266.md) |
 | adw-0267 | Profile and improve game performance                                         | [adw-0267.md](../work/adw-0267.md) |
 | adw-0268 | Reduce redundant test coverage and suite runtime                             | [adw-0268.md](../work/adw-0268.md) |
+| adw-0269 | Align checked guides with the current game                                   | [adw-0269.md](../work/adw-0269.md) |
