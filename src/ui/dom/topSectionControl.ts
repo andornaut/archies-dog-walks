@@ -15,7 +15,8 @@ import {
   topSectionStateCapTop,
 } from "../index.ts";
 import { containGameButtonClicks } from "./actionBinding.ts";
-import { type DomArtSource, type imageArt, sheetArt } from "./artElements.ts";
+import type { imageArt } from "./artElements.ts";
+import { type ControlGlyph, createControlGlyph } from "./controlGlyph.ts";
 import { createGameButton } from "./gameButton.ts";
 import { createTextLine, placeBox, placeText, setBox } from "./pixelLine.ts";
 
@@ -45,9 +46,7 @@ interface ControlContext {
   readonly origin: Point;
   readonly readScale: () => DomScale;
   readonly root: HTMLElement;
-  readonly source: DomArtSource;
   readonly title: BitmapFont;
-  readonly trackArt: (ready: Promise<readonly string[]>) => void;
 }
 
 export function createTopSectionControl(
@@ -57,19 +56,7 @@ export function createTopSectionControl(
   id: TopSectionButton,
   { face, owned }: { face: Point; owned: Rect },
 ) {
-  const {
-    image,
-    inputBottom,
-    label,
-    menu,
-    muted,
-    origin,
-    readScale,
-    root,
-    source,
-    title,
-    trackArt,
-  } = context;
+  const { image, inputBottom, label, menu, muted, origin, readScale, root, title } = context;
   const doc = root.ownerDocument;
   const content = doc.createElement("span");
   content.style.display = "contents";
@@ -78,7 +65,11 @@ export function createTopSectionControl(
   let clickAt: number | undefined;
   let via: NativeTopSectionPress["via"] = "keyboard";
   const view = createGameButton(doc, {
-    appearance: { className: "adw-top-section-button", role: "navigation" },
+    appearance: {
+      className: "adw-top-section-button",
+      contentClassName: "adw-top-section-content",
+      role: "navigation",
+    },
     content: { icon: content, kind: "icon", name: label(id) },
     getAction: () =>
       active()
@@ -100,32 +91,26 @@ export function createTopSectionControl(
     skin: "authored",
   });
   const button = view.element;
+  const skin = doc.createElement("span");
+  skin.className = "adw-top-section-skin";
+  content.append(skin);
   const faces = ["normal", "pressed"].map((tag) => {
     const art = image(`ui-icon-button-${tag}`);
-    content.append(art.element);
+    skin.append(art.element);
     return art;
   });
   // The face's state fill over its art and under its glyph: ink while pressed; in forced
   // colours ButtonFace, Highlight while focused or pressed.
   const fill = doc.createElement("span");
   fill.className = "adw-framed adw-top-section-fill";
-  content.append(fill);
+  skin.append(fill);
   const glyphRoot = doc.createElement("span");
-  glyphRoot.className = "adw-art";
+  glyphRoot.className = "adw-top-section-glyph";
   content.append(glyphRoot);
-  const iconKey = () => (id === "pause" && menu() ? "icon-menu" : `icon-${id}`);
-  const icons =
-    id === "mute"
-      ? []
-      : (id === "pause" ? ["icon-pause", "icon-menu"] : [iconKey()]).map((key) => ({
-          art: image(key),
-          key,
-        }));
-  const sound = id === "mute" ? sheetArt(doc, source, "icon-sound") : undefined;
+  let drawnGlyph: ControlGlyph | undefined;
   const soundState =
-    sound === undefined
-      ? undefined
-      : ({
+    id === "mute"
+      ? ({
           capTop: topSectionStateCapTop(face, fontMetrics(title).capHeight),
           centre: "ink",
           centreX: face.x + TOP_BAR_FACE.size / 2,
@@ -133,20 +118,12 @@ export function createTopSectionControl(
           font: "title",
           scale: 1,
           text: "",
-        } as const);
+        } as const)
+      : undefined;
   const soundLabel = soundState === undefined ? undefined : createTextLine(doc, soundState);
   if (soundLabel !== undefined) {
     soundLabel.setAttribute("aria-hidden", "true");
     root.append(soundLabel);
-  }
-  if (sound !== undefined) {
-    trackArt(sound.ready);
-  }
-  for (const { art } of icons) {
-    glyphRoot.append(art.element);
-  }
-  if (sound !== undefined) {
-    glyphRoot.append(sound.element);
   }
   const place = (scale: DomScale) => {
     const bottom = inputBottom();
@@ -189,16 +166,15 @@ export function createTopSectionControl(
       left: glyphBox.left - gridX(scale, face.x),
       top: glyphBox.top - gridY(scale, face.y),
     });
-    for (const { art, key } of icons) {
-      art.element.hidden = key !== iconKey();
-      art.place(scale, glyphRect, { ...glyphRect, projection: "layout" });
+    const glyph =
+      id === "mute" ? (muted() ? "sound-off" : "sound-on") : id === "pause" && menu() ? "menu" : id;
+    if (glyph !== drawnGlyph) {
+      const icon = createControlGlyph(doc, glyph);
+      // This box follows the authored layout grid, whose snapped axes can differ by one pixel.
+      icon.setAttribute("preserveAspectRatio", "none");
+      glyphRoot.replaceChildren(icon);
+      drawnGlyph = glyph;
     }
-    sound?.place(scale, glyphRect, {
-      projection: "layout",
-      tag: muted() ? "off" : "on",
-      x: glyphRect.x,
-      y: glyphRect.y,
-    });
     if (soundLabel !== undefined && soundState !== undefined) {
       const text = muted() ? MENU_TEXT.settings.off : MENU_TEXT.settings.on;
       soundLabel.textContent = text.toUpperCase();

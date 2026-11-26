@@ -67,13 +67,13 @@ const CUE_SHEETS = {
   uiNormal: unforced(SHEETS.ui),
 };
 
-const FORCED_TOP_ARTWORK =
-  "button.adw-top-section-button.ui-standard-button:is(:focus-visible, [data-ui-pressed])" +
-  ' > .ui-button-face > [aria-hidden="true"]';
+const TOP_FOCUSED_CONTENT =
+  "button.adw-top-section-button.ui-standard-button:focus-visible" +
+  " > .ui-button-face > .adw-top-section-content";
 // A focused standard button's label, which must outrank Kit's focused artwork opacity.
 const STANDARD_FOCUSED_LABEL =
   'button.adw-standard-button.ui-standard-button:focus-visible > .ui-button-face > [aria-hidden="true"]';
-// Kit's focused artwork opacity, which the forced-colours top-bar artwork must outrank.
+// Kit's focused artwork opacity, which the opaque top-bar content must outrank.
 const KIT_FOCUSED_ARTWORK =
   'button.ui-standard-button:focus-visible > .ui-button-face > [aria-hidden="true"]';
 
@@ -390,7 +390,43 @@ describe("control state cues", () => {
       "--ui-colour-button-focus-face:Highlight;--ui-colour-button-focus-text:HighlightText;" +
         "--ui-colour-button-pressed-face:Highlight",
     ],
-    ["the forced-colours top-bar artwork", "top", FORCED_TOP_ARTWORK, "opacity:1"],
+    ["a focused top bar's SVG slot", "top", TOP_FOCUSED_CONTENT, "opacity:1"],
+    [
+      "a focused top bar's authored skin",
+      "top",
+      ".adw-top-section-button:focus-visible .adw-top-section-skin",
+      "opacity:0.65",
+    ],
+    [
+      "a resting top bar's glyph in forced colours",
+      "topForced",
+      ".adw-top-section-button",
+      "--adw-top-glyph-ink:ButtonText",
+    ],
+    [
+      "a focused or pressed top bar's glyph in forced colours",
+      "topForced",
+      ".adw-top-section-button:is(:focus-visible, [data-ui-pressed])",
+      "--adw-top-glyph-ink:HighlightText",
+    ],
+    [
+      "a disabled top bar's glyph in forced colours",
+      "topForced",
+      '.adw-top-section-button:is(:disabled, [aria-disabled="true"])',
+      "--adw-top-glyph-ink:GrayText",
+    ],
+    [
+      "a refusing top bar's glyph in forced colours",
+      "topForced",
+      ".adw-top-section-button[data-refusal-red]",
+      "--adw-top-glyph-ink:ButtonFace",
+    ],
+    [
+      "a top bar's glyph uses the selected system colour",
+      "topForced",
+      ".adw-top-section-glyph",
+      "forced-color-adjust:none",
+    ],
     [
       "a picker tile's or Pet shop row's cyan focus and green press under plum and ink",
       "tile",
@@ -729,11 +765,11 @@ describe("control state cues", () => {
     },
   );
 
-  it("outranks Kit's focused artwork opacity with the forced-colours top-bar artwork", () => {
+  it("outranks Kit's focused artwork opacity with the top-bar glyph slot", () => {
     expect(squeeze(KIT_CONTROLS)).toContain(`${squeeze(KIT_FOCUSED_ARTWORK)}{`);
     expect(specificity(KIT_FOCUSED_ARTWORK)).toEqual([0, 4, 1]);
     expect(
-      ranks(specificity(FORCED_TOP_ARTWORK), specificity(KIT_FOCUSED_ARTWORK)),
+      ranks(specificity(TOP_FOCUSED_CONTENT), specificity(KIT_FOCUSED_ARTWORK)),
     ).toBeGreaterThan(0);
   });
 

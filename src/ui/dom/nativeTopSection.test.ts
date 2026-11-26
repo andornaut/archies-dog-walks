@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { PENDING_ATTRIBUTE } from "@andornaut/game-kit/runtime/web/ui/dom/imageReady";
 import { describe, expect, it, vi } from "vitest";
@@ -18,6 +16,7 @@ import { domScale, fontPixel, gridRect } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
 import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL } from "../topBarTrim.ts";
 import { topSectionLayout } from "../topSection.ts";
+import { type ControlGlyph, createControlGlyph } from "./controlGlyph.ts";
 import { createNativeTopSection, type NativeTopSection } from "./nativeTopSection.ts";
 import { followModalUnderlay } from "./rampDim.ts";
 const labels = {
@@ -37,6 +36,7 @@ function fixture(
   exit = false,
   scale = domScale(1, { height: 560, width: 360, x: 0, y: 0 }),
   clock = false,
+  pause = false,
 ) {
   const doc = new FakeDocument();
   if (clock) {
@@ -77,7 +77,7 @@ function fixture(
     gameFont("font-title"),
     {
       accepts: () => true,
-      buttons: exit ? ["mute", "menu", "exit"] : ["mute", "menu"],
+      buttons: exit ? ["mute", "menu", "exit"] : ["mute", pause ? "pause" : "menu"],
       currency: true,
       effects,
       labels,
@@ -401,17 +401,39 @@ it.each(
   },
 );
 
-it("renders the existing Exit glyph and label to the right of Menu through the shared control", async () => {
-  const { buttons, element, press, reveal, root, view } = fixture(0, true);
+function glyphPaths(glyph: FakeElement) {
+  return glyph.children.map((part) => part.getAttribute("d"));
+}
+
+function expectedPaths(doc: FakeDocument, name: ControlGlyph) {
+  return glyphPaths(createControlGlyph(doc as unknown as Document, name) as unknown as FakeElement);
+}
+
+it("renders a decorative SVG Exit to the right of Menu through the shared control", async () => {
+  const { buttons, doc, element, press, reveal, root, view } = fixture(0, true);
   expect(buttons.map((button) => button.getAttribute("aria-label"))).toEqual([
     labels.mute,
     labels.menu,
     labels.exit,
   ]);
   expect(buttons.map((button) => button.style.left)).toEqual(["224px", "270px", "314px"]);
+  const glyphs = buttons.map((button) => button.all().find((node) => node.tagName === "svg")!);
+  const expected: ControlGlyph[] = ["sound-on", "menu", "exit"];
+  expect(glyphs.map(glyphPaths)).toEqual(expected.map((glyph) => expectedPaths(doc, glyph)));
+  for (const glyph of glyphs) {
+    expect(glyph.namespaceURI).toBe("http://www.w3.org/2000/svg");
+    expect(glyph.getAttribute("aria-hidden")).toBe("true");
+    expect(glyph.getAttribute("focusable")).toBe("false");
+  }
   expect(
-    element.all().some((node) => node.style.backgroundImage?.includes("images/icon-exit.png")),
-  ).toBe(true);
+    element
+      .all()
+      .some((node) =>
+        /(?:images\/icon-(exit|menu|pause)|sprites\/icon-sound)\.png/.test(
+          node.style.backgroundImage ?? "",
+        ),
+      ),
+  ).toBe(false);
   reveal(true);
   await Promise.resolve();
   const event = { detail: 0, target: buttons[2] };
@@ -423,6 +445,30 @@ it("renders the existing Exit glyph and label to the right of Menu through the s
     startedAt: undefined,
     via: "keyboard",
   });
+  view.dispose();
+});
+
+it("swaps the Sound and Pause glyphs in their existing buttons as state changes", () => {
+  const { buttons, doc, view } = fixture(0, false, undefined, false, true);
+  const [sound, pause] = buttons as [FakeElement, FakeElement];
+  const glyph = (button: FakeElement) => button.all().find((node) => node.tagName === "svg")!;
+  const soundOn = glyph(sound);
+  const pauseGlyph = glyph(pause);
+  expect(glyphPaths(soundOn)).toEqual(expectedPaths(doc, "sound-on"));
+  expect(pause.getAttribute("aria-label")).toBe(labels.pause);
+  expect(glyphPaths(pauseGlyph)).toEqual(expectedPaths(doc, "pause"));
+  view.setMuted(true);
+  view.setPaused(true);
+  expect(sound.getAttribute("aria-pressed")).toBe("false");
+  expect(glyphPaths(glyph(sound))).toEqual(expectedPaths(doc, "sound-off"));
+  expect(pause.getAttribute("aria-label")).toBe(labels.menu);
+  expect(glyphPaths(glyph(pause))).toEqual(expectedPaths(doc, "menu"));
+  view.setMuted(false);
+  view.setPaused(false);
+  expect(sound.getAttribute("aria-pressed")).toBe("true");
+  expect(glyphPaths(glyph(sound))).toEqual(expectedPaths(doc, "sound-on"));
+  expect(pause.getAttribute("aria-label")).toBe(labels.pause);
+  expect(glyphPaths(glyph(pause))).toEqual(expectedPaths(doc, "pause"));
   view.dispose();
 });
 
@@ -483,21 +529,14 @@ it.each([
         width: `${faceBox.width}px`,
       });
       const glyphBox = gridRect(scale, { height: 16, width: 16, x: face.x + 2, y: face.y + 1 });
-      const glyph = button
-        .all()
-        .find((node) => node.className === "adw-art" && node.children.length > 0)!;
+      const glyph = button.all().find((node) => node.classList.contains("adw-top-section-glyph"))!;
       expect(glyph.style).toMatchObject({
         height: `${glyphBox.height}px`,
         left: `${glyphBox.left - faceBox.left}px`,
         top: `${glyphBox.top - faceBox.top}px`,
         width: `${glyphBox.width}px`,
       });
-      expect(glyph.children[0]!.style).toMatchObject({
-        height: `${glyphBox.height}px`,
-        left: "0px",
-        top: "0px",
-        width: `${glyphBox.width}px`,
-      });
+      expect(glyph.children[0]!.getAttribute("preserveAspectRatio")).toBe("none");
       view.buttons.get(layout.controls[index]![0])!.setPressed(true);
       const pressedBox = gridRect(scale, {
         height: 16,
@@ -679,23 +718,11 @@ it("rejects releases outside the original control even if implicit capture retai
   view.dispose();
 });
 
-it("uses a local cyan face and translucent raster focus cue without the legacy close ring", () => {
+it("renders the top-bar glyph slots without the legacy close ring", () => {
   const { buttons, element, view } = fixture();
   expect(buttons.every((button) => button.classList.contains("adw-top-section-button"))).toBe(true);
   expect(buttons.some((button) => button.classList.contains("adw-close"))).toBe(false);
   expect(element.all().some((node) => node.tagName === "style")).toBe(false);
-  const style = readFileSync(new URL("./nativeTopSection.css", import.meta.url), "utf8").replace(
-    /\s+/g,
-    "",
-  );
-  expect(style).toContain(
-    ".adw-top-section-button:focus-visible{" +
-      "--ui-button-focus-fill:var(--ui-colour-button-focus-face);" +
-      "--ui-button-focus-text:var(--ui-colour-button-focus-text);}",
-  );
-  expect(style).toContain(
-    '.adw-top-section-button:focus-visible>.ui-button-face>[aria-hidden="true"]{opacity:0.65;}',
-  );
   view.dispose();
 });
 

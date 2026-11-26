@@ -1,10 +1,9 @@
-/* A top-bar face's focus and press colours are Game Kit's theme state slots, set here once and once
-   again in forced colours. Focus fills the face through Kit's focus fill under its glyph at 65%;
-   a press fills the face's state layer under its highlight row, the first of the fill's 16. */
+/* Let the cyan focus fill show through the authored skin while the SVG stays opaque. */
 .adw-top-section-button {
   --ui-colour-button-focus-face: var(--adw-cyan);
   --ui-colour-button-focus-text: var(--adw-ink);
   --ui-colour-button-pressed-face: var(--adw-ink);
+  --adw-top-glyph-ink: var(--adw-cream);
   position: absolute;
   box-sizing: border-box;
   pointer-events: auto;
@@ -17,8 +16,27 @@
   --ui-button-focus-fill: var(--ui-colour-button-focus-face);
   --ui-button-focus-text: var(--ui-colour-button-focus-text);
 }
-.adw-top-section-button:focus-visible > .ui-button-face > [aria-hidden="true"] {
+button.adw-top-section-button.ui-standard-button:focus-visible
+  > .ui-button-face
+  > .adw-top-section-content {
+  opacity: 1;
+}
+.adw-top-section-skin {
+  position: absolute;
+  inset: 0;
+}
+.adw-top-section-button:focus-visible .adw-top-section-skin {
   opacity: 0.65;
+}
+.adw-top-section-glyph {
+  position: absolute;
+  color: var(--adw-top-glyph-ink);
+  pointer-events: none;
+}
+.adw-top-section-glyph > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 .adw-top-section-fill {
   display: none;
@@ -31,29 +49,63 @@
     var(--ui-colour-button-pressed-face) 6.25%
   );
 }
-/* Forced colours paint the whole face under the glyph, ButtonFace normally and Highlight at full
-   opacity while focused or pressed. The artwork rule names the button and its Kit class so it
-   outranks Kit's focused artwork opacity whatever order the sheets load in. */
+.adw-top-section-button:is(:disabled, [aria-disabled="true"]) {
+  --adw-top-glyph-ink: var(--adw-neutralDarkSlate);
+}
+.adw-top-section-button:is(:disabled, [aria-disabled="true"]) .adw-top-section-fill {
+  display: block;
+  background: var(--adw-neutralGrey);
+}
+.adw-top-section-button[data-refusal-red] {
+  --adw-top-glyph-ink: var(--adw-white);
+}
+.adw-top-section-button[data-refusal-red] .adw-top-section-fill {
+  display: block;
+  background: var(--adw-darkRed);
+}
+.adw-top-section-button:is([aria-disabled="true"], [data-refusal-red]):focus-visible
+  .adw-top-section-skin {
+  opacity: 1;
+}
+
+/* Preserve the paired system inks and the visible state under the fully opaque glyph. */
 @media (forced-colors: active) {
   .adw-top-section-button {
     --ui-colour-button-focus-face: Highlight;
     --ui-colour-button-focus-text: HighlightText;
     --ui-colour-button-pressed-face: Highlight;
+    --adw-top-glyph-ink: ButtonText;
   }
-  button.adw-top-section-button.ui-standard-button:is(:focus-visible, [data-ui-pressed])
-    > .ui-button-face
-    > [aria-hidden="true"] {
+  .adw-top-section-button:focus-visible .adw-top-section-skin {
     opacity: 1;
+  }
+  .adw-top-section-glyph {
+    forced-color-adjust: none;
   }
   .adw-top-section-fill {
     display: block;
     forced-color-adjust: none;
     background: ButtonFace;
   }
+  .adw-top-section-button:is(:focus-visible, [data-ui-pressed]) {
+    --adw-top-glyph-ink: HighlightText;
+  }
   .adw-top-section-button:focus-visible .adw-top-section-fill {
     background: var(--ui-colour-button-focus-face);
   }
   .adw-top-section-button[data-ui-pressed] .adw-top-section-fill {
     background: var(--ui-colour-button-pressed-face);
+  }
+  .adw-top-section-button:is(:disabled, [aria-disabled="true"]) {
+    --adw-top-glyph-ink: GrayText;
+  }
+  .adw-top-section-button:is(:disabled, [aria-disabled="true"]) .adw-top-section-fill {
+    background: ButtonFace;
+  }
+  .adw-top-section-button[data-refusal-red] {
+    --adw-top-glyph-ink: ButtonFace;
+  }
+  .adw-top-section-button[data-refusal-red] .adw-top-section-fill {
+    background: ButtonText;
   }
 }
