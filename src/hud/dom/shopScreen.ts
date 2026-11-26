@@ -1,45 +1,20 @@
-import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
-import { type BitmapFont, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { SLICES } from "../../data/index.ts";
+import type { NativeSelectionTile, NativeTileFill } from "../../home/dom/index.ts";
+import { FEEDBACK, SHOP_LAYOUT, type ShopPageView } from "../../home/index.ts";
 import {
-  createSelectionTile,
-  type NativeSelectionTile,
-  type NativeTileFill,
-} from "../../home/dom/index.ts";
-import { FEEDBACK, SHOP_LAYOUT, type ShopPageView, shopTabRects } from "../../home/index.ts";
-import { isConfirmKey } from "../../input/index.ts";
-import {
-  backedTextPlaces,
-  createGameButton,
-  createTextLine,
   type DomArtSource,
   type DomPart,
-  gridFillPart,
-  imageArt,
-  imageNineSlice,
-  inkEnd,
-  placeBackedText,
-  placeBox,
-  placeText,
   REFUSAL_RED,
   setBox,
-  sheetArt,
-  shownText,
   type UiLayer,
 } from "../../ui/dom/index.ts";
-import {
-  fontPixel,
-  gridRect,
-  gridX,
-  PALETTE,
-  type PanelText,
-  TEXT_SCALE,
-  type TileState,
-} from "../../ui/index.ts";
+import { gridRect, type PanelText, type TileState } from "../../ui/index.ts";
 import { scrollPlace } from "./logbook.ts";
 import { type DomPage, showPage } from "./page.ts";
-import { bindPanelFeedback } from "./panelButton.ts";
+import { createShopScreenInput } from "./shopScreenInput.ts";
+import { createShopScreenParts } from "./shopScreenParts.ts";
 
 export interface ShopScreenArt {
   readonly key: string;
@@ -129,8 +104,6 @@ export interface ShopScreenInput {
   readonly click: (point: Point) => void;
 }
 
-const ORIGIN = { x: 0, y: 0 };
-
 // The scene owns purchases and gestures. This surface owns only native painting, on the page
 // template (showPage), which it mounts again whenever the page's chrome changes or new art must
 // load before the page shows.
@@ -157,8 +130,6 @@ export function showShopScreen(
     inert = false,
     dimmed = false;
   let view = initial;
-  let tabGesture: Rect | undefined;
-  let rowGesture: string | undefined;
   let scale = layer.scale();
   let motion: ShopScreenMotion | undefined;
   let page: DomPage | undefined;
@@ -171,49 +142,7 @@ export function showShopScreen(
   let chromeKey = "",
     headingsKey = "",
     messageKey = "";
-  const textPart = (line: PanelText, origin: Point = ORIGIN): DomPart => {
-    const element = createTextLine(doc, line);
-    return { element, place: (at) => placeText(input.fonts[line.font], at, origin, element, line) };
-  };
-  const headingPart = ({ band, note, title }: ShopScreenView["headings"][number]): DomPart => {
-    const element = doc.createElement("div");
-    element.className = "adw-lines";
-    const labels = (["title", "body"] as const).map((font) => {
-      const bitmap = input.fonts[font];
-      const text = font === "title" ? title : note;
-      const line = {
-        capTop: band.y,
-        centre: "left",
-        centreX: band.x,
-        colour: PALETTE.darkBrown,
-        font,
-        scale: TEXT_SCALE,
-        text,
-      } as const;
-      const span = createTextLine(doc, line);
-      element.append(span);
-      const shown = shownText(font, text);
-      const end = inkEnd(bitmap, shown);
-      return { bitmap, end, line, span, start: end - inkWidth(bitmap, 1, shown) };
-    });
-    return {
-      element,
-      place: (at) => {
-        const left = gridX(at, band.x);
-        const right = gridX(at, band.x + band.width);
-        const pixel = fontPixel(at, TEXT_SCALE);
-        for (const { bitmap, end, line, span, start } of labels) {
-          const place = backedTextPlaces(bitmap, at, ORIGIN, band, [line], "layout")[0]!;
-          Object.assign(span.style, {
-            fontSize: `${place.fontSize}px`,
-            left: `${line.font === "title" ? left - start * pixel : right - end * pixel}px`,
-            lineHeight: `${place.lineHeight}px`,
-            top: `${place.top}px`,
-          });
-        }
-      },
-    };
-  };
+  const parts = createShopScreenParts(doc, input);
   const accepts = () => alive && input.active() && page?.accepts() === true;
   const capture = () => {
     const admitted = accepts();
@@ -247,59 +176,26 @@ export function showShopScreen(
       tiles.has(child as HTMLElement),
     ) as HTMLElement[];
   };
-  const point = (event: MouseEvent) => input.toGame({ x: event.clientX, y: event.clientY });
+  const inputFlow = createShopScreenInput(
+    {
+      accepts,
+      clip,
+      motion: () => motion,
+      rowAt: (target) => [...rows].find(([, row]) => row.tile.element.contains(target))?.[0],
+      tileElements,
+      view: () => view,
+    },
+    input,
+  );
   const mount = (ready: readonly Promise<readonly string[]>[]) => {
     page?.destroy();
-    let tabPress = false;
+    const controls = inputFlow.mount(() => shownPage);
     const shownPage = showPage(layer, {
       active: input.active,
       back: input.close,
       chrome: view.page,
       fonts: input.fonts,
-      gesture: {
-        cancel: () => {
-          tabPress = false;
-          tabGesture = undefined;
-          rowGesture = undefined;
-          input.cancel();
-        },
-        down: (event) => {
-          const tab = shownPage.tabAt(event.target as Node);
-          tabGesture = tab === undefined ? undefined : inputTabs(view)[tab];
-          rowGesture = [...rows].find(([, row]) =>
-            row.tile.element.contains(event.target as Node),
-          )?.[0];
-          tabPress = tab !== undefined;
-          if (!tabPress && accepts()) {
-            input.down(point(event));
-          }
-        },
-        move: (event) => {
-          if (!tabPress && accepts()) {
-            input.move(point(event));
-          }
-        },
-        up: (event, cancelled) => {
-          const native = tabPress;
-          const position = point(event);
-          const leftTab =
-            tabGesture !== undefined && !containsPoint(tabGesture, position.x, position.y);
-          const row = view.rows.find((row) => row.id === rowGesture);
-          const leftRow =
-            rowGesture !== undefined &&
-            (row === undefined ||
-              !containsPoint(view.clip, position.x, position.y) ||
-              (view.message !== undefined &&
-                containsPoint(view.message.rect, position.x, position.y)) ||
-              !containsPoint(row.rect, position.x, position.y + (motion?.scroll.y ?? 0)));
-          tabPress = false;
-          tabGesture = undefined;
-          rowGesture = undefined;
-          const handled =
-            !native && (cancelled || accepts()) ? input.up(position, cancelled) : false;
-          return leftTab || leftRow || handled === true;
-        },
-      },
+      gesture: controls.gesture,
       list: {
         clip,
         part: {
@@ -322,43 +218,10 @@ export function showShopScreen(
       overlays: [
         { element: message, place: (at) => messageParts.forEach((part) => part.place(at)) },
       ],
-      tab: (index) => {
-        const hit = inputTabs(view)[index];
-        if (hit !== undefined) {
-          input.click({ x: hit.x + hit.width / 2, y: hit.y + hit.height / 2 });
-        }
-      },
+      tab: controls.tab,
       toGame: input.toGame,
     });
-    const element = shownPage.element;
-    element.addEventListener(
-      "wheel",
-      (event) => {
-        if (accepts()) {
-          event.preventDefault();
-          input.wheel(event.deltaY);
-        }
-      },
-      { passive: false },
-    );
-    // The page's own controls: its tabs, its rows and Back.
-    const onControl = (target: Node) =>
-      shownPage.tabAt(target) !== undefined ||
-      tileElements().some((tile) => tile.contains(target)) ||
-      (target !== element && element.contains(target) && !clip.contains(target));
-    // The page moves focus on Tab and its controls take Enter and Space; every other key is the
-    // scene's.
-    element.addEventListener("keydown", (event) => {
-      if (!accepts() || event.code === "Tab") {
-        return;
-      }
-      if (isConfirmKey(event.code) && onControl(event.target as Node)) {
-        return;
-      }
-      event.preventDefault();
-      event.stopPropagation();
-      input.key(event.code, event.repeat);
-    });
+    controls.bind(shownPage.element);
     page = shownPage;
     page.setDimmed(dimmed);
     page.setInert(inert);
@@ -373,7 +236,7 @@ export function showShopScreen(
     const nextHeadings = JSON.stringify(view.headings);
     if (headingsKey !== nextHeadings) {
       headingsKey = nextHeadings;
-      headingParts = view.headings.map(headingPart);
+      headingParts = view.headings.map(parts.headingPart);
       headings.replaceChildren(...headingParts.map(({ element }) => element));
     }
     const retained = new Set<string>();
@@ -385,92 +248,10 @@ export function showShopScreen(
       }
       rows.get(row.id)?.dispose();
       rows.get(row.id)?.tile.element.remove();
-      const control = createGameButton(doc, {
-        content: { kind: "icon", name: row.label },
-        getAction: () =>
-          accepts()
-            ? {
-                activate: () => input.activateRow(row.id),
-                ...(row.holdDetail === true ? { hold: () => input.detailRow(row.id) } : {}),
-              }
-            : null,
-        getState: () => ({ toggled: row.state === "selected" }),
-        skin: "authored",
-      });
-      const stopFeedback = bindPanelFeedback(control, { accepts, burst: () => undefined });
-      const tile = createSelectionTile(doc, input.source, input.fonts.title, {
-        control,
-        focus: "face",
-        hit: row.rect,
-        mark: "none",
-        rect: row.rect,
-        state: row.state,
-      });
-      const parts: DomPart[] = row.fills.map((fill) => gridFillPart(doc, row.rect, fill));
-      // A row the bank does not cover keeps its greyed text on the focus fill and turns ink, as
-      // any row's does, on the press fill.
-      parts.push(
-        ...row.texts.map((line) => {
-          const part = textPart(line, row.rect);
-          part.element.classList.add(
-            row.selectable ? "adw-selection-focus-ink" : "adw-selection-press-ink",
-          );
-          return part;
-        }),
-      );
-      for (const art of row.art) {
-        const place = {
-          ...art.rect,
-          ...(art.projection === undefined ? {} : { projection: art.projection }),
-        };
-        if (art.sheet) {
-          const part = sheetArt(doc, input.source, art.key, art.imageKey);
-          parts.push({
-            element: part.element,
-            place: (at) =>
-              part.place(at, row.rect, {
-                ...place,
-                ...(art.tag === undefined ? {} : { tag: art.tag }),
-              }),
-          });
-          ready.push(part.ready);
-        } else {
-          const part = imageArt(doc, input.source, art.key, art.imageKey ?? art.key);
-          parts.push({ element: part.element, place: (at) => part.place(at, row.rect, place) });
-          ready.push(part.ready);
-        }
-      }
-      // The price plate's fills and price are marked for the forced-colours plate.
-      if (row.plate !== undefined) {
-        const plate = row.plate;
-        for (const fill of plate.fills) {
-          const element = doc.createElement("span");
-          element.className = "adw-framed adw-selection-plate";
-          element.style.backgroundColor = `#${fill.colour.toString(16).padStart(6, "0")}`;
-          parts.push({ element, place: (at) => placeBox(at, row.rect, element, fill.rect) });
-        }
-        const element = createTextLine(doc, plate.label);
-        element.classList.add("adw-selection-plate-ink");
-        parts.push({
-          element,
-          place: (at) =>
-            placeBackedText(input.fonts.body, at, row.rect, plate.rect, [
-              { element, line: plate.label },
-            ]),
-        });
-      }
-      tile.content.append(...parts.map(({ element }) => element));
-      scrolled.append(tile.element);
-      rows.set(row.id, {
-        dispose: () => {
-          stopFeedback();
-          control.dispose();
-        },
-        key,
-        parts,
-        tile,
-      });
-      ready.push(tile.ready);
+      const made = parts.rowPart(accepts, row);
+      scrolled.append(made.tile.element);
+      rows.set(row.id, { ...made, key });
+      ready.push(...made.ready);
     }
     for (const [id, row] of rows) {
       if (!retained.has(id)) {
@@ -484,33 +265,9 @@ export function showShopScreen(
       messageKey = nextMessage;
       messageParts = [];
       if (view.message !== undefined) {
-        const messageView = view.message;
-        // ui-hint is a flat image, so the plate reads no sheet.
-        const plate = imageNineSlice(
-          doc,
-          input.source,
-          "ui-hint",
-          input.source.imageSize("ui-hint"),
-          SLICES["ui-hint"],
-        );
-        const content = doc.createElement("div");
-        content.className = "adw-lines";
-        const labels = messageView.lines.map((line) => ({
-          element: createTextLine(doc, line),
-          line,
-        }));
-        content.append(...labels.map(({ element }) => element));
-        messageParts.push(
-          {
-            element: plate.element,
-            place: (at) => plate.place(at, ORIGIN, messageView.rect),
-          },
-          {
-            element: content,
-            place: (at) => placeBackedText(input.fonts.body, at, ORIGIN, messageView.rect, labels),
-          },
-        );
-        ready.push(plate.ready);
+        const made = parts.messageParts(view.message);
+        messageParts = made.parts;
+        ready.push(made.ready);
       }
       message.replaceChildren(...messageParts.map(({ element }) => element));
       messageParts.forEach((part) => part.place(scale));
@@ -573,5 +330,3 @@ export function showShopScreen(
     update,
   };
 }
-
-const inputTabs = (view: ShopScreenView) => shopTabRects(view.page.tabs.length);
