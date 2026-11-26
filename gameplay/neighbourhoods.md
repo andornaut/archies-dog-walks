@@ -8,7 +8,7 @@ Routes, obstacles and how they occupy the road. The [Tuning page](https://archie
 
 ## Roster
 
-A walk visits 4 of the 6 neighbourhoods with no repeats.
+Normal walks visit 4 of the 6 neighbourhoods with no repeats. [Cheats](cheats.md#cheats) can revisit a neighbourhood or restart the current one.
 
 Cabbagetown, The Beaches, the Distillery District and Yonge Street each also have their own card obstacle (see [Encounters and debuffs](encounters.md#encounters-and-debuffs)), and every neighbourhood has a few obstacles and movers found nowhere else; no mover or plain obstacle but the squirrel appears in more than 3 neighbourhoods, each street cart look counting as its own.
 
@@ -80,7 +80,7 @@ Each mover draws its move count within its kind's range. Every person and animal
 
 ## Distractions
 
-Each neighbourhood has 17 opportunities for a distraction, and placements without clearance may be skipped. A distraction is a red herring that looks like one of the neighbourhood's own hazards. Most often it steps onto an edge lane near the top of the road, stands there for a quarter of its on-screen time and steps back off; otherwise it is already standing in an edge lane and lingers before stepping off, or now and then waits at the road's edge and leaves. It is gone well before its row nears the pack. It never shows a mover's cue, so a hazard that cues is always real. Red herrings never touch anything, never stand on a pickup, an obstacle or a roadside prop, and leave the road's plan as it is.
+Each neighbourhood has 17 opportunities for a distraction, one in each equal stretch of road. Placements without clearance may be skipped. A distraction is a red herring that looks like one of the neighbourhood's own hazards. Most often it steps onto an edge lane near the top of the road, stands there for a quarter of its on-screen time and steps back off; otherwise it is already standing in an edge lane and lingers before stepping off, or now and then waits at the road's edge and leaves. It is gone well before its row nears the pack. It never shows a mover's cue, so a hazard that cues is always real. Red herrings never touch anything, never stand on a pickup, an obstacle or a roadside prop, and leave the road's plan as it is.
 
 ## Spawning details
 
