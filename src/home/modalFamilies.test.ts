@@ -225,7 +225,7 @@ it("reflows narrow Logbook stat labels and grows content before the following se
     },
     tab: "runs",
   });
-  const { texts } = view.content;
+  const texts = view.content.rows.flatMap((row) => row.texts);
   const values = texts.filter((text) => text.align === "inkRight");
   for (const value of values) {
     const left = value.x - measure.inkWidth("body", value.lines[0]!);

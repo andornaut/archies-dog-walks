@@ -265,13 +265,7 @@ export class StatsScene extends Scene {
       tab: this.tab,
     });
     this.scroll = resizeScroll(scrollMax(VIEW, view.content.bottom), this.scroll);
-    const key = JSON.stringify([
-      this.tab,
-      view.content,
-      view.frame,
-      view.wallRows,
-      view.page.title,
-    ]);
+    const key = JSON.stringify([this.tab, view.content, view.frame, view.page.title]);
     if (this.page === undefined || this.pageKey !== key) {
       this.page?.destroy();
       const panelInput = htmlPanelInput(place);

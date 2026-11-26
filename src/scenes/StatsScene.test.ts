@@ -52,24 +52,43 @@ function nativeFixture() {
   );
   const view: LogbookView = {
     content: {
-      art: [],
       bottom: 700,
-      fills: [{ colour: PALETTE.navy, rect: { height: 80, width: 324, x: 18, y: 180 } }],
-      framed: [],
-      texts: [
+      rows: [
         {
-          capTop: 210,
-          colour: PALETTE.green,
-          lines: [gameData.menuText.stats.title],
-          scale: 2,
-          x: 80,
+          art: [],
+          fills: [{ colour: PALETTE.navy, rect: { height: 80, width: 324, x: 18, y: 180 } }],
+          framed: [],
+          rect: { height: 80, width: 324, x: 18, y: 180 },
+          texts: [],
         },
-        { capTop: 230, colour: PALETTE.plum, lines: [gameData.menuText.pageBack], scale: 2, x: 80 },
+        {
+          art: [],
+          badge: { index: 0, label: gameData.menuText.stats.title },
+          fills: [],
+          framed: [],
+          rect: { height: 40, width: 300, x: 24, y: 200 },
+          texts: [
+            {
+              capTop: 210,
+              colour: PALETTE.green,
+              lines: [gameData.menuText.stats.title],
+              scale: 2,
+              x: 80,
+            },
+            {
+              capTop: 230,
+              colour: PALETTE.plum,
+              lines: [gameData.menuText.pageBack],
+              scale: 2,
+              x: 80,
+            },
+          ],
+        },
       ],
+      separators: [],
     },
     frame: { rect: { height: 300, width: 324, x: 18, y: 160 }, right: 342 },
     page,
-    wallRows: [{ height: 40, width: 300, x: 24, y: 200 }],
   };
   const panel = showLogbook(layer, {
     artUrl: (path) => `/art/${path}`,

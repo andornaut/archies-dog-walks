@@ -5,7 +5,7 @@ import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { textPart } from "../../home/dom/detailText.ts";
 import type { LogbookView } from "../../home/logbookView.ts";
 import type { ShopPageView } from "../../home/shopPageView.ts";
-import { earnedBand, STATS_LAYOUT, statsTabRects } from "../../home/statsLayout.ts";
+import { STATS_LAYOUT, statsTabRects } from "../../home/statsLayout.ts";
 import { contentSeparatorPart } from "../../ui/dom/contentSeparator.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import type { NativeGesture } from "../../ui/dom/modalLifecycle.ts";
@@ -13,14 +13,14 @@ import { type DomPart, fillPart, framedBoxPart } from "../../ui/dom/parts.ts";
 import { setBox } from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { type DomScale, gridRect, wholeArtPixels } from "../../ui/domScale.ts";
-import { PALETTE } from "../../ui/palette.ts";
 import { artPart, type DomDetailCardInput } from "./detailCard.ts";
 import { type DomPage, showPage } from "./page.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
 import type { DomQuestionPanel } from "./questionPanel.ts";
 
-// The Logbook in HTML over the canvas, on the page template (showPage): the open tab's content
-// clipped to the list's frame and moved up by the scroll, at the places logbookView lays out.
+// The Logbook in HTML over the canvas, on the page template (showPage): the open tab's rules and
+// rows, each row one group, clipped to the list's frame and moved up by the scroll, at the places
+// logbookView lays out.
 // Where the list is scrolled to, and whether it has settled: no drag or fling moving it.
 export interface LogbookScroll {
   readonly max: number;
@@ -80,6 +80,7 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
   const scrolled = doc.createElement("div");
   scrolled.className = "adw-scrolled";
   clip.append(scrolled);
+  // A badge's row: its control over rect, the row's parts in it from the content's corner.
   const control = (rect: Rect, label: string, target: LogbookTarget) => {
     const content = doc.createElement("span");
     content.className = "adw-lines";
@@ -110,72 +111,42 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
       },
     };
   };
-  const rowForBox = (box: Rect) =>
-    view.wallRows.findIndex(
-      (row) =>
-        box.x >= row.x &&
-        box.x + box.width <= row.x + row.width &&
-        box.y >= row.y &&
-        box.y + box.height <= row.y + row.height,
-    );
-  const painted: { readonly part: DomPart; readonly row: number }[] = [
-    // Background fills keep their original stacking and coordinates outside action content.
-    ...content.fills.map((fill) => ({
-      part:
-        fill.rect.height === 1 && fill.colour === PALETTE.tan
-          ? contentSeparatorPart(doc, "art", fill.rect)
-          : fillPart(doc, fill),
-      row: -1,
-    })),
-    ...content.framed.map((framed) => ({
-      part: framedBoxPart(doc, framed),
-      row: view.wallRows.findIndex((row) => {
-        const band = earnedBand(row);
-        return (
-          band.x === framed.rect.x &&
-          band.y === framed.rect.y &&
-          band.width === framed.rect.width &&
-          band.height === framed.rect.height
-        );
-      }),
-    })),
-    ...content.art.map((art) => ({
-      part: artPart(doc, input, art),
-      row: rowForBox({
-        height: art.size.height * art.scale,
-        width: art.size.width * art.scale,
-        x: art.x,
-        y: art.y,
-      }),
-    })),
-    ...content.texts.map((text) => ({
-      part: textPart(doc, input, text),
-      row: rowForBox({ height: 1, width: 0, x: text.x, y: text.capTop }),
-    })),
-  ];
-  const badges = view.wallRows.map((rect, index) => {
-    const name =
-      view.content.texts
-        .find((line) => line.capTop >= rect.y && line.capTop < rect.y + rect.height)
-        ?.lines.join(" ") ?? input.view.page.title.map((line) => line.text).join(" ");
-    const part = control(rect, name, { badge: index });
-    const children = painted.filter(({ row }) => row === index);
-    part.content.append(...children.map(({ part }) => part.element));
+  // Any other row: a group of its parts from the content's corner.
+  const group = () => {
+    const element = doc.createElement("div");
+    element.className = "adw-lines";
+    return { content: element, element, place: () => undefined };
+  };
+  // Each row as one group of its parts: fills and framed bands under art under text.
+  const rows = content.rows.map((row) => {
+    const parts: DomPart[] = [
+      ...row.fills.map((fill) => fillPart(doc, fill)),
+      ...row.framed.map((framed) => framedBoxPart(doc, framed)),
+      ...row.art.map((art) => artPart(doc, input, art)),
+      ...row.texts.map((text) => textPart(doc, input, text)),
+    ];
+    const part =
+      row.badge === undefined
+        ? group()
+        : control(row.rect, row.badge.label, { badge: row.badge.index });
+    part.content.append(...parts.map(({ element }) => element));
     return {
       ...part,
-      hit: rect,
       place: (scale: DomScale) => {
         part.place(scale);
-        children.forEach(({ part }) => part.place(scale));
+        parts.forEach((child) => child.place(scale));
       },
       ready: Promise.all(
-        children.flatMap(({ part }) => (part.ready === undefined ? [] : [part.ready])),
+        parts.flatMap((child) => (child.ready === undefined ? [] : [child.ready])),
       ).then((all) => all.flat()),
+      row,
     };
   });
+  // The badges' rows, in the wall's order.
+  const badges = rows.flatMap((part) => ("control" in part ? [part] : []));
   const contentParts: DomPart[] = [
-    ...painted.filter(({ row }) => row === -1).map(({ part }) => part),
-    ...badges,
+    ...content.separators.map((rect) => contentSeparatorPart(doc, "art", rect)),
+    ...rows,
   ];
   scrolled.append(...contentParts.map(({ element }) => element));
   let scale: DomScale | undefined;
@@ -234,8 +205,8 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
           (badge === undefined
             ? undefined
             : {
-                ...badge.hit,
-                y: badge.hit.y - input.scroll().y,
+                ...badge.row.rect,
+                y: badge.row.rect.y - input.scroll().y,
               });
         input.navigation.gesture.down?.(event);
       },
@@ -262,9 +233,9 @@ export function showLogbook(layer: UiLayer, input: DomLogbookInput): DomLogbook 
     },
     onFocus: (index) => {
       clip.scrollTop = 0;
-      const row = index === undefined ? undefined : view.wallRows[index - tabCount];
-      if (row !== undefined) {
-        input.navigation.focus(row);
+      const badge = index === undefined ? undefined : badges[index - tabCount];
+      if (badge !== undefined) {
+        input.navigation.focus(badge.row.rect);
       }
     },
     tab: (index) => input.navigation.activate({ tab: index }),

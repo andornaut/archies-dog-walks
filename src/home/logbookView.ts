@@ -31,18 +31,28 @@ import {
 } from "./statsLayout.ts";
 import { dogRows, overallRows, type StatsRow } from "./statsView.ts";
 
-// The Logbook laid out as one view both renderers draw: the canvas's (src/scenes/StatsScene.ts)
-// and the HTML interface's (src/hud/dom/logbook.ts). Every rect and text origin is in game
-// pixels; the open tab's content is laid out from the list's unscrolled top, and the scene moves
-// it up by the scroll and clips it to the list's frame.
+// The Logbook laid out as one view the HTML interface draws (src/hud/dom/logbook.ts). Every rect
+// and text origin is in game pixels; the open tab's content is laid out from the list's
+// unscrolled top, and the page moves it up by the scroll and clips it to the list's frame.
 
-// The open tab's content: fills and framed bands under art under text, and its bottom.
-export interface LogbookContent {
+// A row of the open tab, drawn as one group: its fills and framed bands under its art under its
+// text, laid out in rect. A badge's row is its control, named label, that opens the badge at
+// index on the wall.
+export interface LogbookRow {
   readonly art: readonly DetailArt[];
-  readonly bottom: number;
+  readonly badge?: { readonly index: number; readonly label: string };
   readonly fills: readonly PageFill[];
   readonly framed: readonly DetailFramed[];
+  readonly rect: Rect;
   readonly texts: readonly DetailText[];
+}
+
+// The open tab's content: its rows top to bottom, which is their focus order, the 1px rules
+// between them, and its bottom.
+export interface LogbookContent {
+  readonly bottom: number;
+  readonly rows: readonly LogbookRow[];
+  readonly separators: readonly Rect[];
 }
 
 export interface LogbookView {
@@ -50,8 +60,6 @@ export interface LogbookView {
   // The list's frame, which clips the content, and its values' right edge.
   readonly frame: { readonly rect: Rect; readonly right: number };
   readonly page: ShopPageView;
-  // The badge wall's rows, each badge's tap target, on the badges tab.
-  readonly wallRows: readonly Rect[];
 }
 
 // Beyond the detail card's measures: a 2x body line's visible ink, its top and bottom rows from
@@ -73,12 +81,24 @@ const BADGE_SIZE = BADGE_STRIP.badgeSize;
 
 type Data = Parameters<typeof badgeProgress>[0] & Pick<GameData, "dogs" | "menuText">;
 
-// What a tab adds its parts to as it lays them out.
+// A row as a tab lays it out: the parts it adds to it, in rect.
 interface Parts {
   readonly art: DetailArt[];
   readonly fills: PageFill[];
   readonly framed: DetailFramed[];
+  readonly rect: Rect;
   readonly texts: DetailText[];
+}
+
+// An empty row across the rows from the left to right, height tall from y.
+function row(right: number, y: number, height: number): Parts {
+  return {
+    art: [],
+    fills: [],
+    framed: [],
+    rect: { height, width: right - LEFT, x: LEFT, y },
+    texts: [],
+  };
 }
 
 // Body text at 2x in plum unless told otherwise, left-aligned with its pen, or a title label's
@@ -116,128 +136,138 @@ function textInkRight(
   text(parts, { x: at.right, y: at.y }, value, { align: "inkRight", colour });
 }
 
-// Each row's label from the left in dark brown and its value's ink up to right, from y.
-function rows(
-  parts: Parts,
+// A row per stat from y, each its label from the left in dark brown, wrapped clear of its value,
+// and its value's ink up to right, a pitch per label line. Returns the rows and the last one's
+// bottom.
+function statRows(
   measure: LogbookMeasure,
   right: number,
   y: number,
   stats: readonly StatsRow[],
-): number {
+): { bottom: number; rows: Parts[] } {
   let top = y;
-  for (const { label, value } of stats) {
+  const rows = stats.map(({ label, value }) => {
     const room = right - LEFT - measure.inkWidth("body", value) - STATS_LAYOUT.rows.gap;
     const lines = measure.wrapNote(room, label);
+    const parts = row(right, top, Math.max(1, lines.length) * PITCH);
     lines.forEach((line, i) =>
       text(parts, { x: LEFT, y: top + i * PITCH }, line, { colour: PALETTE.darkBrown }),
     );
     textInkRight(parts, { right, y: top }, value);
-    top += Math.max(1, lines.length) * PITCH;
-  }
-  return top;
+    top += parts.rect.height;
+    return parts;
+  });
+  return { bottom: top, rows };
 }
 
-// Overall figures, then walks by outcome, each under its heading.
+// Overall figures, then walks by outcome: each section's heading row, then its stat rows.
 function runsTab(
-  parts: Parts,
   measure: LogbookMeasure,
   data: Data,
   save: Pick<SaveDocument, "stats">,
   right: number,
-): number {
+): LogbookContent {
   const { outcomes, overall } = overallRows(data, save.stats);
   const words = data.menuText.stats;
   const sections = [
     { heading: words.sections.overall, rows: overall },
     { heading: words.sections.runs, rows: outcomes },
   ];
+  const rows: Parts[] = [];
   let top = STATS_LAYOUT.walks.top;
   let bottom = top;
   for (const section of sections) {
-    text(parts, { x: LEFT, y: top }, section.heading, { font: "title" });
-    bottom = rows(parts, measure, right, top + STATS_LAYOUT.walks.rowsY, section.rows);
+    const heading = row(right, top, STATS_LAYOUT.walks.rowsY);
+    text(heading, { x: LEFT, y: top }, section.heading, { font: "title" });
+    const stats = statRows(measure, right, top + STATS_LAYOUT.walks.rowsY, section.rows);
+    rows.push(heading, ...stats.rows);
+    bottom = stats.bottom;
     top = bottom + STATS_LAYOUT.walks.sectionGap;
   }
-  return bottom + STATS_LAYOUT.scroll.padBottom;
+  return { bottom: bottom + STATS_LAYOUT.scroll.padBottom, rows, separators: [] };
 }
 
-// A block per dog: its face and name, then its walks, neighbourhoods and firings, one per row,
-// with a rule between blocks.
+// A block per dog: a row of its face and name, then a row each for its walks, neighbourhoods and
+// firings, with a rule between blocks.
 function dogsTab(
-  parts: Parts,
   measure: LogbookMeasure,
   data: Data,
   save: Pick<SaveDocument, "owned" | "stats">,
   right: number,
-): number {
+): LogbookContent {
   const labels = data.menuText.stats.dogColumns;
   const dogs = dogRows(data, save.owned, save.stats);
+  const rows: Parts[] = [];
+  const separators: Rect[] = [];
   let top = DOGS.top;
   let bottom = top;
-  dogs.forEach((row, i) => {
+  dogs.forEach((dog, i) => {
     if (i > 0) {
-      parts.fills.push({
-        colour: PALETTE.tan,
-        rect: {
-          height: 1,
-          width: right - LEFT + 2 * DOGS.ruleDx,
-          x: LEFT - DOGS.ruleDx,
-          y: top - DOGS.ruleAbove,
-        },
+      separators.push({
+        height: 1,
+        width: right - LEFT + 2 * DOGS.ruleDx,
+        x: LEFT - DOGS.ruleDx,
+        y: top - DOGS.ruleAbove,
       });
     }
-    const face = dogFaceKey(data, row.dog);
+    const named = row(right, top, DOGS.rowsY);
+    const face = dogFaceKey(data, dog.dog);
     const size = measure.art(face);
     if (size !== undefined) {
       const tag = measure.hasTag(face, "happy") ? "happy" : undefined;
-      parts.art.push({ key: face, scale: 1, sheet: { tag }, size, x: LEFT, y: top });
+      named.art.push({ key: face, scale: 1, sheet: { tag }, size, x: LEFT, y: top });
     }
-    text(parts, { x: LEFT + DOGS.nameDx, y: top + DOGS.nameY }, row.name, { font: "title" });
+    text(named, { x: LEFT + DOGS.nameDx, y: top + DOGS.nameY }, dog.name, { font: "title" });
     const values: Record<DogStat, number> = {
-      fired: row.timesFired,
-      walks: row.walks,
-      zones: row.zonesFinished,
+      fired: dog.timesFired,
+      walks: dog.walks,
+      zones: dog.zonesFinished,
     };
-    bottom = rows(
-      parts,
+    const stats = statRows(
       measure,
       right,
       top + DOGS.rowsY,
       DOG_STATS.map((stat) => ({ label: labels[stat], value: String(values[stat]) })),
     );
+    rows.push(named, ...stats.rows);
+    bottom = stats.bottom;
     top = bottom + DOGS.gap;
   });
-  return bottom + STATS_LAYOUT.scroll.padBottom;
+  return { bottom: bottom + STATS_LAYOUT.scroll.padBottom, rows, separators };
 }
 
-// The earned count at the rows' right, then a badge per row: earned ones in colour with a green
-// name on a gold band, ticked, locked ones greyed; each with its goal, or its short goal where the
-// full one does not fit, and a locked one that counts across walks with its progress. Returns the
-// content's bottom and the rows.
+// The earned count's row, at the rows' right, then a row per badge: earned ones in colour with a
+// green name on a gold band, ticked, locked ones greyed; each with its goal, or its short goal
+// where the full one does not fit, and a locked one that counts across walks with its progress.
 function badgesTab(
-  parts: Parts,
   measure: LogbookMeasure,
   data: Data,
   save: Pick<SaveDocument, "owned" | "stats">,
   badges: readonly BadgeView[],
   right: number,
-): { bottom: number; wallRows: Rect[] } {
-  textInkRight(parts, { right, y: WALL.headingY }, earnedText(data, badges), PALETTE.darkBrown);
+): LogbookContent {
+  const earned = row(right, WALL.headingY, WALL.y - WALL.headingY);
+  textInkRight(earned, { right, y: WALL.headingY }, earnedText(data, badges), PALETTE.darkBrown);
   const inkWidth = (line: string) => measure.inkWidth("body", line);
   const cells = badges.map((badge) => {
     const cell = wallCell(WALL_TEXT, inkWidth, badge, badgeProgress(data, save, badge));
-    return { ...cell, name: [...cell.name, data.menuText.stats.badgeDifficulty[badge.tier]] };
+    return {
+      ...cell,
+      label: cell.name.join(" "),
+      name: [...cell.name, data.menuText.stats.badgeDifficulty[badge.tier]],
+    };
   });
   // Each line's capitals' top, the goal's clear of the name's line, and each row as tall as its
   // badge or its text, whichever is taller.
   const tops = cells.map((cell) => wallLineTops(measure.body, cell));
   const wallRows = stackRows(WALL, tops.map(wallRowHeight));
-  badges.forEach((badge, i) => {
+  const rows = badges.flatMap((badge, i): LogbookRow[] => {
     const rect = wallRows[i];
     const cell = cells[i];
     if (rect === undefined || cell === undefined) {
-      return;
+      return [];
     }
+    const parts: Parts = { art: [], fills: [], framed: [], rect, texts: [] };
     if (badge.earned) {
       parts.framed.push({
         border: PALETTE[EARNED.outline],
@@ -295,32 +325,25 @@ function badgesTab(
         ...(focus === undefined ? {} : { focusColour: PALETTE[focus] }),
       });
     });
+    return [{ ...parts, badge: { index: i, label: cell.label } }];
   });
-  return { bottom: badgesBottom(wallRows), wallRows };
+  return { bottom: badgesBottom(wallRows), rows: [earned, ...rows], separators: [] };
 }
 
-// The open tab's content laid out in frame (statsListFrame), and the wall's rows on the badges
-// tab.
+// The open tab's content laid out in frame (statsListFrame).
 function tabContent(
   measure: LogbookMeasure,
   data: Data,
   state: LogbookState,
   right: number,
-): { content: LogbookContent; wallRows: Rect[] } {
-  const parts: Parts = { art: [], fills: [], framed: [], texts: [] };
-  const done = (bottom: number, wallRows: Rect[] = []) => ({
-    content: { ...parts, bottom },
-    wallRows,
-  });
+): LogbookContent {
   switch (state.tab) {
     case "runs":
-      return done(runsTab(parts, measure, data, state.save, right));
+      return runsTab(measure, data, state.save, right);
     case "dogs":
-      return done(dogsTab(parts, measure, data, state.save, right));
-    case "badges": {
-      const { bottom, wallRows } = badgesTab(parts, measure, data, state.save, state.badges, right);
-      return done(bottom, wallRows);
-    }
+      return dogsTab(measure, data, state.save, right);
+    case "badges":
+      return badgesTab(measure, data, state.save, state.badges, right);
     default:
       return state.tab satisfies never;
   }
@@ -347,5 +370,5 @@ export function logbookView(measure: LogbookMeasure, data: Data, state: LogbookS
     title: words.title,
   });
   const frame = statsListFrame();
-  return { ...tabContent(measure, data, state, frame.right), frame, page };
+  return { content: tabContent(measure, data, state, frame.right), frame, page };
 }

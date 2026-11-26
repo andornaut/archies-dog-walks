@@ -182,6 +182,42 @@ const actualTab = (tab: Parameters<typeof logbookView>[2]["tab"]) =>
     save: fullestSave,
     tab,
   });
+const tabTexts = (tab: Parameters<typeof logbookView>[2]["tab"]) =>
+  actualTab(tab).content.rows.flatMap((row) => row.texts);
+
+// Each row holds its own parts: every text's capitals and every picture start inside it. The
+// rows run top to bottom without overlapping, each badge's row its own control in the wall's
+// order, and each rule lies in a gap between two rows.
+describe("each tab's rows", () => {
+  it.each(STATS_TABS)(
+    "%s: holds each row's parts, in order, with its rules between rows",
+    (tab) => {
+      const { rows, separators } = actualTab(tab).content;
+      const bottom = (row: (typeof rows)[number]) => row.rect.y + row.rect.height;
+      rows.forEach((row, i) => {
+        for (const y of [...row.texts.map((text) => text.capTop), ...row.art.map((art) => art.y)]) {
+          expect(y).toBeGreaterThanOrEqual(row.rect.y);
+          expect(y).toBeLessThan(bottom(row));
+        }
+        const next = rows[i + 1];
+        if (next !== undefined) {
+          expect(bottom(row)).toBeLessThanOrEqual(next.rect.y);
+        }
+      });
+      expect(rows.flatMap((row) => (row.badge === undefined ? [] : [row.badge.index]))).toEqual(
+        tab === "badges" ? BADGES.map((_, i) => i) : [],
+      );
+      for (const rule of separators) {
+        expect(
+          rows.some(
+            (row, i) =>
+              bottom(row) <= rule.y && (rows[i + 1]?.rect.y ?? -1) >= rule.y + rule.height,
+          ),
+        ).toBe(true);
+      }
+    },
+  );
+});
 
 describe("the Walks and Dogs tabs' rows", () => {
   it.each([...walksRows, ...dogStatRows].map((row) => [row.label, row.value] as const))(
@@ -201,7 +237,7 @@ describe("the Dogs tab's blocks", () => {
   // the name's ink over the rows, the last row's ink over the rule above the next block.
   it(`keeps each block's face, name (${WIDEST_DOG_TITLE}'s at widest), rows and rule in order`, () => {
     expect(titleRight(rows.left + dogs.nameDx, WIDEST_DOG_TITLE)).toBeLessThanOrEqual(BAR_LEFT);
-    const { texts } = actualTab("dogs").content;
+    const texts = tabTexts("dogs");
     const headings = texts.filter((line) => line.font === "title");
     const top = headings[0]!.capTop - dogs.nameY;
     const next = headings[1]!.capTop - dogs.nameY;
@@ -261,7 +297,8 @@ describe("the scrollbar", () => {
 describe("each tab's scroll", () => {
   it.each(STATS_TABS)("%s: brings its last row into view", (tab) => {
     const actual = actualTab(tab);
-    const { bottom, texts } = actual.content;
+    const { bottom } = actual.content;
+    const texts = tabTexts(tab);
     const lastInk = Math.max(
       ...texts.map(
         (text) =>
@@ -317,16 +354,15 @@ describe("an earned row", () => {
 // Art's row rule (art/layout.md, page rows): each wall row's text block is centred on the row by
 // its lines' visible ink, an odd spare row under it.
 it("centres each badge wall row's text by its visible ink", () => {
-  const { content, wallRows } = actualTab("badges");
-  for (const row of wallRows) {
-    const inks = content.texts
-      .filter((text) => text.x > row.x && text.capTop >= row.y && text.capTop < row.y + row.height)
+  const badgeRows = actualTab("badges").content.rows.filter((row) => row.badge !== undefined);
+  for (const { rect, texts } of badgeRows) {
+    const inks = texts
       .flatMap((text) =>
         text.lines.map((line) => ({ ink: lineInk(gameFont("font-body"), line), text })),
       )
       .map(({ ink, text }) => ({ bottom: text.capTop + ink.bottom, top: text.capTop + ink.top }));
-    const above = Math.min(...inks.map(({ top }) => top)) - row.y;
-    const below = row.y + row.height - Math.max(...inks.map(({ bottom }) => bottom));
+    const above = Math.min(...inks.map(({ top }) => top)) - rect.y;
+    const below = rect.y + rect.height - Math.max(...inks.map(({ bottom }) => bottom));
     expect(below - above).toBeGreaterThanOrEqual(0);
     expect(below - above).toBeLessThanOrEqual(1);
   }
