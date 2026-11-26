@@ -101,7 +101,11 @@ it.each([
 it.each([
   ["the Menu", "src/scenes/MenuScene.ts", OUTSIDE_TAP],
   ["Reset save?", "src/scenes/cheatsPage.ts", /backgroundCancel: closeQuestion\b/],
-  ["the install steps' card", "src/hud/dom/settings.ts", /backgroundCancel: input\.closeSteps\b/],
+  [
+    "the install steps' card",
+    "src/hud/dom/settingsInstall.ts",
+    /backgroundCancel: input\.closeSteps\b/,
+  ],
 ])("%s over a page closes on a tap outside it", (_name, path, outside) => {
   expect(readFileSync(path, "utf8")).toMatch(outside);
 });
