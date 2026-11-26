@@ -41,6 +41,7 @@ import {
   wholeArtPixels,
 } from "../../ui/index.ts";
 import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
+import { createQuestionCardFrame } from "./questionCardFrame.ts";
 
 // The pause menu, each question (the Home question, Quit?) and each modal card (the update
 // notices) in HTML over the canvas: the panel questionPanelView or modalCardView lays out, drawn
@@ -182,7 +183,12 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   const id = `adw-panel-${panels}`;
   const { view } = input;
   const modal = input.modal !== false;
-  const dialog = doc.createElement("div");
+  const titleName = input.label ?? view.title.map((line) => line.text).join(" ");
+  const nativeCard =
+    view.frame === "card"
+      ? createQuestionCardFrame(doc, { id, panel: view.panel, title: titleName })
+      : undefined;
+  const dialog = nativeCard?.element ?? doc.createElement("div");
   // Parts with native controls participate independently of modal ownership.
   const passive =
     input.dismiss === undefined &&
@@ -190,7 +196,8 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     input.close === null &&
     input.presses.length === 0 &&
     !(input.parts ?? []).some((part) => (part.controls?.length ?? 0) > 0);
-  dialog.className = passive ? "adw-dialog adw-passive" : "adw-dialog";
+  dialog.classList.add("adw-dialog");
+  dialog.classList.toggle("adw-passive", passive);
   dialog.setAttribute("role", "dialog");
   dialog.setAttribute("aria-modal", String(modal));
   // Focus starts on the dialog itself, so no button shows the keyboard's ring until Tab.
@@ -199,11 +206,12 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   // A question's ui-panel in its rim, or a modal card's ui-detail-card.
   const rim = doc.createElement("div");
   rim.className = "adw-rim";
-  const panel = panelFramePart(doc, view.frame === "card" ? "card" : "panel", view.panel);
-  if (view.frame === "card") {
-    dialog.append(panel.element);
-  } else if (view.frame === "panel") {
-    dialog.append(rim, panel.element);
+  const panel =
+    nativeCard === undefined
+      ? panelFramePart(doc, view.frame === "card" ? "card" : "panel", view.panel)
+      : undefined;
+  if (view.frame === "panel") {
+    dialog.append(rim, panel!.element);
   }
 
   // The parts drawn at game pixels, placed again as the scale changes.
@@ -237,16 +245,20 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     dialog.style.transform = gridTransform(scale);
     setBox(rim, paintedPanel(scale));
   });
-  placed.push(panel.place);
+  if (nativeCard === undefined) {
+    placed.push(panel!.place);
+  } else {
+    placed.push(nativeCard.place);
+  }
 
   // The title, its lines in capitals; a screen reader reads its words as written. It comes first,
   // so the dialog reads in the order it shows: the title, the body, then the actions. It paints
   // over the parts (adw-panel-title), which lie under it.
-  const title = doc.createElement("h2");
+  const title = nativeCard?.title ?? doc.createElement("h2");
   title.className = "adw-lines adw-panel-title";
   title.id = `${id}-title`;
-  const titleName = input.label ?? view.title.map((line) => line.text).join(" ");
   title.setAttribute("aria-label", titleName);
+  title.replaceChildren();
   for (const line of view.title) {
     text(title, ORIGIN, line).setAttribute("aria-hidden", "true");
   }
@@ -507,6 +519,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
       setRampDimmed(dialog, false);
       lifecycle.destroy();
       stopScale();
+      nativeCard?.dispose();
       doc.defaultView?.removeEventListener("keydown", onKey);
       dialog.remove();
     },

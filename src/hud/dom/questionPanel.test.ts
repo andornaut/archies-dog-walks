@@ -226,9 +226,12 @@ describe("an HTML modal card", () => {
         { label: words.button, primary: true, rect: { height: 44, width: 200, x: 80, y: 252 } },
       ]),
     });
-    const parts = element.all().map(({ className }) => className);
-    expect(parts).toContain("adw-card");
-    expect(parts).not.toContain("adw-rim");
+    const parts = element.all();
+    const skins = parts.filter((node) => node.classList.contains("adw-card"));
+    expect(skins).toHaveLength(1);
+    expect(skins[0]?.classList.contains("ui-modal-skin")).toBe(true);
+    expect(parts.some((node) => node.classList.contains("adw-rim"))).toBe(false);
+    expect(parts.filter((node) => node.getAttribute("role") === "dialog")).toHaveLength(1);
     doc.defaultView.fire("keydown", { code: "Digit1", repeat: false });
     expect(update).not.toHaveBeenCalled();
     element
@@ -912,8 +915,13 @@ it.each([
     const n = (node: typeof painted, key: string) => Number.parseFloat(node.style[key]!);
     const faceX = n(close, "left") + n(face, "left");
     const faceY = n(close, "top") + n(face, "top");
-    expect(faceY - n(painted, "top")).toBe(inset);
-    expect(n(painted, "left") + n(painted, "width") - faceX - n(face, "width")).toBe(inset);
+    // Card skin fills the kit card, whose projected bounds are the painted frame.
+    const top = frame === "card" ? n(painted.parent!, "--ui-modal-card-y") : n(painted, "top");
+    const left = frame === "card" ? n(painted.parent!, "--ui-modal-card-x") : n(painted, "left");
+    const paintedWidth =
+      frame === "card" ? n(painted.parent!, "--ui-modal-card-width") : n(painted, "width");
+    expect(faceY - top).toBe(inset);
+    expect(left + paintedWidth - faceX - n(face, "width")).toBe(inset);
     const border = artPixel(scale);
     expect(border + n(glyph, "left") + n(glyph, "width") / 2).toBe(n(face, "width") / 2);
     expect(border + n(glyph, "top") + n(glyph, "height") / 2).toBe(n(face, "height") / 2);

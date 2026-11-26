@@ -338,7 +338,7 @@ export function layerViews(element: FakeElement): FakeElement[] {
   return element.children.flatMap((child) =>
     child.className === "adw-modal-host"
       ? (child.children[1]?.children.slice(0, 1) ?? [])
-      : child.classList.contains("ui-modal-frame")
+      : child.classList.contains("ui-modal-frame") && child.getAttribute("role") !== "dialog"
         ? child.children.filter((view) => view.getAttribute("role") === "dialog")
         : [child],
   );
