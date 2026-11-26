@@ -101,3 +101,4 @@ Reference: [art README](../../art/README.md), [style guide](../../art/style-guid
 | adw-0169 | Load the native interface art from per-set sheets                        | [adw-0169.md](../work/adw-0169.md) |
 | adw-0172 | Shrink the walker and gear plates                                        | [adw-0172.md](../work/adw-0172.md) |
 | adw-0249 | Draw every Settings row icon as one fixed ink icon, aligned to its label | [adw-0249.md](../work/adw-0249.md) |
+| adw-0264 | Polish Archie’s visual art and use vector control glyphs                 | [adw-0264.md](../work/adw-0264.md) |
