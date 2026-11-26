@@ -849,7 +849,11 @@ export class HudScene extends Scene {
       x: placed.text.x,
     });
     if (reached && placed.icon !== null) {
-      chip.art({ at: placed.icon, image: { height: 16, width: 16 }, key: label.reachIcon! });
+      chip.art({
+        at: placed.icon,
+        image: { height: REACH_ICON.size, width: REACH_ICON.size },
+        key: label.reachIcon!,
+      });
     }
     return { parts: [chip], rect: placed.chip };
   }

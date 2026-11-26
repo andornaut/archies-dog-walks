@@ -32,6 +32,7 @@ import { inkWithPills } from "../ui/namePills.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { GREYED } from "../ui/selection.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 import { type CardCharm, optionMarks } from "./buffMarks.ts";
 import { largeBodyText, plaqueTexts, smallCardText } from "./cardText.ts";
 
@@ -150,13 +151,13 @@ export function choiceCardSurface(
     if (marks.forgiven === null) {
       add("body", body?.lines ?? [], x, top + bodyBox.top, bodyStyle.scale, PALETTE.plum, "left");
     } else {
-      add("body", marks.forgiven.rows, x, top + bodyBox.top, 2, PALETTE.forest, "left");
+      add("body", marks.forgiven.rows, x, top + bodyBox.top, TEXT_SCALE, PALETTE.forest, "left");
       add(
         "body",
         [marks.forgiven.name],
         x,
-        top + bodyBox.top + marks.forgiven.rows.length * metrics.body.lineHeight * 2,
-        2,
+        top + bodyBox.top + marks.forgiven.rows.length * metrics.body.lineHeight * TEXT_SCALE,
+        TEXT_SCALE,
         PALETTE.plum,
         "left",
       );

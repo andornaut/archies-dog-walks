@@ -2,6 +2,7 @@ import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";
+import { FACE_SIZE } from "../data/layout.ts";
 import type { AchievementId, DogId } from "../data/types.ts";
 import {
   BADGE_STRIP,
@@ -25,6 +26,7 @@ import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { panelButton, panelTitle } from "../ui/modal/view.ts";
 import { labelInkWidth, pixelFontMetrics, withProbe } from "../ui/phaser/pixelText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 import { badgeCelebrationNames } from "./badges.ts";
 import { clearOnHomePageOpening } from "./homeBarPress.ts";
 import { canvasPanelMeasure, modalTextWidth } from "./modalMeasure.ts";
@@ -44,7 +46,7 @@ export interface CelebrationSceneData {
 }
 
 const SCREEN = SCREEN_LAYOUT.screen;
-const FACES = { pitch: 44, size: 32 };
+const FACES = { pitch: 44, size: FACE_SIZE };
 // The action follows the panel at the section gap.
 
 // Badges earned away from a run's end, on launch or by a purchase, over the dimmed home screen:
@@ -98,7 +100,7 @@ export class CelebrationScene extends Scene {
         ? 0
         : BADGE_STRIP.nameGap +
           (namedLines - 1) * BADGE_STRIP.namePitch +
-          inkRowsFromCapTop(pixelFontMetrics(this, "body")) * 2;
+          inkRowsFromCapTop(pixelFontMetrics(this, "body")) * TEXT_SCALE;
     const badgesHeight = badgeBottom + nameHeight + MODAL.pad;
     const height = badgesHeight + (cheering.length > 0 ? MODAL.gap + FACES.size + MODAL.pad : 0);
     const { button: buttonRect, panel } = ordinaryBadgeModalLayout(dim, {

@@ -6,7 +6,7 @@ import type { GameObjects, Scene, Tweens, Types } from "phaser";
 import { playTag } from "../assets/phaser/sprites.ts";
 import { ownerFaceKey, WARNING_KEY, WARNING_TAG } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { SLICES } from "../data/layout.ts";
+import { FACE_SIZE, MOMENT_PARTS, SLICES } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { DogId } from "../data/types.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
@@ -58,7 +58,7 @@ import type { HudWalk } from "./hudWalk.ts";
 import { onSceneEvent } from "./overlay.ts";
 import { TimedGroup } from "./timedGroup.ts";
 const LAYOUT = SCREEN_LAYOUT;
-const FACE = { scale: 2, size: 32 };
+const FACE = { scale: MOMENT_PARTS.firing.faceScale, size: FACE_SIZE };
 const LINE_TAIL_WIDTH = 8;
 interface FiredLine {
   at: Point;

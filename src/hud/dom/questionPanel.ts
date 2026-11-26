@@ -2,6 +2,7 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 
+import { BUTTON_SIZE } from "../../data/layout.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { cardNumberForKey, isConfirmKey, menuKeyActs } from "../../input/keyBindings.ts";
 import { closeFace } from "../../ui/closeControl.ts";
@@ -109,10 +110,6 @@ export interface DomQuestionPanel {
 }
 
 const ORIGIN = { x: 0, y: 0 } as const;
-
-// art: the close control's 16x16 glyph on its 20x20 ui-icon-button-normal face, from the face's
-// corner.
-const CLOSE_GLYPH_SIZE = 16;
 
 // art: fx-tap's side.
 const BURST_SIDE = 16;
@@ -337,7 +334,8 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
         panelBounds.left + panelBounds.width - inset - side - gridX(scale, view.close.hit.x);
       const top = panelBounds.top + inset - gridY(scale, view.close.hit.y);
       setBox(face, { height: side, left, top, width: side });
-      const glyphSide = CLOSE_GLYPH_SIZE * pixel;
+      // The close control's glyph on its ui-icon-button-normal face.
+      const glyphSide = BUTTON_SIZE.icon.glyph * pixel;
       // Native content starts inside the persistent one-art-pixel face border.
       const glyphInset = (side - glyphSide) / 2 - pixel;
       setBox(glyph, { height: glyphSide, left: glyphInset, top: glyphInset, width: glyphSide });

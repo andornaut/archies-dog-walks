@@ -6,12 +6,14 @@ import type { DogId } from "../data/types.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import {
   FEEDBACK,
+  FLY_HEART,
   heartNoticeLayout,
   heartPopBlocked,
   heartPopCovers,
   heartPopFrame,
   reachIconBeside,
 } from "../hud/feedback.ts";
+import { REACH_ICON } from "../hud/hudLanes.ts";
 import type { ChangeLabel } from "../hud/hudView.ts";
 import { arcControl } from "../hud/moments.ts";
 import { cardHearts } from "../hud/walkHud.ts";
@@ -19,6 +21,7 @@ import { slotIndexOf } from "../state/pack.ts";
 import { lineInk } from "../ui/lineInk.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 import { arcFlight } from "./arcFlight.ts";
 import { FEEDBACK_ART } from "./feedbackArt.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";
@@ -124,7 +127,8 @@ export class HeartFeedback {
     const { to } = pop;
     const number = this.addNumber(pop.label, heartPopFrame(pop.dogTop), art.popInk.right);
     const { frame } = number;
-    const centre = { x: frame.x + 16, y: frame.y + 16 };
+    const half = FLY_HEART.frame / 2;
+    const centre = { x: frame.x + half, y: frame.y + half };
     const covers = heartPopCovers({ chip: number.rect, frame, to }, FEEDBACK.heart.peak);
     if (heartPopBlocked(this.hooks.clearOf(), covers)) {
       number.chip.dispose();
@@ -165,7 +169,7 @@ export class HeartFeedback {
         if (reach !== undefined) {
           flying.art({
             at: reachIconBeside({ x: 0, y: 0 }),
-            image: { height: 16, width: 16 },
+            image: { height: REACH_ICON.size, width: REACH_ICON.size },
             key: reach,
           });
         }
@@ -223,7 +227,7 @@ export class HeartFeedback {
     const { bottom, left, right, top } = lineInk(
       this.hooks.painter.fonts.title,
       plainMarks(text),
-      2,
+      TEXT_SCALE,
     );
     const size = {
       height: Math.ceil(bottom - top) + 2 * CHIP_PAD,
@@ -242,7 +246,7 @@ export class HeartFeedback {
       colour: label.amount < 0 ? PALETTE.darkRed : PALETTE.forest,
       font: "title",
       lines: [text],
-      scale: 2,
+      scale: TEXT_SCALE,
       x: placed.chip.x + CHIP_PAD,
     });
     return { chip, frame: placed.frame, rect: placed.chip };

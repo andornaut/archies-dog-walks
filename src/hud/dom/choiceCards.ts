@@ -33,6 +33,7 @@ import type { DomScale } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { panelButton } from "../../ui/modal/view.ts";
 import { PALETTE } from "../../ui/palette.ts";
+import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { charmRing } from "../charmRing.ts";
 import {
   type ChoiceCardFonts,
@@ -332,8 +333,8 @@ export function showChoiceCards(
     parts.push({ element, place: (scale) => placeText(display, scale, ORIGIN, element, line) });
     headerParts.push(element);
   } else {
-    label(input.view.title, centre + 1, header.titleTop + 1, 2, PALETTE.ink, "title");
-    label(input.view.title, centre, header.titleTop, 2, PALETTE.white, "title");
+    label(input.view.title, centre + 1, header.titleTop + 1, TEXT_SCALE, PALETTE.ink, "title");
+    label(input.view.title, centre, header.titleTop, TEXT_SCALE, PALETTE.white, "title");
   }
   label(input.subtitle, centre, header.subtitleTop, 1, PALETTE.white);
   // One refusal plays at a time across the options, on the option's group: it shakes the card and

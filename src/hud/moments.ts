@@ -6,7 +6,7 @@ import {
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
-import { FIRED_LINE, LOW_CHIP, MOMENT_PARTS } from "../data/layout.ts";
+import { FACE_SIZE, FIRED_LINE, LOW_CHIP, MOMENT_PARTS } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { DogId, GameData } from "../data/types.ts";
 import { type FaceMood, faceMood } from "../rules/treats.ts";
@@ -186,7 +186,7 @@ const FIRING = MOMENT_PARTS.firing;
 const PLATE_REACH = FIRING.plateReach;
 const PLATE_HEIGHT = FIRING.plateHeight;
 const PLATE_GAP = FIRING.plateGap;
-const FACE_HALF = 32;
+const FACE_HALF = (FACE_SIZE * FIRING.faceScale) / 2;
 const LIFT = FIRING.lift;
 const LINE_CLEARANCE = FIRING.lineClearance;
 const FACE = {

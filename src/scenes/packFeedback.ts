@@ -5,7 +5,7 @@ import type { GameObjects, Scene } from "phaser";
 import { playTagOnce } from "../assets/phaser/sprites.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
-import { chipLeft, FEEDBACK, type LabelAnchor, stackOverPop } from "../hud/feedback.ts";
+import { chipLeft, FEEDBACK, FLY_HEART, type LabelAnchor, stackOverPop } from "../hud/feedback.ts";
 import { changeChipAt } from "../hud/hudLanes.ts";
 import { COMIC_WORDS } from "../layout/comicWords.ts";
 import { lineInk } from "../ui/lineInk.ts";
@@ -60,7 +60,7 @@ export function playForgiven(
   const anchor =
     pop === null
       ? { centreX: top.x, lineBottom: top.y - 2 }
-      : { centreX: pop.frame.x + 16, lineBottom: stackOverPop(pop, 0).bottom };
+      : { centreX: pop.frame.x + FLY_HEART.frame / 2, lineBottom: stackOverPop(pop, 0).bottom };
   const { forgiven } = FEEDBACK;
   floatLabel(scene, moment, anchor, gameData.runText.forgiven, PALETTE.forest, forgiven);
 }

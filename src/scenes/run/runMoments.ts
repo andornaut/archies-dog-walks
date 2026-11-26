@@ -24,7 +24,7 @@ import {
   stepValues,
   walkStartMarks,
 } from "../../hud/buffMarks.ts";
-import { heartPopFrame, stackOverPop } from "../../hud/feedback.ts";
+import { FLY_HEART, heartPopFrame, stackOverPop } from "../../hud/feedback.ts";
 import { stepHintTriggers } from "../../hud/hintTriggers.ts";
 import { changeLabels, reachedLabels, totalLabel } from "../../hud/hudView.ts";
 import type { MessageLine } from "../../hud/messageStrip.ts";
@@ -674,7 +674,7 @@ export class RunMoments {
         if (under !== undefined) {
           const { size } = CHARM;
           const { bottom } = stackOverPop(under, size);
-          const x = Math.round(under.frame.x + 16 - size / 2);
+          const x = Math.round(under.frame.x + FLY_HEART.frame / 2 - size / 2);
           return { height: size, width: size, x, y: bottom - size };
         }
         const top = this.deps.pack.dogPoint(pop.at.dog);
@@ -729,7 +729,8 @@ export class RunMoments {
       LAYOUT.walkView.y,
     );
     this.heartPops.set(forgiven.dog, { frame, inkTop });
-    const centre = { x: frame.x + 16, y: frame.y + 16 };
+    const half = FLY_HEART.frame / 2;
+    const centre = { x: frame.x + half, y: frame.y + half };
     const pop = (art: { key: string; pop: string }) =>
       playEffect(this.scene, art.key, art.pop, centre, DEPTH.fx);
     const loss = forgiven.whole ? pop(FEEDBACK_ART.heartLoss) : undefined;

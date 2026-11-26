@@ -22,15 +22,20 @@ export const FEEDBACK = {
   moneyTick: { maxMs: 600, msPerDollar: 150 },
 } as const;
 
-// What a heart pop covers on its way: its 32x32 frame, its number's chip, and the box its heart
-// flies through to land at to, its card's label band's top centre (the arc peaks peak pixels
-// above the frame's centre).
+// art: the heart pop's frame (fx-heart-gain and fx-heart-loss alike), frame pixels square, on
+// which the fly tag's small heart is drawn centred, inking from column inkLeft.
+export const FLY_HEART = { frame: 32, inkLeft: 9 } as const;
+
+// What a heart pop covers on its way: its FLY_HEART.frame square frame, its number's chip, and the
+// box its heart flies through to land at to, its card's label band's top centre (the arc peaks
+// peak pixels above the frame's centre).
 export function heartPopCovers(pop: { chip: Rect; frame: Point; to: Point }, peak: number): Rect[] {
   const { chip, frame, to } = pop;
+  const side = FLY_HEART.frame;
   const left = Math.min(frame.x, to.x);
-  const top = Math.min(frame.y, to.y, frame.y + 16 - peak);
-  const right = Math.max(frame.x + 32, to.x + 1);
-  const bottom = Math.max(frame.y + 32, to.y + 1);
+  const top = Math.min(frame.y, to.y, frame.y + side / 2 - peak);
+  const right = Math.max(frame.x + side, to.x + 1);
+  const bottom = Math.max(frame.y + side, to.y + 1);
   return [chip, { height: bottom - top, width: right - left, x: left, y: top }];
 }
 
@@ -51,10 +56,6 @@ export function chipLeft(screenWidth: number, centreX: number, width: number): n
   return Math.max(0, Math.min(screenWidth - width, Math.round(centreX - width / 2)));
 }
 
-// The fly tag's small heart, drawn centred on its frame frame pixels square, inks from column
-// inkLeft (fx-heart-gain and fx-heart-loss alike).
-export const FLY_HEART = { frame: 32, inkLeft: 9 } as const;
-
 // A reached treat's reach icon rides beside its small heart as it flies into the card: its
 // top-left for the heart's frame centred on heart, FLY_REACH_ICON_GAP columns left of the heart's
 // ink and vertically centred on the frame.
@@ -64,10 +65,10 @@ export function reachIconBeside(heart: Point): Point {
   return { x: inkLeft - FLY_REACH_ICON_GAP - size, y: heart.y - size / 2 };
 }
 
-// The 32x32 heart pop's top-left: its centre column on the dog's, its bottom row 4px below
-// the dog's top opaque row.
+// The heart pop's top-left: its centre column on the dog's, its bottom row 4px below the dog's
+// top opaque row.
 export function heartPopFrame(dogTop: Point): Point {
-  return { x: dogTop.x - 16, y: dogTop.y + 4 - 31 };
+  return { x: dogTop.x - FLY_HEART.frame / 2, y: dogTop.y + 4 - (FLY_HEART.frame - 1) };
 }
 
 // A floating chip, or a buff's charm with its value's chip, over a dog whose heart pops in the
@@ -94,13 +95,16 @@ export function heartNoticeLayout(
   pop: { chip: { height: number; width: number }; frame: Point; inkRight: number },
 ): { chip: Rect; frame: Point } {
   const { chip, frame, inkRight } = pop;
-  const width = Math.max(32, inkRight + 4 + chip.width);
+  const width = Math.max(FLY_HEART.frame, inkRight + 4 + chip.width);
   const x = Math.max(0, Math.min(bounds.screenWidth - width, frame.x));
   return {
     chip: {
       ...chip,
       x: x + inkRight + 4,
-      y: Math.min(frame.y + Math.round((32 - chip.height) / 2), bounds.bottom - chip.height),
+      y: Math.min(
+        frame.y + Math.round((FLY_HEART.frame - chip.height) / 2),
+        bounds.bottom - chip.height,
+      ),
     },
     frame: { ...frame, x },
   };
