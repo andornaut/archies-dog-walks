@@ -18,7 +18,7 @@ import { SCREEN_CONFIG } from "./data/index.ts";
 import { lostTouches, noteKeyPress } from "./input/index.ts";
 import { bindPressAdmission, createCanvasPressAdmission } from "./input/phaser/index.ts";
 import { pageFrameWatch, setupPhoneApp } from "./pwa/index.ts";
-import { pageDeviceSettings } from "./save/index.ts";
+import { pageDeviceSettings } from "./save/dom/index.ts";
 import {
   BootScene,
   CardScene,

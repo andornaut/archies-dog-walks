@@ -15,7 +15,7 @@ import { BUILD_LABEL } from "../buildLabel.ts";
 import { pageSearch } from "../cheats/dom/index.ts";
 import { devInSearch } from "../cheats/index.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
-import { pageDeviceSettings } from "../save/index.ts";
+import { pageDeviceSettings } from "../save/dom/index.ts";
 import { bindRecoveryHold, mountMuteControl } from "../ui/dom/index.ts";
 
 const colour = (name: keyof typeof palette) => `#${palette[name].hex}`;
