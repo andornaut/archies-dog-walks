@@ -1,54 +1,26 @@
-import { newlyEarned } from "@andornaut/game-kit/runtime/achievements";
 import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
-import { type Random, randomStream } from "@andornaut/game-kit/runtime/random";
-import { keysOf } from "@andornaut/game-kit/runtime/records";
+import { randomStream } from "@andornaut/game-kit/runtime/random";
 
-import type { InputEvent } from "../cheats/index.ts";
-import type { AchievementId, DebuffId, DogId, GearId, WalkerId, ZoneId } from "../data/ids.ts";
-import { type GameData, LANE_COUNT } from "../data/index.ts";
-import {
-  type CardView,
-  type Choice,
-  type ChoiceData,
-  currentZoneId,
-  endReasonOf,
-  lastHeartOwnersOf,
-  newRun,
-  runCountersOf,
-  type RunFacts,
-  walkEarnings,
-} from "../rules/index.ts";
+import { LANE_COUNT } from "../data/index.ts";
+import type { CardView, Choice } from "../rules/index.ts";
 import {
   advanceLaneControl,
-  auditSpawnPlan,
-  blocksLane,
   chooseCard,
-  destinationLane,
-  hasLeftRoad,
   laneMotionConfig,
-  laneMoveSeconds,
-  moverPlace,
-  moverY,
   pullLane,
-  type RoadGeometry,
   roadScrollSpeed,
   runStreams,
   screenRoadGeometry,
-  type SessionEvent,
   type SessionInput,
   type SessionStep,
   startRoad,
   startSession,
   stepSession,
   type Walk,
-  type WalkData,
-  type WalkItemKind,
-  type WalkStep,
   type ZonePlanObservation,
 } from "../runner/index.ts";
-import { achievementJudge } from "../save/index.ts";
-import { type PackDogs, packDogs, type RunState } from "../state/index.ts";
-import { addCents, type Cents, cents } from "../units.ts";
+import type { RunState } from "../state/index.ts";
+import { addCents } from "../units.ts";
 import {
   actBot,
   type BotRoad,
@@ -58,332 +30,32 @@ import {
   observePulls,
   observeRoad,
 } from "./bot.ts";
-import { type ZoneDelivery, zoneDelivery } from "./delivery.ts";
-import { choosePath, pickCardOption, type PolicyId, type RoutePolicyId } from "./policies.ts";
-import type { BotSight } from "./sight.ts";
-import type { Skill } from "./skills.ts";
+import { choosePath, pickCardOption } from "./policies.ts";
+import type { RunResult, SimConfig, SimData } from "./runResult.ts";
 import {
-  attachSpawnAudit,
-  capturePlanningFailure,
-  plannedWalkEvents,
-  type PlanningFailure,
-  recordWalkEvents,
-  type ZoneWalkEvents,
-} from "./walkEvents.ts";
+  countLeaving,
+  finishTally,
+  noteChoice,
+  noteDebuffCosts,
+  notePulls,
+  noteZoneDebuffs,
+  noteZonePlan,
+  recordFirings,
+  startTally,
+  type Tally,
+} from "./tally.ts";
+import { capturePlanningFailure, recordWalkEvents } from "./walkEvents.ts";
 
-export type SimData = ChoiceData &
-  WalkData &
-  Pick<
-    GameData,
-    | "achievements"
-    | "defaultWalker"
-    | "dogSlots"
-    | "runText"
-    | "upgradeDrawOrder"
-    | "upgrades"
-    | "walkerPerks"
-  >;
-
-// Who plays the walk: a steering bot of a skill, reading movers by sight or by foresight, plays
-// the real walk loop, and what it hits and collects is measured.
-export interface SimPlayer {
-  readonly kind: "skill";
-  readonly sight: BotSight;
-  readonly skill: Skill;
-}
-
-export interface SimConfig {
-  // Optional diagnostic sink; ordinary runs retain no full plans or snapshots.
-  readonly observeSpawnPlan?: (observation: ZonePlanObservation, run: RunState) => void;
-  readonly gear: GearId | null;
-  readonly pack: PackDogs;
-  readonly player: SimPlayer;
-  readonly policy: PolicyId;
-  readonly route: RoutePolicyId;
-  readonly walker: WalkerId;
-}
-
-// One encounter card: what the option the policy took cost, and whether the policy fell back
-// from its own rule to take it (null for a policy with no fallback).
-interface ChoiceRecord {
-  readonly cost: Cents;
-  readonly fellBack: boolean | null;
-}
-
-interface FiringRecord {
-  readonly dog: DogId;
-  readonly zoneIndex: number;
-}
-
-interface ZoneRecord {
-  readonly fees: readonly { readonly amount: Cents; readonly dog: DogId }[];
-  readonly zoneIndex: number;
-}
-
-// Of the items of a kind that reached the pack, met counts them all and touched those that
-// touched it: an obstacle hit, or a pickup or lucky encounter collected. An obstacle passed
-// during the grace after a hit counts as met, not touched.
-export interface ItemCount {
-  met: number;
-  touched: number;
-}
-
-// Items by kind, and movers by the kind they meet the pack as.
-type ItemCounts = Partial<Record<WalkItemKind, ItemCount>>;
-
-// Obstacle hits, minor ones and movers included, and those of them that came while a pull's move,
-// AFTER_PULL_REACTION_SECONDS and a lane move back had not yet passed, from something not in the
-// lane the pull moved the pack out of: hits the pull left the player no time to avoid.
-interface HitCounts {
-  afterPull: number;
-  all: number;
-}
-
-// The reaction time a hit after a pull is measured against, fixed so the measure stays
-// comparable when the tuning changes.
-const AFTER_PULL_REACTION_SECONDS = 0.6;
-
-// What a debuff cost a run on the road: bumpsWhile, the landed bumps while it lasted, and
-// centsLost, the cash it took, as the walk's own changes name it: its share of each tip's pay,
-// such as Stinky's, and the cash bumps cost while it made them cost cash, such as Spotlight's.
-// A bump in the step a debuff starts in is not counted toward it.
-interface DebuffCost {
-  bumpsWhile: number;
-  centsLost: number;
-}
-
-export type DebuffCosts = Record<DebuffId, DebuffCost>;
-
-// A run's walking in one zone, by the debuffs on the pack: clear holds the landed bumps and
-// walking seconds with no debuff on it, and debuffs, for each debuff, the landed bumps while it
-// lasted, the times the pack got it in the zone and the walking seconds it lasted, so a debuff's
-// bumps per period compare against the zone's bump rate without one. A step counts toward a
-// debuff when the run held it before and after the step, and toward clear when it held none.
-interface ZoneDebuffs {
-  readonly clear: { bumps: number; seconds: number };
-  readonly debuffs: Partial<
-    Record<DebuffId, { bumpsWhile: number; periods: number; seconds: number }>
-  >;
-}
-
-export type DebuffsByZone = Partial<Record<ZoneId, ZoneDebuffs>>;
-
-export interface RunResult {
-  readonly planningFailure?: PlanningFailure;
-  readonly spawnEvents: readonly ZoneWalkEvents[];
-  // The achievements the run earns on its own facts, whatever the profile holds.
-  readonly badges: readonly AchievementId[];
-  // Encounter cards; forks are not counted.
-  readonly cardsSeen: number;
-  readonly choices: readonly ChoiceRecord[];
-  // Each zone planned, in order: what its plan asked for and what it placed.
-  readonly deliveries: readonly ZoneDelivery[];
-  readonly debuffCosts: Readonly<Record<DebuffId, Readonly<DebuffCost>>>;
-  readonly debuffsByZone: DebuffsByZone;
-  // The cash the run carried and lost by ending early (walkEarnings).
-  readonly cashLost: Cents;
-  // The money banked at the end of the run.
-  readonly earnings: Cents;
-  // What the achievements judge the run on: its session counters and how it ended.
-  readonly facts: RunFacts;
-  readonly finished: boolean;
-  readonly firings: readonly FiringRecord[];
-  readonly hits: HitCounts;
-  // A skill player's inputs, as the game logs them: with the seed, a replay of the run.
-  readonly inputs: readonly InputEvent[];
-  // Pulls that moved the pack.
-  readonly pullsMoved: number;
-  // Items that do not move, by kind, and movers, by mover.
-  readonly items: ItemCounts;
-  readonly movers: ItemCounts;
-  // The zones walked, in order.
-  readonly route: readonly ZoneId[];
-  // The run as it ended.
-  readonly run: RunState;
-  readonly tips: Cents;
-  // The zones finished, in order.
-  readonly zones: readonly ZoneRecord[];
-}
-
-// The run state and everything recorded about the run so far.
-interface Tally {
-  // The lane the last pull moved the pack out of, and the bot clock until which a hit counts
-  // as coming after it.
-  afterPull: { readonly fromLane: number; readonly until: number } | null;
-  cardsSeen: number;
-  readonly choices: ChoiceRecord[];
-  readonly debuffCosts: DebuffCosts;
-  readonly debuffsByZone: DebuffsByZone;
-  readonly deliveries: ZoneDelivery[];
-  readonly spawnEvents: ZoneWalkEvents[];
-  readonly spawnOrigins: Map<number, ZoneWalkEvents>;
-  readonly firings: FiringRecord[];
-  readonly hits: HitCounts;
-  readonly inputs: InputEvent[];
-  pullsMoved: number;
-  readonly items: ItemCounts;
-  readonly movers: ItemCounts;
-  // What the card policy draws from, kept apart from the game's and the bot's draws so the
-  // policies that never draw play identical runs.
-  readonly policyRandom: Random;
-  run: RunState;
-  tips: Cents;
-  readonly zones: ZoneRecord[];
-}
-
-// An item that reached the pack: under its mover if it moves, otherwise under its kind.
-function countItem(
-  tally: Tally,
-  touched: boolean,
-  item: { readonly kind: WalkItemKind; readonly moving: boolean },
-): void {
-  const counts: Partial<Record<string, ItemCount>> = item.moving ? tally.movers : tally.items;
-  const key = item.kind;
-  const count = counts[key] ?? { met: 0, touched: 0 };
-  count.met += 1;
-  count.touched += touched ? 1 : 0;
-  counts[key] = count;
-}
-
-function recordFirings(tally: Tally, before: RunState, fired: readonly DogId[]): void {
-  for (const dog of fired) {
-    tally.firings.push({ dog, zoneIndex: before.zoneIndex });
-  }
-}
-
-// Counts items leaving the road, keeping unhit passed movers distinct from collisions.
-// Other departures before the road edge touched the pack; the rest left the visible road.
-function countLeaving(
-  data: SimData,
-  tally: Tally,
-  geometry: RoadGeometry,
-  pulledFrom: number | null,
-  before: Walk,
-  step: WalkStep,
-): void {
-  const after = step.walk;
-  if (after.road.items === before.road.items) {
-    return;
-  }
-  const travel = after.run.zoneDistance - before.run.zoneDistance;
-  const passed = new Set(step.passed.map(({ id }) => id));
-  for (const item of before.road.items) {
-    if (after.road.items.some(({ id }) => id === item.id)) {
-      continue;
-    }
-    const { mover } = item;
-    let touched: boolean;
-    if (mover === undefined) {
-      touched = item.y + travel < geometry.roadBottom;
-    } else {
-      const place = moverPlace(geometry.laneCount, mover.path, mover.since + travel);
-      const y = moverY(geometry.roadTop, item.height, place);
-      touched =
-        !passed.has(item.id) &&
-        !(hasLeftRoad(geometry.laneCount, place) || y >= geometry.roadBottom);
-    }
-    countItem(tally, touched, { kind: item.kind, moving: mover !== undefined });
-    if (touched && blocksLane(data, item.kind)) {
-      const inFromLane =
-        pulledFrom !== null && pulledFrom >= item.lane && pulledFrom < item.lane + item.laneSpan;
-      tally.hits.all += 1;
-      tally.hits.afterPull += pulledFrom !== null && !inFromLane ? 1 : 0;
-    }
-  }
-}
-
-// Counts what each debuff cost in a walking step, from the run before it and the step's tips and
-// bumps. A debuff lasted through the step when the run held it both before and after the step:
-// one that ran out ended as the step began, so nothing in the step met it.
-export function noteDebuffCosts(
-  data: Pick<GameData, "debuffs">,
-  costs: DebuffCosts,
-  before: Pick<RunState, "debuffs">,
-  step: Pick<WalkStep, "bumps" | "tips"> & {
-    readonly walk: { readonly run: Pick<RunState, "debuffs"> };
-  },
-): void {
-  for (const { change } of step.tips) {
-    for (const cause of change.causes) {
-      if (cause.kind === "modifier" && cause.source.kind === "debuff") {
-        costs[cause.source.debuff].centsLost -= cause.amount;
-      }
-    }
-  }
-  const landed = step.bumps.filter(({ dodged }) => !dodged);
-  if (landed.length === 0) {
-    return;
-  }
-  const after = step.walk.run.debuffs.map(({ debuff }) => debuff);
-  for (const debuff of after) {
-    if (before.debuffs.some((active) => active.debuff === debuff)) {
-      costs[debuff].bumpsWhile += landed.length;
-    }
-  }
-  // A debuff held at a bump is still held after the step, so the one that made it cost cash is
-  // among these.
-  const cashing = after.find((debuff) => data.debuffs[debuff].bumpMoney !== undefined);
-  if (cashing !== undefined) {
-    costs[cashing].centsLost -= landed.reduce((sum, { cash }) => sum + (cash?.amount ?? 0), 0);
-  }
-}
-
-// Counts a session step toward its zone's debuffs (ZoneDebuffs): the walking seconds it lasted
-// and its landed bumps, toward each debuff the run held before and after it, or toward clear when
-// it held none, and the debuffs the pack got in it.
-export function noteZoneDebuffs(
-  data: Pick<GameData, "world">,
-  zones: DebuffsByZone,
-  step: { readonly bumps: number; readonly seconds: number },
-  before: Pick<RunState, "debuffs" | "debuffsGot" | "route" | "zoneIndex">,
-  after: Pick<RunState, "debuffs" | "debuffsGot">,
-): void {
-  const id = currentZoneId(data, before);
-  const zone = zones[id] ?? { clear: { bumps: 0, seconds: 0 }, debuffs: {} };
-  zones[id] = zone;
-  const cost = (debuff: DebuffId) => {
-    const held = zone.debuffs[debuff] ?? { bumpsWhile: 0, periods: 0, seconds: 0 };
-    zone.debuffs[debuff] = held;
-    return held;
-  };
-  if (before.debuffs.length === 0 && after.debuffs.length === 0) {
-    zone.clear.bumps += step.bumps;
-    zone.clear.seconds += step.seconds;
-  }
-  for (const { debuff } of after.debuffs) {
-    if (before.debuffs.some((active) => active.debuff === debuff)) {
-      const held = cost(debuff);
-      held.bumpsWhile += step.bumps;
-      held.seconds += step.seconds;
-    }
-  }
-  for (const debuff of keysOf(after.debuffsGot)) {
-    const got = (after.debuffsGot[debuff] ?? 0) - (before.debuffsGot[debuff] ?? 0);
-    if (got > 0) {
-      cost(debuff).periods += got;
-    }
-  }
-}
-
-// Each pull that moved the pack starts the stretch in which a hit counts as coming after it.
-function notePulls(
-  data: SimData,
-  tally: Tally,
-  clock: number,
-  walk: Walk,
-  pulled: readonly { readonly dog: DogId; readonly moved: boolean }[],
-): void {
-  const move = laneMoveSeconds(data, walk.run);
-  for (const { moved } of pulled) {
-    if (moved) {
-      tally.pullsMoved += 1;
-      tally.afterPull = {
-        fromLane: destinationLane(walk.road.control.motion),
-        until: clock + move + AFTER_PULL_REACTION_SECONDS + move,
-      };
-    }
-  }
-}
+export type {
+  DebuffCosts,
+  DebuffsByZone,
+  ItemCount,
+  RunResult,
+  SimConfig,
+  SimData,
+  SimPlayer,
+} from "./runResult.ts";
+export { noteDebuffCosts, noteZoneDebuffs } from "./tally.ts";
 
 // The policies' choice on the open card: the route policy's path at a fork, or the card
 // policy's option, with whether the card policy fell back (null at a fork).
@@ -402,63 +74,6 @@ function policyChoice(
     };
   }
   return pickCardOption(data, tally.policyRandom, config.policy, run, card);
-}
-
-// The counts of the zone just planned, read from the road the plan left.
-function noteZonePlan(
-  data: SimData,
-  seed: number,
-  tally: Tally,
-  observations: Map<number, ZonePlanObservation>,
-  observe: SimConfig["observeSpawnPlan"],
-  walk: Walk,
-): void {
-  const { run } = walk;
-  const observation = observations.get(run.zoneIndex);
-  const selected =
-    observation === undefined
-      ? walk.road
-      : {
-          herrings: observation.planned.herrings,
-          pending: observation.planned.events,
-          planned: observation.plan.quotas.map(({ count, kind, mover }) => ({
-            count,
-            kind,
-            movement: mover?.movement ?? null,
-          })),
-          ...(observation.slots === undefined ? {} : { slots: observation.slots }),
-        };
-  tally.deliveries.push(zoneDelivery(data, run.zoneIndex + 1, currentZoneId(data, run), selected));
-  const events = plannedWalkEvents(seed, run, currentZoneId(data, run), selected);
-  if (observation !== undefined) {
-    events.admission = observation.planned.admission;
-    attachSpawnAudit(
-      events,
-      auditSpawnPlan(observation.plan, observation.planned, observation.planned.visibility),
-    );
-    observations.delete(run.zoneIndex);
-  }
-  tally.spawnEvents.push(events);
-  if (observation !== undefined) {
-    observe?.(observation, run);
-  }
-}
-
-// A choice's record: an encounter card seen, and the firings it brought about.
-function noteChoice(
-  tally: Tally,
-  fellBack: boolean | null,
-  run: RunState,
-  event: Extract<SessionEvent, { kind: "chosen" }>,
-): void {
-  const { choice, outcome, view } = event;
-  recordFirings(tally, run, outcome.fired);
-  if (view.source.kind === "fork") {
-    return;
-  }
-  const option = view.options.find(({ index }) => index === choice);
-  tally.cardsSeen += 1;
-  tally.choices.push({ cost: option?.cost ?? cents(0), fellBack });
 }
 
 // What the bot reads of the road: its geometry for the pack and the zone's scroll speed.
@@ -617,66 +232,9 @@ function playBySkill(data: SimData, seed: number, config: SimConfig, tally: Tall
 // Deterministic for a given seed. A skill player's run draws from the game's named streams
 // (runStreams) and the bot's and policies' own, so its seed and inputs replay it in the game.
 export function simulateRun(data: SimData, seed: number, config: SimConfig): RunResult {
-  const tally: Tally = {
-    afterPull: null,
-    cardsSeen: 0,
-    choices: [],
-    debuffCosts: Object.fromEntries(
-      Object.keys(data.debuffs).map((debuff) => [debuff, { bumpsWhile: 0, centsLost: 0 }]),
-    ) as DebuffCosts,
-    debuffsByZone: {},
-    deliveries: [],
-    firings: [],
-    hits: { afterPull: 0, all: 0 },
-    inputs: [],
-    items: {},
-    movers: {},
-    policyRandom: randomStream(seed, "policy"),
-    pullsMoved: 0,
-    run: newRun(data, config.pack.length, {
-      dogs: config.pack,
-      gear: config.gear,
-      walker: config.walker,
-    }),
-    spawnEvents: [],
-    spawnOrigins: new Map(),
-    tips: cents(0),
-    zones: [],
-  };
+  const tally = startTally(data, seed, config);
   const planningFailure = capturePlanningFailure(seed, () =>
     playBySkill(data, seed, config, tally),
   );
-  const { banked, lost } = walkEarnings(endReasonOf(tally.run), tally.run);
-  const facts: RunFacts = {
-    ...runCountersOf(tally.run),
-    dogsHome: packDogs(tally.run).length,
-    earnedCents: banked,
-    lastHeartOwners: lastHeartOwnersOf(tally.run),
-    packSize: config.pack.length,
-    zonesFinished: tally.zones.length,
-  };
-  return {
-    ...(planningFailure === undefined ? {} : { planningFailure }),
-    badges: newlyEarned(achievementJudge(data), data.achievements, "run", { run: facts }, []),
-    cardsSeen: tally.cardsSeen,
-    cashLost: lost,
-    choices: tally.choices,
-    debuffCosts: tally.debuffCosts,
-    debuffsByZone: tally.debuffsByZone,
-    deliveries: tally.deliveries,
-    earnings: banked,
-    facts,
-    finished: tally.run.phase.kind === "ended" && tally.run.phase.reason === "finished",
-    firings: tally.firings,
-    hits: tally.hits,
-    inputs: tally.inputs,
-    items: tally.items,
-    movers: tally.movers,
-    pullsMoved: tally.pullsMoved,
-    route: tally.run.route,
-    run: tally.run,
-    spawnEvents: tally.spawnEvents,
-    tips: tally.tips,
-    zones: tally.zones,
-  };
+  return finishTally(data, config, tally, planningFailure);
 }
