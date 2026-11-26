@@ -118,16 +118,21 @@ export const UI_STYLE = `
 .adw-font-title{font-family:"ADW Title"}
 .adw-font-display{font-family:"ADW Display";text-shadow:${DISPLAY_SHADOW}}
 .adw-face,.adw-close-face,.adw-close-glyph{position:absolute;box-sizing:border-box;pointer-events:none}
-/* A focused speech bubble fills its inside and its tail's cyan, its owner's name in plum to keep
-   contrast. */
+/* A focused speech bubble fills its inside and its tail's from Game Kit's focus slots, set once
+   on the bubble and once in forced colours: cyan, its owner's name in plum to keep contrast. */
+.adw-button:has(.adw-speech-focus){--ui-colour-button-focus-face:var(--adw-cyan);
+  --ui-colour-button-focus-text:var(--adw-plum)}
 .adw-speech-focus{display:none;clip-path:polygon(${cutCorners(px(1))})}
 .adw-speech-tail-focus{display:none}
-.adw-button:focus-visible :is(.adw-speech-focus,.adw-speech-tail-focus){display:block}
-.adw-button:focus-visible .adw-speech-name{color:var(--adw-plum)!important}
+.adw-button:focus-visible :is(.adw-speech-focus,.adw-speech-tail-focus){display:block;
+  background-color:var(--ui-colour-button-focus-face)}
+.adw-button:focus-visible .adw-speech-name{color:var(--ui-colour-button-focus-text)!important}
 @media (forced-colors:active){
-  .adw-button:focus-visible :is(.adw-speech-focus,.adw-speech-tail-focus){
-    forced-color-adjust:none;background-color:Highlight!important}
-  .adw-button:focus-visible:has(.adw-speech-focus) .adw-text{forced-color-adjust:none;color:HighlightText!important}
+  .adw-button:has(.adw-speech-focus){--ui-colour-button-focus-face:Highlight;
+    --ui-colour-button-focus-text:HighlightText}
+  :is(.adw-speech-focus,.adw-speech-tail-focus){forced-color-adjust:none}
+  .adw-button:focus-visible:has(.adw-speech-focus) .adw-text{forced-color-adjust:none;
+    color:var(--ui-colour-button-focus-text)!important}
 }
 /* A list's view: its content clipped to it, over the whole screen unless placed, and moved up by its
    scroll. */

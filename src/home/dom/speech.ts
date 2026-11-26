@@ -8,9 +8,9 @@ import {
 import { SLICES } from "../../data/layout.ts";
 import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
 import { type DomPart, fillPart, framedPart } from "../../ui/dom/parts.ts";
-import { createTextLine, namePillBoxes, placeText } from "../../ui/dom/pixelLine.ts";
+import { createTextLine, namePillBoxes, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
-import type { DomScale } from "../../ui/domScale.ts";
+import { type DomScale, frameRect } from "../../ui/domScale.ts";
 import { lineInk } from "../../ui/lineInk.ts";
 import { inkWithPills } from "../../ui/namePills.ts";
 import { PALETTE } from "../../ui/palette.ts";
@@ -78,6 +78,14 @@ function lineInkX(body: BitmapFont, line: string, centre: number): number {
   return centre + (glyphMiddle - (visible.left + visible.right) / 2) * TEXT_SCALE;
 }
 
+// A part of the bubble's focus fill over rect, its corner on the art-pixel grid and its size whole
+// art pixels; uiStyle shows it and gives its colour.
+function focusPart(doc: Document, className: string, rect: Rect): DomPart {
+  const element = doc.createElement("div");
+  element.className = `adw-framed ${className}`;
+  return { element, place: (scale) => setBox(element, frameRect(scale, rect)) };
+}
+
 export function createHomeSpeech(
   doc: Document,
   source: DomArtSource & {
@@ -122,20 +130,17 @@ export function createHomeSpeech(
   } else {
     parts.push(framedPart(doc, { border: PALETTE.plum, fill: PALETTE.cream, rect: view.rect }));
   }
-  // The keyboard focus's fill over the bubble's cream inside, which uiStyle shows while the
-  // bubble is focused, clear of the frame's rim and sides.
+  // The keyboard focus's fill over the bubble's cream inside, which uiStyle shows and colours
+  // while the bubble is focused, clear of the frame's rim and sides.
   const { rim } = HOME_LAYOUT.speech;
-  const focus = fillPart(doc, {
-    colour: PALETTE.cyan,
-    rect: {
+  parts.push(
+    focusPart(doc, "adw-speech-focus", {
       height: view.rect.height - rim.top - rim.bottom,
       width: view.rect.width - rim.left - rim.right,
       x: view.rect.x + rim.left,
       y: view.rect.y + rim.top,
-    },
-  });
-  focus.element.classList.add("adw-speech-focus");
-  parts.push(focus);
+    }),
+  );
   // Each line's visible ink, its pills' included, centred across the cream between the frame's
   // sides, or across the text's column beside an owner, the block's ink centred down the cream.
   const centre =
@@ -207,12 +212,13 @@ export function createHomeSpeech(
         art.place(scale, origin, { ...source.imageSize(tail.key), x: tail.x, y: tail.y }),
     });
     for (const row of SPEECH_TAIL_INSIDES[tail.key] ?? []) {
-      const inside = fillPart(doc, {
-        colour: PALETTE.cyan,
-        rect: { ...row, x: tail.x + row.x, y: tail.y + row.y },
-      });
-      inside.element.classList.add("adw-speech-tail-focus");
-      parts.push(inside);
+      parts.push(
+        focusPart(doc, "adw-speech-tail-focus", {
+          ...row,
+          x: tail.x + row.x,
+          y: tail.y + row.y,
+        }),
+      );
     }
   }
   element.append(...parts.map(({ element }) => element));
