@@ -1,44 +1,18 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { type LoaderWatch, watchLoader } from "@andornaut/game-kit/runtime/load/phaser/watchLoader";
-import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { GameObjects, Scene, Scenes, Sound } from "phaser";
 
-import { artUrl, domArtUrl } from "../assets/files/index.ts";
-import {
-  animationSpecs,
-  type AsepriteSheet,
-  type AssetManifest,
-  DOG_FRAME_SIDES,
-  dogFaceKey,
-  dogSpriteKey,
-  encounterSpriteKey,
-  FLAT_ENCOUNTERS,
-  LOADING_ART,
-  ownerCardFaceKey,
-  ownerFaceKey,
-  parseManifest,
-  ROAD_SPRITE_SIZE,
-  type SpriteAsset,
-  usesPhaserArt,
-} from "../assets/index.ts";
+import { type AssetManifest, LOADING_ART, parseManifest } from "../assets/index.ts";
 import {
   addAtlasFonts,
   addAtlasTextures,
   atlasManifest,
-  ensurePlaceholder,
   loadManifest,
   MANIFEST_CACHE_KEY,
-  measureSprite,
   playTag,
-  queueFonts,
-  queueManifestArt,
-  smoothDepthArt,
 } from "../assets/phaser/index.ts";
 import { pageRunSetup, pageSearch } from "../cheats/dom/index.ts";
 import { namesRunSetup, runLinkLoadout } from "../cheats/index.ts";
-import type { EncounterId } from "../data/ids.ts";
-import { FACE_SIZE, gameData, OWNER_CARD_FACE } from "../data/index.ts";
-import { hudArtResources } from "../hud/dom/index.ts";
 import { waitedLoad } from "../loadingProgress.ts";
 import {
   bootHandedOver,
@@ -51,9 +25,17 @@ import {
   unlockAudioOnFirstGesture,
 } from "../pwa/index.ts";
 import { uiLayer } from "../ui/dom/index.ts";
-import { PALETTE } from "../ui/index.ts";
 import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/index.ts";
 import { markArtReady, setBootWatch, type WaitedLoad } from "./artReady.ts";
+import {
+  processBootAssets,
+  queueBootArt,
+  queueBootSounds,
+  queueLoadingArt,
+  registerBootSprite,
+} from "./boot/assets.ts";
+import { queueBootFonts } from "./boot/fonts.ts";
+import { HOME_UI_KEYS, HUD_UI_KEYS, requireBootNativeUi } from "./boot/nativeArt.ts";
 import { addBootPicture } from "./bootPicture.ts";
 import { stopOnceRetried } from "./bootRetries.ts";
 import { waitForNativeHome } from "./nativeHomeReady.ts";
@@ -67,11 +49,9 @@ import {
   walkerInUse,
 } from "./profileStore.ts";
 import {
-  blockedFontAtlas,
   REQUIRED_BITMAP_FONTS,
   requiredFontFailure,
   retryRequiredFontLoads,
-  unqueuedFonts,
 } from "./requiredFontLoads.ts";
 import { REQUIRED_UI, type RequiredUiController } from "./requiredUi.ts";
 import { nextRunStart } from "./run/runRecorder.ts";
@@ -82,64 +62,6 @@ import { SCENE_KEYS } from "./sceneKeys.ts";
 const FRAME_BUDGET_MS = 8;
 
 const always = () => true;
-
-const HOME_UI_KEYS = new Set([
-  "icon-menu",
-  "icon-sound",
-  "ui-icon-button-normal",
-  "ui-icon-button-pressed",
-]);
-const HUD_UI_KEYS = new Set([
-  ...HOME_UI_KEYS,
-  "icon-pause",
-  "ui-dog-card",
-  "ui-heart",
-  "ui-home-cash-well-left",
-  "ui-home-cash-well-mid",
-  "ui-home-cash-well-right",
-]);
-
-type Size = { colour: number; height: number; width: number };
-const box = (width: number, height: number, colour: number): Size => ({ colour, height, width });
-
-// Every sprite the scenes draw, with the box drawn in its place if it is missing.
-function placeholderSizes(): Map<string, Size> {
-  const side = ROAD_SPRITE_SIZE;
-  const short = side / 2;
-  const tallest = side * 1.5;
-  const sizes = new Map<string, Size>([
-    ["tip", box(short, short, PALETTE.amber)],
-    ["treat", box(short, short, PALETTE.tan)],
-    [gameData.walkers[gameData.defaultWalker].spriteKey, box(side, tallest, PALETTE.blue)],
-  ]);
-  for (const dog of keysOf(gameData.dogs)) {
-    const dogSide = DOG_FRAME_SIDES[gameData.dogs[dog].size];
-    sizes.set(dogSpriteKey(gameData, dog), box(dogSide, dogSide, PALETTE.slate));
-    sizes.set(dogFaceKey(gameData, dog), box(FACE_SIZE, FACE_SIZE, PALETTE.slate));
-    sizes.set(ownerFaceKey(gameData, dog), box(FACE_SIZE, FACE_SIZE, PALETTE.brown));
-    sizes.set(
-      ownerCardFaceKey(gameData, dog),
-      box(OWNER_CARD_FACE, OWNER_CARD_FACE, PALETTE.brown),
-    );
-  }
-  const tall: readonly EncounterId[] = [
-    "droppedIceCream",
-    "friendlyNeighbour",
-    "bigScreenPromo",
-    "thief",
-    "weddingPhotoShoot",
-  ];
-  for (const encounter of keysOf(gameData.encounters)) {
-    const height = FLAT_ENCOUNTERS.has(encounter)
-      ? short
-      : tall.includes(encounter)
-        ? tallest
-        : side;
-    const colour = gameData.encounters[encounter].kind === "lucky" ? PALETTE.green : PALETTE.mauve;
-    sizes.set(encounterSpriteKey(encounter), box(side, height, colour));
-  }
-  return sizes;
-}
 
 // Loads the manifests and fixed loading artwork, then every art file and sound behind the loading
 // screen, and processes sprites and metrics in frame-sized batches. Its reads count into the
@@ -186,7 +108,7 @@ export class BootScene extends Scene {
       this.manifest = manifest;
       this.manifestReady = true;
       if (this.inPreload) {
-        this.queueLoadingArt(manifest);
+        queueLoadingArt(this, manifest);
       }
     });
   }
@@ -230,7 +152,7 @@ export class BootScene extends Scene {
     if (this.manifest.sounds.length > 0 && browserSoundFormat() === undefined) {
       console.warn("This browser plays neither Ogg nor AAC, so the game is silent.");
     }
-    this.queueSounds(always);
+    queueBootSounds(this, this.manifest, always);
     this.watch?.waitFor("boot");
     const firstComplete = () => {
       registerFallbackPixelFont(this);
@@ -270,7 +192,7 @@ export class BootScene extends Scene {
         this.deferredInitialArt = always;
         firstComplete();
       } else {
-        this.processAssets(always, FRAME_BUDGET_MS, firstComplete);
+        this.processAssets(always, firstComplete);
       }
     });
     this.load.start();
@@ -367,7 +289,7 @@ export class BootScene extends Scene {
         if (initial === undefined) {
           cancelled();
         } else {
-          this.processAssets(initial, FRAME_BUDGET_MS, cancelled);
+          this.processAssets(initial, cancelled);
         }
       };
       this.load.once("complete", done);
@@ -375,7 +297,7 @@ export class BootScene extends Scene {
       try {
         if (initial !== undefined) {
           this.queueAvailableArt(initial);
-          this.queueSounds(initial);
+          queueBootSounds(this, this.manifest, initial);
           this.deferredInitialArt = undefined;
         }
         const required: ReadonlySet<string> = new Set(REQUIRED_BITMAP_FONTS);
@@ -400,81 +322,32 @@ export class BootScene extends Scene {
   }
 
   private queueFirstFonts(manifest: AssetManifest): boolean {
-    const fonts = unqueuedFonts(
+    return queueBootFonts(
+      this,
       {
-        atlas: atlasManifest(this),
         failures: this.watch?.failures() ?? [],
         queued: this.queuedFontKeys,
       },
-      {
-        ...manifest,
-        fonts: manifest.fonts.filter(({ key }) => !this.cache.bitmapFont.exists(key)),
-      },
+      manifest,
     );
-    if (fonts.length === 0) {
-      return false;
-    }
-    queueFonts(this, { ...manifest, fonts });
-    for (const { key } of fonts) {
-      this.queuedFontKeys.add(key);
-    }
-    return true;
   }
 
   private queueAvailableArt(include: (key: string) => boolean): void {
-    const context = {
-      atlas: atlasManifest(this),
-      failures: this.watch?.failures() ?? [],
-      manifest: this.manifest,
-    };
-    queueManifestArt(this, this.manifest, (key) => include(key) && !blockedFontAtlas(context, key));
+    queueBootArt(
+      this,
+      { failures: this.watch?.failures() ?? [], manifest: this.manifest },
+      include,
+    );
   }
 
   private requireNativeUi(keys: ReadonlySet<string>, ready: () => void): void {
-    const layer = uiLayer();
-    const native = this.nativeUi;
-    if (layer === undefined || native === undefined) {
-      return;
-    }
-    const assets = [
-      ...this.manifest.images
-        .filter(({ key }) => keys.has(key))
-        .map(({ key }) => ({ key, kind: "image" as const })),
-      ...this.manifest.sprites
-        .filter(({ key }) => keys.has(key))
-        .map(({ key }) => ({ key, kind: "sheet" as const })),
-    ];
-    const present = new Set(assets.map(({ key }) => key));
-    const missing = [...keys].filter((key) => !present.has(key));
-    if (missing.length > 0) {
-      throw new Error(`Required native UI art is absent from the manifest: ${missing.join(", ")}`);
-    }
-    layer.requireAssets(hudArtResources({ artUrl: domArtUrl }, assets));
-    const stop = native.wait(ready);
-    this.events.once(Scenes.Events.SHUTDOWN, stop);
-  }
-
-  // One file per sound that include accepts, in the format the service worker precaches.
-  private queueSounds(include: (key: string) => boolean): void {
-    const soundFormat = browserSoundFormat();
-    if (soundFormat === undefined) {
-      return;
-    }
-    for (const sound of this.manifest.sounds.filter(({ key }) => include(key))) {
-      this.load.audio(sound.key, artUrl(sound[soundFormat]));
-    }
-  }
-
-  // The loading screen's art, its atlas page or its own three files, ahead of everything else.
-  private queueLoadingArt(manifest: AssetManifest): void {
-    const loadingKeys: ReadonlySet<string> = new Set(Object.values(LOADING_ART));
-    queueManifestArt(this, manifest, (key) => loadingKeys.has(key));
+    requireBootNativeUi(this, { manifest: this.manifest, native: this.nativeUi }, keys, ready);
   }
 
   // The backdrop and fixed walker are decorative; only the shared top strip shows progress.
   private showLoadingScreen(): void {
     this.walker = addBootPicture(
-      { registerSprite: (sprite) => this.registerSprite(sprite), scene: this },
+      { registerSprite: (sprite) => registerBootSprite(this, sprite), scene: this },
       this.manifest.sprites,
     );
     this.setWalkerMotion(currentSettings(this).reducedMotion);
@@ -486,81 +359,12 @@ export class BootScene extends Scene {
     }
   }
 
-  // Registers the loaded sprites that include accepts and draws a placeholder for each such key
-  // that is missing, one step at a time, yielding to the next frame once budgetMs is spent,
-  // then calls done.
-  private processAssets(
-    include: (key: string) => boolean,
-    budgetMs: number,
-    done: () => void,
-  ): void {
-    const steps: (() => void)[] = [
-      () => addAtlasTextures(this),
-      () => addAtlasFonts(this, GameObjects.BitmapText.ParseFromAtlas, this.manifest),
-      () => smoothDepthArt(this, this.manifest),
-    ];
-    for (const sprite of this.manifest.sprites) {
-      if (usesPhaserArt(sprite.key) && sprite.key !== LOADING_ART.walker && include(sprite.key)) {
-        steps.push(() => this.registerSprite(sprite));
-      }
-    }
-    for (const [key, size] of placeholderSizes()) {
-      if (usesPhaserArt(key) && include(key)) {
-        steps.push(() => ensurePlaceholder(this, key, size));
-      }
-    }
-    let next = 0;
-    let active = true;
-    let frame: number | undefined;
-    const cancel = () => {
-      active = false;
-      if (frame !== undefined) {
-        cancelAnimationFrame(frame);
-      }
-    };
-    this.events.once(Scenes.Events.SHUTDOWN, cancel);
-    const runBatch = () => {
-      if (!active) {
-        return;
-      }
-      const started = performance.now();
-      while (next < steps.length && performance.now() - started < budgetMs) {
-        itemAt(steps, next)();
-        next += 1;
-      }
-      if (next < steps.length) {
-        if (this.game.isPaused) {
-          frame = requestAnimationFrame(() => {
-            frame = undefined;
-            runBatch();
-          });
-        } else {
-          this.time.delayedCall(0, runBatch);
-        }
-      } else {
-        active = false;
-        this.events.off(Scenes.Events.SHUTDOWN, cancel);
-        done();
-      }
-    };
-    runBatch();
-  }
-
-  private registerSprite({ anchor, key }: SpriteAsset): void {
-    if (!usesPhaserArt(key) || !this.textures.exists(key)) {
-      return;
-    }
-    try {
-      const sheet = this.cache.json.get(key) as AsepriteSheet;
-      for (const spec of animationSpecs(key, sheet)) {
-        const frames = spec.frames.map(({ duration, frame }) => ({ duration, frame, key }));
-        const duration = frames.reduce((sum, frame) => sum + frame.duration, 0);
-        this.anims.create({ duration, frames, key: spec.key, repeat: -1 });
-      }
-      measureSprite(this, key, anchor);
-    } catch (error) {
-      console.warn(`Sprite ${key} has no usable animations.`, error);
-    }
+  private processAssets(include: (key: string) => boolean, done: () => void): void {
+    processBootAssets(
+      this,
+      { budgetMs: FRAME_BUDGET_MS, include, manifest: () => this.manifest },
+      done,
+    );
   }
 
   // Launches native home while keeping the loading screen until its usable view is ready, then
