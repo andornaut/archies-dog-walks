@@ -1,8 +1,7 @@
 import { wrapWords } from "@andornaut/game-kit/runtime/lines";
 import { type BitmapFont, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { PALETTE } from "../ui/palette.ts";
-import { plainMarks } from "../ui/pixelFont.ts";
+import { PALETTE, plainMarks } from "../ui/index.ts";
 import { CELEBRATION_LAYOUT as LAYOUT } from "./celebrationLayout.ts";
 
 export interface CelebrationHeadlineLine {

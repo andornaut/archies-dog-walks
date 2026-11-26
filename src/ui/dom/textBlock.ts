@@ -1,8 +1,7 @@
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { type DomScale, gridX, gridY } from "../domScale.ts";
-import { cssHex } from "../palette.ts";
+import { cssHex, type DomScale, gridX, gridY } from "../index.ts";
 import {
   blockPlace,
   displayGlyphs,

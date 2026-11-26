@@ -3,6 +3,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { expect, it } from "vitest";
 
+import { BUILD_LABEL } from "../buildLabel.ts";
 import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
@@ -59,6 +60,7 @@ it("keeps the install steps above their centred dismiss control", () => {
     measure,
     {
       art: () => undefined,
+      buildLabel: BUILD_LABEL,
       layout,
       rows: SETTING_ROWS,
       words: gameData.menuText.settings,

@@ -33,9 +33,7 @@ import {
   smoothDepthArt,
 } from "../assets/phaser/manifestArt.ts";
 import { ensurePlaceholder, measureSprite, playTag } from "../assets/phaser/sprites.ts";
-import { pageSearch } from "../cheats/browserTools.ts";
-import { pageRunSetup } from "../cheats/pageRunSetup.ts";
-import { namesRunSetup, runLinkLoadout } from "../cheats/runLink.ts";
+import { namesRunSetup, pageRunSetup, pageSearch, runLinkLoadout } from "../cheats/index.ts";
 import type { EncounterId } from "../data/ids.ts";
 import { FACE_SIZE, gameData, OWNER_CARD_FACE } from "../data/index.ts";
 import { hudArtResources } from "../hud/dom/prepareHudArt.ts";
@@ -50,7 +48,7 @@ import {
 } from "../pwa/index.ts";
 import { bootHandedOver, bootLoad } from "../pwa/launch.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
-import { PALETTE } from "../ui/palette.ts";
+import { PALETTE } from "../ui/index.ts";
 import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/pixelText.ts";
 import { markArtReady, setBootWatch, type WaitedLoad } from "./artReady.ts";
 import { addBootPicture } from "./bootPicture.ts";

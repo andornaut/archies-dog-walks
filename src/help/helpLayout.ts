@@ -1,13 +1,16 @@
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { arrangePager, type PagerArrangement } from "@andornaut/game-kit/runtime/ui/pager";
 
-import { HELP_SCREEN, MIN_PRESS, PAGE } from "../data/index.ts";
+import { BUTTON_SIZE, HELP_SCREEN, LABEL_HELP_GAP, MIN_PRESS, PAGE } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
-import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
-import { MODAL } from "../ui/modalGeometry.ts";
-import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
-import { BODY_ASCENT_ROWS, BODY_INK_ROWS, TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
+import {
+  BODY_ASCENT_ROWS,
+  BODY_INK_ROWS,
+  MODAL,
+  PAGE_LAYOUT,
+  TEXT_SCALE,
+  TITLE_CAP_ROWS,
+} from "../ui/index.ts";
 import type { HelpAction } from "./helpPaging.ts";
 
 const { screen: SCREEN } = SCREEN_LAYOUT;

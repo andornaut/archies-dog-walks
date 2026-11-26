@@ -7,9 +7,12 @@ import {
   leftBearing,
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { centredInkOffsets } from "../centredInkBlock.ts";
+import { PILL } from "../../data/index.ts";
 import {
   artPixel,
+  centredInkOffsets,
+  centredPillBacking,
+  cssHex,
   deviceX,
   deviceY,
   type DomScale,
@@ -19,19 +22,15 @@ import {
   gridRect,
   gridX,
   gridY,
-  wholeArtPixels,
-} from "../domScale.ts";
-import {
-  centredPillBacking,
   laidPills,
-  PILL,
+  PALETTE,
   PILL_CLOSE,
   PILL_SPACE,
   pillIndex,
   pillRows,
-} from "../namePills.ts";
-import { cssHex, PALETTE } from "../palette.ts";
-import { plainMarks } from "../pixelFont.ts";
+  plainMarks,
+  wholeArtPixels,
+} from "../index.ts";
 import { WEB_FONTS } from "./uiLayer.ts";
 
 // The web fonts' em, in font pixels: a line's font size is this many device pixels a font pixel.

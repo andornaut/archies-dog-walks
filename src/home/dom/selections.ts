@@ -9,13 +9,23 @@ import { type DomArtSource, imageArt, sheetArt } from "../../ui/dom/artElements.
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { createTextLine, placeBackedText, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
-import { type DomScale, frameRect, gridX, gridY } from "../../ui/domScale.ts";
-import { itemTileLook } from "../../ui/interaction.ts";
-import { cssHex } from "../../ui/palette.ts";
-import { plainMarks } from "../../ui/pixelFont.ts";
-import { TEXT_SCALE } from "../../ui/textFit.ts";
-import { plateStripView, type PricePlateView, pricePlateView } from "../pricePlateView.ts";
-import { homeSelectionColour, type HomeSelectionView } from "../selectionView.ts";
+import {
+  cssHex,
+  type DomScale,
+  frameRect,
+  gridX,
+  gridY,
+  itemTileLook,
+  plainMarks,
+  TEXT_SCALE,
+} from "../../ui/index.ts";
+import {
+  homeSelectionColour,
+  type HomeSelectionView,
+  plateStripView,
+  type PricePlateView,
+  pricePlateView,
+} from "../index.ts";
 import { createSelectionTile } from "./selectionTile.ts";
 interface SelectionArtSource extends DomArtSource {
   readonly hasArt: (key: string) => boolean;

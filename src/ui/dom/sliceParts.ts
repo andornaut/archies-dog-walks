@@ -1,4 +1,4 @@
-import { artPixel, type DeviceRect, type DomScale, gridX, gridY } from "../domScale.ts";
+import { artPixel, type DeviceRect, type DomScale, gridX, gridY } from "../index.ts";
 
 // A nine-slice's part: where it goes in the slice's box, and the part of the art frame it shows,
 // in art pixels from the frame's corner.

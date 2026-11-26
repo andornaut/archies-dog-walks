@@ -1,9 +1,7 @@
 import type { LoadingFailurePresentation } from "@andornaut/game-kit/runtime/web/progress/dom/loadingFailure";
 
 import { BUTTON_SIZE, MODAL_SPACING, MODAL_WIDTHS } from "../../data/index.ts";
-import { MODAL } from "../modalGeometry.ts";
-import { cssHex, PALETTE } from "../palette.ts";
-import { PAPER_PANEL } from "../paperPanel.ts";
+import { cssHex, MODAL, PALETTE, PAPER_PANEL } from "../index.ts";
 
 const paper = (role: keyof typeof PAPER_PANEL.colours) =>
   cssHex(PALETTE[PAPER_PANEL.colours[role]]);

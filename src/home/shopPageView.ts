@@ -1,14 +1,22 @@
 import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 
+import { SELECT_OUTSET } from "../data/index.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
-import { raisedLabelCapTop } from "../ui/buttonGeometry.ts";
-import { PLAIN_ITEM, tileState } from "../ui/interaction.ts";
-import type { PanelButton, PanelMeasure, PanelText } from "../ui/modal/types.ts";
-import { panelTitle, titleLabelInk } from "../ui/modal/view.ts";
-import { pageBack } from "../ui/pageLayout.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { GREYED, SELECT_OUTSET, selectLook } from "../ui/selection.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import {
+  GREYED,
+  pageBack,
+  PALETTE,
+  type PanelButton,
+  type PanelMeasure,
+  type PanelText,
+  panelTitle,
+  PLAIN_ITEM,
+  raisedLabelCapTop,
+  selectLook,
+  TEXT_SCALE,
+  tileState,
+  titleLabelInk,
+} from "../ui/index.ts";
 import { FEEDBACK } from "./feedback.ts";
 import { SHOP_LAYOUT, shopTabFace, shopTabRects } from "./shopLayout.ts";
 

@@ -4,7 +4,7 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { HOME_TEXT_FIELDS } from "../content/index.ts";
 import type { DogId, GearId } from "../data/ids.ts";
 import type { GameData, Size } from "../data/index.ts";
-import { dollarText } from "../presentation/currency.ts";
+import { dollarText } from "../presentation/index.ts";
 import {
   effectClause,
   price,

@@ -6,17 +6,25 @@ import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModalit
 import { createModalFrame } from "@andornaut/game-kit/runtime/web/ui/dom/modalFrame";
 
 import { SCREEN_CONFIG } from "../../data/index.ts";
-import { shopTabRects } from "../../home/shopLayout.ts";
-import type { PageFill, PageTab } from "../../home/shopPageView.ts";
+import { type PageFill, type PageTab, shopTabRects } from "../../home/index.ts";
 import { mountModalLifecycle, type NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import { colourBox, type DomPart } from "../../ui/dom/parts.ts";
 import { createTextLine, placeFrame, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import { dimDrawn, followModalUnderlay, setRampDimmed } from "../../ui/dom/rampDim.ts";
 import { refuse } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { deviceX, deviceY, type DomScale, gridTransform, gridX, gridY } from "../../ui/domScale.ts";
-import type { PanelButton, PanelText } from "../../ui/modal/types.ts";
-import { PAGE_FRAME, PAGE_LAYOUT } from "../../ui/pageLayout.ts";
+import {
+  deviceX,
+  deviceY,
+  type DomScale,
+  gridTransform,
+  gridX,
+  gridY,
+  PAGE_FRAME,
+  PAGE_LAYOUT,
+  type PanelButton,
+  type PanelText,
+} from "../../ui/index.ts";
 import { type BodyScroll, bodyScrollbarPart } from "./bodyScrollbar.ts";
 import { createPanelButton } from "./panelButton.ts";
 import {

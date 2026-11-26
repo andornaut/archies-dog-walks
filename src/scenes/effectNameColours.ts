@@ -1,5 +1,5 @@
-import type { EffectNameKind } from "../presentation/effectNames.ts";
-import { PALETTE } from "../ui/palette.ts";
+import type { EffectNameKind } from "../presentation/index.ts";
+import { PALETTE } from "../ui/index.ts";
 
 type PaletteName = keyof typeof PALETTE;
 

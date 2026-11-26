@@ -4,10 +4,9 @@ import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import { createPager } from "@andornaut/game-kit/runtime/web/ui/dom/pager";
 
 import { gameData } from "../../data/index.ts";
-import { HELP_LAYOUT } from "../../help/helpLayout.ts";
-import { HELP_DOTS, type HelpButton, type HelpView } from "../../help/helpView.ts";
-import { MENU_TEXT_FIELDS } from "../../home/menuText.ts";
-import { holdRule, TILE_SLOP_PX } from "../../input/holdRule.ts";
+import { HELP_DOTS, HELP_LAYOUT, type HelpButton, type HelpView } from "../../help/index.ts";
+import { MENU_TEXT_FIELDS } from "../../home/index.ts";
+import { holdRule, TILE_SLOP_PX } from "../../input/index.ts";
 import { colourBox, type DomBox, type DomPart } from "../../ui/dom/parts.ts";
 import {
   createTextLine,
@@ -19,10 +18,17 @@ import {
 } from "../../ui/dom/pixelLine.ts";
 import { refuse } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, type DomScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
-import type { PanelText } from "../../ui/modal/types.ts";
-import { cssHex, PALETTE } from "../../ui/palette.ts";
-import { BODY_ASCENT_ROWS } from "../../ui/textFit.ts";
+import {
+  artPixel,
+  BODY_ASCENT_ROWS,
+  cssHex,
+  type DomScale,
+  gridRect,
+  gridX,
+  gridY,
+  PALETTE,
+  type PanelText,
+} from "../../ui/index.ts";
 import { showPage } from "./page.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
 import { addTapBurst, type DomQuestionPanel, type DomQuestionPanelInput } from "./questionPanel.ts";

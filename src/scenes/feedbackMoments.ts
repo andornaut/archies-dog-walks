@@ -6,16 +6,22 @@ import type { GameObjects, Scene, Tweens, Types } from "phaser";
 import { ownerFaceKey, WARNING_KEY, WARNING_TAG } from "../assets/index.ts";
 import { playTag } from "../assets/phaser/sprites.ts";
 import type { DogId } from "../data/ids.ts";
-import { FACE_SIZE, gameData, MOMENT_PARTS, SCREEN_CONFIG, SLICES } from "../data/index.ts";
+import {
+  FACE_SIZE,
+  FIRED_LINE,
+  gameData,
+  LOW_CHIP,
+  MOMENT_PARTS,
+  SCREEN_CONFIG,
+  SLICES,
+} from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
-import { inlineFaceBox, styledFaceRows } from "../hud/faceText.ts";
-import { type MoneyTick, retarget, tickShown } from "../hud/feedback.ts";
-import type { ChangeLabel } from "../hud/hudView.ts";
 import {
   arcControl,
   bowRightControl,
+  type ChangeLabel,
+  DOG_CARD,
   downTail,
-  FIRED_LINE,
   FIRED_LINE_FIT,
   firedLineHeight,
   firedLineX,
@@ -24,30 +30,35 @@ import {
   type FiringCue,
   firingLayout,
   firingTimeline,
+  inlineFaceBox,
   lastLandMs,
-  LOW_CHIP,
   LOW_CHIP_FIT,
   lowChipPlace,
   lowHeartDogs,
   lowHeartsText,
   MOMENTS,
+  type MoneyTick,
   newlyLow,
   type Payout,
   PAYOUT_EVENT,
   type PayoutFlight,
   payoutFlights,
+  playerPaused,
+  retarget,
+  type RunPause,
   SPARE_TREAT_EVENT,
   type SpareTreatCue,
+  styledFaceRows,
+  tickShown,
   TOP_BAR_POINTS,
   TREAT_EVENT,
   type TreatCue,
   trotOffX,
-} from "../hud/moments.ts";
-import { playerPaused, type RunPause, walkPaused } from "../hud/topBar.ts";
-import { DOG_CARD } from "../hud/walkHud.ts";
+  walkPaused,
+} from "../hud/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { type RunState, slotIndexOf } from "../state/index.ts";
-import { PALETTE } from "../ui/palette.ts";
+import { PALETTE } from "../ui/index.ts";
 import { type Cents, cents } from "../units.ts";
 import { arcFlight } from "./arcFlight.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";

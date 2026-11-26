@@ -1,6 +1,5 @@
 import { DOM_CHOICE_CARD_ART, type DomCopySuffix, remapCardGrey } from "../../assets/index.ts";
-import { greyForDisabledTile, greysOnTile } from "../../ui/disabledArt.ts";
-import { NEUTRAL_RAMP } from "../../ui/palette.ts";
+import { greyForDisabledTile, greysOnTile, NEUTRAL_RAMP } from "../../ui/index.ts";
 
 // The remapped copies of its art the HTML interface can draw, each a copy of a DOM sheet with
 // the same rects (src/tools/atlas/domSheets.ts): the disabled tiles' grey copies, remapped as the

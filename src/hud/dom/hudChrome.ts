@@ -2,7 +2,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { debuffIconKey } from "../../assets/index.ts";
 import type { DebuffId } from "../../data/ids.ts";
-import { gameData, SLICES } from "../../data/index.ts";
+import { DEBUFF_BAR, gameData, SLICES } from "../../data/index.ts";
 import { SCREEN_LAYOUT } from "../../layout/index.ts";
 import {
   effectIconFallback,
@@ -11,26 +11,22 @@ import {
   effectItemsKey,
   hudEffectIconKey,
   spareTreatWell,
-} from "../../presentation/effectIcons.ts";
+} from "../../presentation/index.ts";
 import { currentZone, debuffLasting, read } from "../../rules/index.ts";
 import type { RunState } from "../../state/index.ts";
-import { lineInk } from "../../ui/lineInk.ts";
-import { PALETTE } from "../../ui/palette.ts";
-import { TEXT_SCALE } from "../../ui/textFit.ts";
-import { pressedEffectWells } from "../../ui/topSection.ts";
+import { lineInk, PALETTE, pressedEffectWells, TEXT_SCALE } from "../../ui/index.ts";
 import {
-  DEBUFF_BAR,
   debuffBarRects,
   debuffTrackLayout,
   debuffTrackStyle,
   spareTreatPipAt,
   WALK_BAR,
   walkBarLayout,
+  zonePillLayout,
   zoneProgressLayout,
   zoneProgressText,
   zoneShare,
-} from "../walkHud.ts";
-import { zonePillLayout } from "../zonePill.ts";
+} from "../index.ts";
 import type { HudMoment, HudMomentPainter } from "./hudMoments.ts";
 type DebuffColours = Readonly<
   Record<

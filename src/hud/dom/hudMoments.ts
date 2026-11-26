@@ -16,10 +16,17 @@ import { boundsAdvance, type DomTextBlock, placeBox, shownText } from "../../ui/
 import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
 import { textBlock } from "../../ui/dom/textBlock.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, type DomScale, gridTransform, gridX, gridY } from "../../ui/domScale.ts";
-import { lineInk } from "../../ui/lineInk.ts";
-import { cssHex, PALETTE } from "../../ui/palette.ts";
-import type { FaceBox, FaceRow } from "../faceText.ts";
+import {
+  artPixel,
+  cssHex,
+  type DomScale,
+  gridTransform,
+  gridX,
+  gridY,
+  lineInk,
+  PALETTE,
+} from "../../ui/index.ts";
+import type { FaceBox, FaceRow } from "../index.ts";
 import { type HudArtDescriptor, prepareHudArt } from "./prepareHudArt.ts";
 export interface HudMomentState {
   x: number;

@@ -4,30 +4,29 @@ import {
   sessionWrite,
 } from "@andornaut/game-kit/runtime/web/save/dom/pageSessionStore";
 
-import { browserToolsOn } from "../../cheats/browserTools.ts";
 import {
-  DEV_LAST_LOG_KEY,
-  DEV_REPLAY_KEY,
-  NEXT_WALK_OFF,
-  type NextWalk,
-  nextWalkSetup,
-  WALK_CHEATS_OFF,
-  type WalkCheats,
-} from "../../cheats/cheats.ts";
-import {
+  browserToolsOn,
   type CardChoice,
   decodeInputLog,
+  DEV_LAST_LOG_KEY,
+  DEV_REPLAY_KEY,
   encodeInputLog,
   type InputEvent,
   type InputLog,
+  NEXT_WALK_OFF,
+  type NextWalk,
+  nextWalkSetup,
+  pageRunSetup,
   recordInput,
   replayInputs,
+  type RunSetup,
+  runSetupLimitsFor,
   startInputLog,
   takeCardChoice,
   takeDueInputs,
-} from "../../cheats/inputLog.ts";
-import { pageRunSetup, runSetupLimitsFor } from "../../cheats/pageRunSetup.ts";
-import type { RunSetup } from "../../cheats/runSetup.ts";
+  WALK_CHEATS_OFF,
+  type WalkCheats,
+} from "../../cheats/index.ts";
 import { gameData } from "../../data/index.ts";
 import type { SessionInput } from "../../runner/index.ts";
 

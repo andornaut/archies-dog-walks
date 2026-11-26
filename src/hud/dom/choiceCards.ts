@@ -13,10 +13,8 @@ import { cardGreyPath, DIFFICULTY_KEY } from "../../assets/index.ts";
 import { CHARM, type GameData, SCREEN_CONFIG, SLICES } from "../../data/index.ts";
 import { textPart } from "../../home/dom/detailText.ts";
 import { SCREEN_LAYOUT } from "../../layout/index.ts";
-import { CARD_LAYOUT, cardRowIn, forkHomeRect } from "../../presentation/cardLayout.ts";
-import { walkBarIconKey } from "../../presentation/effectIcons.ts";
+import { CARD_LAYOUT, cardRowIn, forkHomeRect, walkBarIconKey } from "../../presentation/index.ts";
 import { type CardView, MAX_CARD_OPTIONS } from "../../rules/index.ts";
-import { cardHeader } from "../../ui/cardRow.ts";
 import { registerScenePointer } from "../../ui/dom/actionBinding.ts";
 import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
@@ -25,18 +23,21 @@ import { type DomPart, framelessView, gridBoxPart, ringPart } from "../../ui/dom
 import { createTextLine, placeBox, placeText } from "../../ui/dom/pixelLine.ts";
 import { refusalPlaying, refuse } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import type { DomScale } from "../../ui/domScale.ts";
-import { modalTitleInk } from "../../ui/modal/titleRole.ts";
-import { panelButton } from "../../ui/modal/view.ts";
-import { PALETTE } from "../../ui/palette.ts";
-import { TEXT_SCALE } from "../../ui/textFit.ts";
-import { charmRing } from "../charmRing.ts";
 import {
+  cardHeader,
+  type DomScale,
+  modalTitleInk,
+  PALETTE,
+  panelButton,
+  TEXT_SCALE,
+} from "../../ui/index.ts";
+import {
+  charmRing,
   type ChoiceCardFonts,
   type ChoiceCardSurface,
   choiceCardSurface,
   type ChoiceEntry,
-} from "../choiceCardView.ts";
+} from "../index.ts";
 import type { DomDetailCardInput } from "./detailCard.ts";
 import {
   type DomQuestionPanel,

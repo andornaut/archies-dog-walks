@@ -8,57 +8,57 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import type { Scene } from "phaser";
 
 import { playEffect, tagTopY } from "../../assets/phaser/sprites.ts";
-import { debuffSoundCue } from "../../audio/sound.ts";
-import { choiceCues, contactCues, pullCues, stepCues } from "../../audio/stepCues.ts";
+import { choiceCues, contactCues, debuffSoundCue, pullCues, stepCues } from "../../audio/index.ts";
 import { minorLook, minorObstacleName } from "../../content/index.ts";
 import type { AchievementId, DogId, EncounterId, HintId } from "../../data/ids.ts";
 import { CHARM, gameData, type HintTrigger } from "../../data/index.ts";
 import {
   type BuffPop,
-  heartPopDogs,
-  leashPops,
-  reachIcons,
-  type ReachLine,
-  type RoadMarks,
-  roadMarks,
-  stepValues,
-  walkStartMarks,
-} from "../../hud/buffMarks.ts";
-import { FLY_HEART, heartPopFrame, stackOverPop } from "../../hud/feedback.ts";
-import { stepHintTriggers } from "../../hud/hintTriggers.ts";
-import { changeLabels, reachedLabels, totalLabel } from "../../hud/hudView.ts";
-import type { MessageLine } from "../../hud/messageStrip.ts";
-import {
+  bumpLines,
+  cashLostLabel,
+  cashLostMs,
+  changeLabels,
+  debuffChanges,
+  debuffLines,
   endScreenDelayMs,
+  firedLine,
   FIRING_EVENT,
   type FiringCue,
   firingTimeline,
+  FLY_HEART,
   FORGIVEN_EVENT,
   type ForgivenCue,
+  forgivenLines,
+  fullPackLine,
+  gearFoundLine,
+  heartPopDogs,
+  heartPopFrame,
+  leashPops,
+  luckyLine,
+  type MessageLine,
   type Payout,
   PAYOUT_EVENT,
   type PayoutCue,
   payoutFlights,
   payoutMs,
+  pullLine,
+  reachedLabels,
+  reachIcons,
+  type ReachLine,
+  type RoadMarks,
+  roadMarks,
   SPARE_TREAT_EVENT,
   type SpareTreatCue,
+  spareTreatUsedLine,
+  stackOverPop,
+  stepHintTriggers,
+  stepValues,
+  totalLabel,
   TREAT_EVENT,
   type TreatCue,
-} from "../../hud/moments.ts";
-import { cashLostLabel, cashLostMs } from "../../hud/moneyLabels.ts";
-import {
-  bumpLines,
-  debuffChanges,
-  debuffLines,
-  firedLine,
-  forgivenLines,
-  fullPackLine,
-  gearFoundLine,
-  luckyLine,
-  pullLine,
-  spareTreatUsedLine,
   treatGrabLine,
-} from "../../hud/stripLines.ts";
+  walkStartMarks,
+} from "../../hud/index.ts";
 import {
   BUFF_POP,
   bumpFlash,
@@ -75,7 +75,7 @@ import {
   splashEffect,
   whiteFlash,
 } from "../../layout/index.ts";
-import { type EffectItem, effectItems, gearWell } from "../../presentation/effectIcons.ts";
+import { type EffectItem, effectItems, gearWell } from "../../presentation/index.ts";
 import {
   type Change,
   type ChoiceOutcome,
@@ -96,9 +96,8 @@ import {
 import type { EncounterCard, MinorBump, PullStep, WalkItem, WalkStep } from "../../runner/index.ts";
 import { previewedEarned, previewKey, type RunResult } from "../../save/index.ts";
 import { type EffectSource, type EndReason, packDogs, type RunState } from "../../state/index.ts";
-import { PALETTE } from "../../ui/palette.ts";
+import { PALETTE, pixelLinePoints } from "../../ui/index.ts";
 import { fillRect } from "../../ui/phaser/draw.ts";
-import { pixelLinePoints } from "../../ui/pixelShapes.ts";
 import { floatValue, popCharm } from "../buffCharm.ts";
 import { FEEDBACK_ART } from "../feedbackArt.ts";
 import { hitLabelOf, hitLook, playEdgeFlash, playHitMoment } from "../hitMoment.ts";

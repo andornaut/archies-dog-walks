@@ -18,7 +18,7 @@ import {
   type Unlock,
   type Zone,
 } from "../data/index.ts";
-import { badgeGoalText } from "../home/badgesView.ts";
+import { badgeGoalText } from "../home/index.ts";
 import {
   achievementConditionText,
   agilityPercent,

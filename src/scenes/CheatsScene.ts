@@ -1,8 +1,8 @@
 import { Scene, Scenes } from "phaser";
 
-import type { OverlayRegion } from "../home/homeBar.ts";
+import type { OverlayRegion } from "../home/index.ts";
 import { coverHelpUnderlay } from "../hud/dom/helpUnderlay.ts";
-import { isMuteKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
+import { isMuteKey, isPauseKey, menuKeyActs } from "../input/index.ts";
 import { type CheatsPage, openCheatsPage } from "./cheatsPage.ts";
 import { listenHomeBar } from "./homeBarPress.ts";
 import type { MenuSceneData } from "./MenuScene.ts";

@@ -2,7 +2,7 @@ import { fillLine } from "@andornaut/game-kit/runtime/lines";
 
 import { HOME_TEXT_FIELDS } from "../content/index.ts";
 import type { GameData } from "../data/index.ts";
-import { dollarText } from "../presentation/currency.ts";
+import { dollarText } from "../presentation/index.ts";
 import type { SaveDocument } from "../save/index.ts";
 import { type DetailCard, dogDetail, gearDetail } from "./detail.ts";
 import type { HomeLoadout, Purchase } from "./home.ts";

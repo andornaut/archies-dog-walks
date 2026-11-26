@@ -3,7 +3,7 @@
 
 import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
 
-import type { FocusDirection } from "../input/keyBindings.ts";
+import type { FocusDirection } from "../input/index.ts";
 
 export interface Focus {
   readonly column: number;

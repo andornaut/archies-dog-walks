@@ -3,8 +3,7 @@ import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/te
 
 import { CHANGE_CHIP, HUD_LANES, LABEL_ICON } from "../data/index.ts";
 import type { ScreenLayout } from "../layout/index.ts";
-import { centredInkOffsets } from "../ui/centredInkBlock.ts";
-import { TEXT_STYLE } from "../ui/textFit.ts";
+import { centredInkOffsets, TEXT_STYLE } from "../ui/index.ts";
 import { OWNER_TAB } from "./walkHud.ts";
 
 // Each transient layer of the walk's HUD keeps to its own lane, so none covers another. The

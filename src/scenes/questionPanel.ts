@@ -4,10 +4,8 @@ import { Core, type Scene, Scenes } from "phaser";
 
 import { domArtUrl } from "../assets/files/index.ts";
 import { gameData, SCREEN_CONFIG } from "../data/index.ts";
-import type { HelpView } from "../help/helpView.ts";
-import type { BadgeCardView } from "../home/badgeCardView.ts";
-import type { DetailCardView } from "../home/detailCardView.ts";
-import type { EndScreenView } from "../home/endScreenView.ts";
+import type { HelpView } from "../help/index.ts";
+import type { BadgeCardView, DetailCardView, EndScreenView } from "../home/index.ts";
 import { showBadgeCard } from "../hud/dom/badgeCard.ts";
 import { showDetailCard } from "../hud/dom/detailCard.ts";
 import { type DomEndScreen, type DomEndScreenInput, showEndScreen } from "../hud/dom/endScreen.ts";
@@ -17,13 +15,17 @@ import {
   type DomQuestionPanelInput,
   showQuestionPanel,
 } from "../hud/dom/questionPanel.ts";
-import { questionPanelView } from "../hud/questionPanelView.ts";
-import { pillKind } from "../presentation/effectNames.ts";
+import { questionPanelView } from "../hud/index.ts";
+import { pillKind } from "../presentation/index.ts";
 import { pageFrameTurn } from "../pwa/index.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
-import type { CardAction, PanelNotePart, QuestionPanelView } from "../ui/modal/types.ts";
-import { modalCardView } from "../ui/modal/view.ts";
+import {
+  type CardAction,
+  modalCardView,
+  type PanelNotePart,
+  type QuestionPanelView,
+} from "../ui/index.ts";
 import { displayBitmapFont, hasDisplayFont } from "../ui/phaser/displayText.ts";
 import { pixelBitmapFont } from "../ui/phaser/pixelText.ts";
 import { pillColours } from "./effectNameColours.ts";

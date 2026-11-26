@@ -4,27 +4,28 @@ import type { Scene } from "phaser";
 import { domArtUrl } from "../assets/files/index.ts";
 import {
   addToBank,
+  type CheatAction,
+  type CheatsState,
+  cheatsView,
   grantOwned,
   nextChoice,
   type NextWalk,
   nextWalkLink,
+  pageRunSetup,
   pocketChoices,
+  randomSeed,
   seedFrom,
   SPEEDS,
-} from "../cheats/cheats.ts";
-import { type CheatAction, type CheatsState, cheatsView } from "../cheats/cheatsView.ts";
-import { pageRunSetup } from "../cheats/pageRunSetup.ts";
-import { stripRunOverrides } from "../cheats/runLink.ts";
-import { randomSeed } from "../cheats/runSetup.ts";
+  stripRunOverrides,
+} from "../cheats/index.ts";
 import type { ZoneId } from "../data/ids.ts";
 import { gameData, SCREEN_CONFIG } from "../data/index.ts";
-import { overlayRegion } from "../home/homeBar.ts";
+import { overlayRegion } from "../home/index.ts";
 import { showCheats } from "../hud/dom/cheats.ts";
 import { type DomQuestionPanel, showQuestionPanel } from "../hud/dom/questionPanel.ts";
 import { packDogsOf } from "../state/index.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
-import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
-import { PALETTE } from "../ui/palette.ts";
+import { MODAL, modalFamilyWidth, PALETTE } from "../ui/index.ts";
 import { CHEATS_CHANGED_EVENT, nextWalk, setNextWalk } from "./cheatChoices.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { nativeModalShade } from "./nativeModalShade.ts";

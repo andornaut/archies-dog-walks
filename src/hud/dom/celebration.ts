@@ -1,13 +1,9 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import {
-  BADGE_STRIP,
-  type BadgeView,
-  panelBadgeStrip,
-  stripUnderClose,
-} from "../../home/badgesView.ts";
+import { BADGE_STRIP } from "../../data/index.ts";
 import { textPart } from "../../home/dom/detailText.ts";
+import { type BadgeView, panelBadgeStrip, stripUnderClose } from "../../home/index.ts";
 import { type DomPart, framelessView, panelFramePart } from "../../ui/dom/parts.ts";
 import {
   boundsAdvance,
@@ -26,13 +22,18 @@ import {
   fontPixel,
   frameRect,
   gridX,
+  type PanelText,
+  type QuestionPanelView,
+  TEXT_SCALE,
   wholeArtPixels,
-} from "../../ui/domScale.ts";
-import type { PanelText, QuestionPanelView } from "../../ui/modal/types.ts";
-import { TEXT_SCALE } from "../../ui/textFit.ts";
-import { celebrationHeadlineView } from "../celebrationHeadlineView.ts";
-import { CELEBRATION_LAYOUT } from "../celebrationLayout.ts";
-import type { CentredRow, DottedRule, ZoneCelebrationView } from "../celebrationView.ts";
+} from "../../ui/index.ts";
+import {
+  CELEBRATION_LAYOUT,
+  celebrationHeadlineView,
+  type CentredRow,
+  type DottedRule,
+  type ZoneCelebrationView,
+} from "../index.ts";
 import { confettiPart, type DomBadgeCardInput } from "./badgeCard.ts";
 import { artPart, type DomDetailCardInput } from "./detailCard.ts";
 import {

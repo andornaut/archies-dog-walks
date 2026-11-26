@@ -8,22 +8,37 @@ import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 import { HIT_RULE } from "@andornaut/game-kit/runtime/ui/hitAreas";
 
 import type { DogId } from "../data/ids.ts";
-import { HOME_SCREEN, MIN_PRESS, SCREEN_CONFIG } from "../data/index.ts";
-import { type PackPlacement, SCREEN_LAYOUT } from "../layout/index.ts";
-import { ownerPhotoRect } from "../presentation/ownerPhoto.ts";
-import { BUTTON_SIZE, raisedLabelCapTop } from "../ui/buttonGeometry.ts";
-import type { GridSpec } from "../ui/grid.ts";
-import { helpCapDy } from "../ui/labelHelpGap.ts";
-import { MARK_OFFSET } from "../ui/mark.ts";
-import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
-import { hasPill, PILL_IMAGE_GAP, pillDropUnderInk, pillRiseOverCaps } from "../ui/namePills.ts";
-import { TEXT_SCALE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
-import { TOP_BAR_FACE, TOP_BAR_HEIGHT, TOP_BAR_MID, TOP_BAR_WELL } from "../ui/topBarTrim.ts";
 import {
+  BUTTON_SIZE,
+  HOME_SCREEN,
+  MARK_OFFSET,
+  MIN_PRESS,
+  PILL_IMAGE_GAP,
+  SCREEN_CONFIG,
+  TOP_BAR_HEIGHT,
+} from "../data/index.ts";
+import { type PackPlacement, SCREEN_LAYOUT } from "../layout/index.ts";
+import { ownerPhotoRect } from "../presentation/index.ts";
+import {
+  type GridSpec,
+  hasPill,
+  helpCapDy,
+  MODAL,
+  modalActionWidth,
+  modalFamilyWidth,
+  modalRect,
+  pillDropUnderInk,
+  pillRiseOverCaps,
+  raisedLabelCapTop,
+  TEXT_SCALE,
+  TITLE_CAP_ROWS,
+  TOP_BAR_FACE,
+  TOP_BAR_MID,
+  TOP_BAR_WELL,
   TOP_SECTION_CURRENCY_TEXT,
   type TopSectionControl,
   topSectionLayout,
-} from "../ui/topSection.ts";
+} from "../ui/index.ts";
 import { FEEDBACK } from "./feedback.ts";
 import type { SectionId } from "./sections.ts";
 

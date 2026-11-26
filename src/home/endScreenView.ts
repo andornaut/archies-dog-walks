@@ -6,15 +6,19 @@ import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 import { ownerFaceKey, ZONE_PIPS_KEY } from "../assets/index.ts";
 import type { AchievementId, DogId } from "../data/ids.ts";
 import { BADGE_STRIP, type GameData, SCREEN_CONFIG } from "../data/index.ts";
-import { signedShortDollarText } from "../presentation/currency.ts";
-import type { OwnerNameLine } from "../presentation/ownerName.ts";
+import { type OwnerNameLine, signedShortDollarText } from "../presentation/index.ts";
 import { walkLength } from "../rules/index.ts";
 import type { LastWalk } from "../save/index.ts";
-import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
-import type { PanelButton, PanelText } from "../ui/modal/types.ts";
-import { panelButton } from "../ui/modal/view.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { TEXT_SCALE, textOnLines } from "../ui/textFit.ts";
+import {
+  MODAL,
+  modalActionWidth,
+  PALETTE,
+  type PanelButton,
+  panelButton,
+  type PanelText,
+  TEXT_SCALE,
+  textOnLines,
+} from "../ui/index.ts";
 import { celebrationTitle } from "./badgesView.ts";
 import type { DetailArt, DetailFramed, DetailMeasure, DetailText } from "./detailCardView.ts";
 import {

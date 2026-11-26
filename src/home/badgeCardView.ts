@@ -2,12 +2,18 @@ import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
 import type { GameData } from "../data/index.ts";
-import { type CloseControl, closeControl } from "../ui/closeControl.ts";
-import { DISMISS_FOOTER_SPACE, dismissFooter } from "../ui/modal/dismissFooter.ts";
-import { MODAL, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
-import type { PanelButton } from "../ui/modal/types.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import {
+  type CloseControl,
+  closeControl,
+  DISMISS_FOOTER_SPACE,
+  dismissFooter,
+  MODAL,
+  modalFamilyWidth,
+  modalRect,
+  PALETTE,
+  type PanelButton,
+  TEXT_SCALE,
+} from "../ui/index.ts";
 import { BADGE_STRIP, BADGE_TEXT_COLOURS, type BadgeView } from "./badgesView.ts";
 import type { DetailArt, DetailMeasure, DetailText } from "./detailCardView.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";

@@ -3,7 +3,7 @@ import type { Scene } from "phaser";
 import { SCREEN_CONFIG } from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import { BUMP_FLASH, bumpBorder, bumpFlashOn } from "../layout/index.ts";
-import { PALETTE } from "../ui/palette.ts";
+import { PALETTE } from "../ui/index.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";
 const SCREEN = { height: SCREEN_CONFIG.height, width: SCREEN_CONFIG.width, x: 0, y: 0 };
 // HUD coordinates keep the native border and tint still while the road camera jolts.

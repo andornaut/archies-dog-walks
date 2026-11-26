@@ -19,12 +19,12 @@ import {
   packPlacements,
   project,
 } from "../../layout/index.ts";
-import type { StandingDog } from "../../pack/packDraw.ts";
+import type { StandingDog } from "../../pack/index.ts";
 import { type Figure, PackFigures } from "../../pack/phaser/packFigures.ts";
 import { currentZone, read } from "../../rules/index.ts";
 import { laneMotionX, pullPose, type Pulls, type Walk } from "../../runner/index.ts";
 import { packDogs } from "../../state/index.ts";
-import { colourFromHex } from "../../ui/palette.ts";
+import { colourFromHex } from "../../ui/index.ts";
 import { playBarkWord } from "../comicWord.ts";
 import { trotOffRoad } from "../feedbackMoments.ts";
 import { type DogSignal, dogTop, iconArt, playPullFail, PullSignals } from "../pullSignals.ts";

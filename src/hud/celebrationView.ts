@@ -3,17 +3,14 @@ import type { FittedText } from "@andornaut/game-kit/runtime/text/textFit";
 
 import { ZONE_CELEBRATION_ART } from "../assets/index.ts";
 import { ICON_LABEL_GAP, SLICES } from "../data/index.ts";
-import type {
-  DetailArt,
-  DetailArtSize,
-  DetailMeasure,
-  DetailText,
-} from "../home/detailCardView.ts";
-import { iconBesideLabel } from "../ui/iconLabel.ts";
-import type { PanelButton } from "../ui/modal/types.ts";
-import { panelButton } from "../ui/modal/view.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import type { DetailArt, DetailArtSize, DetailMeasure, DetailText } from "../home/index.ts";
+import {
+  iconBesideLabel,
+  PALETTE,
+  type PanelButton,
+  panelButton,
+  TEXT_SCALE,
+} from "../ui/index.ts";
 import {
   CELEBRATION_LAYOUT as LAYOUT,
   greetingLineTops,

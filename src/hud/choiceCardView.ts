@@ -9,7 +9,7 @@ import { fittingText, type TextFitStyle } from "@andornaut/game-kit/runtime/text
 
 import { cardFrameTag, SKIP_CARD_ART } from "../assets/index.ts";
 import type { GameData } from "../data/index.ts";
-import type { DetailText } from "../home/detailCardView.ts";
+import type { DetailText } from "../home/index.ts";
 import { cardCharmPlates, cardCharmWidth } from "../layout/index.ts";
 import {
   CARD_LAYOUT as CARD,
@@ -19,7 +19,7 @@ import {
   largeCardHeight,
   largeCardRect,
   plaqueRoom,
-} from "../presentation/cardLayout.ts";
+} from "../presentation/index.ts";
 import {
   type CardView,
   type Choice,
@@ -27,11 +27,7 @@ import {
   hasPlaque,
   type OptionView,
 } from "../rules/index.ts";
-import { inkWithPills } from "../ui/namePills.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { plainMarks } from "../ui/pixelFont.ts";
-import { GREYED } from "../ui/selection.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { GREYED, inkWithPills, PALETTE, plainMarks, TEXT_SCALE } from "../ui/index.ts";
 import { type CardCharm, optionMarks } from "./buffMarks.ts";
 import { largeBodyText, plaqueTexts, smallCardText } from "./cardText.ts";
 

@@ -7,13 +7,23 @@ import {
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { DOG_SLOTS } from "../data/dogSlots.ts";
-import { BODY_PITCH, LABEL_VALUE_GAP, PAGE, SHOP_PAGE } from "../data/index.ts";
-import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { MODAL } from "../ui/modal/layout.ts";
-import { PAGE_LAYOUT, PAGE_TITLE_ROW } from "../ui/pageLayout.ts";
-import { plainMarks } from "../ui/pixelFont.ts";
-import { SELECT_OUTSET } from "../ui/selection.ts";
-import { TEXT_SCALE, TEXT_STYLE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
+import {
+  BODY_PITCH,
+  BUTTON_SIZE,
+  LABEL_VALUE_GAP,
+  PAGE,
+  SELECT_OUTSET,
+  SHOP_PAGE,
+} from "../data/index.ts";
+import {
+  MODAL,
+  PAGE_LAYOUT,
+  PAGE_TITLE_ROW,
+  plainMarks,
+  TEXT_SCALE,
+  TEXT_STYLE,
+  TITLE_CAP_ROWS,
+} from "../ui/index.ts";
 import { FEEDBACK } from "./feedback.ts";
 
 // The Pet shop page under the home screen's top bar, which stays in view with the bank: a

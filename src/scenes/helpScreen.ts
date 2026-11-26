@@ -1,6 +1,6 @@
 import type { Scene } from "phaser";
 
-import type { OverlayRegion } from "../home/homeBar.ts";
+import type { OverlayRegion } from "../home/index.ts";
 import { openOverlay, type OverlayData } from "./overlay.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 

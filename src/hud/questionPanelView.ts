@@ -2,19 +2,21 @@ import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { sentences } from "@andornaut/game-kit/runtime/lines";
 import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { withKeyNumber } from "../input/keyNumbers.ts";
-import { barTitleRoom } from "../ui/barTitle.ts";
-import { closeControl } from "../ui/closeControl.ts";
-import { modalActionWidth, modalTitleLayout } from "../ui/modal/layout.ts";
-import { cardTitleRow } from "../ui/modal/titleRow.ts";
-import type {
-  PanelButton,
-  PanelMeasure,
-  PanelNotePart,
-  PanelText,
-  QuestionPanelView,
-} from "../ui/modal/types.ts";
-import { panelButton, panelTitle } from "../ui/modal/view.ts";
+import { withKeyNumber } from "../input/index.ts";
+import {
+  barTitleRoom,
+  cardTitleRow,
+  closeControl,
+  modalActionWidth,
+  modalTitleLayout,
+  type PanelButton,
+  panelButton,
+  type PanelMeasure,
+  type PanelNotePart,
+  type PanelText,
+  panelTitle,
+  type QuestionPanelView,
+} from "../ui/index.ts";
 import { NOTE_PLATE, notePartTops, noteTextRoom, questionLayout } from "./pauseMenu.ts";
 
 export interface PanelQuestion {

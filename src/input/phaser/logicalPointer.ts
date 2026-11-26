@@ -1,7 +1,7 @@
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { Input, Scene } from "phaser";
 
-import { deviceFitOwned, logicalWorldPoint, worldFit } from "../../ui/worldFit.ts";
+import { deviceFitOwned, logicalWorldPoint, worldFit } from "../../ui/index.ts";
 import { canvasPressAllowed } from "./pressAdmission.ts";
 
 export type LogicalPointer = Point &

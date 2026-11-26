@@ -3,7 +3,7 @@ import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
 import { type Random, randomStream } from "@andornaut/game-kit/runtime/random";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
-import type { InputEvent } from "../cheats/inputLog.ts";
+import type { InputEvent } from "../cheats/index.ts";
 import type { AchievementId, DebuffId, DogId, GearId, WalkerId, ZoneId } from "../data/ids.ts";
 import { type GameData, LANE_COUNT } from "../data/index.ts";
 import {

@@ -5,17 +5,22 @@ import { Math as PhaserMath, Scene } from "phaser";
 import { ZONE_CELEBRATION_ART as ART } from "../assets/index.ts";
 import { playFirstTag } from "../assets/phaser/sprites.ts";
 import { gameData, MENU_BUTTON_KEY_GAP } from "../data/index.ts";
-import { CELEBRATION_LAYOUT as LAYOUT } from "../hud/celebrationLayout.ts";
-import { zoneCelebrationView } from "../hud/celebrationView.ts";
 import { showZoneCelebration } from "../hud/dom/celebration.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
 import {
+  CELEBRATION_LAYOUT as LAYOUT,
   celebrationAdvance,
   celebrationText,
   type ZoneCelebration,
-} from "../hud/zoneCelebration.ts";
-import { cardNumberForKey, isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
-import { keyNumbersShown } from "../input/keyNumbers.ts";
+  zoneCelebrationView,
+} from "../hud/index.ts";
+import {
+  cardNumberForKey,
+  isConfirmKey,
+  isPauseKey,
+  keyNumbersShown,
+  menuKeyActs,
+} from "../input/index.ts";
 import { displayBitmapFont } from "../ui/phaser/displayText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { addConfetti } from "./badges.ts";

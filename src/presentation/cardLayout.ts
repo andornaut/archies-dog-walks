@@ -6,12 +6,9 @@ import {
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
-import { CHOICE_CARDS } from "../data/index.ts";
+import { BUTTON_SIZE, CARD_HEADER, CHOICE_CARDS, PILL_IMAGE_GAP } from "../data/index.ts";
 import { CARD_CHARMS_HEIGHT } from "../layout/index.ts";
-import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { CARD_HEADER, cardRowRects, type CardRowSpec } from "../ui/cardRow.ts";
-import { PILL_IMAGE_GAP, pillRiseOverCaps } from "../ui/namePills.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { cardRowRects, type CardRowSpec, pillRiseOverCaps, TEXT_SCALE } from "../ui/index.ts";
 
 // The choice cards: the card-frame sprite's parts in card pixels, the row of cards centred
 // on the road, and the enlarged card a hold opens, card-frame-large, centred in the dimmed band

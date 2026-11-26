@@ -2,7 +2,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
 import { gameData, SCREEN_CONFIG } from "../data/index.ts";
-import { LIST_FLING, type ScrollRule } from "../input/listScroll.ts";
+import { LIST_FLING, type ScrollRule } from "../input/index.ts";
 import { read } from "../rules/index.ts";
 import { paintRectMask } from "./rectMask.ts";
 

@@ -6,7 +6,7 @@ import { playEffect } from "../assets/phaser/sprites.ts";
 import type { EncounterId } from "../data/ids.ts";
 import { type Encounter, SCREEN_CONFIG } from "../data/index.ts";
 import { burstWordPlace, COMIC_WORDS, encounterFlashColour } from "../layout/index.ts";
-import { PALETTE } from "../ui/palette.ts";
+import { PALETTE } from "../ui/index.ts";
 import { addDisplayText } from "../ui/phaser/displayText.ts";
 import { letterEffect, loadedComicWordWidth } from "./comicWord.ts";
 import { addNineSlice, tagFrame } from "./uiKit.ts";

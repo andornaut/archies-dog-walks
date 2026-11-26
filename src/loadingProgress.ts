@@ -5,7 +5,7 @@ import {
 
 import { requiredUpdateProgress } from "./pwa/requiredUpdate.ts";
 import { acceptedUpdateProgress } from "./pwa/updateAcceptance.ts";
-import { LOADING_TIMING } from "./ui/progressBar.ts";
+import { LOADING_TIMING } from "./ui/index.ts";
 
 // The loads the player waits for, one at a time: boot (with a resumed walk's art behind the
 // loading screen) and Start walk's wait for the walk's art, measured by settled files (the kit's

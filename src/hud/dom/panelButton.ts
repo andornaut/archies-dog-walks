@@ -4,8 +4,7 @@ import type { ButtonView } from "@andornaut/game-kit/runtime/web/ui/dom/button";
 
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { createTextLine, placeBox, placeFrame, placeText } from "../../ui/dom/pixelLine.ts";
-import type { DomScale } from "../../ui/domScale.ts";
-import type { PanelButton } from "../../ui/modal/types.ts";
+import type { DomScale, PanelButton } from "../../ui/index.ts";
 
 const ORIGIN = { x: 0, y: 0 };
 

@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import type { PageTab } from "../../home/shopPageView.ts";
+import type { PageTab } from "../../home/index.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import type { DomPart } from "../../ui/dom/parts.ts";
 import { createTextLine, placeBox, placeText } from "../../ui/dom/pixelLine.ts";

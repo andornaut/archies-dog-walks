@@ -1,9 +1,8 @@
 import { browserExitPage, exitApp } from "@andornaut/game-kit/runtime/web/pwa/dom/exitApp";
 import type { Scene } from "phaser";
 
-import { homeBarAction, homeBarButtonAt } from "../home/homeBar.ts";
-import type { HomeBarButton } from "../home/homeLayout.ts";
-import { openGuard } from "../input/openGuard.ts";
+import { homeBarAction, type HomeBarButton, homeBarButtonAt } from "../home/index.ts";
+import { openGuard } from "../input/index.ts";
 import { exitShown } from "../pwa/index.ts";
 import { whenArtReady } from "./artReady.ts";
 import { openHelp } from "./helpScreen.ts";

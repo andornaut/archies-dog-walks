@@ -8,7 +8,7 @@ import {
   project,
   type RoadProjection,
 } from "../layout/index.ts";
-import { glyphAdvance, normalizePixelText, PIXEL_GLYPHS } from "../ui/pixelFont.ts";
+import { glyphAdvance, normalizePixelText, PIXEL_GLYPHS } from "../ui/index.ts";
 
 // npm run art:depth-preview: a road sprite drawn as the game draws it at a sweep of
 // distances, through the walk's projection and depthDraw. These are the pure parts; the

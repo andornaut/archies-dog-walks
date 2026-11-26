@@ -1,8 +1,7 @@
 import { wrapWords } from "@andornaut/game-kit/runtime/lines";
 import { type BitmapFont, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { type LineInk, lineInk } from "../ui/lineInk.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { type LineInk, lineInk, TEXT_SCALE } from "../ui/index.ts";
 
 export interface OwnerNameLine {
   readonly ink: LineInk;

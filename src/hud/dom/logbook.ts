@@ -3,16 +3,19 @@ import "./logbook.css";
 import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { textPart } from "../../home/dom/detailText.ts";
-import type { LogbookView } from "../../home/logbookView.ts";
-import type { ShopPageView } from "../../home/shopPageView.ts";
-import { STATS_LAYOUT, statsTabRects } from "../../home/statsLayout.ts";
+import {
+  type LogbookView,
+  type ShopPageView,
+  STATS_LAYOUT,
+  statsTabRects,
+} from "../../home/index.ts";
 import { contentSeparatorPart } from "../../ui/dom/contentSeparator.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import type { NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import { type DomPart, fillPart, framedBoxPart } from "../../ui/dom/parts.ts";
 import { setBox } from "../../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { type DomScale, gridRect, wholeArtPixels } from "../../ui/domScale.ts";
+import { type DomScale, gridRect, wholeArtPixels } from "../../ui/index.ts";
 import { artPart, type DomDetailCardInput } from "./detailCard.ts";
 import { type DomPage, showPage } from "./page.ts";
 import { bindPanelFeedback } from "./panelButton.ts";

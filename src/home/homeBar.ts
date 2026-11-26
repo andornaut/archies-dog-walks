@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { SCREEN_LAYOUT } from "../layout/index.ts";
-import { topSectionButtonAt } from "../ui/topSection.ts";
+import { topSectionButtonAt } from "../ui/index.ts";
 import { HOME_LAYOUT, type HomeBarButton, homeBarShown } from "./homeLayout.ts";
 
 // Where an overlay sits: on a home page (the start screen, the Pet shop, the Logbook), or on a

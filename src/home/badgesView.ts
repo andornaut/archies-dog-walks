@@ -14,13 +14,10 @@ import {
   SCREEN_CONFIG,
 } from "../data/index.ts";
 import { MIN_TAP_SIZE } from "../layout/index.ts";
-import { dollarText } from "../presentation/currency.ts";
+import { dollarText } from "../presentation/index.ts";
 import { type AchievementData, conditionTarget, isMoneyCondition } from "../rules/index.ts";
 import { achievementJudge, type SaveDocument } from "../save/index.ts";
-import { closeControl } from "../ui/closeControl.ts";
-import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
-import { GREYED } from "../ui/selection.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { closeControl, GREYED, MODAL, modalFamilyWidth, TEXT_SCALE } from "../ui/index.ts";
 import { dollarsToCents } from "../units.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 

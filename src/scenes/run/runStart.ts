@@ -1,8 +1,6 @@
 import { type Random, randomStream } from "@andornaut/game-kit/runtime/random";
 
-import { WALK_CHEATS_OFF } from "../../cheats/cheats.ts";
-import type { RunSetup } from "../../cheats/runSetup.ts";
-import { loadoutFor } from "../../cheats/setupRun.ts";
+import { loadoutFor, type RunSetup, WALK_CHEATS_OFF } from "../../cheats/index.ts";
 import type { DogId } from "../../data/ids.ts";
 import type { ResumeWalk } from "../../save/index.ts";
 import type { Loadout, PackDogs } from "../../state/index.ts";

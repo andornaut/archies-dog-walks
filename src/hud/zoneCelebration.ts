@@ -1,10 +1,10 @@
 import { fillLine, fillNames } from "@andornaut/game-kit/runtime/lines";
 
+import { perkIconKey } from "../assets/index.ts";
 import type { WalkerId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
-import { earningsKind } from "../home/endView.ts";
-import { signedDollarText } from "../presentation/currency.ts";
-import { perkIconKey } from "../presentation/effectIcons.ts";
+import { earningsKind } from "../home/index.ts";
+import { signedDollarText } from "../presentation/index.ts";
 import { agilityPercent, type Change, newWalkers } from "../rules/index.ts";
 import type { RunState } from "../state/index.ts";
 import { type Cents, cents } from "../units.ts";

@@ -6,7 +6,7 @@ import type {
   PlacedFormRowEntry,
 } from "@andornaut/game-kit/runtime/web/ui/dom/formRow";
 
-import { artPixel, type DomScale, gridX, gridY } from "../domScale.ts";
+import { artPixel, type DomScale, gridX, gridY } from "../index.ts";
 import type { DomArtSource } from "./artElements.ts";
 import { cutDomFrame } from "./domCuts.ts";
 

@@ -2,8 +2,7 @@ import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { Events } from "phaser";
 
 import type { DogId } from "../data/ids.ts";
-import type { RunPause } from "../hud/topBar.ts";
-import type { ExplainTarget } from "../hud/walkHud.ts";
+import type { ExplainTarget, RunPause } from "../hud/index.ts";
 import type { RunState } from "../state/index.ts";
 import type { PauseSceneData } from "./PauseScene.ts";
 

@@ -23,7 +23,7 @@ import {
   parseManifest,
   usesPhaserArt,
 } from "../../assets/index.ts";
-import { disabledArtKey, greyForDisabledTile, greysOnTile } from "../../ui/disabledArt.ts";
+import { disabledArtKey, greyForDisabledTile, greysOnTile } from "../../ui/index.ts";
 import {
   EXTRUDE,
   imageSource,

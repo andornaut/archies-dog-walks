@@ -1,5 +1,5 @@
 import type { DogId, GearId, WalkerId } from "../data/ids.ts";
-import type { HomeLoadout } from "../home/home.ts";
+import type { HomeLoadout } from "../home/index.ts";
 import { type Loadout, packDogsOf } from "../state/index.ts";
 import { PARAM_NAMES, type RunSetup } from "./runSetup.ts";
 import { loadoutFor } from "./setupRun.ts";

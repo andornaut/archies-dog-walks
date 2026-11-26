@@ -5,7 +5,7 @@ import { HOME_TEXT_FIELDS, homeLine } from "../content/index.ts";
 import type { GameData } from "../data/index.ts";
 import { capitalize, gearShort, unlockPrice } from "../rules/index.ts";
 import type { Owned } from "../save/index.ts";
-import type { ItemLook } from "../ui/interaction.ts";
+import type { ItemLook } from "../ui/index.ts";
 import type { Cents } from "../units.ts";
 import { purchases } from "./afford.ts";
 import {

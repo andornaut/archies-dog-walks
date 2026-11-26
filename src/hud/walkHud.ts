@@ -21,16 +21,19 @@ import {
   WALK_BAR_PARTS,
 } from "../data/index.ts";
 import type { ScreenLayout } from "../layout/index.ts";
-import { type EffectItem, maxEffects } from "../presentation/effectIcons.ts";
-import type { OwnerNameLine } from "../presentation/ownerName.ts";
+import { type EffectItem, maxEffects, type OwnerNameLine } from "../presentation/index.ts";
 import { walkLength } from "../rules/index.ts";
 import { zoneLength } from "../runner/index.ts";
 import type { RunState } from "../state/index.ts";
-import { lineInk } from "../ui/lineInk.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { GAME_PROGRESS, GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";
-import { TOP_BAR_FACE } from "../ui/topBarTrim.ts";
-import { TOP_SECTION_CURRENCY_TEXT, topSectionLayout } from "../ui/topSection.ts";
+import {
+  GAME_PROGRESS,
+  GAME_PROGRESS_STYLE,
+  lineInk,
+  PALETTE,
+  TOP_BAR_FACE,
+  TOP_SECTION_CURRENCY_TEXT,
+  topSectionLayout,
+} from "../ui/index.ts";
 import { heartRows } from "./hudView.ts";
 
 // The walk screen's HUD: the walk bar (ui-walk-bar) across the top, a full-width bar per active

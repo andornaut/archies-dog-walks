@@ -13,7 +13,7 @@ import {
   SCREEN_CONFIG,
 } from "../data/index.ts";
 import { laneCentreXs, ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/index.ts";
-import { cardRowIn } from "../presentation/cardLayout.ts";
+import { cardRowIn } from "../presentation/index.ts";
 import {
   cardFor,
   type CardView,

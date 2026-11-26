@@ -1,9 +1,16 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { closeControl } from "../closeControl.ts";
-import { artPixel, type DomScale, frameRect, gridRect, gridX, gridY } from "../domScale.ts";
-import type { QuestionPanelView } from "../modal/types.ts";
-import { cssHex } from "../palette.ts";
+import {
+  artPixel,
+  closeControl,
+  cssHex,
+  type DomScale,
+  frameRect,
+  gridRect,
+  gridX,
+  gridY,
+  type QuestionPanelView,
+} from "../index.ts";
 import { placeBox, placeFrame, setBox } from "./pixelLine.ts";
 
 // The HTML interface's shared parts: boxes of one colour, framed boxes, nine-slice panel frames

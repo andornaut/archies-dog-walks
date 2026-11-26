@@ -7,10 +7,8 @@ import {
   type NativeSelectionTile,
   type NativeTileFill,
 } from "../../home/dom/selectionTile.ts";
-import { FEEDBACK } from "../../home/feedback.ts";
-import { SHOP_LAYOUT, shopTabRects } from "../../home/shopLayout.ts";
-import type { ShopPageView } from "../../home/shopPageView.ts";
-import { isConfirmKey } from "../../input/keyBindings.ts";
+import { FEEDBACK, SHOP_LAYOUT, type ShopPageView, shopTabRects } from "../../home/index.ts";
+import { isConfirmKey } from "../../input/index.ts";
 import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { type DomPart, gridFillPart } from "../../ui/dom/parts.ts";
@@ -26,11 +24,15 @@ import {
 } from "../../ui/dom/pixelLine.ts";
 import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { fontPixel, gridRect, gridX } from "../../ui/domScale.ts";
-import type { TileState } from "../../ui/interaction.ts";
-import type { PanelText } from "../../ui/modal/types.ts";
-import { PALETTE } from "../../ui/palette.ts";
-import { TEXT_SCALE } from "../../ui/textFit.ts";
+import {
+  fontPixel,
+  gridRect,
+  gridX,
+  PALETTE,
+  type PanelText,
+  TEXT_SCALE,
+  type TileState,
+} from "../../ui/index.ts";
 import { scrollPlace } from "./logbook.ts";
 import { type DomPage, showPage } from "./page.ts";
 import { bindPanelFeedback } from "./panelButton.ts";

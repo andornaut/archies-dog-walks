@@ -9,9 +9,8 @@ import {
 import { ownerFaceKey } from "../assets/index.ts";
 import type { DogId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
-import { withNamePills } from "../presentation/effectNames.ts";
-import { plainMarks } from "../ui/pixelFont.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { withNamePills } from "../presentation/index.ts";
+import { plainMarks, TEXT_SCALE } from "../ui/index.ts";
 import { bubbleLines, bubbleRect, bubbleSize, ownerColumn, ownerPlace } from "./bubbleRect.ts";
 import { HOME_LAYOUT } from "./homeLayout.ts";
 export interface HomeSpeechView {

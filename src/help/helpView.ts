@@ -1,15 +1,18 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import type { GameData } from "../data/index.ts";
-import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
-import { modalActionWidth } from "../ui/modal/layout.ts";
-import type { PanelButton, PanelMeasure, PanelText } from "../ui/modal/types.ts";
-import { panelButton } from "../ui/modal/view.ts";
-import { pageBack } from "../ui/pageLayout.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { BUTTON_COLOURS } from "../ui/selection.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { type GameData, LABEL_HELP_GAP } from "../data/index.ts";
+import {
+  BUTTON_COLOURS,
+  modalActionWidth,
+  pageBack,
+  PALETTE,
+  type PanelButton,
+  panelButton,
+  type PanelMeasure,
+  type PanelText,
+  TEXT_SCALE,
+} from "../ui/index.ts";
 import { helpBody } from "./helpBody.ts";
 import { dotRects, FRAME_LINES, HELP_LAYOUT, helpPager } from "./helpLayout.ts";
 import { clampPage, helpButtons } from "./helpPaging.ts";

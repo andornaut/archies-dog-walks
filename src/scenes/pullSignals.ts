@@ -4,8 +4,7 @@ import type { GameObjects, Scene } from "phaser";
 import { PULL_ART } from "../assets/index.ts";
 import { playEffect, playTag, playTagOnce, spriteTopY } from "../assets/phaser/sprites.ts";
 import type { DogId } from "../data/ids.ts";
-import { arrowheadPixels } from "../ui/arrowhead.ts";
-import { cssHex, PALETTE } from "../ui/palette.ts";
+import { arrowheadPixels, cssHex, PALETTE } from "../ui/index.ts";
 
 // A frame of a texture: its first frame when frame is absent.
 interface IconArt {

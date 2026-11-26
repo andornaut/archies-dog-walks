@@ -2,8 +2,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { END_SCREEN } from "../data/index.ts";
-import { helpCapDy } from "../ui/labelHelpGap.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { helpCapDy, TEXT_SCALE } from "../ui/index.ts";
 import { badgeStripMinHeight, badgeStripRows } from "./badgesView.ts";
 import { HOME_LAYOUT } from "./homeLayout.ts";
 

@@ -2,20 +2,16 @@ import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { Scene } from "phaser";
 
 import { ownerCardFaceKey } from "../assets/index.ts";
-import { gameData, SLICES } from "../data/index.ts";
+import { gameData, MESSAGE_STRIP, SLICES } from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import {
+  EMPTY_MESSAGE_STRIP,
   type FaceText,
   faceTextWithNamePills,
   inlineFaceBox,
-  withoutFace,
-} from "../hud/faceText.ts";
-import {
-  EMPTY_MESSAGE_STRIP,
   isOwnerLead,
   lineAlpha,
   linePlace,
-  MESSAGE_STRIP,
   messageIconKey,
   type MessageLine,
   messageRows,
@@ -28,11 +24,10 @@ import {
   sayLineAhead,
   stepMessageStrip,
   stripLeadSlot,
-} from "../hud/messageStrip.ts";
-import type { NameMark } from "../presentation/effectNames.ts";
-import { lineInk } from "../ui/lineInk.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+  withoutFace,
+} from "../hud/index.ts";
+import type { NameMark } from "../presentation/index.ts";
+import { lineInk, PALETTE, TEXT_SCALE } from "../ui/index.ts";
 // A line said from the run scene, as a MessageLine: the HUD shows it on its message strip.
 export const MESSAGE_EVENT = "message";
 // Says a line on the walk's message strip from the run scene.

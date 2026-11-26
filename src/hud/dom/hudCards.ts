@@ -3,7 +3,7 @@ import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { dogCardTag, dogFaceKey, domArtPath, ownerFaceKey } from "../../assets/index.ts";
 import { type GameData, SCREEN_CONFIG } from "../../data/index.ts";
-import { loopFrame } from "../../home/feedback.ts";
+import { loopFrame } from "../../home/index.ts";
 import { SCREEN_LAYOUT } from "../../layout/index.ts";
 import { faceMood, ownerMaxHearts } from "../../rules/index.ts";
 import type { RunState } from "../../state/index.ts";
@@ -18,18 +18,24 @@ import {
 } from "../../ui/dom/pixelLine.ts";
 import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, deviceX, deviceY, type DomScale, gridTransform } from "../../ui/domScale.ts";
-import { PALETTE } from "../../ui/palette.ts";
-import { FEEDBACK } from "../feedback.ts";
-import { cardOwnerMood } from "../moments.ts";
+import {
+  artPixel,
+  deviceX,
+  deviceY,
+  type DomScale,
+  gridTransform,
+  PALETTE,
+} from "../../ui/index.ts";
 import {
   cardHearts,
+  cardOwnerMood,
   DOG_CARD,
   dogCardEmptyFace,
+  FEEDBACK,
   hudOwnerName,
   leadSlot,
   slotShown,
-} from "../walkHud.ts";
+} from "../index.ts";
 
 export interface HudCardsContext {
   readonly momentNow: number;

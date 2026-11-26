@@ -2,8 +2,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { Core, type Game, type GameObjects, type Scene, Scenes } from "phaser";
 
 import { SCREEN_LAYOUT } from "../../layout/index.ts";
-import { MODAL_DARKNESS } from "../dimArt.ts";
-import { shownWorldRect } from "../worldFit.ts";
+import { MODAL_DARKNESS, shownWorldRect } from "../index.ts";
 import { fitWorldCamera } from "./worldCamera.ts";
 
 interface ShadeRequest {

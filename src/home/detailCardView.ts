@@ -4,26 +4,26 @@ import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 
 import { DETAIL_WELL_KEY, ownerFaceKey } from "../assets/index.ts";
-import type { GameData } from "../data/index.ts";
+import { BUTTON_SIZE, type GameData } from "../data/index.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
-import { withNamePills } from "../presentation/effectNames.ts";
-import { barTitleRoom } from "../ui/barTitle.ts";
-import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { closeControl } from "../ui/closeControl.ts";
-import { dismissFooter } from "../ui/modal/dismissFooter.ts";
+import { withNamePills } from "../presentation/index.ts";
 import {
+  barTitleRoom,
+  cardTitleRow,
+  closeControl,
+  dismissFooter,
   MODAL,
   modalActionWidth,
+  modalCardView,
   modalFamilyWidth,
   modalRect,
   modalTitleLayout,
-} from "../ui/modal/layout.ts";
-import { cardTitleRow } from "../ui/modal/titleRow.ts";
-import type { PanelMeasure, QuestionPanelView } from "../ui/modal/types.ts";
-import { modalCardView } from "../ui/modal/view.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { separatorBetween } from "../ui/separator.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+  PALETTE,
+  type PanelMeasure,
+  type QuestionPanelView,
+  separatorBetween,
+  TEXT_SCALE,
+} from "../ui/index.ts";
 import { type DetailCard, type DetailPart, detailParts, type DetailPicture } from "./detail.ts";
 import {
   cardTextRooms,

@@ -2,8 +2,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import type { GearId } from "../data/ids.ts";
 import { type GameData, GEAR_ICON } from "../data/index.ts";
-import type { PanelText } from "../ui/modal/types.ts";
-import { PALETTE } from "../ui/palette.ts";
+import { PALETTE, type PanelText } from "../ui/index.ts";
 
 // A gear item's authored initials, shown in place of its missing art, their ink centred on the
 // picture they stand in for (placeBackedText).

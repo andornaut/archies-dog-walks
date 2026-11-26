@@ -2,30 +2,33 @@ import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Scene } from "phaser";
 
 import type { AchievementId, DogId } from "../data/ids.ts";
-import { FACE_SIZE, gameData } from "../data/index.ts";
+import { BADGE_STRIP, FACE_SIZE, gameData } from "../data/index.ts";
 import {
-  BADGE_STRIP,
   badgeRowNames,
   badgeStripRows,
   CELEBRATION_PANEL,
   celebrationTitle,
   earnedBadges,
+  overlayRegion,
   stripUnderClose,
-} from "../home/badgesView.ts";
-import { overlayRegion } from "../home/homeBar.ts";
-import { ordinaryBadgeModalLayout } from "../hud/celebrationLayout.ts";
-import { isConfirmKey, isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
-import { screenArea } from "../input/outsideTap.ts";
+} from "../home/index.ts";
+import { ordinaryBadgeModalLayout } from "../hud/index.ts";
+import { isConfirmKey, isPauseKey, menuKeyActs, screenArea } from "../input/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { achievementLabel } from "../rules/index.ts";
-import { barTitleRoom } from "../ui/barTitle.ts";
-import { closeControl } from "../ui/closeControl.ts";
-import { MODAL, modalActionWidth, modalTitleLayout } from "../ui/modal/layout.ts";
-import { cardTitleRow } from "../ui/modal/titleRow.ts";
-import { panelButton, panelTitle } from "../ui/modal/view.ts";
+import {
+  barTitleRoom,
+  cardTitleRow,
+  closeControl,
+  MODAL,
+  modalActionWidth,
+  modalTitleLayout,
+  panelButton,
+  panelTitle,
+  TEXT_SCALE,
+} from "../ui/index.ts";
 import { labelInkWidth, pixelFontMetrics, withProbe } from "../ui/phaser/pixelText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
 import { badgeCelebrationNames } from "./badges.ts";
 import { clearOnHomePageOpening } from "./homeBarPress.ts";
 import { canvasPanelMeasure, modalTextWidth } from "./modalMeasure.ts";

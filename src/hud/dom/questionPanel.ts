@@ -4,9 +4,8 @@ import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 
 import { BUTTON_SIZE, type GameData, SCREEN_CONFIG } from "../../data/index.ts";
-import { MENU_TEXT_FIELDS } from "../../home/menuText.ts";
-import { cardNumberForKey, isConfirmKey, menuKeyActs } from "../../input/keyBindings.ts";
-import { closeFace } from "../../ui/closeControl.ts";
+import { MENU_TEXT_FIELDS } from "../../home/index.ts";
+import { cardNumberForKey, isConfirmKey, menuKeyActs } from "../../input/index.ts";
 import { bindGameAction } from "../../ui/dom/actionBinding.ts";
 import { createControlGlyph } from "../../ui/dom/controlGlyph.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
@@ -26,6 +25,7 @@ import { refuse } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import {
   artPixel,
+  closeFace,
   deviceX,
   deviceY,
   type DomScale,
@@ -33,10 +33,11 @@ import {
   gridTransform,
   gridX,
   gridY,
+  MODAL,
+  type PanelText,
+  type QuestionPanelView,
   wholeArtPixels,
-} from "../../ui/domScale.ts";
-import { MODAL } from "../../ui/modal/layout.ts";
-import type { PanelText, QuestionPanelView } from "../../ui/modal/types.ts";
+} from "../../ui/index.ts";
 import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
 
 // The pause menu, each question (the Home question, Quit?) and each modal card (the update

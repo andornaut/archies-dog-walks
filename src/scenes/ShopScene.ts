@@ -7,43 +7,41 @@ import { Scene } from "phaser";
 import { domArtUrl } from "../assets/files/index.ts";
 import { dogFaceKey, gearIconKey } from "../assets/index.ts";
 import { CHECK_SIZE, gameData, PLATE_PAD } from "../data/index.ts";
-import { FEEDBACK, shakeOffset } from "../home/feedback.ts";
-import type { Purchase } from "../home/home.ts";
-import { overlayRegion } from "../home/homeBar.ts";
-import { type HomeAction, messageLine } from "../home/homeLines.ts";
-import { itemModal } from "../home/itemModal.ts";
-import { pricePlateView } from "../home/pricePlateView.ts";
 import {
   answerPurchase,
   type ConfirmChoice,
-  type PendingPurchase,
-} from "../home/purchaseConfirm.ts";
-import {
   dogRows,
+  FEEDBACK,
   gearRows,
+  type HomeAction,
+  itemModal,
+  messageLine,
+  overlayRegion,
   ownedCountNote,
-  SHOP_ROW_VIEWS,
-  SHOP_TABS,
-  shopOpenTab,
-  type ShopRow,
-  shopRowId,
-  shopRowLook,
-  type ShopTab,
-  slotRows,
-} from "../home/shop.ts";
-import {
+  type PendingPurchase,
+  pricePlateView,
+  type Purchase,
+  shakeOffset,
   SHOP_LAYOUT,
   SHOP_MESSAGE_FIT,
+  SHOP_ROW_VIEWS,
+  SHOP_TABS,
   shopHeadingBand,
   shopListFrame,
   shopMessageLayout,
   shopNextHeading,
+  shopOpenTab,
+  shopPageView,
+  type ShopRow,
+  shopRowId,
+  shopRowLook,
   shopRowsBottom,
   shopRowTextLayout,
   shopRowTextRoom,
+  type ShopTab,
   shopTabRects,
-} from "../home/shopLayout.ts";
-import { shopPageView } from "../home/shopPageView.ts";
+  slotRows,
+} from "../home/index.ts";
 import { addTapBurst as addNativeTapBurst } from "../hud/dom/questionPanel.ts";
 import {
   type NativeShopScreen,
@@ -52,16 +50,14 @@ import {
   showShopScreen,
 } from "../hud/dom/shopScreen.ts";
 import {
+  dragScroll,
   focusDirectionForKey,
   isConfirmKey,
-  isPauseKey,
-  menuKeyActs,
-} from "../input/keyBindings.ts";
-import {
-  dragScroll,
   isDragging,
+  isPauseKey,
   type ListScroll,
   listScroll,
+  menuKeyActs,
   pageKeyScroll,
   pressScroll,
   releaseScroll,
@@ -70,19 +66,24 @@ import {
   scrollToShow,
   stepScroll,
   wheelScroll,
-} from "../input/listScroll.ts";
-import { dollarText } from "../presentation/currency.ts";
+} from "../input/index.ts";
+import { dollarText } from "../presentation/index.ts";
 import type { SaveDocument } from "../save/index.ts";
-import { disabledArtKey } from "../ui/disabledArt.ts";
 import { shownText } from "../ui/dom/pixelLine.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
-import type { PanelMeasure, PanelText } from "../ui/modal/types.ts";
-import { stackRows } from "../ui/pageLayout.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { refusalRed } from "../ui/refuse.ts";
-import { GREYED, pictureBox, selectLook } from "../ui/selection.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import {
+  disabledArtKey,
+  GREYED,
+  PALETTE,
+  type PanelMeasure,
+  type PanelText,
+  pictureBox,
+  refusalRed,
+  selectLook,
+  stackRows,
+  TEXT_SCALE,
+} from "../ui/index.ts";
 import { cents } from "../units.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
 import { listenHomeBar } from "./homeBarPress.ts";

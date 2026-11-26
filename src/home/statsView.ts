@@ -3,7 +3,7 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { DogId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
-import { dollarText } from "../presentation/currency.ts";
+import { dollarText } from "../presentation/index.ts";
 import {
   type DogStats,
   type Owned,

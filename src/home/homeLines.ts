@@ -5,7 +5,7 @@ import type { RequiredUpdateState } from "@andornaut/game-kit/runtime/web/pwa/do
 import { HOME_TEXT_FIELDS, homeLine } from "../content/index.ts";
 import type { DogId, WalkerId } from "../data/ids.ts";
 import type { GameData, HomeText } from "../data/index.ts";
-import { dollarText } from "../presentation/currency.ts";
+import { dollarText } from "../presentation/index.ts";
 import { modifiersOf, packPlace, packSizeRaise, walkerOrder } from "../rules/index.ts";
 import { type LastWalk, MAX_RUN_DOGS, type Owned, type StorageState } from "../save/index.ts";
 import { packOrder } from "../state/index.ts";

@@ -3,18 +3,27 @@ import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { InstallStepsKind } from "@andornaut/game-kit/runtime/web/pwa/installState";
 
-import { BUILD_LABEL } from "../buildLabel.ts";
 import { ICON_LABEL_GAP, LABEL_ICON, type MenuText, SETTINGS_CARD } from "../data/index.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
 import type { Settings } from "../save/index.ts";
-import { iconBesideLabel } from "../ui/iconLabel.ts";
-import { dismissFooter } from "../ui/modal/dismissFooter.ts";
-import type { PanelButton, PanelMeasure, PanelText, QuestionPanelView } from "../ui/modal/types.ts";
-import { modalCardView, panelButton, panelTitle } from "../ui/modal/view.ts";
-import { PAGE_LAYOUT, PAGE_TITLE_ROW, pageBack } from "../ui/pageLayout.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { GREYED, selectLook } from "../ui/selection.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import {
+  dismissFooter,
+  GREYED,
+  iconBesideLabel,
+  modalCardView,
+  PAGE_LAYOUT,
+  PAGE_TITLE_ROW,
+  pageBack,
+  PALETTE,
+  type PanelButton,
+  panelButton,
+  type PanelMeasure,
+  type PanelText,
+  panelTitle,
+  type QuestionPanelView,
+  selectLook,
+  TEXT_SCALE,
+} from "../ui/index.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import {
   INSTALL_STEPS_FIT,
@@ -456,19 +465,20 @@ function stepsView(
 }
 
 // The Settings page as it stands: its title and Back, each row, the separators over the rows (a
-// switch row's face covers its top row), the build's label ink-centred across the screen under
-// the body, and the install steps' card.
+// switch row's face covers its top row), the build's label (BUILD_LABEL, which the caller passes)
+// ink-centred across the screen under the body, and the install steps' card.
 export function settingsView(
   measure: SettingsMeasure,
   context: {
     readonly art: (key: string) => { readonly height: number; readonly width: number } | undefined;
+    readonly buildLabel: string;
     readonly layout: SettingsLayout;
     readonly rows: readonly SettingsRow[];
     readonly words: MenuText["settings"];
   },
   state: SettingsState,
 ): SettingsView {
-  const { layout, rows, words } = context;
+  const { buildLabel, layout, rows, words } = context;
   const { rect } = PAGE_LAYOUT;
   return {
     build: {
@@ -479,7 +489,7 @@ export function settingsView(
       font: "body",
       line: 0,
       scale: SETTINGS_BUILD_LABEL.style.scale,
-      text: BUILD_LABEL,
+      text: buildLabel,
     },
     page: {
       back: pageBack(measure, MENU_TEXT.pageBack),

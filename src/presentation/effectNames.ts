@@ -2,7 +2,7 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { DebuffId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
-import { inPill } from "../ui/namePills.ts";
+import { inPill } from "../ui/index.ts";
 
 // An effect's name where it sits beside its description, set in a pill of its kind's colours: a
 // debuff's own, or the one every buff (gear, a walker's perk or an upgrade) shares.

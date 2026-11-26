@@ -3,9 +3,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { dogFaceKey } from "../assets/index.ts";
 import type { GameData } from "../data/index.ts";
 import type { SaveDocument } from "../save/index.ts";
-import { stackRows } from "../ui/pageLayout.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { PALETTE, stackRows, TEXT_SCALE } from "../ui/index.ts";
 import {
   BADGE_STRIP,
   BADGE_TEXT_COLOURS,

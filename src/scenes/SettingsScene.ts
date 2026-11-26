@@ -3,36 +3,37 @@ import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import { Scene, Scenes } from "phaser";
 
+import { BUILD_LABEL } from "../buildLabel.ts";
 import { gameData } from "../data/index.ts";
-import { FEEDBACK } from "../home/feedback.ts";
-import { type Focus, moveFocus } from "../home/focus.ts";
-import { type OverlayRegion, overlayRegion } from "../home/homeBar.ts";
 import {
+  FEEDBACK,
+  type Focus,
   INSTALL_STEPS_FIT,
   type InstallStepsLayout,
   installStepsLayout,
+  moveFocus,
   noteRoomForControl,
+  type OverlayRegion,
+  overlayRegion,
+  SETTING_ROWS,
   SETTINGS_NOTE_STYLE,
   SETTINGS_ROW,
   type SettingsFonts,
   settingsInstallWidth,
   type SettingsLayout,
   settingsLayout,
-  type SettingsRowShape,
-  setVolumeSteps,
-  type VolumeKey,
-  volumeStepForKey,
-  volumeSteps,
-} from "../home/settings.ts";
-import {
-  SETTING_ROWS,
   type SettingsRow,
   settingsRows,
+  type SettingsRowShape,
   type SettingsTarget,
   type SettingsView,
   settingsView,
+  setVolumeSteps,
   type SwitchKey,
-} from "../home/settingsView.ts";
+  type VolumeKey,
+  volumeStepForKey,
+  volumeSteps,
+} from "../home/index.ts";
 import { coverHelpUnderlay } from "../hud/dom/helpUnderlay.ts";
 import type { DomSettings } from "../hud/dom/settings.ts";
 import {
@@ -41,7 +42,7 @@ import {
   isMuteKey,
   isPauseKey,
   menuKeyActs,
-} from "../input/keyBindings.ts";
+} from "../input/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
 import {
   installApp,
@@ -52,8 +53,7 @@ import {
   stepsKind,
 } from "../pwa/index.ts";
 import type { Settings } from "../save/index.ts";
-import { barTitleRoom } from "../ui/barTitle.ts";
-import { cardTitleRow } from "../ui/modal/titleRow.ts";
+import { barTitleRoom, cardTitleRow } from "../ui/index.ts";
 import {
   fitPixelText,
   labelInkWidth,
@@ -476,6 +476,7 @@ export class SettingsScene extends Scene {
           const frame = this.textures.getFrame(key);
           return { height: frame.realHeight, width: frame.realWidth };
         },
+        buildLabel: BUILD_LABEL,
         layout: this.layout,
         rows: this.rows,
         words: gameData.menuText.settings,

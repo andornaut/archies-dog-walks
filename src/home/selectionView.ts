@@ -5,8 +5,7 @@ import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { dogFaceKey, gearIconKey } from "../assets/index.ts";
 import type { DogId, GearId, WalkerId } from "../data/ids.ts";
 import { type GameData, PLATE_PAD } from "../data/index.ts";
-import { dollarText } from "../presentation/currency.ts";
-import { hudEffectIconKey, walkerEffectItems } from "../presentation/effectIcons.ts";
+import { dollarText, hudEffectIconKey, walkerEffectItems } from "../presentation/index.ts";
 import type { SaveDocument } from "../save/index.ts";
 import {
   type ArtLook,
@@ -14,10 +13,12 @@ import {
   type ItemTile,
   itemTile,
   itemTileLook,
-} from "../ui/interaction.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { pictureBox, type PlateKind, selectLook } from "../ui/selection.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+  PALETTE,
+  pictureBox,
+  type PlateKind,
+  selectLook,
+  TEXT_SCALE,
+} from "../ui/index.ts";
 import { type GearPictureFallback, gearPictureFallback } from "./gearPictureView.ts";
 import {
   type HomeLoadout,

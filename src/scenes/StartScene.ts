@@ -8,89 +8,92 @@ import { domArtUrl } from "../assets/files/index.ts";
 import { dogSpriteKey, gearIconKey, gearSmallIconKey, walkerPortraitKey } from "../assets/index.ts";
 import { MANIFEST_CACHE_KEY } from "../assets/phaser/manifestArt.ts";
 import { playEffect, spriteMetrics } from "../assets/phaser/sprites.ts";
-import { clearRunOverrides } from "../cheats/pageRunSetup.ts";
+import { clearRunOverrides } from "../cheats/index.ts";
 import type { DogId, GearId, WalkerId } from "../data/ids.ts";
 import { gameData, PLATE_PAD } from "../data/index.ts";
-import { startWalkOpensHelp } from "../help/helpSeen.ts";
-import { bankAtLastVisit, newlyAffordable } from "../home/afford.ts";
-import { type DetailPicture, walkerDetail } from "../home/detail.ts";
+import { startWalkOpensHelp } from "../help/index.ts";
 import { createNativeHomeView, type NativeHomeView } from "../home/dom/screen.ts";
 import { createNativeHomeSession } from "../home/dom/session.ts";
 import {
+  answerPurchase,
   badgePopOffset,
+  bankAtLastVisit,
   bobOffset,
-  FEEDBACK,
-  hopOffset,
-  pressDip,
-  settleDelay,
-  shakeOffset,
-} from "../home/feedback.ts";
-import { type Focus, moveFocus } from "../home/focus.ts";
-import { gearPictureFallback } from "../home/gearPictureView.ts";
-import {
-  dogInfo,
-  gearByPrice,
-  gearInfo,
-  type HomeLoadout,
-  partingSpeech,
-  type Purchase,
-  rosterRows,
-  tapDog,
-  tapGear,
-} from "../home/home.ts";
-import { homeBackAction, overlayRegion } from "../home/homeBar.ts";
-import { HOME_LAYOUT, homeBarButtons, tileFace } from "../home/homeLayout.ts";
-import {
   bubbleSpeech,
   bubbleTurnLine,
+  type DetailPicture,
+  dogInfo,
+  FEEDBACK,
+  type Focus,
+  gearByPrice,
+  gearInfo,
+  gearPictureFallback,
+  HOME_LAYOUT,
   type HomeAction,
+  homeBackAction,
+  homeBarButtons,
+  type HomeLoadout,
+  homeSections,
+  type HomeSelectionView,
+  homeSelectionViews,
+  homeSpeechView,
+  hopOffset,
+  itemModal,
+  moveFocus,
   networkPlayNotice,
+  newlyAffordable,
   noticeOrSpeech,
+  overlayRegion,
   packBonusLine,
+  partingSpeech,
+  type PendingPurchase,
+  porchOwners,
+  pressDip,
+  type Purchase,
   requiredNotice,
+  rosterRows,
+  type Sections,
+  settleDelay,
+  shakeOffset,
+  shopAffordable,
+  slotSign,
+  slotSignPurchase,
   storageNotice,
+  tapDog,
+  tapGear,
   tappedBubbleTurn,
+  tapWalker,
+  tileFace,
+  walkerDetail,
   type WalkerLine,
   walkerLineKey,
   walkerSays,
   walkersUnlockedSince,
-} from "../home/homeLines.ts";
-import { itemModal } from "../home/itemModal.ts";
+} from "../home/index.ts";
 import { renderHomeBackdrop } from "../home/phaser/homeBackdrop.ts";
 import { nativeFrames } from "../home/phaser/nativeFrames.ts";
-import { porchOwners } from "../home/porch.ts";
-import { answerPurchase, type PendingPurchase } from "../home/purchaseConfirm.ts";
-import { homeSections, type Sections } from "../home/sections.ts";
-import { type HomeSelectionView, homeSelectionViews } from "../home/selectionView.ts";
-import { shopAffordable } from "../home/shop.ts";
-import { slotSign, slotSignPurchase } from "../home/slotSign.ts";
-import { homeSpeechView } from "../home/speechView.ts";
-import { tapWalker } from "../home/walkers.ts";
-import { downTail } from "../hud/moments.ts";
-import {
-  type HoldPress,
-  holdRule,
-  moveHold,
-  releaseHold,
-  startHold,
-  tickHold,
-  TILE_SLOP_PX,
-} from "../input/hold.ts";
+import { downTail } from "../hud/index.ts";
 import {
   focusDirectionForKey,
+  type HoldPress,
+  holdRule,
   isConfirmKey,
   isExitKey,
   isHelpKey,
   isMuteKey,
   isPauseKey,
   menuKeyActs,
-} from "../input/keyBindings.ts";
-import { screenArea } from "../input/outsideTap.ts";
+  moveHold,
+  releaseHold,
+  screenArea,
+  startHold,
+  tickHold,
+  TILE_SLOP_PX,
+} from "../input/index.ts";
 import { type PackPlacement, SCREEN_LAYOUT } from "../layout/index.ts";
 import { waitedLoad } from "../loadingProgress.ts";
 import { addFigure, PackFigures } from "../pack/phaser/packFigures.ts";
-import { dollarAmountText, shortDollarAmountText } from "../presentation/currency.ts";
-import { pillKind } from "../presentation/effectNames.ts";
+import { dollarAmountText, pillKind, shortDollarAmountText } from "../presentation/index.ts";
 import {
   exitShown,
   installNudgeDue,
@@ -106,14 +109,18 @@ import { requestGameUpdateCheck } from "../pwa/launch.ts";
 import { walkerOrder } from "../rules/index.ts";
 import { type SaveDocument, walksFinished, walksPlayed } from "../save/index.ts";
 import { packDogsOf } from "../state/index.ts";
-import { disabledArtKey } from "../ui/disabledArt.ts";
 import type { NativeTopSection } from "../ui/dom/nativeTopSection.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
-import { gridRects, rectIndexAt } from "../ui/grid.ts";
-import { PALETTE } from "../ui/palette.ts";
+import {
+  disabledArtKey,
+  gridRects,
+  PALETTE,
+  rectIndexAt,
+  refusalRed,
+  REFUSE,
+} from "../ui/index.ts";
 import { drawShadow } from "../ui/phaser/draw.ts";
-import { refusalRed, REFUSE } from "../ui/refuse.ts";
 import type { Cents } from "../units.ts";
 import { artReady, waitForWalkArt, whenArtReady } from "./artReady.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";

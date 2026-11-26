@@ -1,11 +1,9 @@
 import { Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import { overlayRegion } from "../home/homeBar.ts";
-import { HOME_LAYOUT } from "../home/homeLayout.ts";
-import { QUIT_QUESTION_ANSWERS } from "../hud/pauseMenu.ts";
-import { isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
-import { screenArea } from "../input/outsideTap.ts";
+import { HOME_LAYOUT, overlayRegion } from "../home/index.ts";
+import { QUIT_QUESTION_ANSWERS } from "../hud/index.ts";
+import { isPauseKey, menuKeyActs, screenArea } from "../input/index.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { clearOnHomePageOpening, exitGame } from "./homeBarPress.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";

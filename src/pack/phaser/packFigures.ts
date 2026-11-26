@@ -11,9 +11,9 @@ import {
 import type { DogId } from "../../data/ids.ts";
 import { gameData } from "../../data/index.ts";
 import { type DepthDraw, PACK_DEPTH, tautLeashLine } from "../../layout/index.ts";
-import { PALETTE } from "../../ui/palette.ts";
+import { PALETTE } from "../../ui/index.ts";
 import { drawPixelLine, drawShadow } from "../../ui/phaser/draw.ts";
-import { type Feet, type LeashLine, leashLine, packLayers, type StandingDog } from "../packDraw.ts";
+import { type Feet, type LeashLine, leashLine, packLayers, type StandingDog } from "../index.ts";
 
 // The leashes' colour off the road, at the start screen's gate and on the end screen's walk
 // home; on the road each zone sets its own.

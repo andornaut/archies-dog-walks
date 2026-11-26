@@ -1,8 +1,7 @@
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SCREEN_CONFIG, ZONE_BANNER } from "../../data/index.ts";
-import { deviceX, deviceY, gridTransform } from "../domScale.ts";
-import { PALETTE } from "../palette.ts";
+import { deviceX, deviceY, gridTransform, PALETTE } from "../index.ts";
 import { type DomArtSource, imageArt } from "./artElements.ts";
 import { createTextLine, type DomTextLine, placeBackedText } from "./pixelLine.ts";
 import { followModalUnderlay } from "./rampDim.ts";

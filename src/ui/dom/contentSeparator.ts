@@ -1,7 +1,15 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { artPixel, type DomScale, frameRect, gridRect, gridX, gridY } from "../domScale.ts";
-import { cssHex, PALETTE } from "../palette.ts";
+import {
+  artPixel,
+  cssHex,
+  type DomScale,
+  frameRect,
+  gridRect,
+  gridX,
+  gridY,
+  PALETTE,
+} from "../index.ts";
 import { setBox } from "./pixelLine.ts";
 
 // Content rules share one art-pixel stroke without changing their logical anchors or widths.

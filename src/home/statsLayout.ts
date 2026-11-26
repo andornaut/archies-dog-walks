@@ -2,9 +2,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { LABEL_VALUE_GAP, LOGBOOK_PAGE, MIN_PRESS } from "../data/index.ts";
-import { helpCapDy } from "../ui/labelHelpGap.ts";
-import { MODAL } from "../ui/modal/layout.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { helpCapDy, MODAL, TEXT_SCALE } from "../ui/index.ts";
 import { BADGE_STRIP, type WallCellLines } from "./badgesView.ts";
 import { SHOP_LAYOUT, shopListFrame, shopTabRects } from "./shopLayout.ts";
 

@@ -5,19 +5,17 @@ import { createFormRows } from "@andornaut/game-kit/runtime/web/ui/dom/formRow";
 import { createSlider } from "@andornaut/game-kit/runtime/web/ui/dom/slider";
 
 import { gameData } from "../../data/index.ts";
-import { FEEDBACK } from "../../home/feedback.ts";
 import {
+  FEEDBACK,
   SETTINGS_FORM_ROWS,
   SETTINGS_SLIDER,
+  type SettingsRowView,
+  type SettingsTarget,
+  type SettingsText,
+  type SettingsView,
   VOLUME_STEPS,
   type VolumeKey,
-} from "../../home/settings.ts";
-import type {
-  SettingsRowView,
-  SettingsTarget,
-  SettingsText,
-  SettingsView,
-} from "../../home/settingsView.ts";
+} from "../../home/index.ts";
 import { read } from "../../rules/index.ts";
 import { type DomArtSource, imageArt, sheetArt } from "../../ui/dom/artElements.ts";
 import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";
@@ -29,8 +27,7 @@ import { createTextLine, placeBox, placeText } from "../../ui/dom/pixelLine.ts";
 import { refuse } from "../../ui/dom/refusal.ts";
 import { textBlock } from "../../ui/dom/textBlock.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { type DomScale, gridY } from "../../ui/domScale.ts";
-import { cssHex } from "../../ui/palette.ts";
+import { cssHex, type DomScale, gridY } from "../../ui/index.ts";
 import { type DomPage, showPage } from "./page.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
 import {

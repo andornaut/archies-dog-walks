@@ -2,17 +2,25 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { Core, Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import type { ChoiceEntry } from "../hud/choiceCardView.ts";
 import { type NativeChoiceCards, showChoiceCards } from "../hud/dom/choiceCards.ts";
-import { type HoldPress, holdRule, startHold, tickHold } from "../input/hold.ts";
-import { cardNumberForKey, menuKeyActs } from "../input/keyBindings.ts";
-import { keyNumbersShown } from "../input/keyNumbers.ts";
-import { pressDown, pressUp, type TargetPress } from "../input/targetPress.ts";
+import type { ChoiceEntry } from "../hud/index.ts";
+import {
+  cardNumberForKey,
+  type HoldPress,
+  holdRule,
+  keyNumbersShown,
+  menuKeyActs,
+  pressDown,
+  pressUp,
+  startHold,
+  type TargetPress,
+  tickHold,
+} from "../input/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
-import { cardRowIn } from "../presentation/cardLayout.ts";
+import { cardRowIn } from "../presentation/index.ts";
 import { type CardView, type Choice, MAX_CARD_OPTIONS } from "../rules/index.ts";
 import type { UiLayer } from "../ui/dom/uiLayer.ts";
-import { rectIndexAt } from "../ui/grid.ts";
+import { rectIndexAt } from "../ui/index.ts";
 import { displayBitmapFont } from "../ui/phaser/displayText.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";

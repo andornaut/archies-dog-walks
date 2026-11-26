@@ -2,11 +2,9 @@ import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModalit
 import { Core, type Game, Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import { overlayRegion } from "../home/homeBar.ts";
-import { updateModalLayout } from "../home/homeLayout.ts";
+import { overlayRegion, updateModalLayout } from "../home/index.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
-import { isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
-import { screenArea } from "../input/outsideTap.ts";
+import { isPauseKey, menuKeyActs, screenArea } from "../input/index.ts";
 import {
   acceptUpdate,
   dismissUpdate,
@@ -16,9 +14,7 @@ import {
   updateOffered,
 } from "../pwa/index.ts";
 import { bootFinished } from "../pwa/launch.ts";
-import { barTitleRoom } from "../ui/barTitle.ts";
-import { closeControl } from "../ui/closeControl.ts";
-import { cardTitleRow } from "../ui/modal/titleRow.ts";
+import { barTitleRoom, cardTitleRow, closeControl } from "../ui/index.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";

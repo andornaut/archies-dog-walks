@@ -2,9 +2,8 @@ import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import type { DomPart } from "../../ui/dom/parts.ts";
 import { type PillColours, textBlock } from "../../ui/dom/textBlock.ts";
-import type { DomScale } from "../../ui/domScale.ts";
-import { TEXT_SCALE } from "../../ui/textFit.ts";
-import type { DetailText } from "../detailCardView.ts";
+import { type DomScale, TEXT_SCALE } from "../../ui/index.ts";
+import type { DetailText } from "../index.ts";
 
 // What a detail text draws with: each font it may be set in, and the colours of a name's pill of
 // a kind and of its name, or undefined for none.

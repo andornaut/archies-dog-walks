@@ -4,9 +4,8 @@ import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { type DomArtSource, imageArt } from "../../ui/dom/artElements.ts";
 import { colourBox } from "../../ui/dom/parts.ts";
 import { createTextLine, placeBackedText, setBox } from "../../ui/dom/pixelLine.ts";
-import { artPixel, type DomScale, frameRect } from "../../ui/domScale.ts";
-import { PALETTE } from "../../ui/palette.ts";
-import type { GearPictureFallback } from "../gearPictureView.ts";
+import { artPixel, type DomScale, frameRect, PALETTE } from "../../ui/index.ts";
+import type { GearPictureFallback } from "../index.ts";
 export function createGearBadge(
   doc: Document,
   source: DomArtSource & {

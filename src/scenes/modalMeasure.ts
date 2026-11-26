@@ -1,17 +1,16 @@
 import type { Scene } from "phaser";
 
 import { firstTag } from "../assets/phaser/sprites.ts";
-import type { DetailMeasure } from "../home/detailCardView.ts";
-import { QUIP_TEXT_ROOM } from "../home/endLayout.ts";
-import type { EndMeasure } from "../home/endScreenView.ts";
-import { GREETING_FIT } from "../hud/celebrationLayout.ts";
-import type { CelebrationMeasure } from "../hud/celebrationView.ts";
-import { NOTE_PLATE } from "../hud/pauseMenu.ts";
-import { ownerNameWrap } from "../presentation/ownerName.ts";
-import { modalTitleLayout } from "../ui/modal/layout.ts";
-import { modalTitleInk } from "../ui/modal/titleRole.ts";
-import type { PanelMeasure } from "../ui/modal/types.ts";
-import { PALETTE } from "../ui/palette.ts";
+import { type DetailMeasure, type EndMeasure, QUIP_TEXT_ROOM } from "../home/index.ts";
+import { type CelebrationMeasure, GREETING_FIT, NOTE_PLATE } from "../hud/index.ts";
+import { ownerNameWrap } from "../presentation/index.ts";
+import {
+  modalTitleInk,
+  modalTitleLayout,
+  PALETTE,
+  type PanelMeasure,
+  TEXT_SCALE,
+} from "../ui/index.ts";
 import {
   fitPixelText,
   type FontRole,
@@ -23,7 +22,6 @@ import {
   withProbe,
   wrapPixelText,
 } from "../ui/phaser/pixelText.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
 
 // Measure actual game glyph ink without changing its role's font size.
 export function modalTextWidth(scene: Scene, font: FontRole, values: readonly string[]): number {

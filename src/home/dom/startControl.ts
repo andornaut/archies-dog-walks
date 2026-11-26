@@ -3,10 +3,8 @@ import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { createTextLine, placeFrame, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
-import { artPixel, type DomScale, gridRect } from "../../ui/domScale.ts";
-import { PALETTE } from "../../ui/palette.ts";
-import { BUTTON_COLOURS } from "../../ui/selection.ts";
-import { HOME_LAYOUT } from "../homeLayout.ts";
+import { artPixel, BUTTON_COLOURS, type DomScale, gridRect, PALETTE } from "../../ui/index.ts";
+import { HOME_LAYOUT } from "../index.ts";
 export interface NativeStartControl {
   readonly element: HTMLButtonElement;
   dispose(): void;

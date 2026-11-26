@@ -1,4 +1,4 @@
-import { refuseOffset } from "../ui/refuse.ts";
+import { refuseOffset } from "../ui/index.ts";
 
 // The home screen's tap feedback, from the art style guide: offsets in pixels and animation frames,
 // each a function of how long ago its effect started. With reduced motion every movement is 0 and

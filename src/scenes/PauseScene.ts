@@ -1,20 +1,19 @@
 import { Core, Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import { overlayRegion } from "../home/homeBar.ts";
-import type { HomeNoteLine } from "../hud/homeQuestion.ts";
-import { HOME_QUESTION_ANSWERS } from "../hud/pauseMenu.ts";
-import { screenArea } from "../input/outsideTap.ts";
+import { overlayRegion } from "../home/index.ts";
+import { HOME_QUESTION_ANSWERS, type HomeNoteLine } from "../hud/index.ts";
+import { screenArea } from "../input/index.ts";
 import { SCREEN_LAYOUT, WALKER_SILHOUETTES, walkerFootY } from "../layout/index.ts";
-import { MODAL } from "../ui/modal/layout.ts";
 import {
+  MODAL,
   navigationMenuWidth,
+  PALETTE,
   PAUSE_MENU_ITEMS,
   PAUSE_MENU_KEY_ORDER,
   type PauseMenuItem,
   pauseMenuItemLabel,
-} from "../ui/navigationMenu.ts";
-import { PALETTE } from "../ui/palette.ts";
+} from "../ui/index.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import type { CheatsData } from "./CheatsScene.ts";
 import { HELP_CLOSED_EVENT } from "./HelpScene.ts";

@@ -5,7 +5,7 @@ import {
 } from "@andornaut/game-kit/runtime/text/phaser/phaserBitmapFont";
 import type { GameObjects, Scene } from "phaser";
 
-import { plainMarks } from "../pixelFont.ts";
+import { plainMarks } from "../index.ts";
 import { addPixelText, bitmapFontHasChars, type PixelTextStyle } from "./pixelText.ts";
 
 // The sign logo's lettering: capitals with the outline and shadow baked in, so it is never

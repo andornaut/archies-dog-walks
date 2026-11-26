@@ -9,6 +9,7 @@ import {
 } from "@andornaut/game-kit/runtime/ui/slider";
 
 import {
+  BUTTON_SIZE,
   ICON_LABEL_GAP,
   LABEL_ICON,
   MIN_PRESS,
@@ -17,14 +18,22 @@ import {
   SLICES,
 } from "../data/index.ts";
 import type { Settings } from "../save/index.ts";
-import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { type CloseControl, closeControl } from "../ui/closeControl.ts";
-import { helpCapDy } from "../ui/labelHelpGap.ts";
-import { DISMISS_FOOTER_SPACE } from "../ui/modal/dismissFooter.ts";
-import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
-import { ROWS_PAGE_LAYOUT } from "../ui/pageLayout.ts";
-import { SEPARATOR_BAND, separatorBetween } from "../ui/separator.ts";
-import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
+import {
+  type CloseControl,
+  closeControl,
+  DISMISS_FOOTER_SPACE,
+  helpCapDy,
+  MODAL,
+  modalActionWidth,
+  modalFamilyWidth,
+  modalRect,
+  ROWS_PAGE_LAYOUT,
+  SEPARATOR_BAND,
+  separatorBetween,
+  TEXT_SCALE,
+  TEXT_STYLE,
+  textOnLines,
+} from "../ui/index.ts";
 import { HOME_LAYOUT } from "./homeLayout.ts";
 
 // The settings screen moves a volume in 5% steps, from 0 to 1.

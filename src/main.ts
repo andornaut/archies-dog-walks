@@ -13,13 +13,11 @@ import { MAX_RENDER_SCALE } from "@andornaut/game-kit/runtime/view/renderScale";
 import { followFrameTurn } from "@andornaut/game-kit/runtime/web/view/phaser/followFrameTurn";
 import { Core, Game, Scale, WEBGL } from "phaser";
 
-import { DEV_GAME_GLOBAL } from "./cheats/browserTools.ts";
-import { pageRunSetup } from "./cheats/pageRunSetup.ts";
+import { DEV_GAME_GLOBAL, pageRunSetup } from "./cheats/index.ts";
 import { CRASH_SCREEN } from "./crash/crashScreen.ts";
 import { SCREEN_CONFIG } from "./data/index.ts";
-import { noteKeyPress } from "./input/keyNumbers.ts";
+import { lostTouches, noteKeyPress } from "./input/index.ts";
 import { bindPressAdmission, createCanvasPressAdmission } from "./input/phaser/pressAdmission.ts";
-import { lostTouches } from "./input/touches.ts";
 import { pageFrameWatch, setupPhoneApp } from "./pwa/index.ts";
 import { pageDeviceSettings } from "./save/index.ts";
 import { BootScene } from "./scenes/BootScene.ts";
@@ -51,8 +49,7 @@ import { mountFpsCounter } from "./ui/dom/fpsCounter.ts";
 import { mountLoadingError } from "./ui/dom/loadingError.ts";
 import { followModalUnderlay } from "./ui/dom/rampDim.ts";
 import { mountUiLayer, setUiLayer } from "./ui/dom/uiLayer.ts";
-import { startupLoad } from "./ui/startupProgress.ts";
-import { worldViewBox } from "./ui/worldFit.ts";
+import { startupLoad, worldViewBox } from "./ui/index.ts";
 
 // The element in pages/play/index.html that holds the canvas.
 const GAME_PARENT_ID = "game";

@@ -17,7 +17,7 @@ import {
   SKIP_CARD_ART,
   zoneIconKey,
 } from "../assets/index.ts";
-import { DEV_GAME_GLOBAL } from "../cheats/browserTools.ts";
+import { DEV_GAME_GLOBAL } from "../cheats/index.ts";
 import { minorLook, obstacleSkins } from "../content/index.ts";
 import type {
   DogId,

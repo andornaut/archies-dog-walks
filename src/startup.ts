@@ -16,8 +16,7 @@ import { launchGame } from "./pwa/launchGame.ts";
 import { launchProgress } from "./pwa/launchProgress.ts";
 import { mountDomLoadingBar } from "./ui/dom/domLoadingBar.ts";
 import { mountLaunchFailure } from "./ui/dom/launchFailure.ts";
-import { LOADING_TIMING } from "./ui/progressBar.ts";
-import { startupLoad, startupProgress } from "./ui/startupProgress.ts";
+import { LOADING_TIMING, startupLoad, startupProgress } from "./ui/index.ts";
 
 // A screen that focuses its first control on open shows the focus ring only after keyboard
 // input, never on touch (the kit's focusTarget).

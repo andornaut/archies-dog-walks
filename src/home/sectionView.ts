@@ -1,6 +1,6 @@
 import { type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
 
-import type { PALETTE } from "../ui/palette.ts";
+import type { PALETTE } from "../ui/index.ts";
 import { HOME_LAYOUT, sectionFill } from "./homeLayout.ts";
 import type { SectionId, Sections } from "./sections.ts";
 export interface HomeSectionView {

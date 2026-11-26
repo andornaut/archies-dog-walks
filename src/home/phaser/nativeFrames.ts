@@ -6,7 +6,7 @@ import {
   sheetTagFrames,
   type TagFrame,
 } from "../../ui/dom/sheetFrames.ts";
-import { loopFrame } from "../feedback.ts";
+import { loopFrame } from "../index.ts";
 
 // Native pictures use the authored tags and the scene clock used by the yard's feedback.
 export function nativeFrames() {

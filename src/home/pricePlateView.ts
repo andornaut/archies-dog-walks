@@ -1,9 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import type { PanelText } from "../ui/modal/types.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { PLATE_LOOKS, type PlateKind } from "../ui/selection.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { PALETTE, type PanelText, PLATE_LOOKS, type PlateKind, TEXT_SCALE } from "../ui/index.ts";
 import type { TileStrip } from "./selectionView.ts";
 
 export interface PricePlateMeasure {

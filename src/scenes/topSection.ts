@@ -9,8 +9,8 @@ import {
 import { followModalUnderlay } from "../ui/dom/rampDim.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { type UiLayer, uiLayer } from "../ui/dom/uiLayer.ts";
+import type { TopSectionButton } from "../ui/index.ts";
 import { pixelBitmapFont } from "../ui/phaser/pixelText.ts";
-import type { TopSectionButton } from "../ui/topSection.ts";
 
 interface SectionOwner {
   asleep: boolean;

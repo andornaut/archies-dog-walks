@@ -7,22 +7,19 @@ import { gameData } from "../data/index.ts";
 import {
   type BadgeCardView,
   badgeCardView,
-  type BurstEffect,
-  CONFETTI,
-} from "../home/badgeCardView.ts";
-import {
   badgeNameTops,
   type BadgeRowNames,
   badgeRowNames,
+  type BurstEffect,
+  CONFETTI,
+  type DetailText,
   earnedBadges,
   panelBadgeStrip,
   stripUnderClose,
-} from "../home/badgesView.ts";
-import type { DetailText } from "../home/detailCardView.ts";
+} from "../home/index.ts";
 import { achievementLabel } from "../rules/index.ts";
-import { PALETTE } from "../ui/palette.ts";
+import { PALETTE, TEXT_SCALE } from "../ui/index.ts";
 import { labelInkWidth, type PixelTextStyle, withProbe } from "../ui/phaser/pixelText.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
 import { canvasDetailMeasure } from "./modalMeasure.ts";
 import { tagFrame } from "./uiKit.ts";
 

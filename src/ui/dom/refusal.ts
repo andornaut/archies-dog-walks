@@ -1,4 +1,4 @@
-import { refusalRed, REFUSE, REFUSE_SHAKES, refuseShakeSteps } from "../refuse.ts";
+import { refusalRed, REFUSE, REFUSE_SHAKES, refuseShakeSteps } from "../index.ts";
 
 // The refusal cue on a DOM control that plays it on the page's own clock. adw-refusing shakes the
 // control right and back in whole art pixels (--adw-slice-1) at the canvas's offsets and times

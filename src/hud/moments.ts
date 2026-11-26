@@ -17,7 +17,7 @@ import {
 } from "../data/index.ts";
 import { type FaceMood, faceMood } from "../rules/index.ts";
 import { type Pack, type PackSlot, slotIndexOf } from "../state/index.ts";
-import { TEXT_STYLE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
+import { TEXT_STYLE, TITLE_CAP_ROWS } from "../ui/index.ts";
 import type { Cents } from "../units.ts";
 import { type FaceBox, type FaceText, fillFaceText, ownerFaceText } from "./faceText.ts";
 import type { ChangeLabel } from "./hudView.ts";

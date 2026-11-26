@@ -4,33 +4,34 @@ import { type GameObjects, Scene } from "phaser";
 
 import { firstTag, playTag } from "../assets/phaser/sprites.ts";
 import { gameData, SCREEN_CONFIG } from "../data/index.ts";
-import { BADGE_CHEER, BADGE_POP, type BadgeView, earnedBadges } from "../home/badgesView.ts";
-import { END_LAYOUT } from "../home/endLayout.ts";
-import { endScreenView } from "../home/endScreenView.ts";
-import { closingLines, earningsBreakdown } from "../home/endView.ts";
-import { bobOffset } from "../home/feedback.ts";
-import { nativeFrames } from "../home/phaser/nativeFrames.ts";
 import {
+  BADGE_CHEER,
+  BADGE_POP,
+  type BadgeView,
+  bobOffset,
+  closingLines,
+  earnedBadges,
+  earningsBreakdown,
+  END_LAYOUT,
+  endScreenView,
   homecomers,
   type ReturnPhase,
   returnPhase,
   walkUpOffset,
   waveOffset,
-} from "../home/returnHome.ts";
+} from "../home/index.ts";
+import { nativeFrames } from "../home/phaser/nativeFrames.ts";
 import type { DomEndScreen } from "../hud/dom/endScreen.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
-import { isConfirmKey, isMuteKey } from "../input/keyBindings.ts";
-import { screenArea } from "../input/outsideTap.ts";
+import { isConfirmKey, isMuteKey, screenArea } from "../input/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { PackFigures } from "../pack/phaser/packFigures.ts";
 import { stopWakeLock } from "../pwa/index.ts";
 import type { LastWalk } from "../save/index.ts";
-import { PALETTE } from "../ui/palette.ts";
+import { PALETTE, TEXT_SCALE, topSectionButtonAt } from "../ui/index.ts";
 import { hasDisplayFont } from "../ui/phaser/displayText.ts";
 import { fillRect } from "../ui/phaser/draw.ts";
 import { onceBeforeRender } from "../ui/phaser/rampDim.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
-import { topSectionButtonAt } from "../ui/topSection.ts";
 import { addBurst, badgeCard, badgeCelebrationNames, NEW_BEST_BURST } from "./badges.ts";
 import { routeHomeBar } from "./homeBarPress.ts";
 import type { MenuSceneData } from "./MenuScene.ts";

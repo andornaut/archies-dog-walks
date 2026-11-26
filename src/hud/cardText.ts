@@ -8,8 +8,13 @@ import {
 } from "@andornaut/game-kit/runtime/text/textFit";
 
 import type { GameData } from "../data/index.ts";
-import { boxStyle, CARD_LAYOUT, cardEffectBox, FIRES_FIT } from "../presentation/cardLayout.ts";
-import { withNamePills } from "../presentation/effectNames.ts";
+import {
+  boxStyle,
+  CARD_LAYOUT,
+  cardEffectBox,
+  FIRES_FIT,
+  withNamePills,
+} from "../presentation/index.ts";
 import { firesText, formatDollars, type OptionView, upgradeLine } from "../rules/index.ts";
 import { RUN_TEXT_FIELDS } from "./runText.ts";
 

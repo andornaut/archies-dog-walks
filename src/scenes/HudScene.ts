@@ -4,10 +4,10 @@ import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import { Core, Scene } from "phaser";
 
 import { domArtUrl } from "../assets/files/index.ts";
+import { perkIconKey } from "../assets/index.ts";
 import type { AchievementId, DebuffId, DogId } from "../data/ids.ts";
 import { gameData, type HintTrigger, SCREEN_CONFIG } from "../data/index.ts";
-import { FEEDBACK as MENU_FEEDBACK } from "../home/feedback.ts";
-import { charmRing } from "../hud/charmRing.ts";
+import { FEEDBACK as MENU_FEEDBACK } from "../home/index.ts";
 import { createHudCards, type HudCards } from "../hud/dom/hudCards.ts";
 import { createHudChrome } from "../hud/dom/hudChrome.ts";
 import { createHudMoments, type HudMoment, type HudMomentPainter } from "../hud/dom/hudMoments.ts";
@@ -17,56 +17,52 @@ import {
   projectHudTopSections,
 } from "../hud/dom/hudProjection.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
-import { explainDetail } from "../hud/explain.ts";
-import { FEEDBACK } from "../hud/feedback.ts";
-import { runHintTriggers } from "../hud/hintTriggers.ts";
 import {
+  achievementLine,
+  cardHearts,
+  cashChipPlace,
   CHANGE_LABEL_STYLE,
   changeChipPlace,
+  type ChangeLabel,
   changeLabelRoom,
+  charmRing,
+  explainDetail,
+  type ExplainTarget,
+  FEEDBACK,
+  FORGIVEN_EVENT,
+  type ForgivenCue,
+  freeCashSlot,
   type HudLanes,
   hudLanes,
-  REACH_ICON,
-  reachChipPlace,
-} from "../hud/hudLanes.ts";
-import type { ChangeLabel } from "../hud/hudView.ts";
-import type { MessageLine } from "../hud/messageStrip.ts";
-import { FORGIVEN_EVENT, type ForgivenCue } from "../hud/moments.ts";
-import {
-  cashChipPlace,
-  freeCashSlot,
   LABEL_FADE_MS,
   mergeTips,
+  type MessageLine,
   MONEY_LABEL,
   moneyChipPlace,
   moneyFlightPath,
-  stackOrders,
-} from "../hud/moneyLabels.ts";
-import { achievementLine } from "../hud/stripLines.ts";
-import {
   pauseButtonIcon,
   playerPaused,
+  REACH_ICON,
+  reachChipPlace,
+  runHintTriggers,
   type RunPause,
+  stackOrders,
   topBarAction,
   topBarKey,
-  walkPaused,
-} from "../hud/topBar.ts";
-import {
-  cardHearts,
-  type ExplainTarget,
   WALK_BAR_BUTTONS,
   type WalkBarButtonId,
   walkBarLayout,
-} from "../hud/walkHud.ts";
+  walkPaused,
+} from "../hud/index.ts";
 import { BUFF_POP, SCREEN_LAYOUT, sparkleAt } from "../layout/index.ts";
-import { dollarAmountText, shortDollarAmountText } from "../presentation/currency.ts";
 import {
+  dollarAmountText,
   effectIconKey,
   type EffectItem,
   effectItems,
-  perkIconKey,
-} from "../presentation/effectIcons.ts";
-import { pillKind } from "../presentation/effectNames.ts";
+  pillKind,
+  shortDollarAmountText,
+} from "../presentation/index.ts";
 import { faceMood, hintFor, hintJumpsQueue, ownerMaxHearts, walkEarnings } from "../rules/index.ts";
 import { heartsOf, type RunState, slotIndexOf } from "../state/index.ts";
 import {

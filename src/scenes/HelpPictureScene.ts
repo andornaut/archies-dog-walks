@@ -12,13 +12,12 @@ import {
   packStillFrames,
   stillDragMoment,
   TOUCH_DRAG,
-} from "../help/helpPictures.ts";
-import { changeLabels } from "../hud/hudView.ts";
-import { NOTHING_PAUSED } from "../hud/topBar.ts";
+} from "../help/index.ts";
+import { changeLabels, NOTHING_PAUSED } from "../hud/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { currentZone, read } from "../rules/index.ts";
 import { laneControlIn, laneMotionX, type Walk } from "../runner/index.ts";
-import { colourFromHex } from "../ui/palette.ts";
+import { colourFromHex } from "../ui/index.ts";
 import type { CardSceneData } from "./CardScene.ts";
 import type { HudSceneData } from "./HudScene.ts";
 import type { HudWalk } from "./hudWalk.ts";

@@ -6,19 +6,40 @@ import { fillLine, wrapWords } from "@andornaut/game-kit/runtime/lines";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import type { DebuffId, UpgradeId, ZoneId } from "../data/ids.ts";
-import { type GameData, type MenuText, SETTINGS_CARD } from "../data/index.ts";
-import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
-import { SWITCH_STATE_GAP, switchRowHeight, switchStateCentre } from "../home/settings.ts";
-import { dollarText } from "../presentation/currency.ts";
-import { BUTTON_SIZE, raisedLabelCapTop } from "../ui/buttonGeometry.ts";
-import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
-import type { PanelButton, PanelMeasure, PanelText } from "../ui/modal/types.ts";
-import { panelButton, panelTitle, titleLabelInk } from "../ui/modal/view.ts";
-import { PAGE_LAYOUT, PAGE_TITLE_ROW, pageBack, ROWS_PAGE_LAYOUT } from "../ui/pageLayout.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { BUTTON_LIP_PX, GREYED, selectLook } from "../ui/selection.ts";
-import { separatorBetween } from "../ui/separator.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import {
+  BUTTON_LIP_PX,
+  BUTTON_SIZE,
+  type GameData,
+  type MenuText,
+  SETTINGS_CARD,
+} from "../data/index.ts";
+import {
+  MENU_TEXT_FIELDS,
+  SWITCH_STATE_GAP,
+  switchRowHeight,
+  switchStateCentre,
+} from "../home/index.ts";
+import { dollarText } from "../presentation/index.ts";
+import {
+  GREYED,
+  MODAL,
+  modalActionWidth,
+  PAGE_LAYOUT,
+  PAGE_TITLE_ROW,
+  pageBack,
+  PALETTE,
+  type PanelButton,
+  panelButton,
+  type PanelMeasure,
+  type PanelText,
+  panelTitle,
+  raisedLabelCapTop,
+  ROWS_PAGE_LAYOUT,
+  selectLook,
+  separatorBetween,
+  TEXT_SCALE,
+  titleLabelInk,
+} from "../ui/index.ts";
 import type { Cents } from "../units.ts";
 import { BANK_GRANTS, type NextWalk, type OwnGrant, startZones } from "./cheats.ts";
 

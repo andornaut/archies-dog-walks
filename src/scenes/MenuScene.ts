@@ -1,17 +1,16 @@
 import { Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import { overlayRegion } from "../home/homeBar.ts";
-import { isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
-import { screenArea } from "../input/outsideTap.ts";
-import { MODAL } from "../ui/modal/layout.ts";
+import { overlayRegion } from "../home/index.ts";
+import { isPauseKey, menuKeyActs, screenArea } from "../input/index.ts";
 import {
   type MenuContext,
   type MenuItem,
   menuItemLabel,
   menuItems,
+  MODAL,
   navigationMenuWidth,
-} from "../ui/navigationMenu.ts";
+} from "../ui/index.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { whenArtReady } from "./artReady.ts";
 import type { CheatsData } from "./CheatsScene.ts";

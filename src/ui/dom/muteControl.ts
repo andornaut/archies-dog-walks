@@ -7,10 +7,15 @@ import crashArt from "virtual:adw-crash-art";
 
 import { BUTTON_SIZE, SCREEN_CONFIG } from "../../data/index.ts";
 import { MENU_TEXT } from "../../data/menuText.ts";
-import { cssHex, PALETTE } from "../palette.ts";
-import { TITLE_CAP_ROWS } from "../textFit.ts";
-import { TOP_BAR_FACE } from "../topBarTrim.ts";
-import { topBarGlyphRect, topSectionLayout, topSectionStateCapTop } from "../topSection.ts";
+import {
+  cssHex,
+  PALETTE,
+  TITLE_CAP_ROWS,
+  TOP_BAR_FACE,
+  topBarGlyphRect,
+  topSectionLayout,
+  topSectionStateCapTop,
+} from "../index.ts";
 import { bindGameActionHolds } from "./actionBinding.ts";
 import { createGameButton } from "./gameButton.ts";
 

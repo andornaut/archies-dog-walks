@@ -1,5 +1,5 @@
 import type { DebuffId } from "../data/ids.ts";
-import { PALETTE } from "../ui/palette.ts";
+import { PALETTE } from "../ui/index.ts";
 
 // Each native debuff bar uses the authored face, shade, fill and name colours.
 // The name holds 4.5:1 on the face.

@@ -8,13 +8,18 @@ import type { FittedText } from "@andornaut/game-kit/runtime/text/textFit";
 import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 
 import { ROAD_SPRITE_SIZE } from "../assets/index.ts";
-import { CELEBRATIONS, SCREEN_CONFIG } from "../data/index.ts";
+import { BUTTON_SIZE, CELEBRATIONS, LABEL_HELP_GAP, SCREEN_CONFIG } from "../data/index.ts";
 import { SCREEN_LAYOUT, WIDE_BUTTON } from "../layout/index.ts";
-import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { iconBesideLabel } from "../ui/iconLabel.ts";
-import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
-import { MODAL, modalActionWidth, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
-import { TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
+import {
+  iconBesideLabel,
+  MODAL,
+  modalActionWidth,
+  modalFamilyWidth,
+  modalRect,
+  TEXT_SCALE,
+  TEXT_STYLE,
+  textOnLines,
+} from "../ui/index.ts";
 import type { LinePart } from "./zoneCelebration.ts";
 
 const CELEBRATION = CELEBRATIONS;

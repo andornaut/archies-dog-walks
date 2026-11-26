@@ -10,53 +10,61 @@ import {
   ROAD_SPRITE_SIZE,
   UNMEASURED_PREFIXES,
 } from "../assets/index.ts";
-import { type GameData, LANE_COUNT, LOADING_WALKER_START, ROAD_FAR_SCALE } from "../data/index.ts";
-import { MENU_TEXT } from "../data/menuText.ts";
-import { dotRects, HELP_LAYOUT, helpPager } from "../help/helpLayout.ts";
-import { END_LAYOUT } from "../home/endLayout.ts";
-import { overlayRegion } from "../home/homeBar.ts";
 import {
+  DEBUFF_BAR,
+  type GameData,
+  INLINE_FACE,
+  LANE_COUNT,
+  LOADING_WALKER_START,
+  OWNER_LEAD,
+  OWNER_TAB,
+  ROAD_FAR_SCALE,
+} from "../data/index.ts";
+import { MENU_TEXT } from "../data/menuText.ts";
+import { dotRects, HELP_LAYOUT, helpPager } from "../help/index.ts";
+import {
+  END_LAYOUT,
   HOME_LAYOUT,
   homeBarButtons,
-  updateModalLayout,
-  updateModalText,
-} from "../home/homeLayout.ts";
-import {
   noteRoomForControl,
+  overlayRegion,
   settingsInstallWidth,
   settingsLayout,
   type SettingsRowShape,
-} from "../home/settings.ts";
-import { SHOP_TABS } from "../home/shop.ts";
-import { SHOP_LAYOUT, shopTabRects } from "../home/shopLayout.ts";
-import { STATS_LAYOUT, statsTabRects } from "../home/statsLayout.ts";
-import { CELEBRATION_LAYOUT, newWalkerRows, zoneDoneRows } from "../hud/celebrationLayout.ts";
-import { INLINE_FACE, inlineFaceBox } from "../hud/faceText.ts";
-import { hudLanes } from "../hud/hudLanes.ts";
+  SHOP_LAYOUT,
+  SHOP_TABS,
+  shopTabRects,
+  STATS_LAYOUT,
+  statsTabRects,
+  updateModalLayout,
+  updateModalText,
+} from "../home/index.ts";
 import {
+  type BarButton,
+  buttonIcon,
+  CELEBRATION_LAYOUT,
+  debuffBarRects,
+  DOG_CARD,
+  hudLanes,
+  inlineFaceBox,
   type LeadSlot,
   messagePanel,
   messageStripLayout,
-  OWNER_LEAD,
+  newWalkerRows,
   ownerLeadLayout,
   ownerLeadPanel,
-  stripLeadSlot,
-} from "../hud/messageStrip.ts";
-import { PAUSE_NOTE_LINES, questionLayout } from "../hud/pauseMenu.ts";
-import { buttonIcon, TOP_BAR_BUTTONS } from "../hud/topBar.ts";
-import {
-  type BarButton,
-  DEBUFF_BAR,
-  debuffBarRects,
-  DOG_CARD,
-  OWNER_TAB,
   ownerTabRect,
+  PAUSE_NOTE_LINES,
+  questionLayout,
+  stripLeadSlot,
+  TOP_BAR_BUTTONS,
   WALK_BAR,
   WALK_BAR_BUTTONS,
   walkBarLayout,
   ZONE_PROGRESS,
+  zoneDoneRows,
   zoneProgressLayout,
-} from "../hud/walkHud.ts";
+} from "../hud/index.ts";
 import {
   COLLAR_HEIGHTS,
   columnSpan,
@@ -84,15 +92,21 @@ import {
   cardRows,
   largeBodyBox,
   largeCardRect,
-} from "../presentation/cardLayout.ts";
+} from "../presentation/index.ts";
 import { MAX_CARD_OPTIONS, read } from "../rules/index.ts";
 import { walkProjection } from "../runner/index.ts";
-import { gridRects } from "../ui/grid.ts";
-import { type LineInk, lineInk } from "../ui/lineInk.ts";
-import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
-import { navigationMenuWidth, PAUSE_MENU_ITEMS, pauseMenuItemLabel } from "../ui/navigationMenu.ts";
-import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
-import { plainMarks } from "../ui/pixelFont.ts";
+import {
+  gridRects,
+  type LineInk,
+  lineInk,
+  MODAL,
+  modalActionWidth,
+  navigationMenuWidth,
+  PAGE_LAYOUT,
+  PAUSE_MENU_ITEMS,
+  pauseMenuItemLabel,
+  plainMarks,
+} from "../ui/index.ts";
 import { readBitmapFont } from "./fontFile.ts";
 
 // The screen geometry art's tools read, as shared/export/layout.json, all in screen pixels

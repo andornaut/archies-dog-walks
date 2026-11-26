@@ -1,10 +1,14 @@
 import palette from "../../shared/palette.json" with { type: "json" };
 import { BUTTON_FACE_EDGE, BUTTON_LIP_PX, BUTTON_SIZE } from "../data/index.ts";
-import { MODAL } from "../ui/modalGeometry.ts";
-import { cssHex, PALETTE } from "../ui/palette.ts";
-import { CARD_PANEL, PAPER_PANEL } from "../ui/paperPanel.ts";
-import { TOP_BAR_FACE } from "../ui/topBarTrim.ts";
-import { topBarGlyphRect } from "../ui/topSection.ts";
+import {
+  CARD_PANEL,
+  cssHex,
+  MODAL,
+  PALETTE,
+  PAPER_PANEL,
+  TOP_BAR_FACE,
+  topBarGlyphRect,
+} from "../ui/index.ts";
 
 // art: the display face's (Silkscreen's) font box, its ascender and descender, and its capitals'
 // ink, 5 of its 8-pixel em, standing on the baseline, in em.

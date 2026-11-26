@@ -18,15 +18,17 @@ import {
 } from "@andornaut/game-kit/runtime/text/textFit";
 import type { GameObjects, Scene, Types } from "phaser";
 
-import { inkWithPills, type LaidChar, pillGlyphAdvances } from "../namePills.ts";
 import {
   GLYPH_HEIGHT,
   glyphAdvance,
+  inkWithPills,
+  type LaidChar,
   LINE_HEIGHT,
   normalizePixelText,
+  pillGlyphAdvances,
   pixelFontAtlas,
   plainMarks,
-} from "../pixelFont.ts";
+} from "../index.ts";
 
 // body: mixed case, for running text, card effects and labels. title: capitals, for
 // titles, numbers, money and buttons. Both are white glyphs, tinted to a palette colour.

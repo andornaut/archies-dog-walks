@@ -16,7 +16,7 @@ import {
 } from "../../road/index.ts";
 import { previousZone } from "../../rules/index.ts";
 import type { Walk } from "../../runner/index.ts";
-import { colourFromHex } from "../../ui/palette.ts";
+import { colourFromHex } from "../../ui/index.ts";
 import { BumpOverscan } from "./bumpOverscan.ts";
 import { DEPTH, LAYOUT, PROJECTION } from "./stage.ts";
 

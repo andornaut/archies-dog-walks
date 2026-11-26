@@ -2,7 +2,7 @@ import { guardSceneInput } from "@andornaut/game-kit/runtime/input/phaser/guardS
 import type { Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import { tapGuardMs } from "../input/tapGuard.ts";
+import { tapGuardMs } from "../input/index.ts";
 
 // Turns the scene's pointer and keyboard input off until seconds.screenTapGuard has passed since
 // the frame drawn() is called on, its first drawn frame (the kit's guardSceneInput). A page tap

@@ -12,8 +12,7 @@ import crashArt from "virtual:adw-crash-art";
 
 import palette from "../../shared/palette.json" with { type: "json" };
 import { BUILD_LABEL } from "../buildLabel.ts";
-import { pageSearch } from "../cheats/browserTools.ts";
-import { devInSearch } from "../cheats/runSetup.ts";
+import { devInSearch, pageSearch } from "../cheats/index.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
 import { pageDeviceSettings } from "../save/index.ts";
 import { bindRecoveryHold } from "../ui/dom/actionBinding.ts";

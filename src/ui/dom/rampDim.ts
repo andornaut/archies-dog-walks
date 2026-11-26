@@ -1,4 +1,4 @@
-import { MODAL_BRIGHTNESS } from "../dimArt.ts";
+import { MODAL_BRIGHTNESS } from "../index.ts";
 
 interface DimState {
   readonly owners: Set<object>;

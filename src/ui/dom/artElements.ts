@@ -1,7 +1,7 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { domArtPath } from "../../assets/index.ts";
-import { artPixel, type DomScale, frameRect, gridRect, gridX, gridY } from "../domScale.ts";
+import { artPixel, type DomScale, frameRect, gridRect, gridX, gridY } from "../index.ts";
 import { setBox } from "./pixelLine.ts";
 import {
   playingFrame,

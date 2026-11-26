@@ -2,9 +2,8 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 
-import { PAUSE_PANEL } from "../data/index.ts";
-import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
-import { MODAL, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
+import { BUTTON_SIZE, PAUSE_PANEL } from "../data/index.ts";
+import { MODAL, modalFamilyWidth, modalRect } from "../ui/index.ts";
 
 // Source digit order: the safe primary keeps key 1 and is placed last visually.
 export const HOME_QUESTION_ANSWERS = ["keepWalking", "headHome"] as const;

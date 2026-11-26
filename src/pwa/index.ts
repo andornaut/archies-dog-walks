@@ -36,7 +36,7 @@ import { dispatchPhoneEvent, PHONE_EVENTS } from "./events.ts";
 import { createInstallNudge, type InstallNudge } from "./installNudge.ts";
 import { requireNewer } from "./launch.ts";
 
-export { browserSoundFormat } from "../audio/soundFormat.ts";
+export { browserSoundFormat } from "../audio/index.ts";
 export { AUDIO_UNLOCK_EVENTS, unlockAudioOnFirstGesture } from "./audioUnlock.ts";
 export { PHONE_EVENTS } from "./events.ts";
 export {

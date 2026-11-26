@@ -2,27 +2,25 @@ import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import { Core, type Game, type Scene, Sound } from "phaser";
 
 import {
-  advanceDeck,
-  type MusicDeck,
-  NO_MUSIC,
-  playMusic,
-  stopAllMusic,
-  trackVolume,
-} from "../audio/music.ts";
-import { shouldResumeAudio } from "../audio/resume.ts";
-import {
   admitContactPlay,
   admitPlay,
+  advanceDeck,
   clampVolume,
   effectiveVolumes,
   INITIAL_MIX,
   type Mix,
+  type MusicDeck,
+  NO_MUSIC,
+  playMusic,
   type RecentPlays,
+  shouldResumeAudio,
   type SoundCue,
   soundKeyFor,
   soundKeysOf,
+  stopAllMusic,
+  trackVolume,
   type Volumes,
-} from "../audio/sound.ts";
+} from "../audio/index.ts";
 import { AUDIO_UNLOCK_EVENTS, PHONE_EVENTS } from "../pwa/index.ts";
 import type { DeviceSettings, Settings } from "../save/index.ts";
 import { deviceSettingsOf } from "./sceneSettings.ts";

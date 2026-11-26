@@ -1,7 +1,7 @@
 import { Core, type Game, Scale, type Scene, Scenes } from "phaser";
 
+import { ownDeviceFit } from "../ui/index.ts";
 import { fitWorldCamera } from "../ui/phaser/worldCamera.ts";
-import { ownDeviceFit } from "../ui/worldFit.ts";
 
 // The native scale manager owns backing/CSS size. This installation only fits scene cameras
 // to their unchanged logical view, once on creation and whenever that backing changes.

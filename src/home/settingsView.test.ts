@@ -3,6 +3,7 @@ import { formRowsGeometry } from "@andornaut/game-kit/runtime/ui/formRow";
 import { describe, expect, it } from "vitest";
 
 import { DOM_ART_KEYS } from "../assets/domArt.ts";
+import { BUILD_LABEL } from "../buildLabel.ts";
 import { gameData } from "../data/index.ts";
 import { ICON_LABEL_GAP, LABEL_ICON, ROWS_PAGE, SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
@@ -72,6 +73,7 @@ const view = (state: Partial<SettingsState>) =>
     MEASURE,
     {
       art: () => ({ height: 16, width: 16 }),
+      buildLabel: BUILD_LABEL,
       layout,
       rows,
       words: gameData.menuText.settings,

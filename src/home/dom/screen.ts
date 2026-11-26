@@ -15,14 +15,16 @@ import {
   gridTransform,
   gridX,
   gridY,
-} from "../../ui/domScale.ts";
-import { PALETTE } from "../../ui/palette.ts";
-import type { GearPictureFallback } from "../gearPictureView.ts";
-import { HOME_LAYOUT } from "../homeLayout.ts";
-import type { Sections } from "../sections.ts";
-import type { HomeSelectionView } from "../selectionView.ts";
-import type { slotSign } from "../slotSign.ts";
-import type { HomeSpeechView } from "../speechView.ts";
+  PALETTE,
+} from "../../ui/index.ts";
+import {
+  type GearPictureFallback,
+  HOME_LAYOUT,
+  type HomeSelectionView,
+  type HomeSpeechView,
+  type Sections,
+  type slotSign,
+} from "../index.ts";
 import { createGearBadge } from "./gearBadge.ts";
 import { createHomeSections } from "./sections.ts";
 import {

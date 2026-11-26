@@ -2,12 +2,7 @@ import { fillLine, fillNames } from "@andornaut/game-kit/runtime/lines";
 
 import type { DogId } from "../data/ids.ts";
 import type { CharmEffect, Effect, GameData } from "../data/index.ts";
-import {
-  effectIconKey,
-  type EffectItem,
-  effectLine,
-  effectName,
-} from "../presentation/effectIcons.ts";
+import { effectIconKey, type EffectItem, effectLine, effectName } from "../presentation/index.ts";
 import {
   amountText,
   type CardView,

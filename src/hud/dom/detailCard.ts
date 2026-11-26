@@ -1,8 +1,8 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { domArtPath } from "../../assets/index.ts";
-import type { DetailArt, DetailCardView } from "../../home/detailCardView.ts";
 import { textPart } from "../../home/dom/detailText.ts";
+import type { DetailArt, DetailCardView } from "../../home/index.ts";
 import { contentSeparatorPart } from "../../ui/dom/contentSeparator.ts";
 import { type DomPart, framedPart } from "../../ui/dom/parts.ts";
 import { setBox } from "../../ui/dom/pixelLine.ts";
@@ -18,7 +18,7 @@ import {
   gridX,
   gridY,
   wholeArtPixels,
-} from "../../ui/domScale.ts";
+} from "../../ui/index.ts";
 import {
   type DomQuestionPanel,
   type DomQuestionPanelInput,

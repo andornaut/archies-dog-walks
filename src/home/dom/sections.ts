@@ -15,17 +15,16 @@ import {
 } from "../../ui/dom/pixelLine.ts";
 import {
   artPixel,
+  cssHex,
   type DomScale,
   fontPixel,
   frameRect,
   gridRect,
   gridY,
-} from "../../ui/domScale.ts";
-import { cssHex, PALETTE } from "../../ui/palette.ts";
-import { TEXT_SCALE } from "../../ui/textFit.ts";
-import { HOME_LAYOUT } from "../homeLayout.ts";
-import type { Sections } from "../sections.ts";
-import { homeSectionViews } from "../sectionView.ts";
+  PALETTE,
+  TEXT_SCALE,
+} from "../../ui/index.ts";
+import { HOME_LAYOUT, homeSectionViews, type Sections } from "../index.ts";
 export function createHomeSections(
   doc: Document,
   source: DomArtSource & {

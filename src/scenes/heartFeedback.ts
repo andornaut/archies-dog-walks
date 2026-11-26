@@ -5,23 +5,20 @@ import type { DogId } from "../data/ids.ts";
 import { SCREEN_CONFIG } from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import {
+  arcControl,
+  cardHearts,
+  type ChangeLabel,
   FEEDBACK,
   FLY_HEART,
   heartNoticeLayout,
   heartPopBlocked,
   heartPopCovers,
   heartPopFrame,
+  REACH_ICON,
   reachIconBeside,
-} from "../hud/feedback.ts";
-import { REACH_ICON } from "../hud/hudLanes.ts";
-import type { ChangeLabel } from "../hud/hudView.ts";
-import { arcControl } from "../hud/moments.ts";
-import { cardHearts } from "../hud/walkHud.ts";
+} from "../hud/index.ts";
 import { slotIndexOf } from "../state/index.ts";
-import { lineInk } from "../ui/lineInk.ts";
-import { PALETTE } from "../ui/palette.ts";
-import { plainMarks } from "../ui/pixelFont.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { lineInk, PALETTE, plainMarks, TEXT_SCALE } from "../ui/index.ts";
 import { arcFlight } from "./arcFlight.ts";
 import { FEEDBACK_ART } from "./feedbackArt.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";

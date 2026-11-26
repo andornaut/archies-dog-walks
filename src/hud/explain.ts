@@ -8,8 +8,8 @@ import {
   dogDetail,
   gearDetail,
   walkerDetail,
-} from "../home/detail.ts";
-import { effectIconKey, effectItems, effectName } from "../presentation/effectIcons.ts";
+} from "../home/index.ts";
+import { effectIconKey, effectItems, effectName } from "../presentation/index.ts";
 import { capitalize, debuffFields, ownerMaxHearts } from "../rules/index.ts";
 import type { Owned, SaveStats } from "../save/index.ts";
 import { heartsOf, type RunState } from "../state/index.ts";

@@ -2,21 +2,20 @@ import { clampInto, containsPoint, type Point } from "@andornaut/game-kit/runtim
 import type { Input, Scene } from "phaser";
 
 import { gameData, LANE_COUNT } from "../../data/index.ts";
-import { gameplayAllowed, type RunPause, topBarButtonAt, walkPresses } from "../../hud/topBar.ts";
 import {
   debuffBarRects,
   type ExplainShown,
   type ExplainTarget,
   explainTargetAt,
+  gameplayAllowed,
   opensOnTap,
-} from "../../hud/walkHud.ts";
-import type { GestureAction } from "../../input/gestures.ts";
-import { holdRule } from "../../input/hold.ts";
-import { walkKeyAction } from "../../input/keyBindings.ts";
-import { walkPagePoint } from "../../input/pageTap.ts";
-import { logicalPoint } from "../../input/phaser/logicalPointer.ts";
-import { canvasInputBlocked, canvasPressAllowed } from "../../input/phaser/pressAdmission.ts";
+  type RunPause,
+  topBarButtonAt,
+  walkPresses,
+} from "../../hud/index.ts";
 import {
+  type GestureAction,
+  holdRule,
   idleTrack,
   type PointerPhase,
   type PointerSample,
@@ -26,11 +25,15 @@ import {
   tickTrack,
   type TrackContext,
   trackPointer,
-} from "../../input/pointerTracking.ts";
+  walkKeyAction,
+  walkPagePoint,
+} from "../../input/index.ts";
+import { logicalPoint } from "../../input/phaser/logicalPointer.ts";
+import { canvasInputBlocked, canvasPressAllowed } from "../../input/phaser/pressAdmission.ts";
 import type { LaneDirection } from "../../layout/index.ts";
 import { read } from "../../rules/index.ts";
 import { type SessionInput, steerWalk, type Walk } from "../../runner/index.ts";
-import { deviceFitOwned } from "../../ui/worldFit.ts";
+import { deviceFitOwned } from "../../ui/index.ts";
 import { listenPagePresses } from "../pagePresses.ts";
 import { addTapBurst } from "../uiKit.ts";
 import { leadWalk } from "./interpolate.ts";

@@ -1,9 +1,8 @@
 import type { Input, Scene } from "phaser";
 
-import { followOnePress } from "../input/onePress.ts";
+import { followOnePress, type PointerPhase } from "../input/index.ts";
 import { type LogicalPointer, logicalPointer } from "../input/phaser/logicalPointer.ts";
 import { canvasPressAllowed } from "../input/phaser/pressAdmission.ts";
-import type { PointerPhase } from "../input/pointerTracking.ts";
 
 // cancelled: the browser called the press off (a system gesture, an incoming call), so its
 // release picks nothing. A release outside the canvas is an ordinary release.

@@ -23,8 +23,7 @@ import {
 import { artUrl, domArtUrl } from "../../assets/files/index.ts";
 import { DOM_STYLE_ART } from "../../assets/index.ts";
 import { createPressAdmission, type PressAdmission } from "../../pressAdmission.ts";
-import { type DomScale, domScale, sliceLengths } from "../domScale.ts";
-import { PALETTE } from "../palette.ts";
+import { type DomScale, domScale, PALETTE, sliceLengths } from "../index.ts";
 import { cutDomArt } from "./domCuts.ts";
 import { type RequiredAsset, requiredAssets, type RequiredAssetStatus } from "./requiredAssets.ts";
 import { loadSheet, onSheetReady } from "./sheetFrames.ts";

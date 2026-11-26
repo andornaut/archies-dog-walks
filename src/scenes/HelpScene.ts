@@ -3,15 +3,21 @@ import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtim
 import { Scene, Scenes } from "phaser";
 
 import { gameData, type HelpPictureId } from "../data/index.ts";
-import { helpActionForKey, helpActionForPointer } from "../help/helpInput.ts";
-import { HELP_LAYOUT, type HelpActionBounds } from "../help/helpLayout.ts";
-import { applyHelpAction, type HelpAction } from "../help/helpPaging.ts";
-import { closeHelp } from "../help/helpSeen.ts";
-import { type HelpMeasure, helpView } from "../help/helpView.ts";
+import {
+  applyHelpAction,
+  closeHelp,
+  HELP_LAYOUT,
+  type HelpAction,
+  type HelpActionBounds,
+  helpActionForKey,
+  helpActionForPointer,
+  type HelpMeasure,
+  helpView,
+} from "../help/index.ts";
 import { coverHelpUnderlay } from "../hud/dom/helpUnderlay.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
-import { isMuteKey } from "../input/keyBindings.ts";
-import { PALETTE } from "../ui/palette.ts";
+import { isMuteKey } from "../input/index.ts";
+import { PALETTE } from "../ui/index.ts";
 import { addFilledRect } from "../ui/phaser/draw.ts";
 import { setPixelText, withProbe, wrapPixelText } from "../ui/phaser/pixelText.ts";
 import type { HelpPictureData } from "./HelpPictureScene.ts";

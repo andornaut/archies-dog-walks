@@ -19,7 +19,7 @@ import {
   type RequiredUpdateState,
 } from "@andornaut/game-kit/runtime/web/pwa/dom/launch";
 
-import { browserSoundFormat } from "../audio/soundFormat.ts";
+import { browserSoundFormat } from "../audio/index.ts";
 import { CACHE_POLICY, SERVICE_WORKER_URL } from "./cachePolicy.ts";
 import { dispatchPhoneEvent, PHONE_EVENTS } from "./events.ts";
 import { reportLaunchProgress } from "./launchProgress.ts";

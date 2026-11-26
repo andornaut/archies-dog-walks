@@ -1,18 +1,23 @@
 import { insetRect, type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
 import { type BitmapFont, fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { SLICES } from "../../data/index.ts";
+import { AFFORD_OUTSET, SLICES } from "../../data/index.ts";
 import { type DomArtSource, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
 import { fillPart, framedPart } from "../../ui/dom/parts.ts";
 import { createTextLine, placeBackedText, placeBox, setBox } from "../../ui/dom/pixelLine.ts";
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
-import { artPixel, type DomScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
-import { cssHex, PALETTE } from "../../ui/palette.ts";
-import { AFFORD_OUTSET, GREYED } from "../../ui/selection.ts";
-import { FEEDBACK } from "../feedback.ts";
-import { HOME_LAYOUT, slotSignText } from "../homeLayout.ts";
-import type { slotSign } from "../slotSign.ts";
+import {
+  artPixel,
+  cssHex,
+  type DomScale,
+  GREYED,
+  gridRect,
+  gridX,
+  gridY,
+  PALETTE,
+} from "../../ui/index.ts";
+import { FEEDBACK, HOME_LAYOUT, type slotSign, slotSignText } from "../index.ts";
 
 export function createSlotSign(
   doc: Document,

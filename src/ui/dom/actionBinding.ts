@@ -6,7 +6,7 @@ import type { ButtonView } from "@andornaut/game-kit/runtime/web/ui/dom/button";
 import type { PressGuard } from "@andornaut/game-kit/runtime/web/ui/dom/domPress";
 
 import { gameData } from "../../data/index.ts";
-import { holdRule, TILE_SLOP_PX } from "../../input/holdRule.ts";
+import { holdRule, TILE_SLOP_PX } from "../../input/index.ts";
 
 export type ActionOrigin =
   | { readonly kind: "click"; readonly event: MouseEvent }

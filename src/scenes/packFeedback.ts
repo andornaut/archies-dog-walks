@@ -4,11 +4,16 @@ import type { GameObjects, Scene } from "phaser";
 
 import { playTagOnce } from "../assets/phaser/sprites.ts";
 import { gameData, SCREEN_CONFIG } from "../data/index.ts";
-import { chipLeft, FEEDBACK, FLY_HEART, type LabelAnchor, stackOverPop } from "../hud/feedback.ts";
-import { changeChipAt } from "../hud/hudLanes.ts";
+import {
+  changeChipAt,
+  chipLeft,
+  FEEDBACK,
+  FLY_HEART,
+  type LabelAnchor,
+  stackOverPop,
+} from "../hud/index.ts";
 import { COMIC_WORDS } from "../layout/index.ts";
-import { lineInk } from "../ui/lineInk.ts";
-import { PALETTE } from "../ui/palette.ts";
+import { lineInk, PALETTE, TEXT_SCALE } from "../ui/index.ts";
 import { CREAM_PANEL_COLOURS, drawFramedRect } from "../ui/phaser/draw.ts";
 import {
   addPixelText,
@@ -17,7 +22,6 @@ import {
   pixelFontMetrics,
   placePixelText,
 } from "../ui/phaser/pixelText.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
 import { letterEffect } from "./comicWord.ts";
 import { fadeAway } from "./uiKit.ts";
 

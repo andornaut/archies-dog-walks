@@ -8,9 +8,8 @@ import {
   inkWidth,
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { SCREEN_CONFIG } from "../../data/index.ts";
+import { BUTTON_SIZE, SCREEN_CONFIG } from "../../data/index.ts";
 import { MENU_TEXT } from "../../data/menuText.ts";
-import { BUTTON_SIZE } from "../buttonGeometry.ts";
 import {
   deviceX,
   deviceY,
@@ -20,18 +19,19 @@ import {
   gridTransform,
   gridX,
   gridY,
-} from "../domScale.ts";
-import { PALETTE } from "../palette.ts";
-import { TOP_BAR_FACE, TOP_BAR_TRIM, TOP_BAR_WELL, topBarRects } from "../topBarTrim.ts";
-import {
+  PALETTE,
   pressedEffectWells,
+  TOP_BAR_FACE,
+  TOP_BAR_TRIM,
+  TOP_BAR_WELL,
   topBarGlyphRect,
+  topBarRects,
   type TopSectionButton,
   topSectionCurrency,
   topSectionCurrencyText,
   topSectionLayout,
   topSectionStateCapTop,
-} from "../topSection.ts";
+} from "../index.ts";
 import { containGameButtonClicks } from "./actionBinding.ts";
 import { type DomArtSource, imageArt, imageThreeSlice, sheetArt } from "./artElements.ts";
 import { createGameButton } from "./gameButton.ts";

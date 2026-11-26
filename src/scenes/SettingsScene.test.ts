@@ -1,5 +1,6 @@
 import { expect, it, vi } from "vitest";
 
+import { BUILD_LABEL } from "../buildLabel.ts";
 import { gameData } from "../data/index.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import { installStepsLayout, settingsLayout } from "../home/settings.ts";
@@ -54,6 +55,7 @@ function fixture(install = false, width = 360, dpr = 1) {
       measure,
       {
         art: () => ({ height: 16, width: 16 }),
+        buildLabel: BUILD_LABEL,
         layout,
         rows: configuredRows,
         words: gameData.menuText.settings,

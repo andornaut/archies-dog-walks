@@ -10,14 +10,16 @@ import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/
 import { type DomPart, fillPart, framedPart } from "../../ui/dom/parts.ts";
 import { createTextLine, namePillBoxes, placeText, setBox } from "../../ui/dom/pixelLine.ts";
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
-import { type DomScale, frameRect } from "../../ui/domScale.ts";
-import { lineInk } from "../../ui/lineInk.ts";
-import { inkWithPills } from "../../ui/namePills.ts";
-import { PALETTE } from "../../ui/palette.ts";
-import { plainMarks } from "../../ui/pixelFont.ts";
-import { TEXT_SCALE } from "../../ui/textFit.ts";
-import { HOME_LAYOUT } from "../homeLayout.ts";
-import type { HomeSpeechView } from "../speechView.ts";
+import {
+  type DomScale,
+  frameRect,
+  inkWithPills,
+  lineInk,
+  PALETTE,
+  plainMarks,
+  TEXT_SCALE,
+} from "../../ui/index.ts";
+import { HOME_LAYOUT, type HomeSpeechView } from "../index.ts";
 import { textPart } from "./detailText.ts";
 
 // art: each tail's cream inside, row by row from the tail's top-left, which the bubble's focus

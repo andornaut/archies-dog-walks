@@ -3,11 +3,17 @@ import "./logbook.css";
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { badgeStripFaceBottom, badgeStripHits, type BadgeView } from "../../home/badgesView.ts";
-import type { DetailArt, DetailText } from "../../home/detailCardView.ts";
 import { textPart } from "../../home/dom/detailText.ts";
-import { END_LAYOUT } from "../../home/endLayout.ts";
-import type { EndResults, EndScreenView } from "../../home/endScreenView.ts";
+import {
+  badgeStripFaceBottom,
+  badgeStripHits,
+  type BadgeView,
+  type DetailArt,
+  type DetailText,
+  END_LAYOUT,
+  type EndResults,
+  type EndScreenView,
+} from "../../home/index.ts";
 import { sheetArt } from "../../ui/dom/artElements.ts";
 import { contentSeparatorPart } from "../../ui/dom/contentSeparator.ts";
 import { createGameButton } from "../../ui/dom/gameButton.ts";
@@ -22,10 +28,15 @@ import { createTextLine, type DomTextLine, placeBox, placeText } from "../../ui/
 import { followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { artPixel, type DomScale, gridX, gridY } from "../../ui/domScale.ts";
-import type { PanelText } from "../../ui/modal/types.ts";
-import { PALETTE } from "../../ui/palette.ts";
-import { TEXT_SCALE } from "../../ui/textFit.ts";
+import {
+  artPixel,
+  type DomScale,
+  gridX,
+  gridY,
+  PALETTE,
+  type PanelText,
+  TEXT_SCALE,
+} from "../../ui/index.ts";
 import type { DomBadgeCardInput } from "./badgeCard.ts";
 import { badgeStripParts } from "./celebration.ts";
 import { artPart, type DomDetailCardInput } from "./detailCard.ts";

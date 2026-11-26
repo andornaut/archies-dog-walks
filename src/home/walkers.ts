@@ -5,7 +5,7 @@ import type { WalkerId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
 import { agilityPercent, perkEffect, walkerGoal } from "../rules/index.ts";
 import type { Owned, SaveDocument } from "../save/index.ts";
-import { type ItemTile, itemTile } from "../ui/interaction.ts";
+import { type ItemTile, itemTile } from "../ui/index.ts";
 import { togglePick } from "./home.ts";
 
 type WalkerText = Pick<GameData, "homeText" | "tuning" | "walkerPerks" | "walkers">;

@@ -3,17 +3,14 @@ import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { GameObjects, Scene } from "phaser";
 
-import { gameData } from "../data/index.ts";
-import { DETAIL_WELL_KEY, type DetailCardView, detailCardView } from "../home/detailCardView.ts";
+import { DETAIL_WELL_KEY } from "../assets/index.ts";
+import { AFFORD_OUTSET, gameData } from "../data/index.ts";
+import { type DetailCardView, detailCardView } from "../home/index.ts";
 import { shownText } from "../ui/dom/pixelLine.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
-import { fontPixel } from "../ui/domScale.ts";
-import { inkWithPills } from "../ui/namePills.ts";
-import { PALETTE } from "../ui/palette.ts";
+import { fontPixel, inkWithPills, PALETTE, TEXT_SCALE } from "../ui/index.ts";
 import { drawRing } from "../ui/phaser/draw.ts";
 import { pixelBitmapFont } from "../ui/phaser/pixelText.ts";
-import { AFFORD_OUTSET } from "../ui/selection.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
 import { canvasDetailMeasure } from "./modalMeasure.ts";
 import { addLoopingFrame, selectOuter } from "./uiKit.ts";
 

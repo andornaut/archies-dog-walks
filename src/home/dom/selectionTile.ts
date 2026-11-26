@@ -4,15 +4,23 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { ButtonView } from "@andornaut/game-kit/runtime/web/ui/dom/button";
 
-import { CHECK_SIZE } from "../../data/index.ts";
+import { CHECK_SIZE, MARK_OFFSET } from "../../data/index.ts";
 import { type DomArtSource, sheetArt } from "../../ui/dom/artElements.ts";
 import { createTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
-import { artPixel, type DomScale, frameRect, gridRect, gridX, gridY } from "../../ui/domScale.ts";
-import type { TileState } from "../../ui/interaction.ts";
-import { MARK_OFFSET } from "../../ui/mark.ts";
-import { cssHex, PALETTE } from "../../ui/palette.ts";
-import { GREYED, selectLook } from "../../ui/selection.ts";
-import { FEEDBACK } from "../feedback.ts";
+import {
+  artPixel,
+  cssHex,
+  type DomScale,
+  frameRect,
+  GREYED,
+  gridRect,
+  gridX,
+  gridY,
+  PALETTE,
+  selectLook,
+  type TileState,
+} from "../../ui/index.ts";
+import { FEEDBACK } from "../index.ts";
 export interface NativeTileFill {
   readonly colour: number;
   readonly rect: Rect;

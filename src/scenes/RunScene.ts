@@ -8,32 +8,37 @@ import {
 } from "@andornaut/game-kit/runtime/clock/fixedStep";
 import { Scene } from "phaser";
 
-import { musicKey } from "../audio/music.ts";
+import { musicKey } from "../audio/index.ts";
 import {
   finishZone,
+  type InputEvent,
+  type RunSetup,
   timeScaleOf,
   WALK_CHEATS_OFF,
   type WalkCheat,
   walkCheat,
   type WalkCheats,
   withCheats,
-} from "../cheats/cheats.ts";
-import type { InputEvent } from "../cheats/inputLog.ts";
-import type { RunSetup } from "../cheats/runSetup.ts";
-import { withSetupStart } from "../cheats/setupRun.ts";
+  withSetupStart,
+} from "../cheats/index.ts";
 import type { DogId, ZoneId } from "../data/ids.ts";
 import { gameData, LANE_COUNT } from "../data/index.ts";
-import { cardHintTriggers, startHintTriggers } from "../hud/hintTriggers.ts";
-import { homeQuestionNote, pauseNote } from "../hud/homeQuestion.ts";
-import { NOTHING_PAUSED, type RunPause, walkBackAction, walkPaused } from "../hud/topBar.ts";
-import type { ExplainShown } from "../hud/walkHud.ts";
 import {
+  cardHintTriggers,
+  type ExplainShown,
+  homeQuestionNote,
   newWalkerCelebrations,
+  NOTHING_PAUSED,
+  pauseNote,
   playInTurn,
+  type RunPause,
+  startHintTriggers,
+  walkBackAction,
+  walkPaused,
   type ZoneCelebration,
   zoneCelebration,
-} from "../hud/zoneCelebration.ts";
-import { effectItems } from "../presentation/effectIcons.ts";
+} from "../hud/index.ts";
+import { effectItems } from "../presentation/index.ts";
 import { onFrameTurnChange, PHONE_EVENTS, startWakeLock, stopWakeLock } from "../pwa/index.ts";
 import { requestGameUpdateCheck } from "../pwa/launch.ts";
 import {
@@ -71,7 +76,7 @@ import {
 } from "../runner/index.ts";
 import { checkpointOf, dogsFinishedWith, type ResumeWalk, runResultOf } from "../save/index.ts";
 import type { Loadout, RunState } from "../state/index.ts";
-import { colourFromHex, PALETTE } from "../ui/palette.ts";
+import { colourFromHex, PALETTE } from "../ui/index.ts";
 import { noteWalkStarted } from "./cheatChoices.ts";
 import type { HudSceneData } from "./HudScene.ts";
 import type { HudRun, RunHudView } from "./hudWalk.ts";

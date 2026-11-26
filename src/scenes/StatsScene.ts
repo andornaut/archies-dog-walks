@@ -4,11 +4,16 @@ import { Core, Scene } from "phaser";
 
 import { domArtUrl } from "../assets/files/index.ts";
 import { gameData } from "../data/index.ts";
-import { type BadgeView, badgeWall } from "../home/badgesView.ts";
-import { FEEDBACK } from "../home/feedback.ts";
-import { overlayRegion } from "../home/homeBar.ts";
-import { logbookView } from "../home/logbookView.ts";
-import { STATS_LAYOUT, STATS_TABS, type StatsTab } from "../home/statsLayout.ts";
+import {
+  type BadgeView,
+  badgeWall,
+  FEEDBACK,
+  logbookView,
+  overlayRegion,
+  STATS_LAYOUT,
+  STATS_TABS,
+  type StatsTab,
+} from "../home/index.ts";
 import {
   type DomLogbook,
   type LogbookScroll,
@@ -16,16 +21,14 @@ import {
   showLogbook,
 } from "../hud/dom/logbook.ts";
 import {
+  dragScroll,
   focusDirectionForKey,
   isConfirmKey,
-  isPauseKey,
-  menuKeyActs,
-} from "../input/keyBindings.ts";
-import {
-  dragScroll,
   isDragging,
+  isPauseKey,
   type ListScroll,
   listScroll,
+  menuKeyActs,
   pageKeyScroll,
   pressScroll,
   releaseScroll,
@@ -35,11 +38,11 @@ import {
   scrollToShow,
   stepScroll,
   wheelScroll,
-} from "../input/listScroll.ts";
-import { pillKind } from "../presentation/effectNames.ts";
+} from "../input/index.ts";
+import { pillKind } from "../presentation/index.ts";
 import { shownText } from "../ui/dom/pixelLine.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
-import { lineInk } from "../ui/lineInk.ts";
+import { lineInk } from "../ui/index.ts";
 import { badgeCard } from "./badges.ts";
 import { pillColours } from "./effectNameColours.ts";
 import { listenHomeBar } from "./homeBarPress.ts";

@@ -18,7 +18,7 @@ import { addStandingSprite, ensurePlaceholder, type Shadow } from "../../assets/
 import { minorLooks } from "../../content/index.ts";
 import type { EncounterId, GearId, MinorObstacleId } from "../../data/ids.ts";
 import { gameData, type HintTrigger, LANE_COUNT } from "../../data/index.ts";
-import { moverHintTriggers } from "../../hud/hintTriggers.ts";
+import { moverHintTriggers } from "../../hud/index.ts";
 import { obstacleParts } from "../../layout/index.ts";
 import {
   goesToVerge,
@@ -42,7 +42,7 @@ import {
   type WalkItemKind,
   type WalkStep,
 } from "../../runner/index.ts";
-import { PALETTE } from "../../ui/palette.ts";
+import { PALETTE } from "../../ui/index.ts";
 import { applyItemCue } from "./itemCueViews.ts";
 import type { ItemPart, ItemView } from "./itemTypes.ts";
 import { drawMover, MOVER_CUE_PARTS, moverBodyKey } from "./moverView.ts";

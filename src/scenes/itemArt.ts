@@ -3,10 +3,8 @@ import type { GameObjects, Scene } from "phaser";
 
 import { dogPortraitKey, gearIconKey } from "../assets/index.ts";
 import { gameData } from "../data/index.ts";
-import type { DetailPicture } from "../home/detail.ts";
-import type { Purchase } from "../home/home.ts";
-import type { Badge } from "../ui/interaction.ts";
-import { PALETTE } from "../ui/palette.ts";
+import type { DetailPicture, Purchase } from "../home/index.ts";
+import { type Badge, PALETTE } from "../ui/index.ts";
 import { fillRect } from "../ui/phaser/draw.ts";
 import { addPixelText } from "../ui/phaser/pixelText.ts";
 
