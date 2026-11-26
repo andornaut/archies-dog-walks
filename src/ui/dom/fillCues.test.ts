@@ -410,7 +410,7 @@ describe("control state cues", () => {
       "a pressed standard button's fill",
       "game",
       ".adw-standard-button[data-ui-pressed]",
-      "--adw-button-fill:var(--adw-forest)",
+      "--adw-button-fill:var(--ui-colour-button-pressed-face)",
     ],
     [
       "a pressed or disabled standard button's sunk flat face",
@@ -419,10 +419,34 @@ describe("control state cues", () => {
       "background:linear-gradient(var(--adw-button-fill),var(--adw-button-fill));transform:translateY",
     ],
     [
+      "a standard button's state colours",
+      "game",
+      ".adw-standard-button.ui-standard-button",
+      "--ui-colour-button-disabled-face:var(--adw-neutralGrey);" +
+        "--ui-colour-button-disabled-text:var(--adw-neutralDarkSlate);" +
+        "--ui-colour-button-focus-face:var(--adw-cyan);--ui-colour-button-focus-text:var(--adw-ink);" +
+        "--ui-colour-button-pressed-face:var(--adw-forest);" +
+        "--ui-colour-button-pressed-text:var(--adw-white)",
+    ],
+    [
+      "an unavailable standard button's navy focus under cream",
+      "game",
+      '.adw-standard-button[aria-disabled="true"]',
+      "--ui-colour-button-focus-face:var(--adw-navy);--ui-colour-button-focus-text:var(--adw-cream)",
+    ],
+    [
+      "a standard button's focus, press and selection in forced colours",
+      "gameForced",
+      ".adw-standard-button.ui-standard-button",
+      "--ui-colour-button-focus-face:Highlight;--ui-colour-button-focus-text:HighlightText;" +
+        "--ui-colour-button-pressed-face:Highlight;--ui-colour-button-pressed-text:HighlightText;" +
+        "--ui-colour-button-selected-face:Highlight;--ui-colour-button-selected-text:HighlightText",
+    ],
+    [
       "a disabled standard button's label",
       "game",
       '.adw-standard-button:is(:disabled, [aria-disabled="true"])',
-      "--adw-button-text:var(--adw-neutralDarkSlate)",
+      "--adw-button-text:var(--ui-colour-button-disabled-text)",
     ],
     [
       "a primary button's bevel",
@@ -479,8 +503,8 @@ describe("control state cues", () => {
 
   // Each other rule in the sheet that sets the declaration on a part the selector ends with (a
   // focus, press, selection or disabled state) ranks below the red phase's rule or precedes it.
-  // A forced-colours red phase on a choice card, picker tile or Pet shop row is its last rule with
-  // that selector, ranked against the sheet's normal-colour rules too, which apply in both.
+  // A forced-colours red phase is its last rule with that selector, ranked against the sheet's
+  // normal-colour rules too, which apply in both.
   it.each([
     ["standard button's face", "gameNormal", REFUSING_BUTTON, "", "--adw-button-fill:"],
     [
@@ -498,7 +522,7 @@ describe("control state cues", () => {
       ".adw-choice-press-band",
       "background:",
     ],
-    ["standard button's forced face", "gameForced", REFUSING_BUTTON, "", "--adw-button-fill:"],
+    ["standard button's forced face", "game", REFUSING_BUTTON, "", "--adw-button-fill:"],
     [
       "row's forced face",
       "uiForced",

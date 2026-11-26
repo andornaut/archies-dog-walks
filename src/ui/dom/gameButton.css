@@ -1,12 +1,24 @@
 /* A raised face: ink frame, the role's bevel row, its fill and a 4-row lip. Pressed and disabled
    faces sink 2 rows into the lip, flat: the frame from row 2 down to the box's bottom row, no
-   bevel or lip, the label sunk with them. */
+   bevel or lip, the label sunk with them.
+
+   Each state's face and label colours are Game Kit's theme state slots, set here once and once
+   again in forced colours; one rule per state reads its slots. Forced colours come before the
+   state rules, which outrank only the role colours, so they read whichever slots apply. */
 .adw-standard-button.ui-standard-button {
   --adw-button-fill: var(--adw-cream);
   --adw-button-highlight: var(--adw-white);
   --adw-button-lip: var(--adw-tan);
   --adw-button-text: var(--adw-plum);
   --adw-button-unit: var(--adw-slice-1, 1px);
+  --ui-colour-button-disabled-face: var(--adw-neutralGrey);
+  --ui-colour-button-disabled-text: var(--adw-neutralDarkSlate);
+  --ui-colour-button-focus-face: var(--adw-cyan);
+  --ui-colour-button-focus-text: var(--adw-ink);
+  --ui-colour-button-pressed-face: var(--adw-forest);
+  --ui-colour-button-pressed-text: var(--adw-white);
+  --ui-colour-button-selected-face: var(--adw-yellow);
+  --ui-colour-button-selected-text: var(--adw-ink);
   position: absolute;
   border-radius: 0;
   color: var(--adw-button-text);
@@ -23,6 +35,11 @@
   --adw-button-highlight: var(--adw-tan);
   --adw-button-lip: var(--adw-plum);
   --adw-button-text: var(--adw-cream);
+}
+/* An unavailable button's focus is navy under cream. */
+.adw-standard-button[aria-disabled="true"] {
+  --ui-colour-button-focus-face: var(--adw-navy);
+  --ui-colour-button-focus-text: var(--adw-cream);
 }
 .adw-standard-button .adw-standard-button-face {
   position: absolute;
@@ -57,44 +74,6 @@
 .adw-standard-button .adw-text {
   color: var(--adw-button-text) !important;
 }
-.adw-standard-button:is([data-ui-selected], [aria-pressed="true"]) {
-  --adw-button-fill: var(--adw-yellow);
-  --adw-button-text: var(--adw-ink);
-}
-.adw-standard-button.ui-standard-button:is(
-    :focus-visible,
-    [data-picker-focused]:where(.adw-picker-surface:not(:has(:focus-visible)) *)
-  ) {
-  --adw-button-fill: var(--adw-cyan);
-  --adw-button-text: var(--adw-ink);
-  outline: none;
-  box-shadow: none;
-}
-.adw-standard-button[data-ui-pressed] {
-  --adw-button-fill: var(--adw-forest);
-  --adw-button-text: var(--adw-white);
-}
-.adw-standard-button:is(:disabled, [aria-disabled="true"]) {
-  --adw-button-fill: var(--adw-neutralGrey);
-  --adw-button-text: var(--adw-neutralDarkSlate);
-}
-/* The sunk face moves down 2 rows; its bottom frame row is 3 deep and the 2 rows below the box are
-   clipped, so its last row is ink on the box's bottom row. Its fill is an image, as the raised
-   face's is, so it covers Kit's focus background colour. */
-.adw-standard-button:is([data-ui-pressed], :disabled, [aria-disabled="true"])
-  .adw-standard-button-face {
-  border-bottom-width: calc(3 * var(--adw-button-unit));
-  background: linear-gradient(var(--adw-button-fill), var(--adw-button-fill));
-  transform: translateY(calc(2 * var(--adw-button-unit)));
-  clip-path: inset(0 0 calc(2 * var(--adw-button-unit)) 0);
-}
-.adw-standard-button[aria-disabled="true"]:is(
-    :focus-visible,
-    [data-picker-focused]:where(.adw-picker-surface:not(:has(:focus-visible)) *)
-  ) {
-  --adw-button-fill: var(--adw-navy);
-  --adw-button-text: var(--adw-cream);
-}
 /* A refusal's red phases (refusal.ts): a dark red face, red bevel and plum lip under a white
    label (7.34:1), over its focus, press or disabled fill. */
 .adw-standard-button.ui-standard-button[data-refusal-red]:is(
@@ -107,58 +86,26 @@
   --adw-button-lip: var(--adw-plum);
   --adw-button-text: var(--adw-white);
 }
-/* A focused face's label stays at full opacity over its fill; it names the button and the kit
-   only means to let a picture's fill show through. */
-button.adw-standard-button.ui-standard-button:focus-visible
-  > .ui-button-face
-  > [aria-hidden="true"] {
-  opacity: 1;
-}
-/* Suppress inherited game focus decorations; this control's face supplies its focus cue. */
-.adw-standard-button.ui-standard-button:focus-visible .adw-standard-button-face::after {
-  content: none;
-  outline: none;
-  box-shadow: none;
-}
+/* Forced colours: a flat face in system colours, its bevel and lip the fill's colour in every
+   state, Highlight for focus, press and selection, GrayText on ButtonFace while disabled. */
 @media (forced-colors: active) {
   .adw-standard-button.ui-standard-button {
     --adw-button-fill: ButtonFace;
-    --adw-button-highlight: ButtonFace;
-    --adw-button-lip: ButtonFace;
+    --adw-button-highlight: var(--adw-button-fill);
+    --adw-button-lip: var(--adw-button-fill);
     --adw-button-text: ButtonText;
+    --ui-colour-button-disabled-face: ButtonFace;
+    --ui-colour-button-disabled-text: GrayText;
+    --ui-colour-button-focus-face: Highlight;
+    --ui-colour-button-focus-text: HighlightText;
+    --ui-colour-button-pressed-face: Highlight;
+    --ui-colour-button-pressed-text: HighlightText;
+    --ui-colour-button-selected-face: Highlight;
+    --ui-colour-button-selected-text: HighlightText;
     forced-color-adjust: none;
   }
   .adw-standard-button .adw-standard-button-face {
     border-color: ButtonText;
-  }
-  .adw-standard-button.ui-standard-button:is(
-      :focus-visible,
-      [data-picker-focused]:where(.adw-picker-surface:not(:has(:focus-visible)) *),
-      [data-ui-selected],
-      [aria-pressed="true"],
-      [data-ui-pressed]
-    ) {
-    --adw-button-fill: Highlight;
-    --adw-button-highlight: Highlight;
-    --adw-button-lip: Highlight;
-    --adw-button-text: HighlightText;
-    outline: none;
-    box-shadow: none;
-  }
-  .adw-standard-button.ui-standard-button:is(:disabled, [aria-disabled="true"]) {
-    --adw-button-fill: ButtonFace;
-    --adw-button-highlight: ButtonFace;
-    --adw-button-lip: ButtonFace;
-    --adw-button-text: GrayText;
-  }
-  .adw-standard-button.ui-standard-button[aria-disabled="true"]:is(
-      :focus-visible,
-      [data-picker-focused]:where(.adw-picker-surface:not(:has(:focus-visible)) *)
-    ) {
-    --adw-button-fill: Highlight;
-    --adw-button-highlight: Highlight;
-    --adw-button-lip: Highlight;
-    --adw-button-text: HighlightText;
   }
   /* A refusal's red phases fill the face ButtonText under a ButtonFace label, the inverse of the
      resting face, whatever the button's state, so a refusal stays distinct from Highlight focus. */
@@ -172,4 +119,49 @@ button.adw-standard-button.ui-standard-button:focus-visible
     --adw-button-lip: ButtonText;
     --adw-button-text: ButtonFace;
   }
+}
+/* The state rules, the last matching winning: selected, pressed, disabled, then focus. */
+.adw-standard-button:is([data-ui-selected], [aria-pressed="true"]) {
+  --adw-button-fill: var(--ui-colour-button-selected-face);
+  --adw-button-text: var(--ui-colour-button-selected-text);
+}
+.adw-standard-button[data-ui-pressed] {
+  --adw-button-fill: var(--ui-colour-button-pressed-face);
+  --adw-button-text: var(--ui-colour-button-pressed-text);
+}
+.adw-standard-button:is(:disabled, [aria-disabled="true"]) {
+  --adw-button-fill: var(--ui-colour-button-disabled-face);
+  --adw-button-text: var(--ui-colour-button-disabled-text);
+}
+.adw-standard-button.ui-standard-button:is(
+    :focus-visible,
+    [data-picker-focused]:where(.adw-picker-surface:not(:has(:focus-visible)) *)
+  ) {
+  --adw-button-fill: var(--ui-colour-button-focus-face);
+  --adw-button-text: var(--ui-colour-button-focus-text);
+  outline: none;
+  box-shadow: none;
+}
+/* The sunk face moves down 2 rows; its bottom frame row is 3 deep and the 2 rows below the box are
+   clipped, so its last row is ink on the box's bottom row. Its fill is an image, as the raised
+   face's is, so it covers Kit's focus background colour. */
+.adw-standard-button:is([data-ui-pressed], :disabled, [aria-disabled="true"])
+  .adw-standard-button-face {
+  border-bottom-width: calc(3 * var(--adw-button-unit));
+  background: linear-gradient(var(--adw-button-fill), var(--adw-button-fill));
+  transform: translateY(calc(2 * var(--adw-button-unit)));
+  clip-path: inset(0 0 calc(2 * var(--adw-button-unit)) 0);
+}
+/* A focused face's label stays at full opacity over its fill; it names the button and the kit
+   only means to let a picture's fill show through. */
+button.adw-standard-button.ui-standard-button:focus-visible
+  > .ui-button-face
+  > [aria-hidden="true"] {
+  opacity: 1;
+}
+/* Suppress inherited game focus decorations; this control's face supplies its focus cue. */
+.adw-standard-button.ui-standard-button:focus-visible .adw-standard-button-face::after {
+  content: none;
+  outline: none;
+  box-shadow: none;
 }
