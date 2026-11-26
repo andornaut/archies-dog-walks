@@ -30,12 +30,10 @@ import {
   newWalkerCelebrations,
   NOTHING_PAUSED,
   pauseNote,
-  playInTurn,
   type RunPause,
   startHintTriggers,
   walkBackAction,
   walkPaused,
-  type ZoneCelebration,
   zoneCelebration,
 } from "../hud/index.ts";
 import { effectItems } from "../presentation/index.ts";
@@ -106,6 +104,7 @@ import { type RunRandom, runRandom } from "./run/runStart.ts";
 import { createRunViews, drawRunViews, type RunViews } from "./run/runViews.ts";
 import { ShadowPool } from "./run/shadowPool.ts";
 import { LAYOUT, overPack, packPoint } from "./run/stage.ts";
+import { type CelebrationBatch, createZoneCelebrations } from "./run/zoneCelebrations.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
 
@@ -130,13 +129,6 @@ const STEPPING: FixedStepLimits = { maxFrameMs: 1000, stepMs: STEP_MS };
 // Before the walk starts, the HUD shows nothing to explain.
 const NOTHING_SHOWN: ExplainShown = { debuffs: [], dogs: [], effects: [] };
 
-// The celebrations due, one after another, once a zone's fee coins have landed, delayMs from its
-// end.
-interface Celebration {
-  celebrations: readonly ZoneCelebration[];
-  delayMs: number;
-}
-
 // One run's views, input, menus and cheat hooks, made as it starts.
 interface RunWorld extends RunViews {
   banner: ZoneBanner;
@@ -159,7 +151,7 @@ export class RunScene extends Scene implements HudRun {
   // The ambient movers' clock: the walk's simulated time less its firings' holds, in which
   // they stand still.
   private ambientMs = 0;
-  private celebrationGeneration = 0;
+  private readonly celebrations = createZoneCelebrations(this, () => this.openPause());
   // The cheats the walk plays by, initially from the Start screen.
   private cheats: WalkCheats = WALK_CHEATS_OFF;
   private endDestination: EndDestination = "end";
@@ -300,7 +292,7 @@ export class RunScene extends Scene implements HudRun {
 
   private resetState(): void {
     this.ambientMs = 0;
-    this.celebrationGeneration += 1;
+    this.celebrations.cancel();
     this.updateHeld = false;
     this.resumePoint = null;
     this.session = undefined;
@@ -513,7 +505,7 @@ export class RunScene extends Scene implements HudRun {
       session,
     );
     world.recorder.abandon();
-    this.celebrationGeneration += 1;
+    this.celebrations.cancel();
     world.menus.closeZoneOverlays();
     world.input.dropPress();
     world.input.takePending();
@@ -616,7 +608,7 @@ export class RunScene extends Scene implements HudRun {
       this.world?.moments.debuffsChanged(before, step.session.walk.run);
     }
     let opened: CardView | undefined;
-    let celebration: Celebration | undefined;
+    let celebration: CelebrationBatch | undefined;
     for (const event of step.events) {
       if (event.kind === "cardOpened") {
         opened = event.view;
@@ -635,7 +627,7 @@ export class RunScene extends Scene implements HudRun {
       if (celebration === undefined) {
         this.endWalk();
       } else {
-        this.celebrate(celebration, () => this.endWalk());
+        this.celebrations.play(this.world?.menus, celebration, () => this.endWalk());
       }
       return;
     }
@@ -648,7 +640,7 @@ export class RunScene extends Scene implements HudRun {
     if (celebration === undefined) {
       this.showCard(card);
     } else {
-      this.celebrate(celebration, () => this.showCard(card));
+      this.celebrations.play(this.world?.menus, celebration, () => this.showCard(card));
     }
   }
 
@@ -656,7 +648,9 @@ export class RunScene extends Scene implements HudRun {
   // resumes it, and returns the celebrations that play once the coins land: Neighbourhood done
   // between zones, and after the last zone a New walker for each walker the walk unlocks
   // (newWalkerCelebrations).
-  private endZone(event: Extract<SessionEvent, { kind: "zoneEnded" }>): Celebration | undefined {
+  private endZone(
+    event: Extract<SessionEvent, { kind: "zoneEnded" }>,
+  ): CelebrationBatch | undefined {
     const world = this.world;
     if (world === undefined) {
       return undefined;
@@ -682,34 +676,6 @@ export class RunScene extends Scene implements HudRun {
       zone: currentZone(gameData, before).name,
     });
     return { celebrations: [celebration], delayMs: payout.ms };
-  }
-
-  // The celebrations hold the walk while the fee coins land, then play one after another, each
-  // on its button (playInTurn); next follows the last.
-  private celebrate({ celebrations, delayMs }: Celebration, next: () => void): void {
-    const menus = this.world?.menus;
-    if (menus === undefined) {
-      return;
-    }
-    const generation = ++this.celebrationGeneration;
-    const current = (action: () => void) => () => {
-      if (generation === this.celebrationGeneration) {
-        action();
-      }
-    };
-    const show = (celebration: ZoneCelebration, done: () => void) => {
-      menus.holdForCelebration();
-      menus.showCelebration({
-        celebration,
-        onDone: current(done),
-        openPause: () => this.openPause(),
-      });
-    };
-    menus.holdForCelebration();
-    this.time.delayedCall(
-      delayMs,
-      current(() => playInTurn(show, next, celebrations)),
-    );
   }
 
   // An event's sounds, bursts, hints and labels, and the input log.
