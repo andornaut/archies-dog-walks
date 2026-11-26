@@ -4,18 +4,23 @@ import { type BitmapFont, fontMetrics } from "@andornaut/game-kit/runtime/text/b
 import { domArtPath, ownerCardFaceKey } from "../../assets/index.ts";
 import { gameData } from "../../data/index.ts";
 import {
+  boundsAdvance,
   type DomArtSource,
+  type DomTextBlock,
   imageArt,
   imageNineSlice,
+  placeBox,
+  playingFrame,
+  ringPart,
   sheetArt,
   type SheetArtPlace,
   sheetNineSlice,
-} from "../../ui/dom/artElements.ts";
-import { ringPart } from "../../ui/dom/parts.ts";
-import { boundsAdvance, type DomTextBlock, placeBox, shownText } from "../../ui/dom/pixelLine.ts";
-import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
-import { textBlock } from "../../ui/dom/textBlock.ts";
-import type { UiLayer } from "../../ui/dom/uiLayer.ts";
+  sheetTagFrames,
+  shownText,
+  type TagFrame,
+  textBlock,
+  type UiLayer,
+} from "../../ui/dom/index.ts";
 import {
   artPixel,
   cssHex,

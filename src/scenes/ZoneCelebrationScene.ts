@@ -3,10 +3,9 @@ import { guardSceneInput } from "@andornaut/game-kit/runtime/input/phaser/guardS
 import { Math as PhaserMath, Scene } from "phaser";
 
 import { ZONE_CELEBRATION_ART as ART } from "../assets/index.ts";
-import { playFirstTag } from "../assets/phaser/sprites.ts";
+import { playFirstTag } from "../assets/phaser/index.ts";
 import { gameData, MENU_BUTTON_KEY_GAP } from "../data/index.ts";
-import { showZoneCelebration } from "../hud/dom/celebration.ts";
-import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
+import { type DomQuestionPanel, showZoneCelebration } from "../hud/dom/index.ts";
 import {
   CELEBRATION_LAYOUT as LAYOUT,
   celebrationAdvance,
@@ -21,14 +20,14 @@ import {
   keyNumbersShown,
   menuKeyActs,
 } from "../input/index.ts";
-import { displayBitmapFont } from "../ui/phaser/displayText.ts";
-import { addRampDim } from "../ui/phaser/rampDim.ts";
+import { displayBitmapFont } from "../ui/phaser/index.ts";
 import { addConfetti } from "./badges.ts";
 import { canvasCelebrationMeasure } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import { closeOverlay, nativeSceneAccepts, type OverlayData } from "./overlay.ts";
 import { currentSettings, walkerSpriteKey } from "./profileStore.ts";
 import { followScene, htmlArtInput, htmlPanelPlace } from "./questionPanel.ts";
+import { addRampDim } from "./rampDim.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
 

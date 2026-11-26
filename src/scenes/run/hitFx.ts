@@ -1,6 +1,6 @@
 import { type GameObjects, type Scene, TintModes } from "phaser";
 
-import { playEffect } from "../../assets/phaser/sprites.ts";
+import { playEffect } from "../../assets/phaser/index.ts";
 import {
   BUMP_FLASH,
   bumpWorldOffset,

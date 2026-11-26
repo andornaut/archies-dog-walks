@@ -2,18 +2,20 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { BADGE_STRIP } from "../../data/index.ts";
-import { textPart } from "../../home/dom/detailText.ts";
+import { textPart } from "../../home/dom/index.ts";
 import { type BadgeView, panelBadgeStrip, stripUnderClose } from "../../home/index.ts";
-import { type DomPart, framelessView, panelFramePart } from "../../ui/dom/parts.ts";
 import {
   boundsAdvance,
   capRows,
   createTextLine,
+  type DomPart,
+  framelessView,
+  panelFramePart,
   placeText,
   setBox,
   shownText,
-} from "../../ui/dom/pixelLine.ts";
-import type { UiLayer } from "../../ui/dom/uiLayer.ts";
+  type UiLayer,
+} from "../../ui/dom/index.ts";
 import {
   artPixel,
   deviceX,

@@ -42,13 +42,13 @@ import {
   shopTabRects,
   slotRows,
 } from "../home/index.ts";
-import { addTapBurst as addNativeTapBurst } from "../hud/dom/questionPanel.ts";
 import {
+  addTapBurst as addNativeTapBurst,
   type NativeShopScreen,
   type ShopScreenRow,
   type ShopScreenView,
   showShopScreen,
-} from "../hud/dom/shopScreen.ts";
+} from "../hud/dom/index.ts";
 import {
   dragScroll,
   focusDirectionForKey,
@@ -69,9 +69,7 @@ import {
 } from "../input/index.ts";
 import { dollarText } from "../presentation/index.ts";
 import type { SaveDocument } from "../save/index.ts";
-import { shownText } from "../ui/dom/pixelLine.ts";
-import { loadSheet } from "../ui/dom/sheetFrames.ts";
-import { uiLayer } from "../ui/dom/uiLayer.ts";
+import { loadSheet, shownText, uiLayer } from "../ui/dom/index.ts";
 import {
   disabledArtKey,
   GREYED,

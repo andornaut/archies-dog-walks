@@ -1,6 +1,6 @@
 import type { Scene } from "phaser";
 
-import { addRampDim } from "../ui/phaser/rampDim.ts";
+import { addRampDim } from "./rampDim.ts";
 
 // Native modal paint and its world shade share visibility and disposal without another input scope.
 export function nativeModalShade<P extends { destroy(): void; setShown(shown: boolean): void }>(

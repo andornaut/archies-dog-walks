@@ -1,7 +1,7 @@
 import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import { BlendModes, GameObjects, type Scene } from "phaser";
 
-import { spriteMetrics } from "../../assets/phaser/sprites.ts";
+import { spriteMetrics } from "../../assets/phaser/index.ts";
 import type { ZoneId } from "../../data/ids.ts";
 import { gameData } from "../../data/index.ts";
 import { distanceAtY } from "../../layout/index.ts";

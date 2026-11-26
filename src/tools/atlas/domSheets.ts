@@ -11,7 +11,7 @@ import {
   domSheetImagePath,
   domSheetJsonPath,
 } from "../../assets/index.ts";
-import type { DomSheetEntry, DomSheetJson } from "../../ui/dom/sheetFrames.ts";
+import type { DomSheetEntry, DomSheetJson } from "../../ui/dom/index.ts";
 import { ATLAS_MAX_SIZE, spriteSource } from "./atlasLayout.ts";
 import type { ArtCopy } from "./disabledFiles.ts";
 

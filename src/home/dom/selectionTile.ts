@@ -5,8 +5,13 @@ import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { ButtonView } from "@andornaut/game-kit/runtime/web/ui/dom/button";
 
 import { CHECK_SIZE, MARK_OFFSET } from "../../data/index.ts";
-import { type DomArtSource, sheetArt } from "../../ui/dom/artElements.ts";
-import { createTextLine, placeText, setBox } from "../../ui/dom/pixelLine.ts";
+import {
+  createTextLine,
+  type DomArtSource,
+  placeText,
+  setBox,
+  sheetArt,
+} from "../../ui/dom/index.ts";
 import {
   artPixel,
   cssHex,

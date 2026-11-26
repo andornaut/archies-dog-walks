@@ -11,18 +11,29 @@ import {
 
 import { cardGreyPath, DIFFICULTY_KEY } from "../../assets/index.ts";
 import { CHARM, type GameData, SCREEN_CONFIG, SLICES } from "../../data/index.ts";
-import { textPart } from "../../home/dom/detailText.ts";
+import { textPart } from "../../home/dom/index.ts";
 import { SCREEN_LAYOUT } from "../../layout/index.ts";
 import { CARD_LAYOUT, cardRowIn, forkHomeRect, walkBarIconKey } from "../../presentation/index.ts";
 import { type CardView, MAX_CARD_OPTIONS } from "../../rules/index.ts";
-import { registerScenePointer } from "../../ui/dom/actionBinding.ts";
-import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
-import { createGameButton } from "../../ui/dom/gameButton.ts";
-import type { NativeGesture } from "../../ui/dom/modalLifecycle.ts";
-import { type DomPart, framelessView, gridBoxPart, ringPart } from "../../ui/dom/parts.ts";
-import { createTextLine, placeBox, placeText } from "../../ui/dom/pixelLine.ts";
-import { refusalPlaying, refuse } from "../../ui/dom/refusal.ts";
-import type { UiLayer } from "../../ui/dom/uiLayer.ts";
+import {
+  createGameButton,
+  createTextLine,
+  type DomArtSource,
+  type DomPart,
+  framelessView,
+  gridBoxPart,
+  imageArt,
+  imageNineSlice,
+  type NativeGesture,
+  placeBox,
+  placeText,
+  refusalPlaying,
+  refuse,
+  registerScenePointer,
+  ringPart,
+  sheetArt,
+  type UiLayer,
+} from "../../ui/dom/index.ts";
 import {
   cardHeader,
   type DomScale,

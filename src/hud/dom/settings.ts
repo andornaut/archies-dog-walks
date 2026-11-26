@@ -17,16 +17,26 @@ import {
   type VolumeKey,
 } from "../../home/index.ts";
 import { read } from "../../rules/index.ts";
-import { type DomArtSource, imageArt, sheetArt } from "../../ui/dom/artElements.ts";
-import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";
-import { cutFrameProperties, placeFormRows, rowIcon, switchFrames } from "../../ui/dom/formRows.ts";
-import { createGameFormRow } from "../../ui/dom/gameButton.ts";
-import { guardNativeInput } from "../../ui/dom/modalLifecycle.ts";
-import type { DomPart } from "../../ui/dom/parts.ts";
-import { createTextLine, placeBox, placeText } from "../../ui/dom/pixelLine.ts";
-import { refuse } from "../../ui/dom/refusal.ts";
-import { textBlock } from "../../ui/dom/textBlock.ts";
-import type { UiLayer } from "../../ui/dom/uiLayer.ts";
+import {
+  createContentSeparator,
+  createGameFormRow,
+  createTextLine,
+  cutFrameProperties,
+  type DomArtSource,
+  type DomPart,
+  guardNativeInput,
+  imageArt,
+  placeBox,
+  placeContentSeparator,
+  placeFormRows,
+  placeText,
+  refuse,
+  rowIcon,
+  sheetArt,
+  switchFrames,
+  textBlock,
+  type UiLayer,
+} from "../../ui/dom/index.ts";
 import { cssHex, type DomScale, gridY } from "../../ui/index.ts";
 import { type DomPage, showPage } from "./page.ts";
 import { bindPanelFeedback } from "./panelButton.ts";

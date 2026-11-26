@@ -4,7 +4,7 @@ import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import type { GameObjects, Scene, Tweens, Types } from "phaser";
 
 import { ownerFaceKey, WARNING_KEY, WARNING_TAG } from "../assets/index.ts";
-import { playTag } from "../assets/phaser/sprites.ts";
+import { playTag } from "../assets/phaser/index.ts";
 import type { DogId } from "../data/ids.ts";
 import {
   FACE_SIZE,
@@ -15,7 +15,7 @@ import {
   SCREEN_CONFIG,
   SLICES,
 } from "../data/index.ts";
-import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
+import type { HudMoment, HudMomentPainter } from "../hud/dom/index.ts";
 import {
   arcControl,
   bowRightControl,

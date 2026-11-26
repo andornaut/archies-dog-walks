@@ -3,7 +3,7 @@ import type { Scene, Tweens } from "phaser";
 
 import type { DogId } from "../data/ids.ts";
 import { SCREEN_CONFIG } from "../data/index.ts";
-import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
+import type { HudMoment, HudMomentPainter } from "../hud/dom/index.ts";
 import {
   arcControl,
   cardHearts,

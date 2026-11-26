@@ -2,7 +2,7 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { Core, Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import { type NativeChoiceCards, showChoiceCards } from "../hud/dom/choiceCards.ts";
+import { type NativeChoiceCards, showChoiceCards } from "../hud/dom/index.ts";
 import type { ChoiceEntry } from "../hud/index.ts";
 import {
   cardNumberForKey,
@@ -19,15 +19,15 @@ import {
 import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { cardRowIn } from "../presentation/index.ts";
 import { type CardView, type Choice, MAX_CARD_OPTIONS } from "../rules/index.ts";
-import type { UiLayer } from "../ui/dom/uiLayer.ts";
+import type { UiLayer } from "../ui/dom/index.ts";
 import { rectIndexAt } from "../ui/index.ts";
-import { displayBitmapFont } from "../ui/phaser/displayText.ts";
-import { addRampDim } from "../ui/phaser/rampDim.ts";
+import { displayBitmapFont } from "../ui/phaser/index.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import { createNativePicture } from "./nativePicture.ts";
 import { nativeSceneAccepts, onSceneEvent } from "./overlay.ts";
 import { currentSettings } from "./profileStore.ts";
 import { followScene, htmlArtInput, htmlPanelPlace } from "./questionPanel.ts";
+import { addRampDim } from "./rampDim.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { type ScenePicture, showAsPicture } from "./scenePicture.ts";
 import { guardScreenInput } from "./screenGuard.ts";

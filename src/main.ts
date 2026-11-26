@@ -17,38 +17,45 @@ import { DEV_GAME_GLOBAL, pageRunSetup } from "./cheats/index.ts";
 import { CRASH_SCREEN } from "./crash/crashScreen.ts";
 import { SCREEN_CONFIG } from "./data/index.ts";
 import { lostTouches, noteKeyPress } from "./input/index.ts";
-import { bindPressAdmission, createCanvasPressAdmission } from "./input/phaser/pressAdmission.ts";
+import { bindPressAdmission, createCanvasPressAdmission } from "./input/phaser/index.ts";
 import { pageFrameWatch, setupPhoneApp } from "./pwa/index.ts";
 import { pageDeviceSettings } from "./save/index.ts";
-import { BootScene } from "./scenes/BootScene.ts";
-import { CardScene } from "./scenes/CardScene.ts";
-import { CelebrationScene } from "./scenes/CelebrationScene.ts";
-import { CheatsScene } from "./scenes/CheatsScene.ts";
-import { EndScene } from "./scenes/EndScene.ts";
-import { HelpPictureScene } from "./scenes/HelpPictureScene.ts";
-import { HelpScene } from "./scenes/HelpScene.ts";
-import { HudScene } from "./scenes/HudScene.ts";
-import { pauseLoadingError } from "./scenes/loadingErrorPause.ts";
-import { MenuScene } from "./scenes/MenuScene.ts";
-import { PauseScene } from "./scenes/PauseScene.ts";
-import { stopResuming } from "./scenes/profileStore.ts";
-import { QuitScene } from "./scenes/QuitScene.ts";
-import { createRequiredUi, REQUIRED_UI } from "./scenes/requiredUi.ts";
-import { RunScene } from "./scenes/RunScene.ts";
-import { SCENE_KEYS } from "./scenes/sceneKeys.ts";
-import { SettingsScene } from "./scenes/SettingsScene.ts";
-import { ShopScene } from "./scenes/ShopScene.ts";
-import { StartScene } from "./scenes/StartScene.ts";
-import { StatsScene } from "./scenes/StatsScene.ts";
-import { TapBurstScene } from "./scenes/TapBurstScene.ts";
-import { UpdateScene, watchUpdateOffer } from "./scenes/UpdateScene.ts";
-import { followWorldCameras } from "./scenes/worldCamera.ts";
-import { ZoneCelebrationScene } from "./scenes/ZoneCelebrationScene.ts";
-import type { LoadingBar } from "./ui/dom/domLoadingBar.ts";
-import { mountFpsCounter } from "./ui/dom/fpsCounter.ts";
-import { mountLoadingError } from "./ui/dom/loadingError.ts";
-import { followModalUnderlay } from "./ui/dom/rampDim.ts";
-import { mountUiLayer, setUiLayer } from "./ui/dom/uiLayer.ts";
+import {
+  BootScene,
+  CardScene,
+  CelebrationScene,
+  CheatsScene,
+  createRequiredUi,
+  EndScene,
+  followWorldCameras,
+  HelpPictureScene,
+  HelpScene,
+  HudScene,
+  MenuScene,
+  pauseLoadingError,
+  PauseScene,
+  QuitScene,
+  REQUIRED_UI,
+  RunScene,
+  SCENE_KEYS,
+  SettingsScene,
+  ShopScene,
+  StartScene,
+  StatsScene,
+  stopResuming,
+  TapBurstScene,
+  UpdateScene,
+  watchUpdateOffer,
+  ZoneCelebrationScene,
+} from "./scenes/index.ts";
+import {
+  followModalUnderlay,
+  type LoadingBar,
+  mountFpsCounter,
+  mountLoadingError,
+  mountUiLayer,
+  setUiLayer,
+} from "./ui/dom/index.ts";
 import { startupLoad, worldViewBox } from "./ui/index.ts";
 
 // The element in pages/play/index.html that holds the canvas.

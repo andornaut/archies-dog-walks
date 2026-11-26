@@ -6,23 +6,25 @@ import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModalit
 import { BUTTON_SIZE, type GameData, SCREEN_CONFIG } from "../../data/index.ts";
 import { MENU_TEXT_FIELDS } from "../../home/index.ts";
 import { cardNumberForKey, isConfirmKey, menuKeyActs } from "../../input/index.ts";
-import { bindGameAction } from "../../ui/dom/actionBinding.ts";
-import { createControlGlyph } from "../../ui/dom/controlGlyph.ts";
-import { createGameButton } from "../../ui/dom/gameButton.ts";
-import { mountModalLifecycle, type NativeGesture } from "../../ui/dom/modalLifecycle.ts";
-import { type DomPart, panelFramePart } from "../../ui/dom/parts.ts";
 import {
+  bindGameAction,
+  createControlGlyph,
+  createGameButton,
   createTextLine,
+  type DomPart,
   type DomTextLine,
+  mountModalLifecycle,
+  type NativeGesture,
+  panelFramePart,
   placeBackedText,
   placeBox,
   placeFrame,
   placeText,
+  refuse,
   setBox,
-} from "../../ui/dom/pixelLine.ts";
-import { setRampDimmed } from "../../ui/dom/rampDim.ts";
-import { refuse } from "../../ui/dom/refusal.ts";
-import type { UiLayer } from "../../ui/dom/uiLayer.ts";
+  setRampDimmed,
+  type UiLayer,
+} from "../../ui/dom/index.ts";
 import {
   artPixel,
   closeFace,

@@ -3,7 +3,7 @@ import { Core, type Game, Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
 import { overlayRegion, updateModalLayout } from "../home/index.ts";
-import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
+import type { DomQuestionPanel } from "../hud/dom/index.ts";
 import { isPauseKey, menuKeyActs, screenArea } from "../input/index.ts";
 import {
   acceptUpdate,
@@ -15,12 +15,12 @@ import {
   updateOffered,
 } from "../pwa/index.ts";
 import { barTitleRoom, cardTitleRow, closeControl } from "../ui/index.ts";
-import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import { listenOutsideTap, nativeSceneAccepts, onBackPressed, onWindowEvent } from "./overlay.ts";
 import { profileWritesSettled } from "./profileStore.ts";
 import { addHtmlModalCard } from "./questionPanel.ts";
+import { addRampDim } from "./rampDim.ts";
 import type { RunScene } from "./RunScene.ts";
 import { SCENE_KEYS, TAP_BURST_SCENE_KEY } from "./sceneKeys.ts";
 

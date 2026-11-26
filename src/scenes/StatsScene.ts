@@ -19,7 +19,7 @@ import {
   type LogbookScroll,
   type LogbookTarget,
   showLogbook,
-} from "../hud/dom/logbook.ts";
+} from "../hud/dom/index.ts";
 import {
   dragScroll,
   focusDirectionForKey,
@@ -40,8 +40,7 @@ import {
   wheelScroll,
 } from "../input/index.ts";
 import { pillKind } from "../presentation/index.ts";
-import { shownText } from "../ui/dom/pixelLine.ts";
-import { loadSheet } from "../ui/dom/sheetFrames.ts";
+import { loadSheet, shownText } from "../ui/dom/index.ts";
 import { lineInk } from "../ui/index.ts";
 import { badgeCard } from "./badges.ts";
 import { pillColours } from "./effectNameColours.ts";

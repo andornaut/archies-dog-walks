@@ -11,7 +11,6 @@ import {
   MODAL,
   navigationMenuWidth,
 } from "../ui/index.ts";
-import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { whenArtReady } from "./artReady.ts";
 import type { CheatsData } from "./CheatsScene.ts";
 import { openHelp } from "./helpScreen.ts";
@@ -27,6 +26,7 @@ import {
   type OverlayData,
 } from "./overlay.ts";
 import { addHtmlQuestionPanel, type QuestionPanel } from "./questionPanel.ts";
+import { addRampDim } from "./rampDim.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import type { SettingsData } from "./SettingsScene.ts";
 

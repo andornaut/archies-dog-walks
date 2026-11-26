@@ -7,17 +7,21 @@ import { loopFrame } from "../../home/index.ts";
 import { SCREEN_LAYOUT } from "../../layout/index.ts";
 import { faceMood, ownerMaxHearts } from "../../rules/index.ts";
 import type { RunState } from "../../state/index.ts";
-import { type DomArtSource, imageArt, sheetArt } from "../../ui/dom/artElements.ts";
-import { gridFillPart } from "../../ui/dom/parts.ts";
 import {
   createTextLine,
+  type DomArtSource,
   type DomTextLine,
+  gridFillPart,
+  imageArt,
   placeBackedText,
   placeText,
+  playingFrame,
   setBox,
-} from "../../ui/dom/pixelLine.ts";
-import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
-import type { UiLayer } from "../../ui/dom/uiLayer.ts";
+  sheetArt,
+  sheetTagFrames,
+  type TagFrame,
+  type UiLayer,
+} from "../../ui/dom/index.ts";
 import {
   artPixel,
   deviceX,

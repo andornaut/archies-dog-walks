@@ -18,7 +18,7 @@ vi.mock("phaser", () => ({
 vi.mock("virtual:art-files", () => ({ default: new Map() }));
 vi.mock("./artReady.ts", () => ({ whenArtReady: (_scene: unknown, ready: () => void) => ready() }));
 vi.mock("./modalMeasure.ts", () => ({ canvasPanelMeasure: () => ({ inkWidth: () => 60 }) }));
-vi.mock("../ui/phaser/rampDim.ts", () => ({ addRampDim: vi.fn() }));
+vi.mock("./rampDim.ts", () => ({ addRampDim: vi.fn() }));
 vi.mock("./questionPanel.ts", () => ({
   addHtmlQuestionPanel: (_scene: unknown, _area: unknown, panel: QuestionPanel) => {
     fake.question(panel);

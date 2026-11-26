@@ -1,4 +1,4 @@
-import { playFirstTag, type Shadow, showAtDepth } from "../../assets/phaser/sprites.ts";
+import { playFirstTag, type Shadow, showAtDepth } from "../../assets/phaser/index.ts";
 import { project } from "../../layout/index.ts";
 import type { WalkItem } from "../../runner/index.ts";
 import type { ItemPart } from "./itemTypes.ts";

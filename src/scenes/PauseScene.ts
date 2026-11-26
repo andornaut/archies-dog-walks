@@ -14,7 +14,6 @@ import {
   type PauseMenuItem,
   pauseMenuItemLabel,
 } from "../ui/index.ts";
-import { addRampDim } from "../ui/phaser/rampDim.ts";
 import type { CheatsData } from "./CheatsScene.ts";
 import { HELP_CLOSED_EVENT } from "./HelpScene.ts";
 import { openHelp } from "./helpScreen.ts";
@@ -22,6 +21,7 @@ import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import { listenOutsideTap, onceSceneEvent, openOverlay } from "./overlay.ts";
 import { addHtmlQuestionPanel, type PanelEntry, type QuestionPanel } from "./questionPanel.ts";
+import { addRampDim } from "./rampDim.ts";
 import type { RunScene } from "./RunScene.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { SETTINGS_CLOSED_EVENT, type SettingsData } from "./SettingsScene.ts";

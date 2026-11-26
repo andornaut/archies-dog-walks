@@ -1,7 +1,7 @@
 import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 
 import { moverBodyTag } from "../../assets/index.ts";
-import { playTag, showAtDepth, spriteMetrics } from "../../assets/phaser/sprites.ts";
+import { playTag, showAtDepth, spriteMetrics } from "../../assets/phaser/index.ts";
 import { animationPhaseAt, project } from "../../layout/index.ts";
 import {
   facesLeft,

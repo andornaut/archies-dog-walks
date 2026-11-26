@@ -10,8 +10,7 @@ import {
 import type { Scene } from "phaser";
 
 import type { Press } from "../input/index.ts";
-import { logicalPoint } from "../input/phaser/logicalPointer.ts";
-import { canvasPressAllowed } from "../input/phaser/pressAdmission.ts";
+import { canvasPressAllowed, logicalPoint } from "../input/phaser/index.ts";
 import { pageFrameTurn } from "../pwa/index.ts";
 
 // What a press on the bare page does, at points in game pixels, unclamped. onBare: whether the

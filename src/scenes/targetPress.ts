@@ -1,7 +1,7 @@
 import type { Scene } from "phaser";
 
 import { pressDown, pressUp, type TargetPress } from "../input/index.ts";
-import type { LogicalPointer } from "../input/phaser/logicalPointer.ts";
+import type { LogicalPointer } from "../input/phaser/index.ts";
 import { listenOnePress } from "./onePress.ts";
 import { afterMsUnderOverlay } from "./overlayClock.ts";
 

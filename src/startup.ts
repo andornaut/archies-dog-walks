@@ -12,8 +12,7 @@ import { trackInputModality } from "@andornaut/game-kit/runtime/web/ui/dom/focus
 
 import { loadingProgress } from "./loadingProgress.ts";
 import { launchGame, launchProgress, startLaunch } from "./pwa/index.ts";
-import { mountDomLoadingBar } from "./ui/dom/domLoadingBar.ts";
-import { mountLaunchFailure } from "./ui/dom/launchFailure.ts";
+import { mountDomLoadingBar, mountLaunchFailure } from "./ui/dom/index.ts";
 import { LOADING_TIMING, startupLoad, startupProgress } from "./ui/index.ts";
 
 // A screen that focuses its first control on open shows the focus ring only after keyboard

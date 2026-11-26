@@ -1,6 +1,6 @@
 import type { Plugin } from "vite";
 
-import type { DomSheetJson } from "../ui/dom/sheetFrames.ts";
+import type { DomSheetJson } from "../ui/dom/index.ts";
 
 export interface SiteArtSheet {
   readonly json: DomSheetJson;

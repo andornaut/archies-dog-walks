@@ -1,7 +1,7 @@
 import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import type { GameObjects, Scene } from "phaser";
 
-import { playTagOnce } from "../assets/phaser/sprites.ts";
+import { playTagOnce } from "../assets/phaser/index.ts";
 import { bobOffset } from "../home/index.ts";
 import type { IconButton } from "./uiKit.ts";
 

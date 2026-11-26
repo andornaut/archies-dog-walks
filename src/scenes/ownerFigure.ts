@@ -1,7 +1,7 @@
 import type { GameObjects, Scene } from "phaser";
 
 import { ownerFaceKey } from "../assets/index.ts";
-import { addStandingSprite, firstTag, playTag } from "../assets/phaser/sprites.ts";
+import { addStandingSprite, firstTag, playTag } from "../assets/phaser/index.ts";
 import type { DogId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
 

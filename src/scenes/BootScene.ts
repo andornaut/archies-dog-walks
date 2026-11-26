@@ -3,7 +3,7 @@ import { type LoaderWatch, watchLoader } from "@andornaut/game-kit/runtime/load/
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { GameObjects, Scene, Scenes, Sound } from "phaser";
 
-import { domArtUrl } from "../assets/files/index.ts";
+import { artUrl, domArtUrl } from "../assets/files/index.ts";
 import {
   animationSpecs,
   type AsepriteSheet,
@@ -24,19 +24,20 @@ import {
 import {
   addAtlasFonts,
   addAtlasTextures,
-  artUrl,
   atlasManifest,
+  ensurePlaceholder,
   loadManifest,
   MANIFEST_CACHE_KEY,
+  measureSprite,
+  playTag,
   queueFonts,
   queueManifestArt,
   smoothDepthArt,
-} from "../assets/phaser/manifestArt.ts";
-import { ensurePlaceholder, measureSprite, playTag } from "../assets/phaser/sprites.ts";
+} from "../assets/phaser/index.ts";
 import { namesRunSetup, pageRunSetup, pageSearch, runLinkLoadout } from "../cheats/index.ts";
 import type { EncounterId } from "../data/ids.ts";
 import { FACE_SIZE, gameData, OWNER_CARD_FACE } from "../data/index.ts";
-import { hudArtResources } from "../hud/dom/prepareHudArt.ts";
+import { hudArtResources } from "../hud/dom/index.ts";
 import { waitedLoad } from "../loadingProgress.ts";
 import {
   bootHandedOver,
@@ -48,9 +49,9 @@ import {
   startWakeLock,
   unlockAudioOnFirstGesture,
 } from "../pwa/index.ts";
-import { uiLayer } from "../ui/dom/uiLayer.ts";
+import { uiLayer } from "../ui/dom/index.ts";
 import { PALETTE } from "../ui/index.ts";
-import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/pixelText.ts";
+import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/index.ts";
 import { markArtReady, setBootWatch, type WaitedLoad } from "./artReady.ts";
 import { addBootPicture } from "./bootPicture.ts";
 import { stopOnceRetried } from "./bootRetries.ts";

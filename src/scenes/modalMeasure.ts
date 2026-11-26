@@ -1,6 +1,6 @@
 import type { Scene } from "phaser";
 
-import { firstTag } from "../assets/phaser/sprites.ts";
+import { firstTag } from "../assets/phaser/index.ts";
 import { type DetailMeasure, type EndMeasure, QUIP_TEXT_ROOM } from "../home/index.ts";
 import { type CelebrationMeasure, GREETING_FIT, NOTE_PLATE } from "../hud/index.ts";
 import { ownerNameWrap } from "../presentation/index.ts";
@@ -21,7 +21,7 @@ import {
   setPixelText,
   withProbe,
   wrapPixelText,
-} from "../ui/phaser/pixelText.ts";
+} from "../ui/phaser/index.ts";
 
 // Measure actual game glyph ink without changing its role's font size.
 export function modalTextWidth(scene: Scene, font: FontRole, values: readonly string[]): number {

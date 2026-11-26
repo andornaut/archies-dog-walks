@@ -28,8 +28,7 @@ import {
   walkKeyAction,
   walkPagePoint,
 } from "../../input/index.ts";
-import { logicalPoint } from "../../input/phaser/logicalPointer.ts";
-import { canvasInputBlocked, canvasPressAllowed } from "../../input/phaser/pressAdmission.ts";
+import { canvasInputBlocked, canvasPressAllowed, logicalPoint } from "../../input/phaser/index.ts";
 import type { LaneDirection } from "../../layout/index.ts";
 import { read } from "../../rules/index.ts";
 import { type SessionInput, steerWalk, type Walk } from "../../runner/index.ts";

@@ -2,7 +2,7 @@ import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { playTagOnce } from "../../assets/phaser/sprites.ts";
+import { playTagOnce } from "../../assets/phaser/index.ts";
 import type { WalkItem, WalkStep } from "../../runner/index.ts";
 
 // The sprite a collected tip, or a treat that pays cash, twinkles once over the lead dog: centred

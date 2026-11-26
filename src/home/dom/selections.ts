@@ -5,10 +5,17 @@ import {
   fontMetrics,
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { type DomArtSource, imageArt, sheetArt } from "../../ui/dom/artElements.ts";
-import { createGameButton } from "../../ui/dom/gameButton.ts";
-import { createTextLine, placeBackedText, placeText, setBox } from "../../ui/dom/pixelLine.ts";
-import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
+import {
+  createGameButton,
+  createTextLine,
+  type DomArtSource,
+  imageArt,
+  placeBackedText,
+  placeText,
+  setBox,
+  sheetArt,
+  type SheetFrame,
+} from "../../ui/dom/index.ts";
 import {
   cssHex,
   type DomScale,

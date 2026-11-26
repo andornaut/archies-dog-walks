@@ -2,7 +2,7 @@ import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { guardSceneInput } from "@andornaut/game-kit/runtime/input/phaser/guardSceneInput";
 import { type GameObjects, Scene } from "phaser";
 
-import { firstTag, playTag } from "../assets/phaser/sprites.ts";
+import { firstTag, playTag } from "../assets/phaser/index.ts";
 import { gameData, SCREEN_CONFIG } from "../data/index.ts";
 import {
   BADGE_CHEER,
@@ -20,18 +20,15 @@ import {
   walkUpOffset,
   waveOffset,
 } from "../home/index.ts";
-import { nativeFrames } from "../home/phaser/nativeFrames.ts";
-import type { DomEndScreen } from "../hud/dom/endScreen.ts";
-import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
+import { nativeFrames } from "../home/phaser/index.ts";
+import type { DomEndScreen, DomQuestionPanel } from "../hud/dom/index.ts";
 import { isConfirmKey, isMuteKey, screenArea } from "../input/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
-import { PackFigures } from "../pack/phaser/packFigures.ts";
+import { PackFigures } from "../pack/phaser/index.ts";
 import { stopWakeLock } from "../pwa/index.ts";
 import type { LastWalk } from "../save/index.ts";
 import { PALETTE, TEXT_SCALE, topSectionButtonAt } from "../ui/index.ts";
-import { hasDisplayFont } from "../ui/phaser/displayText.ts";
-import { fillRect } from "../ui/phaser/draw.ts";
-import { onceBeforeRender } from "../ui/phaser/rampDim.ts";
+import { fillRect, hasDisplayFont } from "../ui/phaser/index.ts";
 import { addBurst, badgeCard, badgeCelebrationNames, NEW_BEST_BURST } from "./badges.ts";
 import { routeHomeBar } from "./homeBarPress.ts";
 import type { MenuSceneData } from "./MenuScene.ts";
@@ -54,6 +51,7 @@ import {
   htmlPanelInput,
   htmlPanelPlace,
 } from "./questionPanel.ts";
+import { onceBeforeRender } from "./rampDim.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { listenTargetPress, sameByValue, type TargetPressListener } from "./targetPress.ts";

@@ -2,12 +2,12 @@ import { type Point, type Rect, rectAboveIn } from "@andornaut/game-kit/runtime/
 import type { GameObjects, Scene } from "phaser";
 
 import { kebabCase } from "../assets/index.ts";
-import { playEffect } from "../assets/phaser/sprites.ts";
+import { playEffect } from "../assets/phaser/index.ts";
 import type { EncounterId } from "../data/ids.ts";
 import { type Encounter, SCREEN_CONFIG } from "../data/index.ts";
 import { burstWordPlace, COMIC_WORDS, encounterFlashColour } from "../layout/index.ts";
 import { PALETTE } from "../ui/index.ts";
-import { addDisplayText } from "../ui/phaser/displayText.ts";
+import { addDisplayText } from "../ui/phaser/index.ts";
 import { letterEffect, loadedComicWordWidth } from "./comicWord.ts";
 import { addNineSlice, tagFrame } from "./uiKit.ts";
 

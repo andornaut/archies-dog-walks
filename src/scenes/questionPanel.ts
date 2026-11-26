@@ -6,28 +6,29 @@ import { domArtUrl } from "../assets/files/index.ts";
 import { gameData, SCREEN_CONFIG } from "../data/index.ts";
 import type { HelpView } from "../help/index.ts";
 import type { BadgeCardView, DetailCardView, EndScreenView } from "../home/index.ts";
-import { showBadgeCard } from "../hud/dom/badgeCard.ts";
-import { showDetailCard } from "../hud/dom/detailCard.ts";
-import { type DomEndScreen, type DomEndScreenInput, showEndScreen } from "../hud/dom/endScreen.ts";
-import { type DomHelpInput, showHelpScreen } from "../hud/dom/helpScreen.ts";
 import {
+  type DomEndScreen,
+  type DomEndScreenInput,
+  type DomHelpInput,
   type DomQuestionPanel,
   type DomQuestionPanelInput,
+  showBadgeCard,
+  showDetailCard,
+  showEndScreen,
+  showHelpScreen,
   showQuestionPanel,
-} from "../hud/dom/questionPanel.ts";
+} from "../hud/dom/index.ts";
 import { questionPanelView } from "../hud/index.ts";
 import { pillKind } from "../presentation/index.ts";
 import { pageFrameTurn } from "../pwa/index.ts";
-import { loadSheet } from "../ui/dom/sheetFrames.ts";
-import { uiLayer } from "../ui/dom/uiLayer.ts";
+import { loadSheet, uiLayer } from "../ui/dom/index.ts";
 import {
   type CardAction,
   modalCardView,
   type PanelNotePart,
   type QuestionPanelView,
 } from "../ui/index.ts";
-import { displayBitmapFont, hasDisplayFont } from "../ui/phaser/displayText.ts";
-import { pixelBitmapFont } from "../ui/phaser/pixelText.ts";
+import { displayBitmapFont, hasDisplayFont, pixelBitmapFont } from "../ui/phaser/index.ts";
 import { pillColours } from "./effectNameColours.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { nativeModalShade } from "./nativeModalShade.ts";

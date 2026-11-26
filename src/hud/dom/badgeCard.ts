@@ -1,10 +1,17 @@
 import { domArtPath } from "../../assets/index.ts";
-import { textPart } from "../../home/dom/detailText.ts";
+import { textPart } from "../../home/dom/index.ts";
 import { type BadgeCardView, CONFETTI } from "../../home/index.ts";
-import { type DomPart, fillPart, framelessView, panelFramePart } from "../../ui/dom/parts.ts";
-import { setBox } from "../../ui/dom/pixelLine.ts";
-import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
-import type { UiLayer } from "../../ui/dom/uiLayer.ts";
+import {
+  type DomPart,
+  fillPart,
+  framelessView,
+  panelFramePart,
+  playingFrame,
+  setBox,
+  sheetTagFrames,
+  type TagFrame,
+  type UiLayer,
+} from "../../ui/dom/index.ts";
 import {
   artPixel,
   type DomScale,

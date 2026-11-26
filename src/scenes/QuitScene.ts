@@ -4,11 +4,11 @@ import { gameData } from "../data/index.ts";
 import { HOME_LAYOUT, overlayRegion } from "../home/index.ts";
 import { QUIT_QUESTION_ANSWERS } from "../hud/index.ts";
 import { isPauseKey, menuKeyActs, screenArea } from "../input/index.ts";
-import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { clearOnHomePageOpening, exitGame } from "./homeBarPress.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import { closeOverlay, listenDismiss, nativeSceneAccepts, type OverlayData } from "./overlay.ts";
 import { addHtmlQuestionPanel, type QuestionPanel } from "./questionPanel.ts";
+import { addRampDim } from "./rampDim.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 
 // Quit? over the dimmed home screen, which back asks with nothing open, laid out as the Home

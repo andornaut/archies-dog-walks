@@ -4,7 +4,7 @@ import type { Random } from "@andornaut/game-kit/runtime/random";
 import type { GameObjects, Scene } from "phaser";
 
 import { AMBIENT_VARIANTS, IDLE_TAG } from "../../assets/index.ts";
-import { firstTag, playTag, showAtDepth } from "../../assets/phaser/sprites.ts";
+import { firstTag, playTag, showAtDepth } from "../../assets/phaser/index.ts";
 import type { ZoneId } from "../../data/ids.ts";
 import type { AmbientMover } from "../../data/index.ts";
 import {

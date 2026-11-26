@@ -3,7 +3,7 @@ import type { Scene } from "phaser";
 import { ownerFaceKey } from "../assets/index.ts";
 import type { DogId } from "../data/ids.ts";
 import { gameData, OWNER_TAB } from "../data/index.ts";
-import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
+import type { HudMoment, HudMomentPainter } from "../hud/dom/index.ts";
 import { ownerTabRect } from "../hud/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { PALETTE } from "../ui/index.ts";

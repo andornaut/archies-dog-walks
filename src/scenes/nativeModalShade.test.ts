@@ -3,10 +3,10 @@ import { EventEmitter } from "node:events";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
-import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { nativeModalShade } from "./nativeModalShade.ts";
+import { addRampDim } from "./rampDim.ts";
 
-vi.mock("../ui/phaser/rampDim.ts", () => ({ addRampDim: vi.fn() }));
+vi.mock("./rampDim.ts", () => ({ addRampDim: vi.fn() }));
 
 function fixture() {
   const events = new EventEmitter();

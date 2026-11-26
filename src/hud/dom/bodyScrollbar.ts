@@ -1,7 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import type { DomPart } from "../../ui/dom/parts.ts";
-import { setBox } from "../../ui/dom/pixelLine.ts";
+import { type DomPart, setBox } from "../../ui/dom/index.ts";
 import {
   type DomScale,
   gridRect,

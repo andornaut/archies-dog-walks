@@ -14,7 +14,7 @@ import {
   WARNING_KEY,
   WARNING_WANDER_KEY,
 } from "../../assets/index.ts";
-import { addStandingSprite, ensurePlaceholder, type Shadow } from "../../assets/phaser/sprites.ts";
+import { addStandingSprite, ensurePlaceholder, type Shadow } from "../../assets/phaser/index.ts";
 import { minorLooks } from "../../content/index.ts";
 import type { EncounterId, GearId, MinorObstacleId } from "../../data/ids.ts";
 import { gameData, type HintTrigger, LANE_COUNT } from "../../data/index.ts";

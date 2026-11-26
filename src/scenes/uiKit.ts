@@ -2,12 +2,12 @@ import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene, Tweens } from "phaser";
 
-import { playEffect } from "../assets/phaser/sprites.ts";
+import { playEffect } from "../assets/phaser/index.ts";
 import { SELECT_OUTSET, SLICES } from "../data/index.ts";
 import { loopFrame } from "../home/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { PALETTE, TEXT_SCALE } from "../ui/index.ts";
-import { fillRect } from "../ui/phaser/draw.ts";
+import { fillRect } from "../ui/phaser/index.ts";
 import { TAP_BURST_SCENE_KEY } from "./sceneKeys.ts";
 
 // Body text at 2x in plum, the screens' default text.

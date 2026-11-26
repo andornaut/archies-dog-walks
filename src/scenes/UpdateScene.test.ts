@@ -41,7 +41,7 @@ vi.mock("../pwa/launch.ts", async (original) => ({
   bootFinished: () => state.booted,
 }));
 
-vi.mock("../ui/phaser/rampDim.ts", () => ({ addRampDim: vi.fn() }));
+vi.mock("./rampDim.ts", () => ({ addRampDim: vi.fn() }));
 vi.mock("./nativeOverlayReady.ts", () => ({
   mountNativeOverlay: (_scene: unknown, mount: () => boolean) => mount(),
 }));

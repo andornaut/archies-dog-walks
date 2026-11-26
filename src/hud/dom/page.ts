@@ -7,12 +7,21 @@ import { createModalFrame } from "@andornaut/game-kit/runtime/web/ui/dom/modalFr
 
 import { SCREEN_CONFIG } from "../../data/index.ts";
 import { type PageFill, type PageTab, shopTabRects } from "../../home/index.ts";
-import { mountModalLifecycle, type NativeGesture } from "../../ui/dom/modalLifecycle.ts";
-import { colourBox, type DomPart } from "../../ui/dom/parts.ts";
-import { createTextLine, placeFrame, placeText, setBox } from "../../ui/dom/pixelLine.ts";
-import { dimDrawn, followModalUnderlay, setRampDimmed } from "../../ui/dom/rampDim.ts";
-import { refuse } from "../../ui/dom/refusal.ts";
-import type { UiLayer } from "../../ui/dom/uiLayer.ts";
+import {
+  colourBox,
+  createTextLine,
+  dimDrawn,
+  type DomPart,
+  followModalUnderlay,
+  mountModalLifecycle,
+  type NativeGesture,
+  placeFrame,
+  placeText,
+  refuse,
+  setBox,
+  setRampDimmed,
+  type UiLayer,
+} from "../../ui/dom/index.ts";
 import {
   deviceX,
   deviceY,

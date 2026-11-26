@@ -7,17 +7,19 @@ import { gameData } from "../../data/index.ts";
 import { HELP_DOTS, HELP_LAYOUT, type HelpButton, type HelpView } from "../../help/index.ts";
 import { MENU_TEXT_FIELDS } from "../../home/index.ts";
 import { holdRule, TILE_SLOP_PX } from "../../input/index.ts";
-import { colourBox, type DomBox, type DomPart } from "../../ui/dom/parts.ts";
 import {
+  colourBox,
   createTextLine,
+  type DomBox,
+  type DomPart,
   type DomTextLine,
   placeBox,
   placeFrame,
   placeText,
+  refuse,
   setBox,
-} from "../../ui/dom/pixelLine.ts";
-import { refuse } from "../../ui/dom/refusal.ts";
-import type { UiLayer } from "../../ui/dom/uiLayer.ts";
+  type UiLayer,
+} from "../../ui/dom/index.ts";
 import {
   artPixel,
   BODY_ASCENT_ROWS,

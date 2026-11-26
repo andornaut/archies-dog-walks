@@ -7,7 +7,7 @@ import type { Random } from "@andornaut/game-kit/runtime/random";
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import type { Scene } from "phaser";
 
-import { playEffect, tagTopY } from "../../assets/phaser/sprites.ts";
+import { playEffect, tagTopY } from "../../assets/phaser/index.ts";
 import { choiceCues, contactCues, debuffSoundCue, pullCues, stepCues } from "../../audio/index.ts";
 import { minorLook, minorObstacleName } from "../../content/index.ts";
 import type { AchievementId, DogId, EncounterId, HintId } from "../../data/ids.ts";
@@ -97,7 +97,7 @@ import type { EncounterCard, MinorBump, PullStep, WalkItem, WalkStep } from "../
 import { previewedEarned, previewKey, type RunResult } from "../../save/index.ts";
 import { type EffectSource, type EndReason, packDogs, type RunState } from "../../state/index.ts";
 import { PALETTE, pixelLinePoints } from "../../ui/index.ts";
-import { fillRect } from "../../ui/phaser/draw.ts";
+import { fillRect } from "../../ui/phaser/index.ts";
 import { floatValue, popCharm } from "../buffCharm.ts";
 import { FEEDBACK_ART } from "../feedbackArt.ts";
 import { hitLabelOf, hitLook, playEdgeFlash, playHitMoment } from "../hitMoment.ts";

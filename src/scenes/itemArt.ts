@@ -5,8 +5,7 @@ import { dogPortraitKey, gearIconKey } from "../assets/index.ts";
 import { gameData } from "../data/index.ts";
 import type { DetailPicture, Purchase } from "../home/index.ts";
 import { type Badge, PALETTE } from "../ui/index.ts";
-import { fillRect } from "../ui/phaser/draw.ts";
-import { addPixelText } from "../ui/phaser/pixelText.ts";
+import { addPixelText, fillRect } from "../ui/phaser/index.ts";
 
 // The home screen's and the shop's art keys, each with a drawn stand-in below while missing.
 export const SHOP_ART = {

@@ -3,14 +3,15 @@ import { type Scene, Scenes } from "phaser";
 import { domArtUrl } from "../assets/files/index.ts";
 import {
   createNativeTopSection,
+  followModalUnderlay,
+  loadSheet,
   type NativeTopSection,
   type NativeTopSectionConfig,
-} from "../ui/dom/nativeTopSection.ts";
-import { followModalUnderlay } from "../ui/dom/rampDim.ts";
-import { loadSheet } from "../ui/dom/sheetFrames.ts";
-import { type UiLayer, uiLayer } from "../ui/dom/uiLayer.ts";
+  type UiLayer,
+  uiLayer,
+} from "../ui/dom/index.ts";
 import type { TopSectionButton } from "../ui/index.ts";
-import { pixelBitmapFont } from "../ui/phaser/pixelText.ts";
+import { pixelBitmapFont } from "../ui/phaser/index.ts";
 
 interface SectionOwner {
   asleep: boolean;

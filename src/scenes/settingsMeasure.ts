@@ -3,7 +3,7 @@ import type { Scene } from "phaser";
 
 import type { SettingsMeasure } from "../home/index.ts";
 import { PALETTE, TEXT_SCALE, textOnLines } from "../ui/index.ts";
-import { inkSpan, labelInkWidth, setPixelText, withProbe } from "../ui/phaser/pixelText.ts";
+import { inkSpan, labelInkWidth, setPixelText, withProbe } from "../ui/phaser/index.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 
 // The settings card's text measured on the bitmap fonts scene draws it in: body text fitted as

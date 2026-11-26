@@ -6,24 +6,28 @@ import {
   createSelectionTile,
   type NativeSelectionTile,
   type NativeTileFill,
-} from "../../home/dom/selectionTile.ts";
+} from "../../home/dom/index.ts";
 import { FEEDBACK, SHOP_LAYOUT, type ShopPageView, shopTabRects } from "../../home/index.ts";
 import { isConfirmKey } from "../../input/index.ts";
-import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
-import { createGameButton } from "../../ui/dom/gameButton.ts";
-import { type DomPart, gridFillPart } from "../../ui/dom/parts.ts";
 import {
   backedTextPlaces,
+  createGameButton,
   createTextLine,
+  type DomArtSource,
+  type DomPart,
+  gridFillPart,
+  imageArt,
+  imageNineSlice,
   inkEnd,
   placeBackedText,
   placeBox,
   placeText,
+  REFUSAL_RED,
   setBox,
+  sheetArt,
   shownText,
-} from "../../ui/dom/pixelLine.ts";
-import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
-import type { UiLayer } from "../../ui/dom/uiLayer.ts";
+  type UiLayer,
+} from "../../ui/dom/index.ts";
 import {
   fontPixel,
   gridRect,

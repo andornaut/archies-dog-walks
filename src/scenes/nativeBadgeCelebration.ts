@@ -3,9 +3,8 @@ import { Core, type Scene, Scenes } from "phaser";
 import { domArtUrl } from "../assets/files/index.ts";
 import type { DogId } from "../data/ids.ts";
 import { BADGE_CHEER, BADGE_POP, type BadgeView } from "../home/index.ts";
-import type { BadgeCelebrationView } from "../hud/dom/celebration.ts";
-import { showOrdinaryBadgeCelebration } from "../hud/dom/ordinaryBadgeCelebration.ts";
-import { loadSheet } from "../ui/dom/sheetFrames.ts";
+import { type BadgeCelebrationView, showOrdinaryBadgeCelebration } from "../hud/dom/index.ts";
+import { loadSheet } from "../ui/dom/index.ts";
 import { followScene, htmlPanelInput, htmlPanelPlace } from "./questionPanel.ts";
 
 // Native badge parts keep the existing scene clock, pop timings and cheering motion.

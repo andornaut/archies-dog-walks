@@ -8,13 +8,16 @@ import { gameData, SCREEN_CONFIG, ZONE_BANNER } from "../../data/index.ts";
 import { zoneBannerHeading } from "../../hud/index.ts";
 import { currentZone } from "../../rules/index.ts";
 import type { RunState } from "../../state/index.ts";
-import { mountRoadBanner } from "../../ui/dom/roadBanner.ts";
-import { loadSheet } from "../../ui/dom/sheetFrames.ts";
-import { uiLayer } from "../../ui/dom/uiLayer.ts";
+import { loadSheet, mountRoadBanner, uiLayer } from "../../ui/dom/index.ts";
 import { PALETTE } from "../../ui/index.ts";
-import { addDisplayText, displayBitmapFont, hasDisplayFont } from "../../ui/phaser/displayText.ts";
-import { fillRect } from "../../ui/phaser/draw.ts";
-import { addPixelText, pixelBitmapFont } from "../../ui/phaser/pixelText.ts";
+import {
+  addDisplayText,
+  addPixelText,
+  displayBitmapFont,
+  fillRect,
+  hasDisplayFont,
+  pixelBitmapFont,
+} from "../../ui/phaser/index.ts";
 import { fadeAway } from "../uiKit.ts";
 import { DEPTH, LAYOUT } from "./stage.ts";
 

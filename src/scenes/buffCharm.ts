@@ -1,14 +1,13 @@
 import { insetRect, type Point } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { playEffect } from "../assets/phaser/sprites.ts";
+import { playEffect } from "../assets/phaser/index.ts";
 import { CHARM, gameData } from "../data/index.ts";
 import type { LabelAnchor } from "../hud/index.ts";
 import { BUFF_POP, sparkleAt } from "../layout/index.ts";
 import { effectIconFallback, type EffectItem, walkBarIconKey } from "../presentation/index.ts";
 import { PALETTE } from "../ui/index.ts";
-import { addFilledRect, drawRing } from "../ui/phaser/draw.ts";
-import { addPixelText } from "../ui/phaser/pixelText.ts";
+import { addFilledRect, addPixelText, drawRing } from "../ui/phaser/index.ts";
 import { floatLabel } from "./packFeedback.ts";
 import { fadeAway } from "./uiKit.ts";
 

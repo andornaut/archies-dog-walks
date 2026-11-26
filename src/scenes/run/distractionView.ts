@@ -5,7 +5,7 @@ import type { Random } from "@andornaut/game-kit/runtime/random";
 import type { GameObjects, Scene } from "phaser";
 
 import { IDLE_TAG } from "../../assets/index.ts";
-import { firstTag, playTag, showAtDepth, spriteMetrics } from "../../assets/phaser/sprites.ts";
+import { firstTag, playTag, showAtDepth, spriteMetrics } from "../../assets/phaser/index.ts";
 import { gameData } from "../../data/index.ts";
 import { project } from "../../layout/index.ts";
 import {

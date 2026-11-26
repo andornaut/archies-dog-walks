@@ -1,18 +1,20 @@
 import { type BitmapFont, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SLICES } from "../../data/index.ts";
-import { type DomArtSource, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";
-import { cutDomArt } from "../../ui/dom/domCuts.ts";
-import { fillPart } from "../../ui/dom/parts.ts";
 import {
   backedTextPlaces,
   createTextLine,
+  cutDomArt,
+  type DomArtSource,
+  fillPart,
   inkEnd,
   placeText,
   setBox,
+  sheetArt,
+  sheetNineSlice,
   shownText,
   textPlace,
-} from "../../ui/dom/pixelLine.ts";
+} from "../../ui/dom/index.ts";
 import {
   artPixel,
   cssHex,

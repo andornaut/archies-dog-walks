@@ -6,10 +6,20 @@ import {
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SLICES } from "../../data/index.ts";
-import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
-import { type DomPart, fillPart, framedPart } from "../../ui/dom/parts.ts";
-import { createTextLine, namePillBoxes, placeText, setBox } from "../../ui/dom/pixelLine.ts";
-import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
+import {
+  createTextLine,
+  type DomArtSource,
+  type DomPart,
+  fillPart,
+  framedPart,
+  imageArt,
+  imageNineSlice,
+  namePillBoxes,
+  placeText,
+  setBox,
+  sheetArt,
+  type SheetFrame,
+} from "../../ui/dom/index.ts";
 import {
   type DomScale,
   frameRect,

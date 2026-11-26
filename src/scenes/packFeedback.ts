@@ -2,7 +2,7 @@ import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { playTagOnce } from "../assets/phaser/sprites.ts";
+import { playTagOnce } from "../assets/phaser/index.ts";
 import { gameData, SCREEN_CONFIG } from "../data/index.ts";
 import {
   changeChipAt,
@@ -14,14 +14,15 @@ import {
 } from "../hud/index.ts";
 import { COMIC_WORDS } from "../layout/index.ts";
 import { lineInk, PALETTE, TEXT_SCALE } from "../ui/index.ts";
-import { CREAM_PANEL_COLOURS, drawFramedRect } from "../ui/phaser/draw.ts";
 import {
   addPixelText,
+  CREAM_PANEL_COLOURS,
+  drawFramedRect,
   inkSpan,
   pixelBitmapFont,
   pixelFontMetrics,
   placePixelText,
-} from "../ui/phaser/pixelText.ts";
+} from "../ui/phaser/index.ts";
 import { letterEffect } from "./comicWord.ts";
 import { fadeAway } from "./uiKit.ts";
 

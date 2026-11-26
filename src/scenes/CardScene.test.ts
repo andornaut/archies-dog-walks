@@ -23,7 +23,7 @@ vi.mock("phaser", () => ({
 }));
 vi.mock("../hud/dom/choiceCards.ts", () => ({ showChoiceCards: vi.fn() }));
 vi.mock("../ui/phaser/displayText.ts", () => ({ displayBitmapFont: () => undefined }));
-vi.mock("../ui/phaser/rampDim.ts", () => ({ addRampDim: vi.fn() }));
+vi.mock("./rampDim.ts", () => ({ addRampDim: vi.fn() }));
 vi.mock("./nativeOverlayReady.ts", () => ({ mountNativeOverlay: vi.fn() }));
 vi.mock("./overlay.ts", () => ({
   nativeSceneAccepts: vi.fn(),

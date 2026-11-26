@@ -6,14 +6,16 @@ import { Core, type GameObjects, Scene, Scenes, type Time } from "phaser";
 
 import { domArtUrl } from "../assets/files/index.ts";
 import { dogSpriteKey, gearIconKey, gearSmallIconKey, walkerPortraitKey } from "../assets/index.ts";
-import { MANIFEST_CACHE_KEY } from "../assets/phaser/manifestArt.ts";
-import { playEffect, spriteMetrics } from "../assets/phaser/sprites.ts";
+import { MANIFEST_CACHE_KEY, playEffect, spriteMetrics } from "../assets/phaser/index.ts";
 import { clearRunOverrides } from "../cheats/index.ts";
 import type { DogId, GearId, WalkerId } from "../data/ids.ts";
 import { gameData, PLATE_PAD } from "../data/index.ts";
 import { startWalkOpensHelp } from "../help/index.ts";
-import { createNativeHomeView, type NativeHomeView } from "../home/dom/screen.ts";
-import { createNativeHomeSession } from "../home/dom/session.ts";
+import {
+  createNativeHomeSession,
+  createNativeHomeView,
+  type NativeHomeView,
+} from "../home/dom/index.ts";
 import {
   answerPurchase,
   badgePopOffset,
@@ -70,8 +72,7 @@ import {
   walkerSays,
   walkersUnlockedSince,
 } from "../home/index.ts";
-import { renderHomeBackdrop } from "../home/phaser/homeBackdrop.ts";
-import { nativeFrames } from "../home/phaser/nativeFrames.ts";
+import { nativeFrames, renderHomeBackdrop } from "../home/phaser/index.ts";
 import { downTail } from "../hud/index.ts";
 import {
   focusDirectionForKey,
@@ -92,7 +93,7 @@ import {
 } from "../input/index.ts";
 import { type PackPlacement, SCREEN_LAYOUT } from "../layout/index.ts";
 import { waitedLoad } from "../loadingProgress.ts";
-import { addFigure, PackFigures } from "../pack/phaser/packFigures.ts";
+import { addFigure, PackFigures } from "../pack/phaser/index.ts";
 import { dollarAmountText, pillKind, shortDollarAmountText } from "../presentation/index.ts";
 import {
   exitShown,
@@ -109,9 +110,7 @@ import {
 import { walkerOrder } from "../rules/index.ts";
 import { type SaveDocument, walksFinished, walksPlayed } from "../save/index.ts";
 import { packDogsOf } from "../state/index.ts";
-import type { NativeTopSection } from "../ui/dom/nativeTopSection.ts";
-import { loadSheet } from "../ui/dom/sheetFrames.ts";
-import { uiLayer } from "../ui/dom/uiLayer.ts";
+import { loadSheet, type NativeTopSection, uiLayer } from "../ui/dom/index.ts";
 import {
   disabledArtKey,
   gridRects,
@@ -120,7 +119,7 @@ import {
   refusalRed,
   REFUSE,
 } from "../ui/index.ts";
-import { drawShadow } from "../ui/phaser/draw.ts";
+import { drawShadow } from "../ui/phaser/index.ts";
 import type { Cents } from "../units.ts";
 import { artReady, waitForWalkArt, whenArtReady } from "./artReady.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";

@@ -3,7 +3,7 @@ import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import type { GameObjects, Scene } from "phaser";
 
 import { IDLE_TAG } from "../../assets/index.ts";
-import { showAtDepth, spriteMetrics } from "../../assets/phaser/sprites.ts";
+import { showAtDepth, spriteMetrics } from "../../assets/phaser/index.ts";
 import { gameData } from "../../data/index.ts";
 import { type DepthDraw, distanceAtY } from "../../layout/index.ts";
 import {

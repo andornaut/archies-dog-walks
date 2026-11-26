@@ -1,6 +1,5 @@
 import { domArtPath } from "../../assets/index.ts";
-import type { DomArtSource } from "../../ui/dom/artElements.ts";
-import type { RequiredAsset } from "../../ui/dom/requiredAssets.ts";
+import type { DomArtSource, RequiredAsset } from "../../ui/dom/index.ts";
 
 export interface HudArtDescriptor {
   readonly key: string;

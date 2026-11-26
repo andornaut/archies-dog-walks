@@ -1,8 +1,13 @@
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { createGameButton } from "../../ui/dom/gameButton.ts";
-import { createTextLine, placeFrame, placeText, setBox } from "../../ui/dom/pixelLine.ts";
-import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
+import {
+  createGameButton,
+  createTextLine,
+  placeFrame,
+  placeText,
+  REFUSAL_RED,
+  setBox,
+} from "../../ui/dom/index.ts";
 import { artPixel, BUTTON_COLOURS, type DomScale, gridRect, PALETTE } from "../../ui/index.ts";
 import { HOME_LAYOUT } from "../index.ts";
 export interface NativeStartControl {

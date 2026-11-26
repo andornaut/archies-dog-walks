@@ -27,8 +27,7 @@ import {
   panelTitle,
   TEXT_SCALE,
 } from "../ui/index.ts";
-import { labelInkWidth, pixelFontMetrics, withProbe } from "../ui/phaser/pixelText.ts";
-import { addRampDim } from "../ui/phaser/rampDim.ts";
+import { labelInkWidth, pixelFontMetrics, withProbe } from "../ui/phaser/index.ts";
 import { badgeCelebrationNames } from "./badges.ts";
 import { clearOnHomePageOpening } from "./homeBarPress.ts";
 import { canvasPanelMeasure, modalTextWidth } from "./modalMeasure.ts";
@@ -36,6 +35,7 @@ import { addNativeBadgeCelebration } from "./nativeBadgeCelebration.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import { closeOverlay, listenDismiss, nativeSceneAccepts } from "./overlay.ts";
 import { currentSettings } from "./profileStore.ts";
+import { addRampDim } from "./rampDim.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { BODY_TEXT } from "./uiKit.ts";

@@ -2,9 +2,13 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import type { PageTab } from "../../home/index.ts";
-import { createGameButton } from "../../ui/dom/gameButton.ts";
-import type { DomPart } from "../../ui/dom/parts.ts";
-import { createTextLine, placeBox, placeText } from "../../ui/dom/pixelLine.ts";
+import {
+  createGameButton,
+  createTextLine,
+  type DomPart,
+  placeBox,
+  placeText,
+} from "../../ui/dom/index.ts";
 import { bindPanelFeedback, type PanelPress } from "./panelButton.ts";
 
 // The tabs the Pet shop and the Logbook share in HTML over the canvas, at the places the canvas

@@ -2,8 +2,8 @@ import type { Scene } from "phaser";
 
 import { domArtUrl } from "../assets/files/index.ts";
 import { SETTINGS_ART_KEYS } from "../home/index.ts";
-import { type DomSettings, type DomSettingsInput, showSettings } from "../hud/dom/settings.ts";
-import { loadSheet } from "../ui/dom/sheetFrames.ts";
+import { type DomSettings, type DomSettingsInput, showSettings } from "../hud/dom/index.ts";
+import { loadSheet } from "../ui/dom/index.ts";
 import { followScene, htmlPanelInput, htmlPanelPlace } from "./questionPanel.ts";
 
 // The native settings view uses the same model, gesture controller and scene lifecycle.

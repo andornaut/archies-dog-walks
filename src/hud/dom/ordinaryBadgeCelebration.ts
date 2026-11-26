@@ -3,12 +3,17 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { domArtPath, ownerFaceKey } from "../../assets/index.ts";
 import type { DogId } from "../../data/ids.ts";
 import { gameData } from "../../data/index.ts";
-import { textPart } from "../../home/dom/detailText.ts";
+import { textPart } from "../../home/dom/index.ts";
 import type { BadgeView } from "../../home/index.ts";
-import { sheetArt } from "../../ui/dom/artElements.ts";
-import { type DomPart, framelessView } from "../../ui/dom/parts.ts";
-import { playingFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/sheetFrames.ts";
-import type { UiLayer } from "../../ui/dom/uiLayer.ts";
+import {
+  type DomPart,
+  framelessView,
+  playingFrame,
+  sheetArt,
+  sheetTagFrames,
+  type TagFrame,
+  type UiLayer,
+} from "../../ui/dom/index.ts";
 import type { DomScale } from "../../ui/index.ts";
 import type { DomBadgeCardInput } from "./badgeCard.ts";
 import { type BadgeCelebrationView, badgeStripParts } from "./celebration.ts";

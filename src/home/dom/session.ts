@@ -1,7 +1,10 @@
-import { bindGameAction } from "../../ui/dom/actionBinding.ts";
-import { guardNativeInput, revealPaint } from "../../ui/dom/modalLifecycle.ts";
-import { followModalUnderlay } from "../../ui/dom/rampDim.ts";
-import type { UiLayer } from "../../ui/dom/uiLayer.ts";
+import {
+  bindGameAction,
+  followModalUnderlay,
+  guardNativeInput,
+  revealPaint,
+  type UiLayer,
+} from "../../ui/dom/index.ts";
 import type { NativeHomeView } from "./screen.ts";
 // A home visit keeps one input owner while immutable content is replaced.
 export function createNativeHomeSession(

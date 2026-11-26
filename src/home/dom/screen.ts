@@ -4,9 +4,14 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SCREEN_CONFIG } from "../../data/index.ts";
-import type { DomArtSource } from "../../ui/dom/artElements.ts";
-import { fillPart } from "../../ui/dom/parts.ts";
-import { createTextLine, placeText, setBox, spokenText } from "../../ui/dom/pixelLine.ts";
+import {
+  createTextLine,
+  type DomArtSource,
+  fillPart,
+  placeText,
+  setBox,
+  spokenText,
+} from "../../ui/dom/index.ts";
 import {
   deviceX,
   deviceY,

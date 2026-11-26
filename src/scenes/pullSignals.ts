@@ -2,7 +2,7 @@ import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import type { GameObjects, Scene } from "phaser";
 
 import { PULL_ART } from "../assets/index.ts";
-import { playEffect, playTag, playTagOnce, spriteTopY } from "../assets/phaser/sprites.ts";
+import { playEffect, playTag, playTagOnce, spriteTopY } from "../assets/phaser/index.ts";
 import type { DogId } from "../data/ids.ts";
 import { arrowheadPixels, cssHex, PALETTE } from "../ui/index.ts";
 

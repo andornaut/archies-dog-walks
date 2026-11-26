@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { playTagOnce } from "../assets/phaser/sprites.ts";
+import { playTagOnce } from "../assets/phaser/index.ts";
 import type { AchievementId } from "../data/ids.ts";
 import { gameData } from "../data/index.ts";
 import {
@@ -19,7 +19,7 @@ import {
 } from "../home/index.ts";
 import { achievementLabel } from "../rules/index.ts";
 import { PALETTE, TEXT_SCALE } from "../ui/index.ts";
-import { labelInkWidth, type PixelTextStyle, withProbe } from "../ui/phaser/pixelText.ts";
+import { labelInkWidth, type PixelTextStyle, withProbe } from "../ui/phaser/index.ts";
 import { canvasDetailMeasure } from "./modalMeasure.ts";
 import { tagFrame } from "./uiKit.ts";
 

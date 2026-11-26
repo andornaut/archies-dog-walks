@@ -1,7 +1,6 @@
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import type { DomPart } from "../../ui/dom/parts.ts";
-import { type PillColours, textBlock } from "../../ui/dom/textBlock.ts";
+import { type DomPart, type PillColours, textBlock } from "../../ui/dom/index.ts";
 import { type DomScale, TEXT_SCALE } from "../../ui/index.ts";
 import type { DetailText } from "../index.ts";
 

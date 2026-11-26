@@ -1,13 +1,17 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { domArtPath } from "../../assets/index.ts";
-import { textPart } from "../../home/dom/detailText.ts";
+import { textPart } from "../../home/dom/index.ts";
 import type { DetailArt, DetailCardView } from "../../home/index.ts";
-import { contentSeparatorPart } from "../../ui/dom/contentSeparator.ts";
-import { type DomPart, framedPart } from "../../ui/dom/parts.ts";
-import { setBox } from "../../ui/dom/pixelLine.ts";
-import { type SheetFrame, sheetFrame } from "../../ui/dom/sheetFrames.ts";
-import type { UiLayer } from "../../ui/dom/uiLayer.ts";
+import {
+  contentSeparatorPart,
+  type DomPart,
+  framedPart,
+  setBox,
+  type SheetFrame,
+  sheetFrame,
+  type UiLayer,
+} from "../../ui/dom/index.ts";
 import {
   artPixel,
   type DomScale,

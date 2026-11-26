@@ -2,7 +2,7 @@ import type { Scene } from "phaser";
 
 import { SCREEN_LAYOUT } from "../../layout/index.ts";
 import { PALETTE } from "../../ui/index.ts";
-import { fillRect } from "../../ui/phaser/draw.ts";
+import { fillRect } from "../../ui/phaser/index.ts";
 import { HOME_LAYOUT } from "../index.ts";
 
 const SCREEN = SCREEN_LAYOUT.screen;

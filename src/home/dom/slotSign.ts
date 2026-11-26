@@ -2,11 +2,19 @@ import { insetRect, type Rect, ringRects } from "@andornaut/game-kit/runtime/rec
 import { type BitmapFont, fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { AFFORD_OUTSET, SLICES } from "../../data/index.ts";
-import { type DomArtSource, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";
-import { createGameButton } from "../../ui/dom/gameButton.ts";
-import { fillPart, framedPart } from "../../ui/dom/parts.ts";
-import { createTextLine, placeBackedText, placeBox, setBox } from "../../ui/dom/pixelLine.ts";
-import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
+import {
+  createGameButton,
+  createTextLine,
+  type DomArtSource,
+  fillPart,
+  framedPart,
+  placeBackedText,
+  placeBox,
+  setBox,
+  sheetArt,
+  type SheetFrame,
+  sheetNineSlice,
+} from "../../ui/dom/index.ts";
 import {
   artPixel,
   cssHex,

@@ -6,11 +6,9 @@ import type { GameObjects, Scene } from "phaser";
 import { DETAIL_WELL_KEY } from "../assets/index.ts";
 import { AFFORD_OUTSET, gameData } from "../data/index.ts";
 import { type DetailCardView, detailCardView } from "../home/index.ts";
-import { shownText } from "../ui/dom/pixelLine.ts";
-import { uiLayer } from "../ui/dom/uiLayer.ts";
+import { shownText, uiLayer } from "../ui/dom/index.ts";
 import { fontPixel, inkWithPills, PALETTE, TEXT_SCALE } from "../ui/index.ts";
-import { drawRing } from "../ui/phaser/draw.ts";
-import { pixelBitmapFont } from "../ui/phaser/pixelText.ts";
+import { drawRing, pixelBitmapFont } from "../ui/phaser/index.ts";
 import { canvasDetailMeasure } from "./modalMeasure.ts";
 import { addLoopingFrame, selectOuter } from "./uiKit.ts";
 

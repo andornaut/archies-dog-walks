@@ -1,6 +1,6 @@
 import type { Scene } from "phaser";
 
-import { uiLayer } from "../ui/dom/uiLayer.ts";
+import { uiLayer } from "../ui/dom/index.ts";
 import { trackNativeSceneInput } from "./overlay.ts";
 
 // Pending native overlays block page routes until their scene-owned view can mount.

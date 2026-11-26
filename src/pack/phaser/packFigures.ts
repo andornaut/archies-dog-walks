@@ -7,12 +7,12 @@ import {
   type Shadow,
   showAtDepth,
   spriteMetrics,
-} from "../../assets/phaser/sprites.ts";
+} from "../../assets/phaser/index.ts";
 import type { DogId } from "../../data/ids.ts";
 import { gameData } from "../../data/index.ts";
 import { type DepthDraw, PACK_DEPTH, tautLeashLine } from "../../layout/index.ts";
 import { PALETTE } from "../../ui/index.ts";
-import { drawPixelLine, drawShadow } from "../../ui/phaser/draw.ts";
+import { drawPixelLine, drawShadow } from "../../ui/phaser/index.ts";
 import { type Feet, type LeashLine, leashLine, packLayers, type StandingDog } from "../index.ts";
 
 // The leashes' colour off the road, at the start screen's gate and on the end screen's walk

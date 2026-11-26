@@ -3,7 +3,7 @@ import "./logbook.css";
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { textPart } from "../../home/dom/detailText.ts";
+import { textPart } from "../../home/dom/index.ts";
 import {
   badgeStripFaceBottom,
   badgeStripHits,
@@ -14,20 +14,23 @@ import {
   type EndResults,
   type EndScreenView,
 } from "../../home/index.ts";
-import { sheetArt } from "../../ui/dom/artElements.ts";
-import { contentSeparatorPart } from "../../ui/dom/contentSeparator.ts";
-import { createGameButton } from "../../ui/dom/gameButton.ts";
 import {
+  contentSeparatorPart,
+  createGameButton,
+  createTextLine,
   type DomPart,
+  type DomTextLine,
   fillPart,
+  followModalUnderlay,
   framedPart,
   framelessView,
   panelFramePart,
-} from "../../ui/dom/parts.ts";
-import { createTextLine, type DomTextLine, placeBox, placeText } from "../../ui/dom/pixelLine.ts";
-import { followModalUnderlay } from "../../ui/dom/rampDim.ts";
-import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
-import type { UiLayer } from "../../ui/dom/uiLayer.ts";
+  placeBox,
+  placeText,
+  sheetArt,
+  type SheetFrame,
+  type UiLayer,
+} from "../../ui/dom/index.ts";
 import {
   artPixel,
   type DomScale,

@@ -11,7 +11,7 @@ import {
   WARNING_TAG,
   WARNING_UP_TAG,
 } from "../../assets/index.ts";
-import { firstTag, playTag, showAtDepth } from "../../assets/phaser/sprites.ts";
+import { firstTag, playTag, showAtDepth } from "../../assets/phaser/index.ts";
 import type { EncounterId, MinorObstacleId } from "../../data/ids.ts";
 import { gameData, LANE_COUNT } from "../../data/index.ts";
 import { moverBodyArt, project } from "../../layout/index.ts";

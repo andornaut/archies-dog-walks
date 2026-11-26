@@ -1,6 +1,6 @@
 import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 
-import type { NativeTopSection } from "../../ui/dom/nativeTopSection.ts";
+import type { NativeTopSection } from "../../ui/dom/index.ts";
 import type { HudCards } from "./hudCards.ts";
 import type { HudMoment, HudMomentPainter } from "./hudMoments.ts";
 // A picture can expose multiple screen strips while one logical HUD owns its feedback timeline.

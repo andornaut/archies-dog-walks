@@ -8,7 +8,7 @@ import {
   playTagOnce,
   type Shadow,
   spriteMetrics,
-} from "../../assets/phaser/sprites.ts";
+} from "../../assets/phaser/index.ts";
 import type { DogId } from "../../data/ids.ts";
 import { gameData } from "../../data/index.ts";
 import {
@@ -20,7 +20,7 @@ import {
   project,
 } from "../../layout/index.ts";
 import type { StandingDog } from "../../pack/index.ts";
-import { type Figure, PackFigures } from "../../pack/phaser/packFigures.ts";
+import { type Figure, PackFigures } from "../../pack/phaser/index.ts";
 import { currentZone, read } from "../../rules/index.ts";
 import { laneMotionX, pullPose, type Pulls, type Walk } from "../../runner/index.ts";
 import { packDogs } from "../../state/index.ts";

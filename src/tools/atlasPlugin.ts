@@ -17,7 +17,7 @@ import {
   domSheetJsonPath,
   parseManifest,
 } from "../assets/index.ts";
-import type { DomSheetJson } from "../ui/dom/sheetFrames.ts";
+import type { DomSheetJson } from "../ui/dom/index.ts";
 import { ART_DIR, ART_MANIFEST, artManifestText, generateArtManifest } from "./artManifest.ts";
 import { buildAtlases, WEBP_PAGES } from "./atlas/atlasBuild.ts";
 import { buildDomSheet, checkDomCopies } from "./atlas/domSheets.ts";

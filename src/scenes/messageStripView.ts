@@ -3,7 +3,7 @@ import type { Scene } from "phaser";
 
 import { ownerCardFaceKey } from "../assets/index.ts";
 import { gameData, MESSAGE_STRIP, SLICES } from "../data/index.ts";
-import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
+import type { HudMoment, HudMomentPainter } from "../hud/dom/index.ts";
 import {
   EMPTY_MESSAGE_STRIP,
   type FaceText,

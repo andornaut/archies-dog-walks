@@ -34,8 +34,7 @@ import {
   volumeStepForKey,
   volumeSteps,
 } from "../home/index.ts";
-import { coverHelpUnderlay } from "../hud/dom/helpUnderlay.ts";
-import type { DomSettings } from "../hud/dom/settings.ts";
+import { coverHelpUnderlay, type DomSettings } from "../hud/dom/index.ts";
 import {
   focusDirectionForKey,
   isConfirmKey,
@@ -60,8 +59,7 @@ import {
   pixelFontMetrics,
   setPixelText,
   withProbe,
-} from "../ui/phaser/pixelText.ts";
-import { addRampDim } from "../ui/phaser/rampDim.ts";
+} from "../ui/phaser/index.ts";
 import { listenHomeBar } from "./homeBarPress.ts";
 import type { MenuSceneData } from "./MenuScene.ts";
 import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
@@ -76,6 +74,7 @@ import {
 } from "./overlay.ts";
 import { currentSettings, setSettings } from "./profileStore.ts";
 import { htmlPanelPlace } from "./questionPanel.ts";
+import { addRampDim } from "./rampDim.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import { addHtmlSettings } from "./settingsHtml.ts";
 import { canvasSettingsMeasure } from "./settingsMeasure.ts";

@@ -6,14 +6,22 @@ import { createFormRows } from "@andornaut/game-kit/runtime/web/ui/dom/formRow";
 
 import type { CheatAction, CheatRowView, CheatsView } from "../../cheats/index.ts";
 import { SWITCH_ROWS } from "../../home/index.ts";
-import type { DomArtSource } from "../../ui/dom/artElements.ts";
-import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";
-import { placeFormRows, switchFrames } from "../../ui/dom/formRows.ts";
-import { createGameButton, createGameFormRow } from "../../ui/dom/gameButton.ts";
-import type { DomPart } from "../../ui/dom/parts.ts";
-import { createTextLine, placeBox, placeFrame, placeText } from "../../ui/dom/pixelLine.ts";
-import { refuse } from "../../ui/dom/refusal.ts";
-import type { UiLayer } from "../../ui/dom/uiLayer.ts";
+import {
+  createContentSeparator,
+  createGameButton,
+  createGameFormRow,
+  createTextLine,
+  type DomArtSource,
+  type DomPart,
+  placeBox,
+  placeContentSeparator,
+  placeFormRows,
+  placeFrame,
+  placeText,
+  refuse,
+  switchFrames,
+  type UiLayer,
+} from "../../ui/dom/index.ts";
 import { type DomScale, gridX, gridY } from "../../ui/index.ts";
 import { type DomPage, showPage } from "./page.ts";
 import { bindPanelFeedback } from "./panelButton.ts";

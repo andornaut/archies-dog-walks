@@ -8,15 +8,18 @@ import { perkIconKey } from "../assets/index.ts";
 import type { AchievementId, DebuffId, DogId } from "../data/ids.ts";
 import { gameData, type HintTrigger, SCREEN_CONFIG } from "../data/index.ts";
 import { FEEDBACK as MENU_FEEDBACK } from "../home/index.ts";
-import { createHudCards, type HudCards } from "../hud/dom/hudCards.ts";
-import { createHudChrome } from "../hud/dom/hudChrome.ts";
-import { createHudMoments, type HudMoment, type HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import {
+  createHudCards,
+  createHudChrome,
+  createHudMoments,
+  type DomQuestionPanel,
+  type HudCards,
+  type HudMoment,
+  type HudMomentPainter,
   projectHudCards,
   projectHudMoments,
   projectHudTopSections,
-} from "../hud/dom/hudProjection.ts";
-import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
+} from "../hud/dom/index.ts";
 import {
   achievementLine,
   cardHearts,
@@ -67,14 +70,14 @@ import { faceMood, hintFor, hintJumpsQueue, ownerMaxHearts, walkEarnings } from 
 import { heartsOf, type RunState, slotIndexOf } from "../state/index.ts";
 import {
   createNativeTopSection,
+  dimDrawn,
+  followModalUnderlay,
+  loadSheet,
   type NativeTopSection,
   type NativeTopSectionConfig,
-} from "../ui/dom/nativeTopSection.ts";
-import { dimDrawn, followModalUnderlay } from "../ui/dom/rampDim.ts";
-import { loadSheet } from "../ui/dom/sheetFrames.ts";
-import { uiLayer } from "../ui/dom/uiLayer.ts";
-import { displayBitmapFont } from "../ui/phaser/displayText.ts";
-import { pixelBitmapFont, pixelFontMetrics } from "../ui/phaser/pixelText.ts";
+  uiLayer,
+} from "../ui/dom/index.ts";
+import { displayBitmapFont, pixelBitmapFont, pixelFontMetrics } from "../ui/phaser/index.ts";
 import { type Cents, cents } from "../units.ts";
 import { arcFlight } from "./arcFlight.ts";
 import { BumpBorder } from "./bumpBorder.ts";

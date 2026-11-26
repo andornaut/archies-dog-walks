@@ -1,11 +1,6 @@
 import { domArtUrl } from "../../assets/files/index.ts";
 import { domArtPath } from "../../assets/index.ts";
-import {
-  loadedSheet,
-  type SheetFrame,
-  sheetTagFrames,
-  type TagFrame,
-} from "../../ui/dom/sheetFrames.ts";
+import { loadedSheet, type SheetFrame, sheetTagFrames, type TagFrame } from "../../ui/dom/index.ts";
 import { loopFrame } from "../index.ts";
 
 // Native pictures use the authored tags and the scene clock used by the yard's feedback.

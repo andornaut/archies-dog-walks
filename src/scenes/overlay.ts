@@ -10,7 +10,7 @@ import type { Events, Scene } from "phaser";
 
 import { gameData } from "../data/index.ts";
 import { openGuard } from "../input/index.ts";
-import { logicalInput } from "../input/phaser/logicalPointer.ts";
+import { logicalInput } from "../input/phaser/index.ts";
 import { PHONE_EVENTS } from "../pwa/index.ts";
 import { read } from "../rules/index.ts";
 import { deviceFitOwned, logicalBackingBounds, worldFit } from "../ui/index.ts";
