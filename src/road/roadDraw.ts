@@ -53,15 +53,10 @@ export function drawRoad(raster: RoadRaster, frame: RoadFrame, out: Uint32Array)
         : look.zone;
     const verge = vergeAt(vergeZone);
     const offset = y * width;
-    const vergePixels = vergeOf(raster, vergeZone);
+    const vergePixels = vergeOf(raster, vergeZone)[y]!;
     const { roadEnd, roadStart, roadX } = row;
-    // The strip covers its columns, so only the verge's either side are copied.
-    for (let i = 0; i < roadStart; i++) {
-      out[offset + i] = vergePixels[offset + i] ?? 0;
-    }
-    for (let i = roadEnd; i < width; i++) {
-      out[offset + i] = vergePixels[offset + i] ?? 0;
-    }
+    // The typed copy lays down the verge's cached base; the strip replaces its centre.
+    out.set(vergePixels, offset);
 
     const image = look.strip[row.level];
     const pixels = image.pixels;

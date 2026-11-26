@@ -7,7 +7,8 @@ import {
   markFits,
   markFrom,
   marksOnRow,
-  noise,
+  noiseByte,
+  noiseRow,
   ROUGH_PATCH_BLOCK,
   ROUGH_PATCH_REACH,
   roughPatches,
@@ -149,22 +150,24 @@ function splitAt(row: RasterRow, threshold: number): readonly [number, number] {
   return split;
 }
 
-export function vergeOf(raster: RoadRaster, zone: ZoneId): Uint32Array {
+export function vergeOf(raster: RoadRaster, zone: ZoneId): readonly Uint32Array[] {
   const drawn = raster.verges.get(zone);
   if (drawn !== undefined) {
     return drawn;
   }
   const verge = vergeAt(zone);
   const { width } = raster.view;
-  const pixels = new Uint32Array(width * raster.rows.length);
-  raster.rows.forEach((row, y) => {
+  const base = new Uint32Array(width * raster.rows.length);
+  const rows = raster.rows.map((row, y) => {
+    const pixels = base.subarray(y * width, (y + 1) * width);
     for (let i = 0; i < width; i++) {
       const across = row.across[i] ?? -1;
-      pixels[y * width + i] = across < 0 ? 0 : wordOf(vergeBase(verge, across, row.scale));
+      pixels[i] = across < 0 ? 0 : wordOf(vergeBase(verge, across, row.scale));
     }
+    return pixels;
   });
-  raster.verges.set(zone, pixels);
-  return pixels;
+  raster.verges.set(zone, rows);
+  return rows;
 }
 
 // The raster's caches grow with the road; past this many entries the oldest goes, so the rows
@@ -261,7 +264,7 @@ export function drawVergeDetails(
   if (dots.length > 0) {
     // Each dot holds a cell of road at least as long as the row's span, so it moves down
     // with the road rather than reshuffle on rows that cover more road than they show.
-    const seed = Math.floor(z) >> row.dotLevel;
+    const rowNoise = noiseRow(Math.floor(z) >> row.dotLevel);
     for (let d = 0; d < dots.length; d++) {
       const band = dots[d];
       if (band === undefined) {
@@ -269,8 +272,8 @@ export function drawVergeDetails(
       }
       const from = splitAt(row, band.from);
       const to = splitAt(row, band.to);
-      drawDots(out, offset, roadX, seed, band.words, to[0], from[0]);
-      drawDots(out, offset, roadX, seed, band.words, from[1], to[1]);
+      drawDots(out, offset, roadX, rowNoise, band.words, to[0], from[0]);
+      drawDots(out, offset, roadX, rowNoise, band.words, from[1], to[1]);
     }
   }
 
@@ -341,7 +344,7 @@ export function keepBackdropVerge(
       continue;
     }
     const pixel = approach?.[at];
-    if (pixel === undefined || (pixel !== verge[at] && !isVergeDetail(plan, across, pixel))) {
+    if (pixel === undefined || (pixel !== verge[i] && !isVergeDetail(plan, across, pixel))) {
       out[at] = 0;
     }
   }
@@ -353,13 +356,13 @@ function drawDots(
   out: Uint32Array,
   offset: number,
   roadX: Int16Array,
-  seed: number,
+  rowNoise: number,
   words: Uint32Array,
   from: number,
   to: number,
 ): void {
   for (let i = from; i < to; i++) {
-    const word = words[(noise(roadX[i] ?? 0, seed) * NOISE_STEPS) | 0] ?? 0;
+    const word = words[noiseByte(rowNoise, roadX[i] ?? 0)] ?? 0;
     if (word !== 0) {
       out[offset + i] = word;
     }

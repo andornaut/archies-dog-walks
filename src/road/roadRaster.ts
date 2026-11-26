@@ -76,7 +76,7 @@ export interface RoadRaster {
   readonly marks: Map<number, RowMarks>;
   readonly patches: Map<number, readonly RoughPatch[]>;
   readonly rows: readonly RasterRow[];
-  readonly verges: Map<ZoneId, Uint32Array>;
+  readonly verges: Map<ZoneId, readonly Uint32Array[]>;
   // Scratch space drawRoad reuses frame to frame: marks carried to the next row, the
   // columns a mark has drawn on in this row, and the strip rows a row's lines are looked for on.
   readonly scratch: { carried: [Carried, Carried]; lineRows: Int32Array; marked: Uint8Array };

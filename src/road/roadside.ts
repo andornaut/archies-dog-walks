@@ -322,11 +322,25 @@ export function isLawn(verge: Verge, across: number): boolean {
   return verge.lawn !== "none" && across >= verge.walkTo;
 }
 
+function noiseBits(row: number, column: number): number {
+  const h = (Math.imul(column, 374761393) + row) | 0;
+  const mixed = Math.imul(h ^ (h >>> 13), 1274126177);
+  return mixed ^ (mixed >>> 16);
+}
+
+export function noiseRow(row: number): number {
+  return Math.imul(row, 668265263);
+}
+
+// The same 256-way bucket as flooring noise(column, row) times 256. Reuse the mixed row at
+// every column of a verge dot band.
+export function noiseByte(row: number, column: number): number {
+  return (noiseBits(row, column) >>> 8) & 0xff;
+}
+
 // A fixed pseudo-random value in [0, 1) for two integers, mixed so picks fall irregularly.
 export function noise(a: number, b: number): number {
-  let h = (Math.imul(a, 374761393) + Math.imul(b, 668265263)) | 0;
-  h = Math.imul(h ^ (h >>> 13), 1274126177);
-  return ((h ^ (h >>> 16)) & 0xffff) / 65536;
+  return (noiseBits(noiseRow(b), a) & 0xffff) / 65536;
 }
 
 // A mark on the verge, 2 rows tall: a tuft of grass on the lawn or a fallen leaf on the
