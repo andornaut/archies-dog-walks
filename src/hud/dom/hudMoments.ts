@@ -352,7 +352,7 @@ export function createHudMoments(
       },
       state,
       text(text) {
-        const part = textBlock(doc, { bitmap: fonts[text.font], pillColours }, text);
+        const part = textBlock(doc, { fonts, pillColours, spoken: true, tag: "div" }, text);
         let previous = "";
         mount(part.element, part.ready, (scale) => {
           const key = JSON.stringify(scale);

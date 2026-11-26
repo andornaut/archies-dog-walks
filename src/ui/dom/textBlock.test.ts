@@ -12,7 +12,12 @@ it("centres a backed label's ink and retains coloured pill runs and accessible t
   const backing = { height: 46, width: 260, x: 50, y: 350 };
   const block = textBlock(
     doc as unknown as Document,
-    { bitmap, pillColours: () => ({ name: 0x102030, pill: 0xffdd88 }) },
+    {
+      fonts: { body: bitmap },
+      pillColours: () => ({ name: 0x102030, pill: 0xffdd88 }),
+      spoken: true,
+      tag: "div",
+    },
     {
       anchor: "ink",
       backing,
@@ -47,7 +52,12 @@ it("centres a backed label's ink and retains coloured pill runs and accessible t
   expect(root.children.at(-1)!.textContent).toBe(`${label} `);
   const named = textBlock(
     doc as unknown as Document,
-    { bitmap, pillColours: () => ({ name: 0x102030, pill: 0xffdd88 }) },
+    {
+      fonts: { body: bitmap },
+      pillColours: () => ({ name: 0x102030, pill: 0xffdd88 }),
+      spoken: true,
+      tag: "div",
+    },
     { capTop: 20, colour: 0, font: "body", lines: [inPill(0, "Zoomies")], scale: 2, x: 10 },
   );
   named.place(scale);
@@ -60,7 +70,12 @@ it("keeps display glyphs separate and updates their placement without rebuilding
   const doc = new FakeDocument();
   const view = textBlock(
     doc as unknown as Document,
-    { bitmap: gameFont("font-display"), pillColours: () => undefined },
+    {
+      fonts: { display: gameFont("font-display") },
+      pillColours: () => undefined,
+      spoken: true,
+      tag: "div",
+    },
     {
       anchor: "centre",
       capTop: 10,
@@ -80,4 +95,40 @@ it("keeps display glyphs separate and updates their placement without rebuilding
   expect(run.children[0]).toBe(glyph);
   expect(run.style.fontSize).toBe("24px");
   expect(root.children.at(-1)!.textContent).toBe("FIRED! ");
+});
+it("colours its spans, moves by a shift and draws a new view in the same element", () => {
+  const doc = new FakeDocument();
+  const bitmap = gameFont("font-body");
+  const scale = domScale(2, { height: 560, width: 360, x: 0, y: 0 });
+  const base = { capTop: 20, colour: 0x101010, font: "body", scale: 2, x: 10 } as const;
+  const block = textBlock(
+    doc as unknown as Document,
+    { fonts: { body: bitmap }, pillColours: () => undefined, spoken: false, tag: "span" },
+    {
+      ...base,
+      focusColour: 0xffffff,
+      lines: ["Paid $5"],
+      spans: [
+        { colour: 0x203040, text: "Paid " },
+        { colour: 0x506070, text: "$5" },
+      ],
+    },
+  );
+  const root = block.element as unknown as FakeElement;
+  expect(root.tagName).toBe("span");
+  expect(root.getAttribute("aria-hidden")).toBe("true");
+  expect(root.classList.contains("adw-focus-colour")).toBe(true);
+  expect(root.children.map(({ style, textContent }) => [textContent, style.color])).toEqual([
+    ["Paid ", "#203040"],
+    ["$5", "#506070"],
+  ]);
+  block.place(scale);
+  const left = parseFloat(root.children[0]!.style.left!);
+  block.place(scale, undefined, 6);
+  expect(parseFloat(root.children[0]!.style.left!)).toBe(left + 6);
+  block.update({ ...base, lines: ["Muted"] });
+  expect(root.classList.contains("adw-focus-colour")).toBe(false);
+  expect(root.children.map(({ style, textContent }) => [textContent, style.color])).toEqual([
+    ["Muted", "#101010"],
+  ]);
 });
