@@ -48,10 +48,13 @@ export function liveSwitchRuns(
     seed: streams.seed,
     session: zoneStartPoint(session, session.walk),
   });
-  if (resume === undefined) {
-    throw new Error("The switched walk's resume point does not store");
+  if (!resume.ok) {
+    throw new Error(resume.reason);
   }
-  const launch = launchWalk(gameData, true, { ...checkpointOf(gameData, switched), resume });
+  const launch = launchWalk(gameData, true, {
+    ...checkpointOf(gameData, switched),
+    resume: resume.value,
+  });
   if (launch.kind !== "resume") {
     throw new Error(`The switched walk does not resume: ${JSON.stringify(launch)}`);
   }

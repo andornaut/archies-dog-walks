@@ -150,26 +150,27 @@ describe("the DOM sheets a build packs from the files on disk", () => {
 });
 
 it("resolves each key's logical files to its sheet, and a copy's to its sheet's copy", () => {
+  const report = vi.fn<(error: unknown) => void>();
   const artUrl = (path: string) => `/art/${path}`;
-  expect(domArtFileUrl(artUrl, domArtPath("sheet", "ui-dog-card", "json"))).toBe(
+  expect(domArtFileUrl(artUrl, report, domArtPath("sheet", "ui-dog-card", "json"))).toBe(
     "/art/dom/dom-walk.json#ui-dog-card",
   );
-  expect(domArtFileUrl(artUrl, domArtPath("image", "ui-quip", "png"))).toBe(
+  expect(domArtFileUrl(artUrl, report, domArtPath("image", "ui-quip", "png"))).toBe(
     "/art/dom/dom-chrome.webp",
   );
-  expect(domArtFileUrl(artUrl, domArtPath("sheet", "face-dog-kilo-disabled", "png"))).toBe(
+  expect(domArtFileUrl(artUrl, report, domArtPath("sheet", "face-dog-kilo-disabled", "png"))).toBe(
     "/art/dom/dom-home-disabled.webp",
   );
-  expect(domArtFileUrl(artUrl, "images/card-skip-grey.png")).toBe("/art/dom/dom-cards-grey.webp");
-  expect(domArtFileUrl(artUrl, domArtPath("sheet", "treat@50", "json"))).toBe(
+  expect(domArtFileUrl(artUrl, report, "images/card-skip-grey.png")).toBe(
+    "/art/dom/dom-cards-grey.webp",
+  );
+  expect(domArtFileUrl(artUrl, report, domArtPath("sheet", "treat@50", "json"))).toBe(
     "/art/dom/dom-walk.json#treat%4050",
   );
-  const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
-  expect(domArtFileUrl(artUrl, domArtPath("image", "ambient-airliner", "png"))).toBe(
+  expect(domArtFileUrl(artUrl, report, domArtPath("image", "ambient-airliner", "png"))).toBe(
     "/art/images/ambient-airliner.png",
   );
-  expect(String(error.mock.calls[0]?.[0])).toContain("no art the HTML interface draws");
-  error.mockRestore();
+  expect(String(report.mock.calls[0]?.[0])).toContain("no art the HTML interface draws");
 });
 
 it("fails a sheet that needs more than one page", () => {

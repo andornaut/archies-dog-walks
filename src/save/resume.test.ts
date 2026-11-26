@@ -1,5 +1,5 @@
 import { encodeSave } from "@andornaut/game-kit/runtime/save/versionedSave";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { LANE_COUNT } from "../data/screen.ts";
@@ -118,17 +118,22 @@ const START: ResumeWalk = {
   }),
 };
 
-function checkpointFor(
-  walk: ResumeWalk,
-  resume: string | null = encodeResume(gameData, walk) ?? null,
-): Checkpoint {
+function resumeText(walk: ResumeWalk): string {
+  const encoded = encodeResume(gameData, walk);
+  if (!encoded.ok) {
+    throw new Error(encoded.reason);
+  }
+  return encoded.value;
+}
+
+function checkpointFor(walk: ResumeWalk, resume: string | null = resumeText(walk)): Checkpoint {
   const slice = checkpointOf(gameData, walk.session.walk.run);
   return resume === null ? slice : { ...slice, resume };
 }
 
 // The checkpoint of walk with its stored resume point changed by edit, as JSON.
 function edited(walk: ResumeWalk, edit: (stored: Record<string, unknown>) => void): Checkpoint {
-  const stored = JSON.parse(encodeResume(gameData, walk) ?? "null") as Record<string, unknown>;
+  const stored = JSON.parse(resumeText(walk)) as Record<string, unknown>;
   edit(stored);
   return checkpointFor(walk, JSON.stringify(stored));
 }
@@ -237,7 +242,7 @@ describe("encodeResume and launchWalk", () => {
         },
       },
     };
-    const encoded = encodeResume(gameData, runtime);
+    const encoded = resumeText(runtime);
     expect(encoded).toBeDefined();
     expect(encoded).not.toContain('"debuffMovement"');
     expect(encoded).not.toContain('"admission"');
@@ -249,7 +254,7 @@ describe("encodeResume and launchWalk", () => {
     if (saved.ok) {
       expect(saved.value).not.toContain("manualDirection");
     }
-    const stored = JSON.parse(encoded ?? "null") as {
+    const stored = JSON.parse(encoded) as {
       draws: typeof walk.draws;
       session: { zoomiesSeconds: number };
       version: number;
@@ -276,14 +281,13 @@ describe("encodeResume and launchWalk", () => {
     if (restored.kind !== "resume") {
       throw new Error("Expected a legacy boundary");
     }
-    const encoded = JSON.parse(encodeResume(gameData, restored.walk) ?? "null") as {
+    const encoded = JSON.parse(resumeText(restored.walk)) as {
       session: { zoomiesSeconds: number };
     };
     expect(encoded.session.zoomiesSeconds).toBe(0);
   });
 
   it("refuses a mid-walk session instead of saving its transient clock", () => {
-    const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
     expect(
       encodeResume(gameData, {
         ...ZONE_START,
@@ -293,8 +297,7 @@ describe("encodeResume and launchWalk", () => {
           needsZonePlan: false,
         },
       }),
-    ).toBeUndefined();
-    logged.mockRestore();
+    ).toMatchObject({ ok: false });
   });
 
   it("roundtrips a production signature item through a checkpoint and resumes with its route intact", () => {
@@ -463,12 +466,11 @@ describe("encodeResume and launchWalk", () => {
   });
 
   it("stores no point it could not read back", () => {
-    vi.spyOn(console, "error").mockImplementation(() => undefined);
     const run = { ...zoneStartRun(), walker: "nobody" } as unknown as RunState;
     const walk = {
       ...ZONE_START,
       session: { ...ZONE_START.session, walk: { ...ZONE_START.session.walk, run } },
     };
-    expect(encodeResume(gameData, walk)).toBeUndefined();
+    expect(encodeResume(gameData, walk)).toMatchObject({ ok: false });
   });
 });

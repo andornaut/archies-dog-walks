@@ -3,7 +3,7 @@ import { expect, it, vi } from "vitest";
 import { domArtFileUrl } from "../../assets/domArt.ts";
 import { hudArtResources, prepareHudArt } from "./prepareHudArt.ts";
 
-const artUrl = (path: string) => domArtFileUrl((file) => `/art/${file}`, path);
+const artUrl = (path: string) => domArtFileUrl((file) => `/art/${file}`, vi.fn(), path);
 
 it("prepares modal art by its frames on its sheets and propagates required sheet failures", async () => {
   const source = { artUrl, loadSheet: vi.fn().mockResolvedValue({}) };

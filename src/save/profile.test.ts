@@ -376,7 +376,6 @@ describe("a walk left unfinished", () => {
   ])(
     "on a launch that decides $decision.kind, keeps the checkpoint or banks it",
     async ({ bank, checkpoint, decision, wentHome }) => {
-      vi.spyOn(console, "info").mockImplementation(() => undefined);
       const { entries, session } = await openedWith(decision);
       expect(session.resumesWalk).toBe(decision.kind === "resume");
       expect(session.save.checkpoint).toEqual(checkpoint);

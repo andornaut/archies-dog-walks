@@ -96,6 +96,7 @@ function withoutResume(checkpoint: Checkpoint): Checkpoint {
 export class ProfileSession {
   private readonly awards: AwardContext;
   private readonly stores: ProfileStores;
+  private readonly reportWriteError: (message: string) => void;
   // Earned and not yet celebrated: on launch, by a purchase, or before this page.
   private readonly celebrations = new CelebrationQueue<AchievementId>();
   private document: SaveDocument;
@@ -116,12 +117,14 @@ export class ProfileSession {
   private constructor(
     awards: AwardContext,
     stores: ProfileStores,
+    reportWriteError: (message: string) => void,
     document: SaveDocument,
     earned: readonly AchievementId[],
     state: StorageState,
   ) {
     this.awards = awards;
     this.stores = stores;
+    this.reportWriteError = reportWriteError;
     this.document = document;
     this.earnedIds = earned;
     this.judge = achievementJudge(awards.data);
@@ -138,11 +141,19 @@ export class ProfileSession {
     awards: AwardContext,
     stores: ProfileStores,
     launch: LaunchDecision = bankEvery,
+    reportWriteError: (message: string) => void = () => undefined,
   ): Promise<OpenedProfile> {
     const [load, earned] = await Promise.all([stores.save.load(), stores.earned.load()]);
     const loaded = load.save;
     const state = loadedState(load, earned);
-    const session = new ProfileSession(awards, stores, loaded, earned.save.earned, state);
+    const session = new ProfileSession(
+      awards,
+      stores,
+      reportWriteError,
+      loaded,
+      earned.save.earned,
+      state,
+    );
     session.storedPlay = load.status === "loaded" && hasSavedPlay(loaded);
     session.storedBadges = earned.status === "loaded" && earned.save.earned.length > 0;
     session.celebrations.push(earned.save.unannounced);
@@ -151,9 +162,6 @@ export class ProfileSession {
       if (decided.kind === "resume") {
         session.resumable = decided.walk;
       } else {
-        if (decided.kind === "bank") {
-          console.info(`The unfinished walk banks as heading home: ${decided.reason}`);
-        }
         const banked = bankCheckpoint(awards, loaded);
         const run = checkpointFacts(loaded.checkpoint);
         session.celebrations.push(session.earn("bank", { run, save: banked }));
@@ -223,7 +231,7 @@ export class ProfileSession {
         return;
       }
       if (result.status === "invalid") {
-        console.error(`The ${what} was not written: ${result.reason}`);
+        this.reportWriteError(`The ${what} was not written: ${result.reason}`);
       } else {
         this.state = result.status === "saved" ? "available" : "unavailable";
       }

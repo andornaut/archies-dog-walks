@@ -103,20 +103,6 @@ export function writeSettings(
   }
 }
 
-// The page's localStorage, or undefined where the browser refuses it.
-export function pageSettingsStorage(): SettingsStorage | undefined {
-  try {
-    return globalThis.localStorage;
-  } catch {
-    return undefined;
-  }
-}
-
-// Whether the device asks for reduced motion.
-export function devicePrefersReducedMotion(): boolean {
-  return globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-}
-
 type SettingsListener = (settings: Settings) => void;
 
 // The settings for this page's life: read once, changed in memory at once and written key by
@@ -152,12 +138,4 @@ export class DeviceSettings {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
-}
-
-let pageSettings: DeviceSettings | undefined;
-
-// Device preferences are available before a progress save or renderer has opened.
-export function pageDeviceSettings(): DeviceSettings {
-  pageSettings ??= new DeviceSettings(pageSettingsStorage(), devicePrefersReducedMotion());
-  return pageSettings;
 }

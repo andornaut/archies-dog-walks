@@ -11,7 +11,6 @@ import {
 } from "@andornaut/game-kit/runtime/save/saveStore";
 import type { SaveStorage } from "@andornaut/game-kit/runtime/save/storage";
 import type { SaveFormat } from "@andornaut/game-kit/runtime/save/versionedSave";
-import { localSaveStorage } from "@andornaut/game-kit/runtime/web/save/dom/localSaveStorage";
 
 import type { AchievementId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
@@ -41,11 +40,6 @@ export function gameSaveStore(context: SaveContext, storage: SaveStorage): SaveS
   return saveStore(storage, SAVE_KEYS, saveFormat(context));
 }
 
-// The page's save store, on localStorage.
-export function pageSaveStore(context: SaveContext): SaveStore<SaveDocument> {
-  return gameSaveStore(context, localSaveStorage());
-}
-
 // The earned record's format: loading drops the ids of badges the data no longer has.
 export function earnedRecordFormat(
   data: Pick<GameData, "achievements">,
@@ -62,9 +56,4 @@ export function gameEarnedStore(
   storage: SaveStorage,
 ): EarnedStore<AchievementId> {
   return earnedStore(storage, EARNED_KEYS, earnedRecordFormat(data));
-}
-
-// The page's earned badges, on localStorage.
-export function pageEarnedStore(data: Pick<GameData, "achievements">): EarnedStore<AchievementId> {
-  return gameEarnedStore(data, localSaveStorage());
 }

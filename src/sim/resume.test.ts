@@ -164,9 +164,13 @@ describe("a walk resumed from its checkpoint", { timeout: 60_000 }, () => {
       expect(saved.walk.session.debuffMovement).toBeNull();
       expect(saved.walk.session.walk.run.debuffs).toEqual([]);
 
+      const encoded = encodeResume(gameData, saved.walk);
+      if (!encoded.ok) {
+        throw new Error(encoded.reason);
+      }
       const checkpoint = {
         ...checkpointOf(gameData, saved.walk.session.walk.run),
-        resume: encodeResume(gameData, saved.walk) ?? "",
+        resume: encoded.value,
       };
       const launched = launchWalk(gameData, true, checkpoint);
       if (launched.kind !== "resume") {

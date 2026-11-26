@@ -5,6 +5,7 @@ import { type Game, type Scene, Scenes } from "phaser";
 import type { AchievementId, HintId, WalkerId } from "../data/ids.ts";
 import { gameData } from "../data/index.ts";
 import type { Change } from "../rules/index.ts";
+import { pageEarnedStore, pageSaveStore } from "../save/dom/index.ts";
 import {
   type Checkpoint,
   createDefaultSave,
@@ -12,8 +13,6 @@ import {
   earnedRecordFormat,
   encodeResume,
   launchWalk,
-  pageEarnedStore,
-  pageSaveStore,
   ProfileSession,
   RESUME_BACKUP_KEY,
   type ResumeWalk,
@@ -59,10 +58,13 @@ export async function openProfile(
 ): Promise<StoreLoadResult<SaveDocument>> {
   const launch = (checkpoint: Checkpoint) => {
     const decided = launchWalk(gameData, resume, checkpoint);
-    if (decided.kind === "bank" && decided.backup !== undefined) {
-      localSaveStorage()
-        .write(RESUME_BACKUP_KEY, decided.backup)
-        .catch((error: unknown) => console.warn("The resume point was not backed up.", error));
+    if (decided.kind === "bank") {
+      if (decided.backup !== undefined) {
+        localSaveStorage()
+          .write(RESUME_BACKUP_KEY, decided.backup)
+          .catch((error: unknown) => console.warn("The resume point was not backed up.", error));
+      }
+      console.info(`The unfinished walk banks as heading home: ${decided.reason}`);
     }
     return decided;
   };
@@ -70,7 +72,12 @@ export async function openProfile(
     earned: pageEarnedStore(gameData),
     save: pageSaveStore(saveContextFrom(gameData)),
   };
-  const { load, session: opened } = await ProfileSession.open({ data: gameData }, stores, launch);
+  const { load, session: opened } = await ProfileSession.open(
+    { data: gameData },
+    stores,
+    launch,
+    console.error,
+  );
   scene.registry.set(SESSION_KEY, opened);
   soundboardOf(scene);
   return load;
@@ -179,8 +186,15 @@ export function checkpointRun(
   slice: Checkpoint,
   resume: ResumeWalk | null,
 ): Promise<void> {
-  const text = resume === null ? undefined : encodeResume(gameData, resume);
-  return session(scene).checkpointRun(text === undefined ? slice : { ...slice, resume: text });
+  if (resume === null) {
+    return session(scene).checkpointRun(slice);
+  }
+  const encoded = encodeResume(gameData, resume);
+  if (!encoded.ok) {
+    console.error(`The walk's resume point was not saved: ${encoded.reason}`);
+    return session(scene).checkpointRun(slice);
+  }
+  return session(scene).checkpointRun({ ...slice, resume: encoded.value });
 }
 
 // What banking result now would newly earn, for a mid-run badge line: nothing is written, and

@@ -1,6 +1,7 @@
 import type { Scene } from "phaser";
 
-import { type DeviceSettings, pageDeviceSettings, type Settings } from "../save/index.ts";
+import { pageDeviceSettings } from "../save/dom/index.ts";
+import type { DeviceSettings, Settings } from "../save/index.ts";
 
 export const PROFILE_SESSION_KEY = "profileSession";
 const DEVICE_SETTINGS_KEY = "deviceSettings";

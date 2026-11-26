@@ -339,7 +339,11 @@ export function domSheetJsonPath(sheet: DomSheet): string {
 // the fragment, which loadSheet (src/ui/dom/sheetFrames.ts) reads the key's frames by. A key on
 // no sheet is reported and keeps its own path, which a build does not ship, so its art stays
 // hidden rather than stopping the view that draws it.
-export function domArtFileUrl(artUrl: (path: string) => string, path: string): string {
+export function domArtFileUrl(
+  artUrl: (path: string) => string,
+  report: (error: unknown) => void,
+  path: string,
+): string {
   const match = /^(?:images|sprites)\/(.+)\.(json|png)$/.exec(path);
   if (match === null) {
     throw new Error(`${path} is no DOM art file`);
@@ -349,7 +353,7 @@ export function domArtFileUrl(artUrl: (path: string) => string, path: string): s
   try {
     of = domSheetOf(name);
   } catch (error) {
-    console.error(error);
+    report(error);
     return artUrl(path);
   }
   const { copy, key, sheet } = of;

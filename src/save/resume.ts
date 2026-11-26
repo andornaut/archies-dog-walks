@@ -422,15 +422,9 @@ function resumeFormat(data: ResumeData): SaveFormat<ResumeWalk | null> {
   };
 }
 
-// The text the checkpoint stores for a resume point, or undefined when it cannot be stored,
-// which the next launch banks as heading home.
-export function encodeResume(data: ResumeData, walk: ResumeWalk): string | undefined {
-  const encoded = encodeSave(resumeFormat(data), walk);
-  if (!encoded.ok) {
-    console.error(`The walk's resume point was not saved: ${encoded.reason}`);
-    return undefined;
-  }
-  return encoded.value;
+// Encodes the resume point and reports validation failures to the caller.
+export function encodeResume(data: ResumeData, walk: ResumeWalk) {
+  return encodeSave(resumeFormat(data), walk);
 }
 
 // What a launch does with the checkpoint left by a walk that never ended: nothing without one;
