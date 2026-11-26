@@ -10,13 +10,11 @@ import { Scene } from "phaser";
 
 import { musicKey } from "../audio/index.ts";
 import {
-  finishZone,
   type InputEvent,
   type RunSetup,
   timeScaleOf,
   WALK_CHEATS_OFF,
   type WalkCheat,
-  walkCheat,
   type WalkCheats,
   withCheats,
   withSetupStart,
@@ -44,22 +42,13 @@ import {
   startWakeLock,
   stopWakeLock,
 } from "../pwa/index.ts";
-import {
-  type CardView,
-  type Choice,
-  currentZone,
-  currentZoneId,
-  newRun,
-  outcomeChanges,
-} from "../rules/index.ts";
+import { type CardView, type Choice, currentZone, newRun, outcomeChanges } from "../rules/index.ts";
 import { pageZonePlanner } from "../runner/dom/index.ts";
 import {
   awaitsZonePlan,
   chooseShownCard,
   forkPoint,
   headHomeSession,
-  jumpToNeighbourhood,
-  planZoneFromSeed,
   resumeSession,
   type RunStreams,
   runStreams,
@@ -97,6 +86,13 @@ import { ensureRoadPlaceholders } from "./run/itemViews.ts";
 import { MenuFlow } from "./run/menuFlow.ts";
 import { ZoneBanner, zoneBannerMs } from "./run/roadBanners.ts";
 import { RoadArt } from "./run/roadView.ts";
+import {
+  activeCheatsOf,
+  applyWalkCheat,
+  cheatZoneJump,
+  cheatZonePlan,
+  liveCheatRun,
+} from "./run/runCheats.ts";
 import { RunInput } from "./run/runInput.ts";
 import { RunMoments, showHint } from "./run/runMoments.ts";
 import { RunRecorder } from "./run/runRecorder.ts";
@@ -104,6 +100,7 @@ import { type RunRandom, runRandom } from "./run/runStart.ts";
 import { createRunViews, drawRunViews, type RunViews } from "./run/runViews.ts";
 import { ShadowPool } from "./run/shadowPool.ts";
 import { LAYOUT, overPack, packPoint } from "./run/stage.ts";
+import { UpdateHold } from "./run/updateHold.ts";
 import { type CelebrationBatch, createZoneCelebrations } from "./run/zoneCelebrations.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { soundboardOf } from "./soundboard.ts";
@@ -162,8 +159,11 @@ export class RunScene extends Scene implements HudRun {
   private session: Session | undefined;
   private settings: Settings | undefined;
   private stepClock: StepClock = startStepClock;
-  // While Update now's prompt holds the walk (holdForUpdate), back is the prompt's.
-  private updateHeld = false;
+  private readonly updateHold = new UpdateHold({
+    close: () => this.closePause(),
+    isClosed: () => this.runPause().menu === "closed",
+    open: () => this.openPause(),
+  });
   // The walk one step before the session's, which a frame blends from; undefined draws the
   // session's walk as it is.
   private stepBefore: Walk | undefined;
@@ -293,7 +293,7 @@ export class RunScene extends Scene implements HudRun {
   private resetState(): void {
     this.ambientMs = 0;
     this.celebrations.cancel();
-    this.updateHeld = false;
+    this.updateHold.reset();
     this.resumePoint = null;
     this.session = undefined;
     this.stepBefore = undefined;
@@ -343,7 +343,7 @@ export class RunScene extends Scene implements HudRun {
     // The run scene hears back before any overlay launched over it, so it reads the overlays as
     // they were when back was pressed; help and the settings close themselves.
     const onBack = () => {
-      if (this.updateHeld) {
+      if (this.updateHold.takesBack) {
         return;
       }
       const over = this.session === undefined || this.session.walk.run.phase.kind === "ended";
@@ -462,16 +462,11 @@ export class RunScene extends Scene implements HudRun {
 
   // Whether the walk is on, for This walk's cheats: started and not ended.
   cheatsApply(): boolean {
-    const run = this.session?.walk.run;
-    return run !== undefined && run.phase.kind !== "ended";
+    return liveCheatRun(this.session) !== undefined;
   }
 
   activeCheats(): { readonly invincible: boolean; readonly zone: ZoneId } | undefined {
-    const run = this.session?.walk.run;
-    if (run === undefined || run.phase.kind === "ended") {
-      return undefined;
-    }
-    return { invincible: run.invincible ?? false, zone: currentZoneId(gameData, run) };
+    return activeCheatsOf(this.session);
   }
 
   toggleInvincible(): void {
@@ -495,15 +490,7 @@ export class RunScene extends Scene implements HudRun {
     if (session === undefined || world === undefined || !this.cheatsApply()) {
       return;
     }
-    const next = jumpToNeighbourhood(
-      gameData,
-      world.streams,
-      screenRoadGeometry,
-      "deferred",
-      LANE_COUNT,
-      zone,
-      session,
-    );
+    const next = cheatZoneJump(world.streams, zone, session);
     world.recorder.abandon();
     this.celebrations.cancel();
     world.menus.closeZoneOverlays();
@@ -523,12 +510,7 @@ export class RunScene extends Scene implements HudRun {
     }
     const session = this.planDueZoneNow(this.session);
     this.world?.recorder.abandon();
-    const { run } = session.walk;
-    const walk = { ...session.walk, run: walkCheat(gameData, cheat, run) };
-    this.session = {
-      ...session,
-      walk: cheat.kind === "finishZone" ? finishZone(gameData, session.walk) : walk,
-    };
+    this.session = { ...session, walk: applyWalkCheat(cheat, session.walk) };
     this.stepBefore = this.session.walk;
     this.draw();
   }
@@ -536,12 +518,8 @@ export class RunScene extends Scene implements HudRun {
   // The session with the zone it awaits planned here: a cheat pressed while the planner's plan is
   // still to come applies to the planned walk, as when the step plans the zone.
   private planDueZoneNow(session: Session): Session {
-    const streams = this.world?.streams;
-    if (streams === undefined || !awaitsZonePlan(session)) {
-      return session;
-    }
-    const planned = planZoneFromSeed(gameData, screenRoadGeometry, streams.seed, session.walk);
-    return this.takePlan(withZonePlan(session, planned));
+    const planned = cheatZonePlan(this.world?.streams, session);
+    return planned === undefined ? session : this.takePlan(planned);
   }
 
   // A zone that fell due starts at once, as when its step planned it: its banner and music, and the
@@ -795,21 +773,7 @@ export class RunScene extends Scene implements HudRun {
   // while it shows. opened says whether the prompt opened the menu, which then launches at
   // Phaser's next step; the release closes it again.
   holdForUpdate(): { readonly opened: boolean; release(): void } {
-    const closed = this.runPause().menu === "closed";
-    this.updateHeld = true;
-    if (closed) {
-      this.openPause();
-    }
-    const opened = closed && this.runPause().menu !== "closed";
-    return {
-      opened,
-      release: () => {
-        this.updateHeld = false;
-        if (opened) {
-          this.closePause();
-        }
-      },
-    };
+    return this.updateHold.hold();
   }
 
   // Update now's save: the walk so far with where the next launch resumes it, as a hidden page
