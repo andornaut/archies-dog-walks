@@ -9,13 +9,14 @@ import {
   artManifestText,
   generateArtManifest,
 } from "./artManifest.ts";
+import type * as dataExport from "./dataExport.ts";
 import { nodeArtFiles, writeFiles, writeIfChanged } from "./files.ts";
 
 const ART_FOLDERS = ["fonts", "images", "sounds", "sprites"];
 // Edits arrive in bursts, as when art's tools export a set: regenerate once they settle.
 const SETTLE_MS = 200;
 
-type DataExportModule = typeof import("./dataExport.ts");
+type DataExportModule = typeof dataExport;
 
 // Runs run once calls settle for settleMs. Runs never overlap: one that comes due while another
 // is under way starts when that one ends, so the last write is always from the newest sources.

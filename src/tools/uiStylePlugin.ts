@@ -1,6 +1,8 @@
 import { type Plugin, runnerImport } from "vite";
 
-type StylesheetModule = typeof import("../ui/dom/uiStylesheet.ts");
+import type * as uiStylesheet from "../ui/dom/uiStylesheet.ts";
+
+type StylesheetModule = typeof uiStylesheet;
 
 // The CSS module the game imports for the HTML interface's stylesheet.
 export const UI_STYLESHEET_ID = "virtual:adw-ui.css";
