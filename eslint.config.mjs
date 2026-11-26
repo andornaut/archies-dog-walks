@@ -143,6 +143,7 @@ const ENTRY_BANDS = [
   "Presentation",
   "Platform",
   "Engine and views",
+  "Support",
 ];
 const ENTRY_GROUPS = BANDS.filter(({ band }) => ENTRY_BANDS.includes(band)).flatMap(({ rows }) =>
   rows.flat(),

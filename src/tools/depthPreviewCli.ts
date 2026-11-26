@@ -26,8 +26,7 @@ import {
 import { walkProjection } from "../runner/index.ts";
 import { GLYPH_HEIGHT } from "../ui/index.ts";
 import { ART_DIR, ART_MANIFEST, generateArtManifest, measureAnchor } from "./artManifest.ts";
-import { encodePng } from "./atlas/atlasBuild.ts";
-import { spriteSource } from "./atlas/atlasLayout.ts";
+import { encodePng, spriteSource } from "./atlas/index.ts";
 import {
   cloneImage,
   crop,

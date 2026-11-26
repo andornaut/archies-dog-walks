@@ -11,9 +11,13 @@ import {
   usesPhaserArt,
 } from "../assets/index.ts";
 import { ART_MANIFEST } from "./artManifest.ts";
-import type { AtlasBuild } from "./atlas/atlasBuild.ts";
-import { type ArtCopy, CARD_GREY_COPY, DISABLED_COPY } from "./atlas/disabledFiles.ts";
-import { buildDomSheets } from "./atlas/domSheets.ts";
+import {
+  type ArtCopy,
+  type AtlasBuild,
+  buildDomSheets,
+  CARD_GREY_COPY,
+  DISABLED_COPY,
+} from "./atlas/index.ts";
 
 // The module a build fills with the game's ArtFileMap (src/assets/artUrl.ts). The dev server's
 // map is empty, so every file loads from its own path there.

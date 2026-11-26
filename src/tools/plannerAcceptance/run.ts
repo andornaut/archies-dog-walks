@@ -3,11 +3,14 @@ import { join } from "node:path";
 
 import { gameData } from "../../data/index.ts";
 import { SLOT_LIMITS, type ZonePlanObservation } from "../../runner/index.ts";
-import { type RunResult, simulateRun } from "../../sim/simulate.ts";
-import { SKILL_PRESETS } from "../../sim/skills.ts";
-import type { ZoneWalkEvents } from "../../sim/walkEvents.ts";
+import {
+  type RunResult,
+  simulateRun,
+  SKILL_PRESETS,
+  type ZoneWalkEvents,
+} from "../../sim/index.ts";
 import type { RunState } from "../../state/index.ts";
-import { UsageError } from "../usage.ts";
+import { UsageError } from "../index.ts";
 import { certifyPlan, geometryValid } from "./certify.ts";
 import {
   ACCEPTANCE_PACK,

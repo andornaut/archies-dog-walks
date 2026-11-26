@@ -26,7 +26,7 @@ it.each([
 
 it.each([
   ["save/probe.ts", 'import "../rules/index.ts";', undefined],
-  ["tools/probe.ts", 'import "./atlas/atlasLayout.ts";', undefined],
+  ["tools/probe.ts", 'import "./atlas/index.ts";', undefined],
   ["rules/probe.test.ts", 'import "../save/settings.ts";', undefined],
   ["rules/probe.ts", 'type T = typeof import("@andornaut/game-kit/runtime/rect");', undefined],
   ["rules/probe.ts", 'import "../save/settings.ts";', "import-x/no-restricted-paths"],
@@ -51,6 +51,8 @@ it.each([
   ["assets/probe.ts", 'import "./manifest.ts";', undefined],
   ["homePage/probe.ts", 'import "../pwa/cachePolicy.ts";', undefined],
   ["homePage/probe.ts", 'import "../pwa/launch.ts";', "import-x/no-restricted-paths"],
+  ["tools/probe.ts", 'import "./atlas/atlasLayout.ts";', "import-x/no-restricted-paths"],
+  ["tools/plannerAcceptance/probe.ts", 'import "../usage.ts";', "import-x/no-restricted-paths"],
 ])("holds src/%s with %s to the bands and the entries", async (file, text, rule) => {
   const results = await lint.lintText(text, { filePath: `src/${file}` });
   const found = results.flatMap(({ messages }) =>

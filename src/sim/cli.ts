@@ -10,7 +10,7 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { GearId } from "../data/ids.ts";
 import { gameData } from "../data/index.ts";
-import { USAGE_EXIT_CODE, UsageError } from "../tools/usage.ts";
+import { USAGE_EXIT_CODE, UsageError } from "../tools/index.ts";
 import { DEFAULT_ROUTE_POLICY, MIXED_PAY_SHARE, POLICY_IDS, ROUTE_POLICY_IDS } from "./policies.ts";
 import {
   DEFAULT_MATRIX,

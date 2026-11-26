@@ -1,5 +1,5 @@
 // Planner acceptance batch: npm run planner:acceptance -- <out-dir> [--commit <sha>]
-import { USAGE_EXIT_CODE, UsageError } from "../usage.ts";
+import { USAGE_EXIT_CODE, UsageError } from "../index.ts";
 import { runBatch } from "./run.ts";
 
 const USAGE = "Usage: planner:acceptance <out-dir> [--commit <sha>]";

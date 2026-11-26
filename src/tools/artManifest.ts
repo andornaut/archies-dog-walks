@@ -16,7 +16,7 @@ import {
   type SpriteAsset,
   standsOnGround,
 } from "../assets/index.ts";
-import { spriteSource } from "./atlas/atlasLayout.ts";
+import { spriteSource } from "./atlas/index.ts";
 import { type ArtFiles, jsonText } from "./files.ts";
 
 // public/art/manifest.json, derived from the files under public/art/. A key is its file's
