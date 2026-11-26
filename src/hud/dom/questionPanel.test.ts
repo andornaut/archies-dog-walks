@@ -661,6 +661,39 @@ it("keeps a footer-only overlay dismissible without introducing a corner close c
   shown.destroy();
 });
 
+it("reads a detail card's title first, then its body, then its actions", () => {
+  const { element, layer } = menuContext();
+  const rect = { height: 240, width: 280, x: 40, y: 120 };
+  const close = { label: gameData.menuText.common.close, primary: true };
+  showDetailCard(layer, {
+    artUrl: (path) => path,
+    closeLabel: gameData.menuText.common.close,
+    dismiss: vi.fn(),
+    fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+    loadSheet: () => Promise.resolve({}),
+    pillColours: () => undefined,
+    toGame: (point) => point,
+    view: {
+      art: [],
+      card: {
+        ...modalCardView(MEASURE, rect, "Casey", []),
+        footer: dismissFooter(MEASURE, close, rect),
+      },
+      framed: [],
+      texts: [{ capTop: 200, colour: 0, lines: ["Spots more"], x: 56 }],
+      title: "Casey",
+    },
+  });
+  const dialog = layerViews(element)[0]!;
+  const at = (found: (node: (typeof dialog.children)[number]) => boolean) =>
+    dialog.children.findIndex(found);
+  const title = at((node) => node.id === dialog.getAttribute("aria-labelledby"));
+  const body = at((node) => node.id === dialog.getAttribute("aria-describedby"));
+  const action = at((node) => node.tagName === "button");
+  expect(title).toBeGreaterThanOrEqual(0);
+  expect([title < body, body < action]).toEqual([true, true]);
+});
+
 it("uses a detail card's existing any-tap dismissal for its native X and footer", () => {
   const { element, layer } = menuContext();
   const dismiss = vi.fn();

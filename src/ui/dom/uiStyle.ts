@@ -109,6 +109,8 @@ export const UI_STYLE = `
 .adw-art{background-repeat:no-repeat;background-size:100% 100%;image-rendering:pixelated}
 .adw-pill{clip-path:polygon(${cutCorners("var(--adw-cut)")})}
 .adw-lines{position:absolute;left:0;top:0;margin:0;font:inherit}
+/* A panel's title comes first in its dialog and paints over the parts after it. */
+.adw-panel-title{z-index:1}
 .adw-text{position:absolute;margin:0;white-space:pre;letter-spacing:0;
   font-kerning:normal;font-synthesis:none;font-variant-ligatures:none;font-weight:400;
   -webkit-font-smoothing:none;pointer-events:none}

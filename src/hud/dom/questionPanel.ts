@@ -76,7 +76,7 @@ export interface DomQuestionPanelInput {
   // Whether keys 1 to n press the buttons, as on the pause menu and the questions.
   readonly numberKeys: boolean;
   readonly numberPresses?: readonly (() => void)[];
-  // Drawn over the frame, under the title.
+  // Drawn over the frame, under the title, and read after the title.
   readonly parts?: readonly DomPart[];
   readonly presses: readonly (() => void)[];
   // A tap on the panel's own body, away from its controls, as a detail card's dismissal.
@@ -218,17 +218,12 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     setBox(rim, paintedPanel(scale));
   });
   placed.push(panel.place);
-  for (const part of input.parts ?? []) {
-    dialog.append(part.element);
-    placed.push(part.place);
-  }
-  if (input.describedBy !== undefined) {
-    dialog.setAttribute("aria-describedby", input.describedBy);
-  }
 
-  // The title, its lines in capitals; a screen reader reads its words as written.
+  // The title, its lines in capitals; a screen reader reads its words as written. It comes first,
+  // so the dialog reads in the order it shows: the title, the body, then the actions. It paints
+  // over the parts (adw-panel-title), which lie under it.
   const title = doc.createElement("h2");
-  title.className = "adw-lines";
+  title.className = "adw-lines adw-panel-title";
   title.id = `${id}-title`;
   title.setAttribute("aria-label", input.label ?? view.title.map((line) => line.text).join(" "));
   for (const line of view.title) {
@@ -236,6 +231,14 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   }
   dialog.setAttribute("aria-labelledby", title.id);
   dialog.append(title);
+
+  for (const part of input.parts ?? []) {
+    dialog.append(part.element);
+    placed.push(part.place);
+  }
+  if (input.describedBy !== undefined) {
+    dialog.setAttribute("aria-describedby", input.describedBy);
+  }
 
   if (view.notePlate !== undefined) {
     const backing = view.notePlate;
