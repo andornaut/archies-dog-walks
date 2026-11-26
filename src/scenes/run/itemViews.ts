@@ -28,7 +28,7 @@ import { type MoverOnRoad, moverTell } from "../../runner/movers.ts";
 import { screenRoadGeometry } from "../../runner/screenGeometry.ts";
 import { signaturePlace } from "../../runner/signaturePaths.ts";
 import type { SpawnEvent } from "../../runner/spawning.ts";
-import { type Walk, type WalkStep } from "../../runner/walk.ts";
+import type { Walk, WalkStep } from "../../runner/walk.ts";
 import { type RoadGeometry, walkGeometry } from "../../runner/walkGeometry.ts";
 import { itemCategory, type WalkItem, type WalkItemKind } from "../../runner/walkItems.ts";
 import { PALETTE } from "../../ui/palette.ts";

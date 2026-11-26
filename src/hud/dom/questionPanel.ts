@@ -34,7 +34,7 @@ import {
   wholeArtPixels,
 } from "../../ui/domScale.ts";
 import { MODAL } from "../../ui/modal/layout.ts";
-import { type PanelText, type QuestionPanelView } from "../../ui/modal/types.ts";
+import type { PanelText, QuestionPanelView } from "../../ui/modal/types.ts";
 import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
 
 // The pause menu, each question (the Home question, Quit?) and each modal card (the update

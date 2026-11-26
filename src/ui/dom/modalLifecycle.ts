@@ -1,7 +1,4 @@
-import {
-  type ModalInputGate,
-  type ModalInputScope,
-} from "@andornaut/game-kit/runtime/input/modalInput";
+import type { ModalInputGate, ModalInputScope } from "@andornaut/game-kit/runtime/input/modalInput";
 import { followOnePress } from "@andornaut/game-kit/runtime/input/onePress";
 import { guardClicks, type PressGate } from "@andornaut/game-kit/runtime/web/ui/dom/domPress";
 import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";

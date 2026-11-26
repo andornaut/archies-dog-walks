@@ -31,8 +31,8 @@ import type { SlotAssignment } from "./slotPlan.ts";
 import { SLOT_LIMITS, type SlotDiagnostics, type SlotPlanningFailure } from "./slotPlanner.ts";
 import type { PlannedSpawns, SpawnPlan, SpawnQuota } from "./spawning.ts";
 import { spacedStretch } from "./stretches.ts";
-import { type Walk, type WalkData } from "./walk.ts";
-import { type RoadGeometry } from "./walkGeometry.ts";
+import type { Walk, WalkData } from "./walk.ts";
+import type { RoadGeometry } from "./walkGeometry.ts";
 import {
   blocksLane,
   footprintOf,

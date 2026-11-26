@@ -5,7 +5,7 @@ import type { GameData } from "../../data/types.ts";
 import { advanceLaneControl } from "../../runner/laneControl.ts";
 import type { SessionInput } from "../../runner/session.ts";
 import { steerWalk, type Walk } from "../../runner/walk.ts";
-import { type WalkItem } from "../../runner/walkItems.ts";
+import type { WalkItem } from "../../runner/walkItems.ts";
 import { laneMotionConfig } from "../../runner/walkMotion.ts";
 
 // The walk as drawn between two fixed steps. The session steps at 60 Hz while the screen may

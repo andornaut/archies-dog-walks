@@ -23,7 +23,7 @@ import { followModalUnderlay } from "../../ui/dom/rampDim.ts";
 import type { SheetFrame } from "../../ui/dom/sheetFrames.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridX, gridY } from "../../ui/domScale.ts";
-import { type PanelText } from "../../ui/modal/types.ts";
+import type { PanelText } from "../../ui/modal/types.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import type { DomBadgeCardInput } from "./badgeCard.ts";

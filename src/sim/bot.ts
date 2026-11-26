@@ -13,7 +13,7 @@ import { moverOutcomes } from "../runner/outcomes.ts";
 import { contactWindow, type PullEvent, type Pulls } from "../runner/pulls.ts";
 import { signatureAlive } from "../runner/signaturePaths.ts";
 import { pickupReach, steerWalk, type Walk, type WalkData } from "../runner/walk.ts";
-import { type RoadGeometry } from "../runner/walkGeometry.ts";
+import type { RoadGeometry } from "../runner/walkGeometry.ts";
 import {
   isObstacleCategory,
   isPullObstacle,

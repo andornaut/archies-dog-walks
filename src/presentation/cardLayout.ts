@@ -4,7 +4,7 @@ import {
   inkRowsFromCapTop,
   inkRowsOfLines,
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
-import { type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
+import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
 import { CHOICE_CARDS } from "../data/layout.ts";
 import { CARD_CHARMS_HEIGHT } from "../layout/buffLayout.ts";

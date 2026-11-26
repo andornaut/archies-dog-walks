@@ -20,7 +20,7 @@ import { runStreams } from "./session.ts";
 import { compileSignature } from "./signaturePaths.ts";
 import { startRoad, steerWalk, stepWalk, type Walk } from "./walk.ts";
 import { walkGeometry, walkProjection } from "./walkGeometry.ts";
-import { type WalkItem } from "./walkItems.ts";
+import type { WalkItem } from "./walkItems.ts";
 import { roadScrollSpeed } from "./walkMotion.ts";
 import {
   debuffDriftProfile,

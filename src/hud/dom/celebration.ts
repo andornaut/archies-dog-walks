@@ -28,7 +28,7 @@ import {
   gridX,
   wholeArtPixels,
 } from "../../ui/domScale.ts";
-import { type PanelText, type QuestionPanelView } from "../../ui/modal/types.ts";
+import type { PanelText, QuestionPanelView } from "../../ui/modal/types.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { celebrationHeadlineView } from "../celebrationHeadlineView.ts";
 import { CELEBRATION_LAYOUT } from "../celebrationLayout.ts";

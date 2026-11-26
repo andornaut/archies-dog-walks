@@ -1,8 +1,8 @@
-import { type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { Core, Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
-import { type ChoiceEntry } from "../hud/choiceCardView.ts";
+import type { ChoiceEntry } from "../hud/choiceCardView.ts";
 import { type NativeChoiceCards, showChoiceCards } from "../hud/dom/choiceCards.ts";
 import { type HoldPress, holdRule, startHold, tickHold } from "../input/hold.ts";
 import { cardNumberForKey, menuKeyActs } from "../input/keyBindings.ts";

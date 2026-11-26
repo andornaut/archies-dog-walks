@@ -2,7 +2,7 @@ import { expect, it } from "vitest";
 
 import { laneMask } from "../layout/lanes.ts";
 import { drawMover } from "./moverDraws.ts";
-import { type MoverGeometry, type MoverSpec } from "./moverModel.ts";
+import type { MoverGeometry, MoverSpec } from "./moverModel.ts";
 import { moverPlacements } from "./moverPlanning.ts";
 import { crossScrollTo, crossSpan, moverPlace } from "./movers.ts";
 import { slotMotionStreams } from "./slotEntropy.ts";

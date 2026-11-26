@@ -1,9 +1,9 @@
-import { type Seconds } from "@andornaut/game-kit/runtime/units";
+import type { Seconds } from "@andornaut/game-kit/runtime/units";
 import { describe, expect, expectTypeOf, it } from "vitest";
 
 import { read } from "../rules/units.ts";
 import type { Pack } from "../state/runState.ts";
-import { type Cents, type Hearts } from "../units.ts";
+import type { Cents, Hearts } from "../units.ts";
 import { TUNING } from "./tuning.ts";
 import type {
   AchievementCondition,

@@ -2,7 +2,7 @@ import type { GameData } from "../data/types.ts";
 import { hasLeftRoad, moverPlace, moverY } from "../runner/movers.ts";
 import { itemHeight } from "../runner/obstacleGeometry.ts";
 import type { SpawnEvent } from "../runner/spawning.ts";
-import { type RoadGeometry } from "../runner/walkGeometry.ts";
+import type { RoadGeometry } from "../runner/walkGeometry.ts";
 import { footprintOf, type WalkItem, type WalkItemKind } from "../runner/walkItems.ts";
 
 // The red herring crossers (herringSpawn in src/runner/dartOutcomes.ts): a share of a kind's

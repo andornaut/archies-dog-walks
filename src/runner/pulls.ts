@@ -14,7 +14,7 @@ import { destinationLane } from "./laneMotion.ts";
 import { isWaiting, laneAt, moverPlace, moverY } from "./movers.ts";
 import { moverOutcomes } from "./outcomes.ts";
 import { packBoxes, type Walk } from "./walk.ts";
-import { type RoadGeometry } from "./walkGeometry.ts";
+import type { RoadGeometry } from "./walkGeometry.ts";
 import { blocksLane, isPullObstacle, type WalkItem } from "./walkItems.ts";
 import { laneMotionConfig, laneMoveSeconds, roadScrollSpeed } from "./walkMotion.ts";
 

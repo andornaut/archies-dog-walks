@@ -27,7 +27,7 @@ import {
   type RunResult,
   zonesFinishedBy,
 } from "./checkpoint.ts";
-import { type Checkpoint, type SaveDocument } from "./schema.ts";
+import type { Checkpoint, SaveDocument } from "./schema.ts";
 import { bestWalkCents, timesFired } from "./stats.ts";
 
 // veteranSave: bank 12,345, best walk 9,000 over 4 zones, lifetime 30,000 of which 2,000 starting

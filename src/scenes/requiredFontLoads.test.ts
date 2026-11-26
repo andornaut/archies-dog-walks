@@ -2,7 +2,7 @@ import type { LoadFailure } from "@andornaut/game-kit/runtime/load/phaser/watchL
 import { expect, it, vi } from "vitest";
 
 import type { AtlasManifest } from "../assets/atlasManifest.ts";
-import { type AssetManifest } from "../assets/manifest.ts";
+import type { AssetManifest } from "../assets/manifest.ts";
 import { fontXmlKey, MANIFEST_CACHE_KEY } from "../assets/phaser/manifestArt.ts";
 import {
   blockedFontAtlas,

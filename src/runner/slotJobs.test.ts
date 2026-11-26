@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { prepareSlotKind, slotPlacementsAt } from "./slotCandidates.ts";
-import { type SlotSource } from "./slotConfig.ts";
+import type { SlotSource } from "./slotConfig.ts";
 import { createSlotConstructionState } from "./slotConstraintState.ts";
 import type { SlotJob } from "./slotJobs.ts";
 import { materialiseSlotPlan } from "./slotPlan.ts";

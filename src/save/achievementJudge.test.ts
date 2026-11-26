@@ -11,7 +11,7 @@ import { testState } from "../testing/runState.ts";
 import { newPlayerSave, veteranSave } from "../testing/saves.ts";
 import { cents } from "../units.ts";
 import { achievementJudge } from "./achievementJudge.ts";
-import { type SaveDocument } from "./schema.ts";
+import type { SaveDocument } from "./schema.ts";
 
 const JUDGE = achievementJudge(gameData);
 

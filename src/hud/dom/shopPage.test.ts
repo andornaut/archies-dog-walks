@@ -6,7 +6,7 @@ import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
-import { type PanelMeasure } from "../../ui/modal/types.ts";
+import type { PanelMeasure } from "../../ui/modal/types.ts";
 import { createPageTab } from "./shopPage.ts";
 
 const MEASURE: PanelMeasure = {

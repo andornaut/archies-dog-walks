@@ -14,7 +14,7 @@ import { UPGRADE_DRAW_ORDER, UPGRADES } from "../data/upgrades.ts";
 import { newRun } from "../rules/newRun.ts";
 import { stillInLane } from "../runner/laneMotion.ts";
 import { startRoad, stepWalk, type Walk } from "../runner/walk.ts";
-import { type WalkItem } from "../runner/walkItems.ts";
+import type { WalkItem } from "../runner/walkItems.ts";
 import { mapPack } from "../state/pack.ts";
 import type { PackDogs } from "../state/runState.ts";
 import { clampHearts } from "../units.ts";

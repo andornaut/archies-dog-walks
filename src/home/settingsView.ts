@@ -10,12 +10,7 @@ import type { MenuText } from "../data/types.ts";
 import type { Settings } from "../save/settings.ts";
 import { iconBesideLabel } from "../ui/iconLabel.ts";
 import { dismissFooter } from "../ui/modal/dismissFooter.ts";
-import {
-  type PanelButton,
-  type PanelMeasure,
-  type PanelText,
-  type QuestionPanelView,
-} from "../ui/modal/types.ts";
+import type { PanelButton, PanelMeasure, PanelText, QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView, panelButton, panelTitle } from "../ui/modal/view.ts";
 import { PAGE_LAYOUT, PAGE_TITLE_ROW, pageBack } from "../ui/pageLayout.ts";
 import { PALETTE } from "../ui/palette.ts";

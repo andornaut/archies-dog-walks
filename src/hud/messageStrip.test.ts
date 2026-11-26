@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import { keysOf } from "@andornaut/game-kit/runtime/records";
-import { type Rect } from "@andornaut/game-kit/runtime/rect";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 

@@ -6,14 +6,9 @@ import type { GameData, MoveCount, Movement, NeighbourhoodId } from "../data/typ
 import { read } from "../rules/units.ts";
 import { assignedMovement, type ProfiledMovement } from "./movementAssignments.ts";
 import { hopSequences, hopShapes, SIDESTEPS } from "./moverHops.ts";
-import {
-  type MoverFootprint,
-  type MoverMotion,
-  type MoverSpec,
-  type MoverStreams,
-} from "./moverModel.ts";
-import { type StepShape } from "./movers.ts";
-import { type WalkItemKind } from "./walkItems.ts";
+import type { MoverFootprint, MoverMotion, MoverSpec, MoverStreams } from "./moverModel.ts";
+import type { StepShape } from "./movers.ts";
+import type { WalkItemKind } from "./walkItems.ts";
 
 // The movement a drawn spawn moves with: an obstacle, minor or not, or a lucky encounter with a
 // movement comes as a mover at a chance of share. Other spawns never move and draw nothing, as

@@ -1,5 +1,5 @@
 import type { DogId, EncounterId, OptionPicks, WalkerId, ZoneId } from "../data/types.ts";
-import { type AchievementData, type RunCounters, type RunFacts } from "../rules/achievements.ts";
+import type { AchievementData, RunCounters, RunFacts } from "../rules/achievements.ts";
 import { newWalkers } from "../rules/walkers.ts";
 import type { EndReason } from "../state/runState.ts";
 import { addCents, type Cents, cents } from "../units.ts";

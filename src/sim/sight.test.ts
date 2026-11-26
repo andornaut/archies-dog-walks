@@ -5,7 +5,7 @@ import { gameData } from "../data/index.ts";
 import type { MinorObstacleId, Movement } from "../data/types.ts";
 import type { MoverPath } from "../runner/movers.ts";
 import { screenRoadGeometry } from "../runner/screenGeometry.ts";
-import { type WalkItem, type WalkItemKind } from "../runner/walkItems.ts";
+import type { WalkItem, WalkItemKind } from "../runner/walkItems.ts";
 import { walkScrollSpeed } from "../runner/walkMotion.ts";
 import { testState } from "../testing/runState.ts";
 import { sightPaths } from "./sight.ts";

@@ -29,7 +29,7 @@ import {
   type WalkData,
   type WalkStep,
 } from "./walk.ts";
-import { type RoadGeometry } from "./walkGeometry.ts";
+import type { RoadGeometry } from "./walkGeometry.ts";
 import { zoneLength } from "./walkMotion.ts";
 import {
   planZoneWithContext,

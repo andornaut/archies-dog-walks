@@ -4,7 +4,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameData } from "../data/types.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { modalActionWidth } from "../ui/modal/layout.ts";
-import { type PanelButton, type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
+import type { PanelButton, PanelMeasure, PanelText } from "../ui/modal/types.ts";
 import { panelButton } from "../ui/modal/view.ts";
 import { pageBack } from "../ui/pageLayout.ts";
 import { PALETTE } from "../ui/palette.ts";

@@ -1,5 +1,5 @@
 import * as hits from "../hits.ts";
-import { type Drawable, type Point, type Sprite } from "../pixel.ts";
+import type { Drawable, Point, Sprite } from "../pixel.ts";
 import {
   CHEESE,
   cheeseWheel,

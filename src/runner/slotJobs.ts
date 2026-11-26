@@ -8,7 +8,7 @@ import {
   type SlotPlanningRole,
   type SlotSource,
 } from "./slotConfig.ts";
-import { type SpawnQuota } from "./spawning.ts";
+import type { SpawnQuota } from "./spawning.ts";
 
 export interface SlotJob<Kind extends string> {
   readonly auxiliary?: { readonly requestIndex: number; readonly memberIndex: number };

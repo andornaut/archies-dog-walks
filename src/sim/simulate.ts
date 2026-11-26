@@ -15,7 +15,7 @@ import type {
 } from "../data/types.ts";
 import type { InputEvent } from "../dev/inputLog.ts";
 import { lastHeartOwnersOf, runCountersOf, type RunFacts } from "../rules/achievements.ts";
-import { type CardView, type Choice, type ChoiceData } from "../rules/choices.ts";
+import type { CardView, Choice, ChoiceData } from "../rules/choices.ts";
 import { newRun } from "../rules/newRun.ts";
 import { currentZoneId } from "../rules/route.ts";
 import { endReasonOf, walkEarnings } from "../rules/run.ts";
@@ -34,7 +34,7 @@ import {
 } from "../runner/session.ts";
 import { auditSpawnPlan } from "../runner/spawnValidation.ts";
 import { startRoad, type Walk, type WalkData, type WalkStep } from "../runner/walk.ts";
-import { type RoadGeometry } from "../runner/walkGeometry.ts";
+import type { RoadGeometry } from "../runner/walkGeometry.ts";
 import { blocksLane, type WalkItemKind } from "../runner/walkItems.ts";
 import { laneMotionConfig, laneMoveSeconds, roadScrollSpeed } from "../runner/walkMotion.ts";
 import type { ZonePlanObservation } from "../runner/zonePlan.ts";

@@ -1,5 +1,5 @@
 import { STEPS } from "../mini.ts";
-import { type Drawable, type Frame, type Sprite, type Tag } from "../pixel.ts";
+import type { Drawable, Frame, Sprite, Tag } from "../pixel.ts";
 import {
   artSculpture,
   BARREL_IDLE,

@@ -9,7 +9,7 @@ import type { MoverPath } from "../runner/movers.ts";
 import { moverSpec } from "../runner/moverSpecs.ts";
 import { componentHitLength, itemHeight, plannedCellInset } from "../runner/obstacleGeometry.ts";
 import { blockingLength } from "../runner/spawning.ts";
-import { type RoadGeometry } from "../runner/walkGeometry.ts";
+import type { RoadGeometry } from "../runner/walkGeometry.ts";
 import { blocksLane, footprintOf, type WalkItemKind } from "../runner/walkItems.ts";
 import { walkScrollSpeed } from "../runner/walkMotion.ts";
 import type { RunState } from "../state/runState.ts";

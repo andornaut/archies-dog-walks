@@ -4,7 +4,7 @@ import {
   inkRowsFromCapTop,
   inkRowsOfLines,
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
-import { type FittedText } from "@andornaut/game-kit/runtime/text/textFit";
+import type { FittedText } from "@andornaut/game-kit/runtime/text/textFit";
 import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 
 import { ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";

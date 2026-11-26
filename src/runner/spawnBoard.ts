@@ -1,6 +1,6 @@
 import { laneMask } from "../layout/lanes.ts";
 import { deterministicOccupancyMasks, reactiveLaneMasks } from "./laneAlternatives.ts";
-import { type MoverBody, type MoverPlacement } from "./moverModel.ts";
+import type { MoverBody, MoverPlacement } from "./moverModel.ts";
 import { type OnScreen, onScreenOf } from "./moverScreen.ts";
 import {
   fitsMoverSpot,

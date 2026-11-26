@@ -12,7 +12,7 @@ import type { OwnerNameLine } from "../presentation/ownerName.ts";
 import { walkLength } from "../rules/route.ts";
 import type { LastWalk } from "../save/schema.ts";
 import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
-import { type PanelButton, type PanelText } from "../ui/modal/types.ts";
+import type { PanelButton, PanelText } from "../ui/modal/types.ts";
 import { panelButton } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { TEXT_SCALE, textOnLines } from "../ui/textFit.ts";

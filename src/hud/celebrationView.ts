@@ -10,7 +10,7 @@ import type {
   DetailText,
 } from "../home/detailCardView.ts";
 import { iconBesideLabel } from "../ui/iconLabel.ts";
-import { type PanelButton } from "../ui/modal/types.ts";
+import type { PanelButton } from "../ui/modal/types.ts";
 import { panelButton } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";

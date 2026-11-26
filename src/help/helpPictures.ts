@@ -30,7 +30,7 @@ import { NO_PULLS, type Pulls } from "../runner/pulls.ts";
 import { screenRoadGeometry } from "../runner/screenGeometry.ts";
 import { startRoad, type Walk } from "../runner/walk.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
-import { type WalkItem, type WalkItemKind } from "../runner/walkItems.ts";
+import type { WalkItem, WalkItemKind } from "../runner/walkItems.ts";
 import { zoneLength } from "../runner/walkMotion.ts";
 import { heartsOf, mapPack } from "../state/pack.ts";
 import type { PackDogs, PackSlot, RunState } from "../state/runState.ts";

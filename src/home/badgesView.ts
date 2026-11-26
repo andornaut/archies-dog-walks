@@ -1,6 +1,6 @@
 import { fillLine, fillNames, wrapWords } from "@andornaut/game-kit/runtime/lines";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
-import { type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
+import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
 import { badgeKey } from "../assets/spriteKeys.ts";
 import { BADGE_NAME_PAD, BADGE_STRIP } from "../data/layout.ts";

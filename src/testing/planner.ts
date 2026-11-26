@@ -17,12 +17,12 @@ import { drawnLanes, hasLeftRoad, type MoverPath, moverPlace } from "../runner/m
 import { componentHitLength, itemHeight, plannedCellInset } from "../runner/obstacleGeometry.ts";
 import { moverOutcomes } from "../runner/outcomes.ts";
 import { signaturePlace } from "../runner/signaturePaths.ts";
-import { type Walk } from "../runner/walk.ts";
+import type { Walk } from "../runner/walk.ts";
 import { type RoadGeometry, walkGeometry, walkProjection } from "../runner/walkGeometry.ts";
 import { blocksLane, footprintOf, type WalkItem } from "../runner/walkItems.ts";
 import { walkScrollSpeed, zoneLength } from "../runner/walkMotion.ts";
 import type { RunState } from "../state/runState.ts";
-import { type BlockingSpan } from "./avoidable.ts";
+import type { BlockingSpan } from "./avoidable.ts";
 import { data } from "./walk.ts";
 import { mapZones } from "./world.ts";
 

@@ -1,4 +1,4 @@
-import { type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { pageToGame } from "@andornaut/game-kit/runtime/view/pagePoint";
 import { Core, type Scene, Scenes } from "phaser";
 
@@ -24,7 +24,7 @@ import { pillKind } from "../presentation/effectNames.ts";
 import { pageFrameTurn } from "../pwa/index.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
-import { type CardAction, type PanelNotePart, type QuestionPanelView } from "../ui/modal/types.ts";
+import type { CardAction, PanelNotePart, QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView } from "../ui/modal/view.ts";
 import { displayBitmapFont, hasDisplayFont } from "../ui/phaser/displayText.ts";
 import { pixelBitmapFont } from "../ui/phaser/pixelText.ts";

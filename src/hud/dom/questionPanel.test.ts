@@ -8,7 +8,7 @@ import { gameFont } from "../../testing/fontInk.ts";
 import { artPixel, domScale } from "../../ui/domScale.ts";
 import { dismissFooter } from "../../ui/modal/dismissFooter.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
-import { type PanelMeasure } from "../../ui/modal/types.ts";
+import type { PanelMeasure } from "../../ui/modal/types.ts";
 import { modalCardView, panelButton } from "../../ui/modal/view.ts";
 import { inPill } from "../../ui/namePills.ts";
 import { PAUSE_MENU_ITEMS, pauseMenuItemLabel } from "../../ui/navigationMenu.ts";

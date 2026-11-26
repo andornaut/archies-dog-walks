@@ -3,7 +3,7 @@ import { fillLine, fillNames, wrapWords } from "@andornaut/game-kit/runtime/line
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { overflowOf } from "@andornaut/game-kit/runtime/text/overflow";
-import { type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
+import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 import { buildLabel } from "@andornaut/game-kit/runtime/web/buildLabel";
 
 import { gameData } from "../data/index.ts";

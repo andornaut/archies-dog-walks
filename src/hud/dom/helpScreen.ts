@@ -20,7 +20,7 @@ import {
 import { refuse } from "../../ui/dom/refusal.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
 import { artPixel, type DomScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
-import { type PanelText } from "../../ui/modal/types.ts";
+import type { PanelText } from "../../ui/modal/types.ts";
 import { cssHex, PALETTE } from "../../ui/palette.ts";
 import { BODY_ASCENT_ROWS } from "../../ui/textFit.ts";
 import { showPage } from "./page.ts";

@@ -1,6 +1,6 @@
 import { stopsOnVerge } from "../runner/dartOutcomes.ts";
 import { moverPlace, moverY } from "../runner/movers.ts";
-import { type RoadGeometry } from "../runner/walkGeometry.ts";
+import type { RoadGeometry } from "../runner/walkGeometry.ts";
 import type { WalkItem } from "../runner/walkItems.ts";
 import type { KeptScenery, RoadPlace } from "./struckScenery.ts";
 

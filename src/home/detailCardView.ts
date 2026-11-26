@@ -19,7 +19,7 @@ import {
   modalTitleLayout,
 } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
-import { type PanelMeasure, type QuestionPanelView } from "../ui/modal/types.ts";
+import type { PanelMeasure, QuestionPanelView } from "../ui/modal/types.ts";
 import { modalCardView } from "../ui/modal/view.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { separatorBetween } from "../ui/separator.ts";

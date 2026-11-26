@@ -1,9 +1,4 @@
-import {
-  type MoverBody,
-  type MoverDraws,
-  type MoverGeometry,
-  type MoverStand,
-} from "./moverModel.ts";
+import type { MoverBody, MoverDraws, MoverGeometry, MoverStand } from "./moverModel.ts";
 import { moverPlacements } from "./moverPlanning.ts";
 import { crossLength } from "./movers.ts";
 import {

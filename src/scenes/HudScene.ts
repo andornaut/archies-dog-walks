@@ -124,7 +124,7 @@ import {
   type RaisedHint,
 } from "./run/runMoments.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
-import { type ScenePicture } from "./scenePicture.ts";
+import type { ScenePicture } from "./scenePicture.ts";
 import type { SettingsScene } from "./SettingsScene.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { TimedGroup } from "./timedGroup.ts";

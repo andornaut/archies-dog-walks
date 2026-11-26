@@ -329,11 +329,15 @@ export default defineConfig(
   },
   // No import cycles: a module in a cycle can run before what it imports has loaded. Type-only
   // imports are erased at build time, so they never form one; the bands keep them inside a group.
-  // The rule also skips `import { type A }`, which verbatimModuleSyntax keeps as a module load.
+  // no-cycle also skips `import { type A }`, which verbatimModuleSyntax keeps as a module load, so
+  // that form is written `import type { A }`, which loads nothing.
   {
     ...IMPORT_X,
     files: SOURCE_FILES,
-    rules: { "import-x/no-cycle": "error" },
+    rules: {
+      "@typescript-eslint/no-import-type-side-effects": "error",
+      "import-x/no-cycle": "error",
+    },
   },
   // Every relative import names its file, ./x.ts or ./dir/index.ts, so plain node runs the source
   // with type stripping and no resolver. Package imports keep their exported subpaths.

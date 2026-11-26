@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { SignatureProfile } from "../data/types.ts";
 import { moverRetries } from "./moverDraws.ts";
-import { type MoverGeometry, type MoverSpec } from "./moverModel.ts";
+import type { MoverGeometry, MoverSpec } from "./moverModel.ts";
 import { moverPlacements } from "./moverPlanning.ts";
 import { onScreenOf, screenHasRoom } from "./moverScreen.ts";
 import { signaturePlace } from "./signaturePaths.ts";

@@ -42,7 +42,7 @@ import {
   stepPulls,
 } from "./pulls.ts";
 import { startRoad, steerWalk, stepWalk, type Walk } from "./walk.ts";
-import { type WalkItem } from "./walkItems.ts";
+import type { WalkItem } from "./walkItems.ts";
 
 const data = {
   debuffs: DEBUFFS,

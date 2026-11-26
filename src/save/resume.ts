@@ -31,7 +31,7 @@ import type { MoverPath } from "../runner/movers.ts";
 import type { Session, StreamDraws } from "../runner/session.ts";
 import type { WalkItemKind } from "../runner/walkItems.ts";
 import type { ActiveModifier, Pack } from "../state/runState.ts";
-import { type Cents, type Hearts } from "../units.ts";
+import type { Cents, Hearts } from "../units.ts";
 import { type Checkpoint, MAX_RUN_DOGS, TALLY_IDS } from "./schema.ts";
 
 // A walk saved where it can resume: at its start, at a fork, or as a zone starts, its zone not

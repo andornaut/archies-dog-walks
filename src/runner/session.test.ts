@@ -39,7 +39,7 @@ import {
   zoneStartPoint,
 } from "./session.ts";
 import { packBoxes, startRoad } from "./walk.ts";
-import { type WalkItem } from "./walkItems.ts";
+import type { WalkItem } from "./walkItems.ts";
 import { zoneLength } from "./walkMotion.ts";
 import type { ZonePlanObservation } from "./zonePlan.ts";
 import { replayZoneSlots } from "./zoneSlotInput.ts";

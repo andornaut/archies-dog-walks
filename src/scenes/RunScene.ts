@@ -27,7 +27,7 @@ import { withSetupStart } from "../dev/setupRun.ts";
 import { cardHintTriggers, startHintTriggers } from "../hud/hintTriggers.ts";
 import { homeQuestionNote, pauseNote } from "../hud/homeQuestion.ts";
 import { NOTHING_PAUSED, type RunPause, walkBackAction, walkPaused } from "../hud/topBar.ts";
-import { type ExplainShown } from "../hud/walkHud.ts";
+import type { ExplainShown } from "../hud/walkHud.ts";
 import {
   newWalkerCelebrations,
   playInTurn,

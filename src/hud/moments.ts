@@ -4,7 +4,7 @@ import {
   inkRowsFromCapTop,
   inkRowsOfLines,
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
-import { type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
+import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
 import { FIRED_LINE, LOW_CHIP, MOMENT_PARTS } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";

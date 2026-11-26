@@ -11,7 +11,7 @@ import { DART_VERGE_LANES, stopsOnVerge } from "../runner/dartOutcomes.ts";
 import { drawnLanes, hasLeftRoad, type MoverOnRoad, moverPlace, moverY } from "../runner/movers.ts";
 import { itemHeight } from "../runner/obstacleGeometry.ts";
 import { signaturePlace, signatureSweeps } from "../runner/signaturePaths.ts";
-import { type RoadGeometry } from "../runner/walkGeometry.ts";
+import type { RoadGeometry } from "../runner/walkGeometry.ts";
 import { footprintOf, type WalkItem, type WalkSpawn } from "../runner/walkItems.ts";
 import { zoneLength } from "../runner/walkMotion.ts";
 import { eachRoadsideProp, type RoadsideTable, START_STRIP_LENGTH } from "./roadsideProps.ts";

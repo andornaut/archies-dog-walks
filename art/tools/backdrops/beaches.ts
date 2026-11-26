@@ -21,7 +21,7 @@ import {
   W,
   yard,
 } from "./common.ts";
-import { type Point } from "./kensington.ts";
+import type { Point } from "./kensington.ts";
 
 // A white clapboard lifeguard station with a red hipped roof and a lookout, on stilts, on row base.
 function leuty(cv: Canvas, cx: number, base: number): void {

@@ -41,7 +41,7 @@ import { moverOutcomes } from "./outcomes.ts";
 import { signaturePlace } from "./signaturePaths.ts";
 import { apportionSlotCounts } from "./slotConfig.ts";
 import { startRoad, type Walk } from "./walk.ts";
-import { type RoadGeometry } from "./walkGeometry.ts";
+import type { RoadGeometry } from "./walkGeometry.ts";
 import { blocksLane, footprintOf, movementOf, type WalkItemKind } from "./walkItems.ts";
 import { walkScrollSpeed } from "./walkMotion.ts";
 

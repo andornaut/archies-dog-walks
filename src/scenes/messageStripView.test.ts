@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
-import { type FaceRow } from "../hud/faceText.ts";
+import type { FaceRow } from "../hud/faceText.ts";
 import {
   MESSAGE_STRIP,
   messagePanel,

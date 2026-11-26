@@ -10,7 +10,7 @@ import { NOTE_PLATE } from "../hud/pauseMenu.ts";
 import { ownerNameWrap } from "../presentation/ownerName.ts";
 import { modalTitleLayout } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
-import { type PanelMeasure } from "../ui/modal/types.ts";
+import type { PanelMeasure } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";
 import {
   fitPixelText,

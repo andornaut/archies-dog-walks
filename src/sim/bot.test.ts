@@ -12,7 +12,7 @@ import { read } from "../rules/units.ts";
 import { hitDog } from "../runner/collision.ts";
 import { type LaneMotion, stillInLane } from "../runner/laneMotion.ts";
 import { DART_LIFTS } from "../runner/moverDraws.ts";
-import { type MoverDraws, type MoverFootprint } from "../runner/moverModel.ts";
+import type { MoverDraws, MoverFootprint } from "../runner/moverModel.ts";
 import { moverPlacements } from "../runner/moverPlanning.ts";
 import { hasLeftRoad, type MoverPath, moverPlace } from "../runner/movers.ts";
 import { moverSpec } from "../runner/moverSpecs.ts";

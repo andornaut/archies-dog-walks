@@ -9,7 +9,7 @@ import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
-import { type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
+import type { PanelMeasure, PanelText } from "../ui/modal/types.ts";
 import { PAUSE_MENU_ITEMS, pauseMenuItemLabel } from "../ui/navigationMenu.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";

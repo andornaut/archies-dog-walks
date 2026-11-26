@@ -3,7 +3,7 @@ import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { MENU_TEXT } from "../data/menuText.ts";
 import { raisedLabelCapTop } from "../ui/buttonGeometry.ts";
 import { PLAIN_ITEM, tileState } from "../ui/interaction.ts";
-import { type PanelButton, type PanelMeasure, type PanelText } from "../ui/modal/types.ts";
+import type { PanelButton, PanelMeasure, PanelText } from "../ui/modal/types.ts";
 import { panelTitle, titleLabelInk } from "../ui/modal/view.ts";
 import { pageBack } from "../ui/pageLayout.ts";
 import { PALETTE } from "../ui/palette.ts";

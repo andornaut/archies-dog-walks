@@ -21,7 +21,7 @@ import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { DebuffId, DogId, GameData } from "../data/types.ts";
 import type { ScreenLayout } from "../layout/screenLayout.ts";
 import { type EffectItem, maxEffects } from "../presentation/effectIcons.ts";
-import { type OwnerNameLine } from "../presentation/ownerName.ts";
+import type { OwnerNameLine } from "../presentation/ownerName.ts";
 import { walkLength } from "../rules/route.ts";
 import { zoneLength } from "../runner/walkMotion.ts";
 import type { RunState } from "../state/runState.ts";
