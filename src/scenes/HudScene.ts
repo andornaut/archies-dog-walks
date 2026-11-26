@@ -1,21 +1,15 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { Core, Scene } from "phaser";
 
-import { domArtUrl } from "../assets/files/index.ts";
 import { perkIconKey } from "../assets/index.ts";
 import type { AchievementId, DebuffId, DogId } from "../data/ids.ts";
 import { gameData, type HintTrigger } from "../data/index.ts";
 import { FEEDBACK as MENU_FEEDBACK } from "../home/index.ts";
 import {
-  createHudCards,
   createHudChrome,
-  createHudMoments,
   type DomQuestionPanel,
   type HudCards,
   type HudMomentPainter,
-  projectHudCards,
-  projectHudMoments,
-  projectHudTopSections,
 } from "../hud/dom/index.ts";
 import {
   achievementLine,
@@ -46,36 +40,31 @@ import {
   effectIconKey,
   type EffectItem,
   effectItems,
-  pillKind,
   shortDollarAmountText,
 } from "../presentation/index.ts";
 import { faceMood, hintFor, hintJumpsQueue, ownerMaxHearts, walkEarnings } from "../rules/index.ts";
 import { heartsOf, type RunState, slotIndexOf } from "../state/index.ts";
 import {
-  createNativeTopSection,
   dimDrawn,
   followModalUnderlay,
-  loadSheet,
   type NativeTopSection,
   type NativeTopSectionConfig,
   uiLayer,
 } from "../ui/dom/index.ts";
-import { displayBitmapFont, pixelBitmapFont } from "../ui/phaser/index.ts";
 import { type Cents, cents } from "../units.ts";
 import { BumpBorder } from "./bumpBorder.ts";
 import { CardScene } from "./CardScene.ts";
 import type { CheatsScene } from "./CheatsScene.ts";
 import { DEBUFF_COLOURS } from "./debuffColours.ts";
-import { pillColours } from "./effectNameColours.ts";
 import { HudFeedback } from "./feedbackMoments.ts";
 import { HeartFeedback, heartPops } from "./heartFeedback.ts";
 import type { HelpScene } from "./HelpScene.ts";
 import { detailView } from "./homePanels.ts";
 import { HudChangeLabels } from "./hudChangeLabels.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";
+import { createHudSceneProjection } from "./hudSceneProjection.ts";
 import type { HudRun, HudWalk, RunHudView } from "./hudWalk.ts";
 import { MESSAGE_EVENT, MessageStrip } from "./messageStripView.ts";
-import { createNativePicture } from "./nativePicture.ts";
 import { BAR_MUTED_EVENT, onSceneEvent } from "./overlay.ts";
 import { OwnerTabs } from "./ownerTabs.ts";
 import {
@@ -103,7 +92,7 @@ import type { ScenePicture } from "./scenePicture.ts";
 import type { SettingsScene } from "./SettingsScene.ts";
 import { soundboardOf } from "./soundboard.ts";
 import { TimedGroup } from "./timedGroup.ts";
-import { addNativeTopSection, joinTopSection } from "./topSection.ts";
+import { joinTopSection } from "./topSection.ts";
 const LAYOUT = SCREEN_LAYOUT;
 const BAR = walkBarLayout(LAYOUT.topBar);
 const NOT_EXPLAINED = { key: "", scene: undefined };
@@ -135,8 +124,6 @@ export type HudSceneData =
 export class HudScene extends Scene {
   private cards: HudCards | undefined;
   private chrome: ReturnType<typeof createHudChrome> | undefined;
-  private painter: HudMomentPainter | undefined;
-  private barPainter: HudMomentPainter | undefined;
   // The walk bar's own marks over it: its effect icons and their glints.
   private iconPainter: HudMomentPainter | undefined;
   private debuffBars: DebuffBarView[] = [];
@@ -178,42 +165,23 @@ export class HudScene extends Scene {
     this.picture = picture?.source;
     this.run = "run" in data ? data.run : undefined;
     const layer = uiLayer();
-    const body = pixelBitmapFont(this, "body"),
-      title = pixelBitmapFont(this, "title"),
-      display = displayBitmapFont(this);
-    if (layer === undefined || body === undefined || title === undefined || display === undefined) {
+    if (layer === undefined) {
       throw new Error("The native HUD requires its prepared UI context");
     }
-    const source = { artUrl: domArtUrl, loadSheet };
-    const fonts = { body, display, title };
-    const colours = (index: number) => {
-      const kind = pillKind(index);
-      return kind === undefined ? undefined : pillColours(kind);
-    };
-    const hasArt = (key: string) => this.textures.exists(key);
-    const projection =
-      picture === undefined
-        ? { dispose() {}, layers: [layer] }
-        : createNativePicture(layer, picture.view);
-    const painters = projection.layers.map((target) =>
-      createHudMoments(target, source, fonts, hasArt, colours),
-    );
-    const cards = projection.layers.map((target) =>
-      createHudCards(target, source, fonts, gameData),
-    );
-    this.painter = projectHudMoments(painters, picture?.stillFrames);
-    this.painter.update({ firingNow: this.time.now, momentNow: this.time.now, now: this.time.now });
+    const projection = createHudSceneProjection(this, layer, picture);
+    const { painter } = projection;
+    painter.update({ firingNow: this.time.now, momentNow: this.time.now, now: this.time.now });
     const stopUnderlays =
       picture === undefined
-        ? painters.map((painter) => followModalUnderlay(layer.input, painter.element))
+        ? projection.roots.map((root) => followModalUnderlay(layer.input, root))
         : [];
     this.debuffBars = [];
     this.explained = NOT_EXPLAINED;
-    this.messages = new MessageStrip(this.painter);
+    this.messages = new MessageStrip(painter);
     this.labels = new TimedGroup();
     const changeLabels = new HudChangeLabels(this, {
       labels: this.labels,
-      painter: this.painter,
+      painter,
       reducedMotion: () => this.walk().reducedMotion(),
     });
     this.changeLabels = changeLabels;
@@ -242,61 +210,38 @@ export class HudScene extends Scene {
         }
       },
     };
-    this.topSection =
-      picture === undefined
-        ? addNativeTopSection(this, barConfig)
-        : projectHudTopSections(
-            projection.layers.map((target) =>
-              createNativeTopSection(target, source, title, barConfig),
-            ),
-          );
-    // The bar's icons on roots of their own over the bar, joined to it, so a page over the walk
-    // (help) that keeps the bar in view keeps them too; the dog cards and the bump border over
-    // them.
-    const iconPainters = projection.layers.map((target) =>
-      createHudMoments(target, source, fonts, hasArt, colours),
-    );
-    this.iconPainter = projectHudMoments(iconPainters, picture?.stillFrames);
-    const barPainters = projection.layers.map((target) =>
-      createHudMoments(target, source, fonts, hasArt, colours),
-    );
-    this.barPainter = projectHudMoments(barPainters, picture?.stillFrames);
-    this.cards = projectHudCards(barPainters, cards);
+    const { bar, barRoots, cards, disposePainters, iconRoots, icons, section } =
+      projection.mountTopSection(barConfig);
+    this.topSection = section;
+    this.iconPainter = icons;
+    this.cards = cards;
+    const topRoots = [...iconRoots, ...barRoots];
     if (picture === undefined) {
-      stopUnderlays.push(
-        ...[...iconPainters, ...barPainters].map((painter) =>
-          followModalUnderlay(layer.input, painter.element),
-        ),
-      );
-      joinTopSection(
-        this,
-        iconPainters.map((painter) => painter.element),
-      );
+      stopUnderlays.push(...topRoots.map((root) => followModalUnderlay(layer.input, root)));
+      // Help keeps the effect icons in view with the live bar.
+      joinTopSection(this, iconRoots);
     }
     const now = { firingNow: this.time.now, momentNow: this.time.now, now: this.time.now };
-    this.iconPainter.update(now);
-    this.barPainter.update(now);
-    this.chrome = createHudChrome(this.painter, this.iconPainter, DEBUFF_COLOURS);
+    icons.update(now);
+    bar.update(now);
+    const chrome = createHudChrome(painter, icons, DEBUFF_COLOURS);
+    this.chrome = chrome;
+    const roots = [...projection.roots, ...topRoots];
     onSceneEvent(this, this.game.events, Core.Events.PRE_RENDER, () => {
       const time = { firingNow: this.firingNow, momentNow: this.momentNow, now: this.time.now };
-      this.painter?.update(time);
-      this.iconPainter?.update(time);
-      this.barPainter?.update(time);
+      painter.update(time);
+      icons.update(time);
+      bar.update(time);
       if (picture === undefined) {
-        [...painters, ...iconPainters, ...barPainters].forEach((painter) =>
-          dimDrawn(painter.element, !layer.input.accepts()),
-        );
+        roots.forEach((root) => dimDrawn(root, !layer.input.accepts()));
       }
     });
     this.events.once("shutdown", () => {
       stopUnderlays.forEach((stop) => stop());
-      this.topSection?.dispose();
-      this.cards?.dispose();
-      this.chrome?.dispose();
-      this.painter?.dispose();
-      this.iconPainter?.dispose();
-      this.barPainter?.dispose();
-      projection.dispose();
+      section?.dispose();
+      cards.dispose();
+      chrome.dispose();
+      disposePainters();
     });
     onSettingsChanged(this, ({ muted }) => this.topSection?.setMuted(muted));
     for (const id of WALK_BAR_BUTTONS) {
@@ -305,12 +250,12 @@ export class HudScene extends Scene {
         this.barButtons.set(id, button);
       }
     }
-    const border = new BumpBorder(this, { border: this.barPainter, tint: this.painter });
+    const border = new BumpBorder(this, { border: bar, tint: painter });
     const run = this.walk();
     const firingRects = () => this.feedback?.firingRects() ?? [];
     this.owners = new OwnerTabs(this, {
       group: this.labels,
-      painter: this.painter,
+      painter,
       still: () => run.reducedMotion(),
     });
     this.feedback = new HudFeedback(this, run, {
@@ -322,7 +267,7 @@ export class HudScene extends Scene {
       },
       firingShown: () => this.hearts?.clearWay(),
       floatLabels: (ownerMs, labels) => this.floatLabels(ownerMs, labels),
-      painter: this.painter,
+      painter,
       payTotal: (label, timing) => changeLabels.showPayTotal(label, timing),
       popOwner: (dog, mood, ms) => this.popOwner(dog, mood, ms),
     });
@@ -331,7 +276,7 @@ export class HudScene extends Scene {
       flashCard: (slot) =>
         this.cards?.flashCard({ now: this.momentNow, reducedMotion: run.reducedMotion() }, slot),
       landed: (label, lane) => changeLabels.showHeartLabel(label, lane),
-      painter: this.painter,
+      painter,
       still: () => run.reducedMotion(),
       tabTop: this.lanes().ownerTabs.y,
     });
