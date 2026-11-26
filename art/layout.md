@@ -179,12 +179,12 @@ The choice-card band tokens state the drawn margin they centre in: small `{ y: 2
 
 Every ordinary modal uses one vertical rule. Start its top at `(560 - H) / 2`, where `H` is its measured full-size height, which targets the full viewport's midpoint, y = 280, then clamp it with `rectAboveIn` to its caller's protected area. The protected top is y = 56 in every caller, the top bar's 48 press rows plus 8, so no modal covers the top bar. Horizontal actor avoidance may move it left or right without changing that vertical placement. Do not centre in the remaining safe band instead. Full-scene celebrations, results and the frameless pages are separate roles.
 
-| Caller                                                                                    | Protected interval   |
-| ----------------------------------------------------------------------------------------- | -------------------- |
-| Home overlays and full-viewport callers (the Settings and Cheats pages, install, details) | y ≥ 56, bottom ≤ 544 |
-| Walk overlays                                                                             | y ≥ 56, bottom ≤ 466 |
+| Caller                                                              | Protected interval   |
+| ------------------------------------------------------------------- | -------------------- |
+| Home overlays and full-viewport dialogs (for example, item details) | y ≥ 56, bottom ≤ 544 |
+| Walk overlays                                                       | y ≥ 56, bottom ≤ 466 |
 
-Clamping can move the final centre: a 400px-high walk modal clamps to y = 66, bottom = 466, without shrinking. Update, Quit, purchase, badge, item, grouped-detail and Reset save? modals follow this rule; a body taller than its room scrolls, and its title, X and footer stay fixed.
+Clamping can move the final centre: a 400px-high walk modal clamps to y = 66, bottom = 466, without shrinking. Update, Quit, purchase, badge, item and grouped-detail modals follow this rule. Install steps over Settings and Reset save? over Cheats use their home or walk caller's interval. When a modal body exceeds its available height, it scrolls while the title, X and footer stay fixed.
 
 | Token                            | Value                                                | Unit | Scope                                                                   | Source                                                                                          |
 | -------------------------------- | ---------------------------------------------------- | ---- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
