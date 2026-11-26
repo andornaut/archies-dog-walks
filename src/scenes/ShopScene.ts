@@ -4,6 +4,7 @@ import { Scene } from "phaser";
 import { domArtUrl } from "../assets/files/index.ts";
 import { dogFaceKey, gearIconKey } from "../assets/index.ts";
 import { gameData } from "../data/index.ts";
+import { type NativeShopScreen, showShopScreen } from "../home/dom/index.ts";
 import {
   answerPurchase,
   type ConfirmChoice,
@@ -34,11 +35,6 @@ import {
   slotRows,
 } from "../home/index.ts";
 import {
-  addTapBurst as addNativeTapBurst,
-  type NativeShopScreen,
-  showShopScreen,
-} from "../hud/dom/index.ts";
-import {
   dragScroll,
   focusDirectionForKey,
   isConfirmKey,
@@ -57,7 +53,12 @@ import {
   wheelScroll,
 } from "../input/index.ts";
 import type { SaveDocument } from "../save/index.ts";
-import { loadSheet, shownText, uiLayer } from "../ui/dom/index.ts";
+import {
+  addTapBurst as addNativeTapBurst,
+  loadSheet,
+  shownText,
+  uiLayer,
+} from "../ui/dom/index.ts";
 import { refusalRed } from "../ui/index.ts";
 import { cents } from "../units.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";

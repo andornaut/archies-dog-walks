@@ -14,6 +14,7 @@ import {
 import { read } from "../../rules/index.ts";
 import {
   createGameFormRow,
+  type DomQuestionPanel,
   guardNativeInput,
   refuse,
   rowIcon,
@@ -21,7 +22,6 @@ import {
   type UiLayer,
 } from "../../ui/dom/index.ts";
 import { cssHex, type DomScale } from "../../ui/index.ts";
-import type { DomQuestionPanel } from "./questionPanel.ts";
 import { hideKitText, installPart } from "./settingsInstall.ts";
 import type { DomSettingsInput, RowPart } from "./settingsTypes.ts";
 

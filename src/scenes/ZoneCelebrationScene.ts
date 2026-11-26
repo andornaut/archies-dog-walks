@@ -5,7 +5,7 @@ import { Math as PhaserMath, Scene } from "phaser";
 import { ZONE_CELEBRATION_ART as ART } from "../assets/index.ts";
 import { playFirstTag } from "../assets/phaser/index.ts";
 import { gameData, MENU_BUTTON_KEY_GAP } from "../data/index.ts";
-import { type DomQuestionPanel, showZoneCelebration } from "../hud/dom/index.ts";
+import { showZoneCelebration } from "../hud/dom/index.ts";
 import {
   CELEBRATION_LAYOUT as LAYOUT,
   celebrationAdvance,
@@ -20,6 +20,7 @@ import {
   keyNumbersShown,
   menuKeyActs,
 } from "../input/index.ts";
+import type { DomQuestionPanel } from "../ui/dom/index.ts";
 import { displayBitmapFont } from "../ui/phaser/index.ts";
 import { addConfetti } from "./badges.ts";
 import { canvasCelebrationMeasure } from "./modalMeasure.ts";

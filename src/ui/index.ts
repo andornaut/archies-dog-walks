@@ -104,6 +104,7 @@ export { pixelEllipseSpans, pixelLinePoints, shadowRadiusX } from "./pixelShapes
 export { GAME_PROGRESS, GAME_PROGRESS_STYLE, LOADING_TIMING } from "./progressBar.ts";
 export { refusalRed, REFUSE, REFUSE_SHAKES, refuseOffset, refuseShakeSteps } from "./refuse.ts";
 export { scrollbarRects, type ScrollbarSpec } from "./scrollbar.ts";
+export { scrollPlace } from "./scrollPlace.ts";
 export {
   BUTTON_COLOURS,
   GREYED,

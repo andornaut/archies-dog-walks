@@ -5,13 +5,18 @@ import { createPager } from "@andornaut/game-kit/runtime/web/ui/dom/pager";
 
 import { gameData } from "../../data/index.ts";
 import { HELP_DOTS, HELP_LAYOUT, type HelpButton, type HelpView } from "../../help/index.ts";
+import { showPage } from "../../home/dom/index.ts";
 import { MENU_TEXT_FIELDS } from "../../home/index.ts";
 import { holdRule, TILE_SLOP_PX } from "../../input/index.ts";
 import {
+  addTapBurst,
+  bindPanelFeedback,
   colourBox,
   createTextLine,
   type DomBox,
   type DomPart,
+  type DomQuestionPanel,
+  type DomQuestionPanelInput,
   type DomTextLine,
   placeBox,
   placeFrame,
@@ -31,9 +36,6 @@ import {
   PALETTE,
   type PanelText,
 } from "../../ui/index.ts";
-import { showPage } from "./page.ts";
-import { bindPanelFeedback } from "./panelButton.ts";
-import { addTapBurst, type DomQuestionPanel, type DomQuestionPanelInput } from "./questionPanel.ts";
 
 // Native Help text, page controls, body scrolling and dismissal share the scene's callbacks, on
 // the page template (showPage). The canvas keeps the page's backing, the picture's frame and the

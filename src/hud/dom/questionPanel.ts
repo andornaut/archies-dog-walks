@@ -1,17 +1,23 @@
 import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
-import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 
-import { BUTTON_SIZE, type GameData, SCREEN_CONFIG } from "../../data/index.ts";
+import { BUTTON_SIZE, SCREEN_CONFIG } from "../../data/index.ts";
 import { MENU_TEXT_FIELDS } from "../../home/index.ts";
-import { cardNumberForKey, isConfirmKey, menuKeyActs } from "../../input/index.ts";
+import { cardNumberForKey, menuKeyActs } from "../../input/index.ts";
 import {
+  addTapBurst,
+  artUrls,
+  bindDialogKeys,
   bindGameAction,
+  bindPanelFeedback,
+  type CloseLabel,
   createControlGlyph,
   createGameButton,
+  createPanelButton,
   createTextLine,
-  type DomPart,
+  type DomQuestionPanel,
+  type DomQuestionPanelInput,
   type DomTextLine,
   mountModalLifecycle,
   type NativeGesture,
@@ -37,10 +43,8 @@ import {
   gridY,
   MODAL,
   type PanelText,
-  type QuestionPanelView,
   wholeArtPixels,
 } from "../../ui/index.ts";
-import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
 import { createQuestionCardFrame } from "./questionCardFrame.ts";
 
 // The pause menu, each question (the Home question, Quit?) and each modal card (the update
@@ -50,9 +54,6 @@ import { createQuestionCardFrame } from "./questionCardFrame.ts";
 // frame, the top bar's included: it calls backgroundCancel where the panel is closeable and
 // otherwise does nothing. Number keys press a question's buttons, Tab and Shift+Tab keep focus
 // among its buttons and close control, and Enter or Space presses the focused one.
-
-// The close control's accessible names: close, or closeTitled filled with the panel's title.
-export type CloseLabel = Pick<GameData["menuText"]["common"], "close" | "closeTitled">;
 
 // The close control's accessible name: close, or, where another of the panel's buttons is also
 // named close (a footer Close), closeTitled filled with the panel's title, so no two of the
@@ -67,113 +68,10 @@ export function closeName(
     : words.close;
 }
 
-export interface DomQuestionPanelInput {
-  // Base screens opt out of modal ownership; pictures can remain modal without native buttons.
-  readonly modal?: boolean;
-  // Outside dismissal when there is no interactive X. An interactive X always supplies the
-  // backdrop's action too. Required choices without either callback consume the tap.
-  readonly backgroundCancel?: () => void;
-  // The page's own controls drawn outside the panel, interactive with it.
-  readonly companions?: readonly HTMLElement[];
-  // What the close control does; null draws no close control, and a panel with no buttons then
-  // takes no presses: every press goes through to the canvas. Then its accessible names
-  // (closeName), and what each button does, in order.
-  readonly close: (() => void) | null;
-  readonly closeLabel: CloseLabel;
-  // A footer can dismiss a native overlay that intentionally has no corner close control.
-  readonly footerPress?: () => void;
-  // Gives the caller its exact source control after admission and before activation.
-  readonly onInvoke?: (index: number, control: HTMLElement) => void;
-  // The id of the part that describes the panel, if any.
-  readonly describedBy?: string;
-  // Told the index (focusControl's) of the control focus moves to, or undefined for the dialog.
-  readonly onFocus?: (index: number | undefined) => void;
-  // The dialog's name where the canvas draws its title (view.title empty), as over a
-  // celebration.
-  readonly label?: string;
-  readonly fonts: Readonly<Record<PanelText["font"], BitmapFont>>;
-  readonly gesture?: NativeGesture;
-  readonly onPaint?: () => void;
-  // Whether keys 1 to n press the buttons, as on the pause menu and the questions.
-  readonly numberKeys: boolean;
-  readonly numberPresses?: readonly (() => void)[];
-  // Drawn over the frame, under the title, and read after the title.
-  readonly parts?: readonly DomPart[];
-  readonly presses: readonly (() => void)[];
-  // A tap on the panel's own body, away from its controls, as a detail card's dismissal.
-  readonly dismiss?: () => void;
-  // The page point of a press as a game point, through the page frame's turn.
-  readonly toGame: (client: Point) => Point;
-  readonly view: QuestionPanelView;
-}
-
-export interface DomQuestionPanel {
-  readonly element: HTMLElement;
-  setActionShown(index: number, shown: boolean): void;
-  accepts(): boolean;
-  capture(): () => boolean;
-  setEnabled(enabled: boolean): void;
-  // A tap burst at a game point, over the panel.
-  burst(at: Point): void;
-  destroy(): void;
-  // Focuses the parts' controls, then the buttons, then the close control, by index, or the
-  // dialog itself for undefined, as the scene's own focus moves.
-  focusControl(index: number | undefined): void;
-  // Plays the refusal cue (refusal.ts) on the index-th button.
-  refuse(index: number, reducedMotion: boolean): void;
-  // Darkens this covered panel once while preserving its original colours and assets.
-  setDimmed(dimmed: boolean): void;
-  // Lets the panel take no presses and no focus while another's dim covers it (a celebration
-  // under the pause menu), and take them again.
-  setInert(inert: boolean): void;
-  // Hides the panel while a canvas page covers it (help, the settings), and shows it again.
-  setShown(shown: boolean): void;
-}
-
 const ORIGIN = { x: 0, y: 0 } as const;
-
-// art: fx-tap's side.
-const BURST_SIDE = 16;
-
-// fx-tap's burst over every panel (burstHost), centred on a game point where a press landed.
-export function addTapBurst(layer: UiLayer, at: Point): void {
-  const element = layer.element.ownerDocument.createElement("span");
-  element.className = "adw-burst";
-  const scale = layer.scale();
-  const side = BURST_SIDE * artPixel(scale);
-  setBox(element, {
-    height: side,
-    left: deviceX(scale, at.x) - side / 2,
-    top: deviceY(scale, at.y) - side / 2,
-    width: side,
-  });
-  element.style.setProperty("--adw-burst", `${side}px`);
-  element.addEventListener("animationend", () => element.remove());
-  burstHost(layer, scale).append(element);
-}
 
 // Ids that tie each panel's dialog to its title and note.
 let panels = 0;
-
-// Each layer's root for tap bursts: over every panel, laid out in device pixels as a panel is,
-// so a burst plays on while a panel under it is drawn again, as the canvas's burst scene does.
-const burstHosts = new WeakMap<HTMLElement, HTMLElement>();
-
-function burstHost(layer: UiLayer, scale: DomScale): HTMLElement {
-  let host = burstHosts.get(layer.element);
-  if (host === undefined) {
-    host = layer.element.ownerDocument.createElement("div");
-    host.className = "adw-dialog adw-passive adw-bursts";
-    host.setAttribute("aria-hidden", "true");
-    burstHosts.set(layer.element, host);
-  }
-  host.style.width = `${deviceX(scale, SCREEN_CONFIG.width)}px`;
-  host.style.height = `${deviceY(scale, SCREEN_CONFIG.height)}px`;
-  host.style.transform = gridTransform(scale);
-  // Last, so over every panel.
-  layer.element.append(host);
-  return host;
-}
 
 // The panel in layer, shown and its dialog focused.
 export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput): DomQuestionPanel {
@@ -574,68 +472,4 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     setInert: (inert) => lifecycle.setInert(inert),
     setShown: (shown) => lifecycle.setShown(shown),
   };
-}
-
-// Enter and Space press the focused button natively, and the scene under never hears them; Tab and
-// Shift+Tab move the focus among the visible focusables in order, round from the last to the
-// first, and from the dialog itself enter at the first or the last.
-export function bindDialogKeys(
-  input: { readonly accepts: () => boolean; readonly focusables: () => readonly HTMLElement[] },
-  dialog: HTMLElement,
-): void {
-  const doc = dialog.ownerDocument;
-  const { accepts, focusables } = input;
-  dialog.addEventListener("keydown", (event) => {
-    if (!accepts()) {
-      return;
-    }
-    // Enter and Space press the focused control natively; the scene under never hears them.
-    if (
-      isConfirmKey(event.code) &&
-      focusables().some(
-        (control) =>
-          control.tagName.toLowerCase() === "button" && control.contains(event.target as Node),
-      )
-    ) {
-      if (event.repeat) {
-        event.preventDefault();
-      }
-      event.stopPropagation();
-      return;
-    }
-    if (event.code !== "Tab") {
-      return;
-    }
-    const visible = focusables().filter(
-      (control) =>
-        (control.tagName.toLowerCase() !== "button" || control.tabIndex >= 0) &&
-        !control.hidden &&
-        control.closest?.("[hidden]") == null,
-    );
-    const at = visible.indexOf(doc.activeElement as HTMLElement);
-    const step = event.shiftKey ? visible.length - 1 : 1;
-    // From the dialog itself, Tab enters at the first button and Shift+Tab at the close control.
-    const next =
-      at === -1 ? (event.shiftKey ? visible.length - 1 : 0) : (at + step) % visible.length;
-    event.preventDefault();
-    (visible[next] ?? dialog).focus();
-  });
-}
-
-// The art URLs every element in root draws as a background image, so its reveal waits for them.
-export function artUrls(root: HTMLElement): Set<string> {
-  const view = root.ownerDocument.defaultView;
-  const urls = new Set<string>();
-  const visit = (element: HTMLElement) => {
-    const background =
-      view?.getComputedStyle?.(element).backgroundImage ?? element.style.backgroundImage ?? "";
-    for (const match of background.matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
-      urls.add(match[1]!);
-    }
-    for (const child of element.children) {
-      visit(child as HTMLElement);
-    }
-  };
-  visit(root);
-  return urls;
 }

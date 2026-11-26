@@ -1,7 +1,6 @@
 import type { SettingsTarget, SettingsView, VolumeKey } from "../../home/index.ts";
-import type { DomArtSource } from "../../ui/dom/index.ts";
+import type { DomArtSource, DomQuestionPanel, DomQuestionPanelInput } from "../../ui/dom/index.ts";
 import type { DomScale } from "../../ui/index.ts";
-import type { DomQuestionPanel, DomQuestionPanelInput } from "./questionPanel.ts";
 
 export interface DomSettingsInput
   extends Pick<DomQuestionPanelInput, "closeLabel" | "fonts" | "toGame">, DomArtSource {

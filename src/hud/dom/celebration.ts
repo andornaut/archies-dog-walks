@@ -9,6 +9,8 @@ import {
   capRows,
   createTextLine,
   type DomPart,
+  type DomQuestionPanel,
+  type DomQuestionPanelInput,
   framelessView,
   panelFramePart,
   placeText,
@@ -38,11 +40,7 @@ import {
 } from "../index.ts";
 import { confettiPart, type DomBadgeCardInput } from "./badgeCard.ts";
 import { artPart, type DomDetailCardInput } from "./detailCard.ts";
-import {
-  type DomQuestionPanel,
-  type DomQuestionPanelInput,
-  showQuestionPanel,
-} from "./questionPanel.ts";
+import { showQuestionPanel } from "./questionPanel.ts";
 
 // Native celebration surfaces share the scene-owned animation clock and world actor layer.
 

@@ -21,12 +21,13 @@ import {
   waveOffset,
 } from "../home/index.ts";
 import { nativeFrames } from "../home/phaser/index.ts";
-import type { DomEndScreen, DomQuestionPanel } from "../hud/dom/index.ts";
+import type { DomEndScreen } from "../hud/dom/index.ts";
 import { isConfirmKey, isMuteKey, screenArea } from "../input/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { PackFigures } from "../pack/phaser/index.ts";
 import { stopWakeLock } from "../pwa/index.ts";
 import type { LastWalk } from "../save/index.ts";
+import type { DomQuestionPanel } from "../ui/dom/index.ts";
 import { PALETTE, TEXT_SCALE, topSectionButtonAt } from "../ui/index.ts";
 import { fillRect, hasDisplayFont } from "../ui/phaser/index.ts";
 import { addBurst, badgeCard, badgeCelebrationNames, NEW_BEST_BURST } from "./badges.ts";

@@ -2,14 +2,9 @@ import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { ButtonView } from "@andornaut/game-kit/runtime/web/ui/dom/button";
 
-import {
-  createGameButton,
-  createTextLine,
-  placeBox,
-  placeFrame,
-  placeText,
-} from "../../ui/dom/index.ts";
-import type { DomScale, PanelButton } from "../../ui/index.ts";
+import type { DomScale, PanelButton } from "../index.ts";
+import { createGameButton } from "./gameButton.ts";
+import { createTextLine, placeBox, placeFrame, placeText } from "./pixelLine.ts";
 
 const ORIGIN = { x: 0, y: 0 };
 

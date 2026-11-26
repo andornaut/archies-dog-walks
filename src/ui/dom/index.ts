@@ -8,6 +8,7 @@ export {
   type SheetArtPlace,
   sheetNineSlice,
 } from "./artElements.ts";
+export { type BodyScroll, bodyScrollbarPart } from "./bodyScrollbar.ts";
 export {
   contentSeparatorPart,
   createContentSeparator,
@@ -29,10 +30,17 @@ export {
 } from "./modalLifecycle.ts";
 export { mountMuteControl } from "./muteControl.ts";
 export {
+  type CloseLabel,
+  type DomQuestionPanel,
+  type DomQuestionPanelInput,
+} from "./nativeSurface.ts";
+export { addTapBurst, artUrls, bindDialogKeys } from "./nativeSurfaceEffects.ts";
+export {
   createNativeTopSection,
   type NativeTopSection,
   type NativeTopSectionConfig,
 } from "./nativeTopSection.ts";
+export { bindPanelFeedback, createPanelButton, type PanelPress } from "./panelButton.ts";
 export {
   colourBox,
   type DomBox,

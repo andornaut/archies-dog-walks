@@ -7,7 +7,6 @@ import { gameData, type HintTrigger } from "../data/index.ts";
 import { FEEDBACK as MENU_FEEDBACK } from "../home/index.ts";
 import {
   createHudChrome,
-  type DomQuestionPanel,
   type HudCards,
   type HudMomentPainter,
 } from "../hud/dom/index.ts";
@@ -46,6 +45,7 @@ import { faceMood, hintFor, hintJumpsQueue, ownerMaxHearts, walkEarnings } from 
 import { heartsOf, type RunState, slotIndexOf } from "../state/index.ts";
 import {
   dimDrawn,
+  type DomQuestionPanel,
   followModalUnderlay,
   type NativeTopSection,
   type NativeTopSectionConfig,

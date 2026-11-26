@@ -2,12 +2,15 @@ import "@andornaut/game-kit/runtime/web/ui/dom/slider.css";
 
 import { createFormRows } from "@andornaut/game-kit/runtime/web/ui/dom/formRow";
 
+import { type DomPage, showPage } from "../../home/dom/index.ts";
 import { SETTINGS_FORM_ROWS } from "../../home/index.ts";
 import {
+  addTapBurst,
   createContentSeparator,
   createTextLine,
   cutFrameProperties,
   type DomPart,
+  type DomQuestionPanel,
   placeBox,
   placeContentSeparator,
   placeFormRows,
@@ -16,8 +19,6 @@ import {
   type UiLayer,
 } from "../../ui/dom/index.ts";
 import { gridY } from "../../ui/index.ts";
-import { type DomPage, showPage } from "./page.ts";
-import { addTapBurst, type DomQuestionPanel } from "./questionPanel.ts";
 import { showSteps } from "./settingsInstall.ts";
 import { rowPart, SLIDER_FRAMES } from "./settingsRow.ts";
 import type { DomSettings, DomSettingsInput } from "./settingsTypes.ts";

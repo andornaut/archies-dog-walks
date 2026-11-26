@@ -1,8 +1,6 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import type { NativeSelectionTile, NativeTileFill } from "../../home/dom/index.ts";
-import { FEEDBACK, SHOP_LAYOUT, type ShopPageView } from "../../home/index.ts";
 import {
   type DomArtSource,
   type DomPart,
@@ -10,9 +8,10 @@ import {
   setBox,
   type UiLayer,
 } from "../../ui/dom/index.ts";
-import { gridRect, type PanelText, type TileState } from "../../ui/index.ts";
-import { scrollPlace } from "./logbook.ts";
+import { gridRect, type PanelText, scrollPlace, type TileState } from "../../ui/index.ts";
+import { FEEDBACK, SHOP_LAYOUT, type ShopPageView } from "../index.ts";
 import { type DomPage, showPage } from "./page.ts";
+import type { NativeSelectionTile, NativeTileFill } from "./selectionTile.ts";
 import { createShopScreenInput } from "./shopScreenInput.ts";
 import { createShopScreenParts } from "./shopScreenParts.ts";
 

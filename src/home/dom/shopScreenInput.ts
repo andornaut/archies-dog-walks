@@ -1,8 +1,8 @@
 import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { shopTabRects } from "../../home/index.ts";
 import { isConfirmKey } from "../../input/index.ts";
 import type { NativeGesture } from "../../ui/dom/index.ts";
+import { shopTabRects } from "../index.ts";
 import type { DomPage } from "./page.ts";
 import type { ShopScreenInput, ShopScreenMotion, ShopScreenView } from "./shopScreen.ts";
 

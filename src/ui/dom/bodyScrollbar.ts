@@ -1,6 +1,5 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { type DomPart, setBox } from "../../ui/dom/index.ts";
 import {
   type DomScale,
   gridRect,
@@ -9,7 +8,9 @@ import {
   scrollbarBoxes,
   scrollbarRects,
   type ScrollbarSpec,
-} from "../../ui/index.ts";
+} from "../index.ts";
+import type { DomPart } from "./parts.ts";
+import { setBox } from "./pixelLine.ts";
 
 // A body's scroll: its viewport, its content's height from the viewport's top, its scrollbar,
 // and, where the scene moves the content rather than the clip scrolling, how far it is scrolled

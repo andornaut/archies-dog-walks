@@ -14,16 +14,5 @@ export { projectHudCards, projectHudMoments, projectHudTopSections } from "./hud
 export { type DomLogbook, type LogbookScroll, type LogbookTarget, showLogbook } from "./logbook.ts";
 export { showOrdinaryBadgeCelebration } from "./ordinaryBadgeCelebration.ts";
 export { hudArtResources } from "./prepareHudArt.ts";
-export {
-  addTapBurst,
-  type DomQuestionPanel,
-  type DomQuestionPanelInput,
-  showQuestionPanel,
-} from "./questionPanel.ts";
+export { showQuestionPanel } from "./questionPanel.ts";
 export { type DomSettings, type DomSettingsInput, showSettings } from "./settings.ts";
-export {
-  type NativeShopScreen,
-  type ShopScreenRow,
-  type ShopScreenView,
-  showShopScreen,
-} from "./shopScreen.ts";

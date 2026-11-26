@@ -2,7 +2,7 @@ import "./logbook.css";
 
 import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { textPart } from "../../home/dom/index.ts";
+import { type DomPage, showPage, textPart } from "../../home/dom/index.ts";
 import {
   type LogbookView,
   type ShopPageView,
@@ -10,20 +10,19 @@ import {
   statsTabRects,
 } from "../../home/index.ts";
 import {
+  bindPanelFeedback,
   contentSeparatorPart,
   createGameButton,
   type DomPart,
+  type DomQuestionPanel,
   fillPart,
   framedBoxPart,
   type NativeGesture,
   setBox,
   type UiLayer,
 } from "../../ui/dom/index.ts";
-import { type DomScale, gridRect, wholeArtPixels } from "../../ui/index.ts";
+import { type DomScale, gridRect, scrollPlace } from "../../ui/index.ts";
 import { artPart, type DomDetailCardInput } from "./detailCard.ts";
-import { type DomPage, showPage } from "./page.ts";
-import { bindPanelFeedback } from "./panelButton.ts";
-import type { DomQuestionPanel } from "./questionPanel.ts";
 
 // The Logbook in HTML over the canvas, on the page template (showPage): the open tab's rules and
 // rows, each row one group, clipped to the list's frame and moved up by the scroll, at the places
@@ -55,24 +54,6 @@ export interface DomLogbookInput extends Omit<DomDetailCardInput, "close" | "vie
     readonly gesture: NativeGesture;
     readonly wheel: (deltaY: number) => void;
   };
-}
-
-// Where the list's content is laid out at a scroll: the scale its parts are placed at and the
-// device pixels the content then moves up by. Once it settles, the content moves up whole art
-// pixels. While it moves, each part lands on the device pixel nearest the whole game pixel the
-// canvas rounds it to: the parts are placed at a scale whose origin is moved up by the scroll's
-// whole game pixels, and the content moves up to that origin's device pixel, so no art lands
-// between device pixels and each part stays within half a device pixel of the canvas.
-export function scrollPlace(
-  scale: DomScale,
-  scroll: Pick<LogbookScroll, "settled" | "y">,
-): { by: number; scale: DomScale } {
-  if (scroll.settled) {
-    return { by: wholeArtPixels(scale, scroll.y * scale.unit * scale.dpr), scale };
-  }
-  const origin = { ...scale.origin, y: scale.origin.y - Math.round(scroll.y) * scale.unit };
-  const grid = (page: number) => Math.round(page * scale.dpr);
-  return { by: grid(scale.origin.y) - grid(origin.y), scale: { ...scale, origin } };
 }
 
 // The Logbook in layer, shown and its dialog focused.

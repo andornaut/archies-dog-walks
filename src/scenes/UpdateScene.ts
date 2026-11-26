@@ -3,7 +3,6 @@ import { Core, type Game, Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
 import { overlayRegion, updateModalLayout } from "../home/index.ts";
-import type { DomQuestionPanel } from "../hud/dom/index.ts";
 import { isPauseKey, menuKeyActs, screenArea } from "../input/index.ts";
 import {
   acceptUpdate,
@@ -14,6 +13,7 @@ import {
   updateAccepting,
   updateOffered,
 } from "../pwa/index.ts";
+import type { DomQuestionPanel } from "../ui/dom/index.ts";
 import { barTitleRoom, cardTitleRow, closeControl } from "../ui/index.ts";
 import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";

@@ -21,7 +21,7 @@ import { FEEDBACK } from "./feedback.ts";
 import { SHOP_LAYOUT, shopTabFace, shopTabRects } from "./shopLayout.ts";
 
 // The native Pet shop and Logbook share this frameless page view beneath the home top bar, which
-// the page template (src/hud/dom/page.ts) draws.
+// the page template (src/home/dom/page.ts) draws.
 // Every rectangle and text origin is in logical game pixels.
 
 // A rect filled in one colour.

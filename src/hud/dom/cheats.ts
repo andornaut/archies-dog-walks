@@ -5,14 +5,18 @@ import { createActionGroup } from "@andornaut/game-kit/runtime/web/ui/dom/action
 import { createFormRows } from "@andornaut/game-kit/runtime/web/ui/dom/formRow";
 
 import type { CheatAction, CheatRowView, CheatsView } from "../../cheats/index.ts";
+import { type DomPage, showPage } from "../../home/dom/index.ts";
 import { SWITCH_ROWS } from "../../home/index.ts";
 import {
+  bindPanelFeedback,
   createContentSeparator,
   createGameButton,
   createGameFormRow,
   createTextLine,
   type DomArtSource,
   type DomPart,
+  type DomQuestionPanel,
+  type DomQuestionPanelInput,
   placeBox,
   placeContentSeparator,
   placeFormRows,
@@ -23,9 +27,6 @@ import {
   type UiLayer,
 } from "../../ui/dom/index.ts";
 import { type DomScale, gridX, gridY } from "../../ui/index.ts";
-import { type DomPage, showPage } from "./page.ts";
-import { bindPanelFeedback } from "./panelButton.ts";
-import type { DomQuestionPanel, DomQuestionPanelInput } from "./questionPanel.ts";
 
 // The Cheats page in HTML over the canvas, on the page template (showPage): its title and Back
 // fixed, and between them its rows in the page's body, which scrolls with the pages' scrollbar

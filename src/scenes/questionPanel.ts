@@ -10,8 +10,6 @@ import {
   type DomEndScreen,
   type DomEndScreenInput,
   type DomHelpInput,
-  type DomQuestionPanel,
-  type DomQuestionPanelInput,
   showBadgeCard,
   showDetailCard,
   showEndScreen,
@@ -21,7 +19,12 @@ import {
 import { questionPanelView } from "../hud/index.ts";
 import { pillKind } from "../presentation/index.ts";
 import { pageFrameTurn } from "../pwa/index.ts";
-import { loadSheet, uiLayer } from "../ui/dom/index.ts";
+import {
+  type DomQuestionPanel,
+  type DomQuestionPanelInput,
+  loadSheet,
+  uiLayer,
+} from "../ui/dom/index.ts";
 import {
   type CardAction,
   modalCardView,

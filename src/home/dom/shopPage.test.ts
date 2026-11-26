@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { shopTabRects } from "../../home/shopLayout.ts";
-import { shopPageView } from "../../home/shopPageView.ts";
 import { FakeDocument, type FakeElement } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import type { PanelMeasure } from "../../ui/modal/types.ts";
+import { shopTabRects } from "../shopLayout.ts";
+import { shopPageView } from "../shopPageView.ts";
 import { createPageTab } from "./shopPage.ts";
 
 const MEASURE: PanelMeasure = {

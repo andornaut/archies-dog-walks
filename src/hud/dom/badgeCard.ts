@@ -3,6 +3,7 @@ import { textPart } from "../../home/dom/index.ts";
 import { type BadgeCardView, CONFETTI } from "../../home/index.ts";
 import {
   type DomPart,
+  type DomQuestionPanel,
   fillPart,
   framelessView,
   panelFramePart,
@@ -22,7 +23,7 @@ import {
   wholeArtPixels,
 } from "../../ui/index.ts";
 import { artPart, type DomDetailCardInput } from "./detailCard.ts";
-import { type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
+import { showQuestionPanel } from "./questionPanel.ts";
 
 // A badge's card in HTML over the canvas: the ui-panel and close control,
 // any confetti behind the badge, the badge at 2x and its name, status, goal and line, at the

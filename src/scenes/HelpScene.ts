@@ -14,8 +14,9 @@ import {
   type HelpMeasure,
   helpView,
 } from "../help/index.ts";
-import { coverHelpUnderlay, type DomQuestionPanel } from "../hud/dom/index.ts";
+import { coverHelpUnderlay } from "../hud/dom/index.ts";
 import { isMuteKey } from "../input/index.ts";
+import type { DomQuestionPanel } from "../ui/dom/index.ts";
 import { PALETTE } from "../ui/index.ts";
 import { addFilledRect, setPixelText, withProbe, wrapPixelText } from "../ui/phaser/index.ts";
 import type { HelpPictureData } from "./HelpPictureScene.ts";

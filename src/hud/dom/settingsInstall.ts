@@ -1,8 +1,10 @@
 import type { SettingsRowView, SettingsView } from "../../home/index.ts";
 import {
+  bindPanelFeedback,
   createGameFormRow,
   createTextLine,
   type DomPart,
+  type DomQuestionPanel,
   guardNativeInput,
   imageArt,
   placeText,
@@ -11,8 +13,7 @@ import {
   type UiLayer,
 } from "../../ui/dom/index.ts";
 import type { DomScale } from "../../ui/index.ts";
-import { bindPanelFeedback } from "./panelButton.ts";
-import { type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
+import { showQuestionPanel } from "./questionPanel.ts";
 import type { DomSettingsInput, RowPart } from "./settingsTypes.ts";
 
 const ORIGIN = { x: 0, y: 0 } as const;

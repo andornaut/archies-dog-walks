@@ -15,10 +15,14 @@ import {
   type EndScreenView,
 } from "../../home/index.ts";
 import {
+  bindPanelFeedback,
   contentSeparatorPart,
   createGameButton,
+  createPanelButton,
   createTextLine,
   type DomPart,
+  type DomQuestionPanel,
+  type DomQuestionPanelInput,
   type DomTextLine,
   fillPart,
   followModalUnderlay,
@@ -43,12 +47,7 @@ import {
 import type { DomBadgeCardInput } from "./badgeCard.ts";
 import { badgeStripParts } from "./celebration.ts";
 import { artPart, type DomDetailCardInput } from "./detailCard.ts";
-import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
-import {
-  type DomQuestionPanel,
-  type DomQuestionPanelInput,
-  showQuestionPanel,
-} from "./questionPanel.ts";
+import { showQuestionPanel } from "./questionPanel.ts";
 
 // Native results, controls and authored animation projections.
 

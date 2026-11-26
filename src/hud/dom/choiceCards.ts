@@ -20,6 +20,8 @@ import {
   createTextLine,
   type DomArtSource,
   type DomPart,
+  type DomQuestionPanel,
+  type DomQuestionPanelInput,
   framelessView,
   gridBoxPart,
   imageArt,
@@ -50,11 +52,7 @@ import {
   type ChoiceEntry,
 } from "../index.ts";
 import type { DomDetailCardInput } from "./detailCard.ts";
-import {
-  type DomQuestionPanel,
-  type DomQuestionPanelInput,
-  showQuestionPanel,
-} from "./questionPanel.ts";
+import { showQuestionPanel } from "./questionPanel.ts";
 
 const ORIGIN = { x: 0, y: 0 } as const;
 interface Source extends Pick<DomDetailCardInput, "artUrl" | "loadSheet" | "pillColours"> {

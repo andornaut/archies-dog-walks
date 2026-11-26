@@ -4,14 +4,6 @@ import { createModalInputGate } from "@andornaut/game-kit/runtime/input/modalInp
 import { expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
-import { ownedCountNote } from "../../home/shop.ts";
-import {
-  SHOP_LAYOUT,
-  shopHeadingBand,
-  shopListFrame,
-  shopTabRects,
-} from "../../home/shopLayout.ts";
-import { shopPageView } from "../../home/shopPageView.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, fontInk, fontInkRows, gameFont } from "../../testing/fontInk.ts";
 import { expectInkCentredDown } from "../../testing/inkCentring.ts";
@@ -27,6 +19,9 @@ import {
 } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
+import { ownedCountNote } from "../shop.ts";
+import { SHOP_LAYOUT, shopHeadingBand, shopListFrame, shopTabRects } from "../shopLayout.ts";
+import { shopPageView } from "../shopPageView.ts";
 import { type ShopScreenInput, type ShopScreenView, showShopScreen } from "./shopScreen.ts";
 
 const SOURCE: ShopScreenInput["source"] = {

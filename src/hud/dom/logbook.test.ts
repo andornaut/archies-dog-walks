@@ -9,9 +9,10 @@ import { STATS_TABS, statsTabRects } from "../../home/statsLayout.ts";
 import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
 import { deviceY, domScale } from "../../ui/domScale.ts";
+import { scrollPlace } from "../../ui/index.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { PALETTE } from "../../ui/palette.ts";
-import { scrollPlace, showLogbook } from "./logbook.ts";
+import { showLogbook } from "./logbook.ts";
 
 // 393 CSS px wide over the 360-wide game at DPR 3: a game pixel is 3.275 device pixels and an
 // art pixel 3.

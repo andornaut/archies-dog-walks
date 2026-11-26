@@ -6,12 +6,19 @@ import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModalit
 import { createModalFrame } from "@andornaut/game-kit/runtime/web/ui/dom/modalFrame";
 
 import { SCREEN_CONFIG } from "../../data/index.ts";
-import { type PageFill, type PageTab, shopTabRects } from "../../home/index.ts";
 import {
+  addTapBurst,
+  artUrls,
+  bindDialogKeys,
+  type BodyScroll,
+  bodyScrollbarPart,
   colourBox,
+  createPanelButton,
   createTextLine,
   dimDrawn,
   type DomPart,
+  type DomQuestionPanel,
+  type DomQuestionPanelInput,
   followModalUnderlay,
   mountModalLifecycle,
   type NativeGesture,
@@ -34,15 +41,7 @@ import {
   type PanelButton,
   type PanelText,
 } from "../../ui/index.ts";
-import { type BodyScroll, bodyScrollbarPart } from "./bodyScrollbar.ts";
-import { createPanelButton } from "./panelButton.ts";
-import {
-  addTapBurst,
-  artUrls,
-  bindDialogKeys,
-  type DomQuestionPanel,
-  type DomQuestionPanelInput,
-} from "./questionPanel.ts";
+import { type PageFill, type PageTab, shopTabRects } from "../index.ts";
 import { createPageTab } from "./shopPage.ts";
 
 // The page template the Pet shop, the Logbook and Help share in HTML over the canvas: the kit's

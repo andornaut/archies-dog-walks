@@ -20,9 +20,9 @@ import {
 import type { ZoneId } from "../data/ids.ts";
 import { gameData, SCREEN_CONFIG } from "../data/index.ts";
 import { overlayRegion } from "../home/index.ts";
-import { type DomQuestionPanel, showCheats, showQuestionPanel } from "../hud/dom/index.ts";
+import { showCheats, showQuestionPanel } from "../hud/dom/index.ts";
 import { packDogsOf } from "../state/index.ts";
-import { loadSheet } from "../ui/dom/index.ts";
+import { type DomQuestionPanel, loadSheet } from "../ui/dom/index.ts";
 import { MODAL, modalFamilyWidth, PALETTE } from "../ui/index.ts";
 import { CHEATS_CHANGED_EVENT, nextWalk, setNextWalk } from "./cheatChoices.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";

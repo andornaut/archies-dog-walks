@@ -8,7 +8,7 @@ import type { CheatsState } from "../cheats/cheatsView.ts";
 import { gameData } from "../data/index.ts";
 import type { ZoneId } from "../data/types.ts";
 import type { DomCheatsInput } from "../hud/dom/cheats.ts";
-import type { DomQuestionPanelInput } from "../hud/dom/questionPanel.ts";
+import type { DomQuestionPanelInput } from "../ui/dom/index.ts";
 import { cents } from "../units.ts";
 import { openCheatsPage } from "./cheatsPage.ts";
 

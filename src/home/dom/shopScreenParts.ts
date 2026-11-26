@@ -2,9 +2,9 @@ import type { Point } from "@andornaut/game-kit/runtime/rect";
 import { inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { SLICES } from "../../data/index.ts";
-import { createSelectionTile } from "../../home/dom/index.ts";
 import {
   backedTextPlaces,
+  bindPanelFeedback,
   createGameButton,
   createTextLine,
   type DomPart,
@@ -19,7 +19,7 @@ import {
   shownText,
 } from "../../ui/dom/index.ts";
 import { fontPixel, gridX, PALETTE, type PanelText, TEXT_SCALE } from "../../ui/index.ts";
-import { bindPanelFeedback } from "./panelButton.ts";
+import { createSelectionTile } from "./selectionTile.ts";
 import type { ShopScreenInput, ShopScreenRow, ShopScreenView } from "./shopScreen.ts";
 
 const ORIGIN = { x: 0, y: 0 };

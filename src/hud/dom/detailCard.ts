@@ -6,6 +6,8 @@ import type { DetailArt, DetailCardView } from "../../home/index.ts";
 import {
   contentSeparatorPart,
   type DomPart,
+  type DomQuestionPanel,
+  type DomQuestionPanelInput,
   framedPart,
   setBox,
   type SheetFrame,
@@ -23,11 +25,7 @@ import {
   gridY,
   wholeArtPixels,
 } from "../../ui/index.ts";
-import {
-  type DomQuestionPanel,
-  type DomQuestionPanelInput,
-  showQuestionPanel,
-} from "./questionPanel.ts";
+import { showQuestionPanel } from "./questionPanel.ts";
 
 // A detail card in HTML over the canvas: the ui-detail-card, its title and close control drawn
 // as a modal card is (showQuestionPanel), and its framed boxes, art and text as its view
