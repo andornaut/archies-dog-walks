@@ -26,7 +26,7 @@ import { currentSettings, walkerSpriteKey } from "./profileStore.ts";
 import { ensureRoadPlaceholders, ItemViews } from "./run/itemViews.ts";
 import { PackView } from "./run/packView.ts";
 import { RoadArt, RoadView } from "./run/roadView.ts";
-import { CHANGE_LABELS_EVENT } from "./run/runMoments.ts";
+import { CHANGE_LABELS_EVENT } from "./run/runMomentEvents.ts";
 import { ShadowPool } from "./run/shadowPool.ts";
 import { DEPTH, LANE_XS, overPack, packPoint } from "./run/stage.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";

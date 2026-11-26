@@ -102,17 +102,6 @@ import {
 import { DEPTH, firingSeconds, overPack } from "./stage.ts";
 import { stepSparkles } from "./tipSparkle.ts";
 
-export {
-  ACHIEVEMENTS_EVENT,
-  BUFF_GLINT_EVENT,
-  BUMP_FLASH_EVENT,
-  CHANGE_LABELS_EVENT,
-  HINT_EVENT,
-  type OwnerQuip,
-  QUIPS_EVENT,
-  type RaisedHint,
-} from "./runMomentEvents.ts";
-
 // Raises the first-time hint for event until it has shown once: the HUD says it on the
 // message strip and marks it shown.
 export function showHint(scene: Scene, event: HintTrigger): void {

@@ -97,7 +97,7 @@ import {
   type OwnerQuip,
   QUIPS_EVENT,
   type RaisedHint,
-} from "./run/runMoments.ts";
+} from "./run/runMomentEvents.ts";
 import { SCENE_KEYS, type SceneKey } from "./sceneKeys.ts";
 import type { ScenePicture } from "./scenePicture.ts";
 import type { SettingsScene } from "./SettingsScene.ts";
