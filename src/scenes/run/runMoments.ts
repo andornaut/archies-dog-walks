@@ -4,16 +4,15 @@ import {
   previewAchievements,
 } from "@andornaut/game-kit/runtime/achievements/preview";
 import type { Random } from "@andornaut/game-kit/runtime/random";
-import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { Scene } from "phaser";
 
-import { playEffect, tagTopY } from "../../assets/phaser/index.ts";
+import { playEffect } from "../../assets/phaser/index.ts";
 import { choiceCues, contactCues, debuffSoundCue, pullCues, stepCues } from "../../audio/index.ts";
-import { minorLook, minorObstacleName } from "../../content/index.ts";
-import type { AchievementId, DogId, EncounterId, HintId } from "../../data/ids.ts";
-import { CHARM, gameData, type HintTrigger } from "../../data/index.ts";
+import { minorObstacleName } from "../../content/index.ts";
+import type { AchievementId, DogId } from "../../data/ids.ts";
+import { gameData, type HintTrigger } from "../../data/index.ts";
 import {
-  type BuffPop,
   bumpLines,
   cashLostLabel,
   cashLostMs,
@@ -25,7 +24,6 @@ import {
   FIRING_EVENT,
   type FiringCue,
   firingTimeline,
-  FLY_HEART,
   FORGIVEN_EVENT,
   type ForgivenCue,
   forgivenLines,
@@ -44,13 +42,10 @@ import {
   pullLine,
   reachedLabels,
   reachIcons,
-  type ReachLine,
-  type RoadMarks,
   roadMarks,
   SPARE_TREAT_EVENT,
   type SpareTreatCue,
   spareTreatUsedLine,
-  stackOverPop,
   stepHintTriggers,
   stepValues,
   totalLabel,
@@ -61,19 +56,10 @@ import {
 } from "../../hud/index.ts";
 import {
   BUFF_POP,
-  bumpFlash,
-  type BumpSource,
-  charmByWalkerRect,
-  charmOverRect,
   contactDebuffBatch,
   ContactImpactFrame,
   contactImpacts,
   DOG_REACTIONS,
-  dogReaction,
-  hitEffects,
-  obstacleMotion,
-  splashEffect,
-  whiteFlash,
 } from "../../layout/index.ts";
 import { type EffectItem, effectItems, gearWell } from "../../presentation/index.ts";
 import {
@@ -82,79 +68,50 @@ import {
   type HeartChange,
   heartsForgiven,
   hintFor,
-  hitWord,
   type MoneyChange,
   outcomeChanges,
   type QuipCue,
   quipLine,
-  read,
   spareTreatGiver,
   spareTreatSource,
   walkEarnings,
   walkLength,
 } from "../../rules/index.ts";
-import type { EncounterCard, MinorBump, PullStep, WalkItem, WalkStep } from "../../runner/index.ts";
+import type { PullStep, WalkItem, WalkStep } from "../../runner/index.ts";
 import { previewedEarned, previewKey, type RunResult } from "../../save/index.ts";
 import { type EffectSource, type EndReason, packDogs, type RunState } from "../../state/index.ts";
-import { PALETTE, pixelLinePoints } from "../../ui/index.ts";
-import { fillRect } from "../../ui/phaser/index.ts";
-import { floatValue, popCharm } from "../buffCharm.ts";
-import { FEEDBACK_ART } from "../feedbackArt.ts";
-import { hitLabelOf, hitLook, playEdgeFlash, playHitMoment } from "../hitMoment.ts";
 import { sayMessage } from "../messageStripView.ts";
-import { floatChipHeight, type HeartPopPlace, playDodge, playForgiven } from "../packFeedback.ts";
+import { type HeartPopPlace, playDodge, playForgiven } from "../packFeedback.ts";
 import { earnedIfBanked, shownHints } from "../profileStore.ts";
-import { dogTop } from "../pullSignals.ts";
 import { SCENE_KEYS } from "../sceneKeys.ts";
 import { soundboardOf } from "../soundboard.ts";
 import { playContactDebuff } from "./contactDebuffFx.ts";
-import { flashWhite, moveObstacle, playHitEffects, shakeRoad } from "./hitFx.ts";
 import type { ItemViews } from "./itemViews.ts";
 import type { PackView } from "./packView.ts";
 import { showDebuffPopup, showGearPopup, showInstantPopup } from "./roadBanners.ts";
-import { DEPTH, firingSeconds, LAYOUT, overPack } from "./stage.ts";
+import { markRoad, popBuffs, popInkTop } from "./runBuffMoments.ts";
+import { flashBump, playBumpHit, playContactHit, playHit } from "./runHitMoments.ts";
+import {
+  ACHIEVEMENTS_EVENT,
+  BUFF_GLINT_EVENT,
+  CHANGE_LABELS_EVENT,
+  HINT_EVENT,
+  type OwnerQuip,
+  QUIPS_EVENT,
+} from "./runMomentEvents.ts";
+import { DEPTH, firingSeconds, overPack } from "./stage.ts";
 import { stepSparkles } from "./tipSparkle.ts";
 
-// How long the step's hit stop holds the road, or a plain obstacle's stop while it has none.
-function stopMs(step: WalkStep): number {
-  const seconds = step.walk.road.hitStop?.seconds;
-  return 1000 * (seconds ?? read(gameData.tuning, "seconds", "minorHitStopSeconds"));
-}
-
-// Where a hit's moment and label play: a little over the pack's point, for the step's hit stop.
-function hitPlace(step: WalkStep, pack: Point): { centre: Point; seconds: number } {
-  return { centre: { x: pack.x, y: pack.y - 20 }, seconds: step.walk.road.hitStop?.seconds ?? 0 };
-}
-
-// A hit's edge flash runs down the road and the backdrop band beside it.
-function hitField(): Rect {
-  const { backdrop, roadView } = LAYOUT;
-  return { ...roadView, height: roadView.y + roadView.height - backdrop.y, y: backdrop.y };
-}
-
-// An owner's line, said on the message strip.
-export interface OwnerQuip {
-  dog: DogId;
-  text: string;
-}
-
-// A first-time hint raised for the HUD to say on the message strip.
-export interface RaisedHint {
-  readonly id: HintId;
-  readonly text: string;
-}
-
-// Emitted on the run scene's events: ChangeLabel[] whenever money or hearts change, a
-// first-time hint (RaisedHint), and OwnerQuip[] when owners react.
-export const CHANGE_LABELS_EVENT = "change-labels";
-export const HINT_EVENT = "hint";
-export const QUIPS_EVENT = "quips";
-// AchievementId[] when the walk so far has earned badges, for the message strip.
-export const ACHIEVEMENTS_EVENT = "achievements";
-// An EffectItem whose walk bar well glints as its charm pops.
-export const BUFF_GLINT_EVENT = "buff-glint";
-// A bump's border colour, for the HUD to flash round the screen.
-export const BUMP_FLASH_EVENT = "bump-flash";
+export {
+  ACHIEVEMENTS_EVENT,
+  BUFF_GLINT_EVENT,
+  BUMP_FLASH_EVENT,
+  CHANGE_LABELS_EVENT,
+  HINT_EVENT,
+  type OwnerQuip,
+  QUIPS_EVENT,
+  type RaisedHint,
+} from "./runMomentEvents.ts";
 
 // Raises the first-time hint for event until it has shown once: the HUD says it on the
 // message strip and marks it shown.
@@ -295,7 +252,12 @@ export class RunMoments {
       this.hint({ kind: "pullLanded" });
     }
     this.deps.pack.pullFailed(step.failed);
-    this.popBuffs(leashPops(gameData, step.walk.run, step.leashed));
+    popBuffs(
+      this.scene,
+      this.deps,
+      { heartPops: this.heartPops, point: this.pack },
+      leashPops(gameData, step.walk.run, step.leashed),
+    );
   }
 
   // A line on the HUD's message strip, when there is one.
@@ -311,7 +273,7 @@ export class RunMoments {
     this.pack = pack;
     this.heartPops = this.hudHeartPops(step);
     const marks = roadMarks(gameData, stepValues(step));
-    this.markRoad(marks);
+    markRoad(this.scene, this.deps, { heartPops: this.heartPops, point: this.pack }, marks);
     const reached = reachIcons(marks.reaches);
     this.deps.items.strike(step);
     const sound = soundboardOf(this.scene);
@@ -377,7 +339,7 @@ export class RunMoments {
           .forEach((sprite) => playDodge(this.scene, moment, sprite));
         continue;
       }
-      this.playBumpHit({ ground: false }, bump.dog, bump.item, step);
+      playBumpHit(this.scene, this.deps, { ground: false }, bump.dog, bump.item, step);
       this.addChanges(
         overPack(pack),
         [bump.change, bump.cash].flatMap((change) => (change === null ? [] : [change])),
@@ -398,9 +360,16 @@ export class RunMoments {
     );
     for (const { dog, item, source } of impacts) {
       if (source.kind === "minor") {
-        this.playBumpHit({ ground: true }, dog, { ...item, kind: source.obstacle }, step);
+        playBumpHit(
+          this.scene,
+          this.deps,
+          { ground: true },
+          dog,
+          { ...item, kind: source.obstacle },
+          step,
+        );
       } else {
-        this.playContactHit(dog, source.encounter, step);
+        playContactHit(this.scene, this.deps, dog, source.encounter, step);
       }
     }
     for (const { outcome } of step.contacts) {
@@ -465,9 +434,9 @@ export class RunMoments {
     for (const hit of step.encounterHits) {
       const { kind } = gameData.encounters[hit.encounter];
       this.deps.pack.stumble(this.deps.still(), DOG_REACTIONS.hit);
-      this.playHit(hit, step, pack);
+      playHit(this.scene, this.deps, hit, step, pack);
       if (kind === "obstacle") {
-        this.flashBump({ encounter: hit.encounter, kind: "encounter" });
+        flashBump(this.scene, this.deps, { encounter: hit.encounter, kind: "encounter" });
       }
     }
     this.heartPops = new Map();
@@ -476,19 +445,13 @@ export class RunMoments {
   // The HUD's heart pop over each dog whose hearts the step changes, where heartFeedback.ts
   // plays it.
   private hudHeartPops(step: WalkStep): Map<DogId, HeartPopPlace> {
-    const inkTop = this.popInkTop();
+    const inkTop = popInkTop(this.scene);
     return new Map(
       heartPopDogs(step).flatMap((dog): [DogId, HeartPopPlace][] => {
         const top = this.deps.pack.dogPoint(dog);
         return top === undefined ? [] : [[dog, { frame: heartPopFrame(top), inkTop }]];
       }),
     );
-  }
-
-  // The heart pops' top opaque row, fx-heart-gain's and fx-heart-loss's pop tags alike.
-  private popInkTop(): number {
-    const { heartGain, heartLoss } = FEEDBACK_ART;
-    return Math.min(...[heartGain, heartLoss].map(({ key, pop }) => tagTopY(this.scene, key, pop)));
   }
 
   // The debuffs that started and ended between two run states, on the message strip.
@@ -605,7 +568,12 @@ export class RunMoments {
       item: null,
       value,
     }));
-    this.markRoad(roadMarks(gameData, values));
+    markRoad(
+      this.scene,
+      this.deps,
+      { heartPops: this.heartPops, point: this.pack },
+      roadMarks(gameData, values),
+    );
   }
 
   // The walk's start: a strip line for each gear that changes it from the start, its well
@@ -616,130 +584,9 @@ export class RunMoments {
     marks.glints.forEach((item) => this.scene.events.emit(BUFF_GLINT_EVENT, item));
   }
 
-  // Each reach's dotted line, its well glinting, and each buff's pop.
-  private markRoad({ pops, reaches }: RoadMarks): void {
-    for (const reach of reaches) {
-      this.reachLine(reach);
-      this.scene.events.emit(BUFF_GLINT_EVENT, reach.glint);
-    }
-    this.popBuffs(pops);
-  }
-
-  // Each buff's pop: its well glinting, its charm, lit, a chip of the value it made over the
-  // charm, if any, and a forgiven bump's heart turning from loss to gain as its charm shows
-  // beside the walker.
-  private popBuffs(pops: readonly BuffPop[]): void {
-    const still = this.deps.still();
-    for (const pop of pops) {
-      const rect = this.popRect(pop);
-      if (rect === undefined) {
-        continue;
-      }
-      const at = { x: rect.x - pop.index * (CHARM.size + CHARM.gap), y: rect.y };
-      const shownAtMs = pop.forgiven === null ? 0 : BUFF_POP.switchMs;
-      const show = () => {
-        popCharm(this.scene, { depth: DEPTH.fx, shownAtMs, still }, pop.item, at);
-        this.scene.events.emit(BUFF_GLINT_EVENT, pop.item);
-        if (pop.chip !== null) {
-          const anchor = { centreX: at.x + CHARM.size / 2, lineBottom: at.y - BUFF_POP.gap };
-          floatValue(this.scene, { depth: DEPTH.fx + 1, shownAtMs, still }, anchor, pop.chip);
-        }
-      };
-      if (pop.forgiven === null) {
-        show();
-      } else {
-        this.forgivenHeart(pop.forgiven);
-        this.scene.time.delayedCall(shownAtMs, show);
-      }
-    }
-  }
-
   // Where an item is on screen, else over the pack at pack.
   private itemPoint(item: WalkItem, pack: Point): Point {
     return this.deps.items.point(item.id) ?? overPack(pack);
-  }
-
-  // The charm's place: beside the walker's head, over its dog, over its item, or over the pack.
-  private popRect(pop: BuffPop): Rect | undefined {
-    const overPackRect = () => {
-      if (this.pack === undefined) {
-        return undefined;
-      }
-      const over = overPack(this.pack);
-      return charmOverRect(over.x, over.y);
-    };
-    switch (pop.at.kind) {
-      case "walker":
-        return charmByWalkerRect(dogTop(this.deps.pack.walkerSprite()));
-      case "dog": {
-        const under = this.heartPops.get(pop.at.dog);
-        if (under !== undefined) {
-          const { size } = CHARM;
-          const { bottom } = stackOverPop(under, size);
-          const x = Math.round(under.frame.x + FLY_HEART.frame / 2 - size / 2);
-          return { height: size, width: size, x, y: bottom - size };
-        }
-        const top = this.deps.pack.dogPoint(pop.at.dog);
-        return top === undefined ? overPackRect() : charmOverRect(top.x, top.y);
-      }
-      case "item": {
-        const point = this.deps.items.point(pop.at.item);
-        return point === null ? overPackRect() : charmOverRect(point.x, point.y);
-      }
-      case "pack":
-        return overPackRect();
-      default:
-        return pop.at satisfies never;
-    }
-  }
-
-  // Long reach's 1px amber dotted line from its dog, or the pack, to the item it grabbed.
-  private reachLine(reach: ReachLine): void {
-    const from = reach.dog === null ? this.pack : this.deps.pack.dogPoint(reach.dog);
-    const to = this.deps.items.point(reach.item);
-    if (from === undefined || to === null) {
-      return;
-    }
-    const g = this.scene.add.graphics().setDepth(DEPTH.fx);
-    const points = pixelLinePoints(
-      Math.round(from.x),
-      Math.round(from.y),
-      Math.round(to.x),
-      Math.round(to.y),
-    );
-    points.forEach(([x, y], i) => {
-      if (i % 2 === 0) {
-        fillRect(g, PALETTE.amber, { height: 1, width: 1, x, y });
-      }
-    });
-    this.scene.time.delayedCall(BUFF_POP.reachMs, () => g.destroy());
-  }
-
-  // A forgiven bump's heart over its dog: the loss pop (the HUD plays it for a loss forgiven in
-  // part), turning to the gain pop at switchMs, moved down when its forgiven label stacked over
-  // it would rise past the walk view's top (stackOverPop).
-  private forgivenHeart(forgiven: NonNullable<BuffPop["forgiven"]>): void {
-    const top = this.deps.pack.dogPoint(forgiven.dog);
-    if (top === undefined) {
-      return;
-    }
-    const inkTop = this.popInkTop();
-    const height = floatChipHeight(this.scene);
-    const { frame } = stackOverPop(
-      { frame: heartPopFrame(top), inkTop },
-      height,
-      LAYOUT.walkView.y,
-    );
-    this.heartPops.set(forgiven.dog, { frame, inkTop });
-    const half = FLY_HEART.frame / 2;
-    const centre = { x: frame.x + half, y: frame.y + half };
-    const pop = (art: { key: string; pop: string }) =>
-      playEffect(this.scene, art.key, art.pop, centre, DEPTH.fx);
-    const loss = forgiven.whole ? pop(FEEDBACK_ART.heartLoss) : undefined;
-    this.scene.time.delayedCall(BUFF_POP.switchMs, () => {
-      loss?.destroy();
-      pop(FEEDBACK_ART.heartGain);
-    });
   }
 
   // At a zone's end, each dog's pay flies as a coin from its card to the bank while the total
@@ -763,82 +610,5 @@ export class RunMoments {
     const changes = this.changes.slice(this.zoneStart);
     this.zoneStart = this.changes.length;
     return { changes, ms };
-  }
-
-  // The hit moment over the pack, framed by the road and the backdrop band beside it, labelled
-  // with the encounter's hit label over its burst.
-  private playHit(hit: EncounterCard, step: WalkStep, pack: Point): void {
-    playHitMoment(this.scene, {
-      caught: this.deps.pack.sprites(hit.affected),
-      ...hitPlace(step, pack),
-      depth: DEPTH.popup,
-      encounter: hit.encounter,
-      field: hitField(),
-      kind: gameData.encounters[hit.encounter].kind,
-      label: hitLabelOf(gameData.encounters[hit.encounter]),
-      still: this.deps.still(),
-      word: hitWord(gameData.encounters[hit.encounter]),
-    });
-  }
-
-  // A plain or moving hit's cues: its bump and debris over the struck dog, the dog reacting
-  // and flashing white, the struck obstacle's motion, and the bump's flash.
-  private playBumpHit(
-    context: { ground: boolean },
-    dog: DogId,
-    item: MinorBump["item"],
-    step: WalkStep,
-  ): void {
-    const still = this.deps.still();
-    const hit = {
-      kind: item.mover === undefined ? "plain" : "moving",
-      obstacle: item.kind,
-    } as const;
-    const top = context.ground ? this.deps.pack.dogFeet(dog) : this.deps.pack.dogPoint(dog);
-    if (top !== undefined) {
-      const moment = {
-        depth: context.ground ? DEPTH.sprite - 0.5 : DEPTH.fx,
-        holdMs: stopMs(step),
-      };
-      playHitEffects(this.scene, moment, hitEffects(still, { ...hit, top }));
-    }
-    for (const sprite of this.deps.pack.sprites([dog])) {
-      flashWhite(this.scene, sprite, whiteFlash(still));
-    }
-    this.deps.pack.dogsReact([dog], dogReaction(still, "hit"));
-    const body = this.deps.items.struckBody(item.id);
-    if (body !== undefined) {
-      moveObstacle(this.scene, body, obstacleMotion(still, hit));
-    }
-    this.flashBump({ kind: "minor", look: minorLook(gameData, item.kind, item.skin) });
-  }
-
-  // A contact obstacle's cues: a splash at the touching dog's feet, its edge flash, the bump's
-  // flash, and the walker stumbling as every dog reacts and shakes off.
-  private playContactHit(dog: DogId, encounter: EncounterId, step: WalkStep): void {
-    const still = this.deps.still();
-    const { kind } = gameData.encounters[encounter];
-    const feet = this.deps.pack.dogFeet(dog);
-    if (feet !== undefined) {
-      const moment = { depth: DEPTH.sprite - 0.5, holdMs: stopMs(step) };
-      playHitEffects(this.scene, moment, [splashEffect(still, feet)]);
-    }
-    const { flash } = hitLook(kind, encounter);
-    if (flash !== null) {
-      const moment = { depth: DEPTH.popup, field: hitField(), still };
-      playEdgeFlash(this.scene, moment, flash);
-    }
-    this.flashBump({ encounter, kind: "encounter" });
-    this.deps.pack.stumble(still, DOG_REACTIONS.splash);
-  }
-
-  // A bump's border round the screen, flashed by the HUD in the bump's colour, and the road's
-  // nudge unless motion is reduced.
-  private flashBump(source: BumpSource): void {
-    const { colour, nudge } = bumpFlash(this.deps.still(), source);
-    this.scene.events.emit(BUMP_FLASH_EVENT, PALETTE[colour]);
-    if (nudge) {
-      shakeRoad(this.scene);
-    }
   }
 }
