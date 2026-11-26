@@ -74,3 +74,4 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0258 | Audit the source structure and propose layered, encapsulated modules         | [adw-0258.md](../work/adw-0258.md) |
 | adw-0259 | Layer the source with downward imports and one public entry per area         | [adw-0259.md](../work/adw-0259.md) |
 | adw-0266 | Add Dependabot coverage for the gate Dockerfile                              | [adw-0266.md](../work/adw-0266.md) |
+| adw-0267 | Profile and improve game performance                                         | [adw-0267.md](../work/adw-0267.md) |
