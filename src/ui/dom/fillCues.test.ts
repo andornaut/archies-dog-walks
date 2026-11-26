@@ -525,6 +525,103 @@ describe("control state cues", () => {
     expect(rule(CUE_SHEETS[sheet], selector)).toContain(squeeze(declaration));
   });
 
+  // Each control family sets its focus and press colours in Game Kit's theme state slots on its
+  // root, once in normal and once in forced colours, and one rule reads each: every focus or press
+  // rule that fills one of the family's parts reads a slot. The standard button's unavailable
+  // focus is the one variant that sets its focus slots again.
+  it.each([
+    [
+      "standard button, the Help pager's included",
+      "game",
+      ".adw-standard-button",
+      true,
+      "--adw-button-fill",
+      [""],
+    ],
+    [
+      "Settings or Cheats row or slider",
+      "ui",
+      ".adw-row",
+      true,
+      "background-color",
+      [".adw-row-face"],
+    ],
+    [
+      "picker tile or Pet shop row",
+      "tile",
+      ".adw-selection-tile",
+      true,
+      "background-color",
+      [".adw-selection-face", ".adw-selection-focus-fill", ".adw-selection-focus-fill)"],
+    ],
+    ["slot sign", "tile", ".adw-slot-sign", false, "background-color", [".adw-slot-sign-focus"]],
+    ["choice card", "choice", ".adw-choice-", true, "background", [".adw-choice-press-band"]],
+    [
+      "top-bar button",
+      "top",
+      ".adw-top-section-button",
+      true,
+      "background|--ui-button-focus-fill",
+      [".adw-top-section-fill", ":focus-visible"],
+    ],
+    [
+      "Logbook row or end-screen badge",
+      "logbook",
+      ":is(.adw-logbook-badge,.adw-end-badge-control)",
+      true,
+      "background-color",
+      [".ui-button-face"],
+    ],
+    ["speech bubble", "ui", ".adw-button", false, "background-color", [".adw-speech-tail-focus)"]],
+  ] as const)(
+    "fills a %s from one focus slot and one press slot",
+    (_what, sheet, scope, press, property, parts) => {
+      const own = (text: string) =>
+        rules(text).filter(({ selector }) => selector.startsWith(scope));
+      const normal = own(unforced(SHEETS[sheet]));
+      const forcedRules = own(forced(SHEETS[sheet]));
+      const variants = sheet === "game" ? ['.adw-standard-button[aria-disabled="true"]'] : [];
+      const count = (list: typeof normal, test: (body: string) => boolean) =>
+        new Set(list.filter(({ body }) => test(body)).map(({ index }) => index)).size;
+      for (const [slot, shown] of [
+        ["focus", true],
+        ["pressed", press],
+      ] as const) {
+        const declares = (body: string) => `;${body}`.includes(`;--ui-colour-button-${slot}-face:`);
+        const reads = (body: string) => body.includes(`var(--ui-colour-button-${slot}-face)`);
+        const roots = normal.filter(({ selector }) => !variants.includes(selector));
+        expect(count(roots, declares), `${slot} slot`).toBe(shown ? 1 : 0);
+        expect(count(forcedRules, declares), `forced ${slot} slot`).toBe(shown ? 1 : 0);
+        expect(count(normal, reads), `${slot} fill`).toBe(shown ? 1 : 0);
+        expect(count(forcedRules, reads), `forced ${slot} fill`).toBeLessThanOrEqual(1);
+      }
+      const fills = own(SHEETS[sheet])
+        .filter(
+          ({ selector }) =>
+            /:focus-visible|\[data-picker-focused\]|\[data-ui-pressed\]|\.adw-choice-pressed/.test(
+              selector,
+            ) &&
+            !/\[data-refusal-red\]|\[data-picker-refusing\]/.test(selector) &&
+            parts.some((part) => selector.endsWith(part)),
+        )
+        .flatMap(({ body, selector }) =>
+          [...`;${body}`.matchAll(new RegExp(`;(${property}):([^;]*)`, "g"))].map(
+            ([, name, value]) => ({ name, selector, value }),
+          ),
+        );
+      expect(fills.length).toBeGreaterThan(0);
+      for (const { name, selector, value } of fills) {
+        expect(value, `${selector} ${name}`).toContain("var(--ui-colour-button-");
+      }
+    },
+  );
+
+  it("draws the Help pager's buttons as standard buttons", () => {
+    expect(squeeze(css("../../hud/dom/helpScreen.ts"))).toContain(
+      'className:"adw-reset-buttonadw-standard-buttonadw-buttonadw-secondary"',
+    );
+  });
+
   it("keeps a focused standard button's label at full opacity over Kit's focused artwork", () => {
     expect(rule(SHEETS.game, STANDARD_FOCUSED_LABEL)).toContain("opacity:1");
     expect(
