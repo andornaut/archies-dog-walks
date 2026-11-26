@@ -119,5 +119,6 @@ export {
   type ZoneSlotDelivery,
   zoneSlotGuarantees,
 } from "./zonePlan.ts";
-export { pageZonePlanner } from "./zonePlanner.ts";
+export { type ZonePlanner, zonePlanner, type ZonePlanPort } from "./zonePlanner.ts";
+export { answerZonePlan, type ZonePlanAnswer, type ZonePlanRequest } from "./zonePlans.ts";
 export { compileZoneSlotInput } from "./zoneSlotInput.ts";

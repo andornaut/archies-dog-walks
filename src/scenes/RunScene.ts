@@ -56,13 +56,13 @@ import {
   previousZone,
   previousZoneId,
 } from "../rules/index.ts";
+import { pageZonePlanner } from "../runner/dom/index.ts";
 import {
   awaitsZonePlan,
   chooseShownCard,
   forkPoint,
   headHomeSession,
   jumpToNeighbourhood,
-  pageZonePlanner,
   planZoneFromSeed,
   resumeSession,
   type RunStreams,

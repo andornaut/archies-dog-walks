@@ -4,7 +4,7 @@ import { planZoneFromSeed } from "./session.ts";
 import type { Walk } from "./walk.ts";
 
 // What the zone planner's worker (zonePlanWorker.ts) is asked and answers, kept apart from the
-// page's planner (zonePlanner.ts), which starts the worker.
+// page's planner (zonePlanner.ts) and the browser adapter that starts the worker.
 
 // A request to plan the current zone of walk from seed, and its answer: the planned walk, or the
 // planner's error message.
