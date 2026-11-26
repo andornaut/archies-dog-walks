@@ -3,8 +3,7 @@ import {
   createProgressState,
 } from "@andornaut/game-kit/runtime/progressState";
 
-import { requiredUpdateProgress } from "./pwa/requiredUpdate.ts";
-import { acceptedUpdateProgress } from "./pwa/updateAcceptance.ts";
+import { acceptedUpdateProgress, requiredUpdateProgress } from "./pwa/index.ts";
 import { LOADING_TIMING } from "./ui/index.ts";
 
 // The loads the player waits for, one at a time: boot (with a resumed walk's art behind the

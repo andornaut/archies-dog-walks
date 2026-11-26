@@ -39,6 +39,8 @@ import { FACE_SIZE, gameData, OWNER_CARD_FACE } from "../data/index.ts";
 import { hudArtResources } from "../hud/dom/prepareHudArt.ts";
 import { waitedLoad } from "../loadingProgress.ts";
 import {
+  bootHandedOver,
+  bootLoad,
   browserSoundFormat,
   exitShown,
   noteSaveStorage,
@@ -46,7 +48,6 @@ import {
   startWakeLock,
   unlockAudioOnFirstGesture,
 } from "../pwa/index.ts";
-import { bootHandedOver, bootLoad } from "../pwa/launch.ts";
 import { uiLayer } from "../ui/dom/uiLayer.ts";
 import { PALETTE } from "../ui/index.ts";
 import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/pixelText.ts";

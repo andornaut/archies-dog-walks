@@ -39,8 +39,13 @@ import {
   zoneCelebration,
 } from "../hud/index.ts";
 import { effectItems } from "../presentation/index.ts";
-import { onFrameTurnChange, PHONE_EVENTS, startWakeLock, stopWakeLock } from "../pwa/index.ts";
-import { requestGameUpdateCheck } from "../pwa/launch.ts";
+import {
+  onFrameTurnChange,
+  PHONE_EVENTS,
+  requestGameUpdateCheck,
+  startWakeLock,
+  stopWakeLock,
+} from "../pwa/index.ts";
 import {
   type CardView,
   type Choice,

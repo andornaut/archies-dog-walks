@@ -185,3 +185,15 @@ export function installNudgeDue(): boolean {
 export function noteInstallNudged(): void {
   installNudge?.markShown();
 }
+
+export {
+  bootFinished,
+  bootHandedOver,
+  bootLoad,
+  requestGameUpdateCheck,
+  startLaunch,
+} from "./launch.ts";
+export { launchGame } from "./launchGame.ts";
+export { launchProgress } from "./launchProgress.ts";
+export { requiredUpdateProgress } from "./requiredUpdate.ts";
+export { acceptedUpdateProgress } from "./updateAcceptance.ts";

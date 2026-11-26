@@ -69,6 +69,7 @@ const BANDS = [
         "src/headers/securityPolicy.ts",
         "src/packCapacity.ts",
         "src/pressAdmission.ts",
+        "src/pwa/cachePolicy.ts",
         "src/units.ts",
       ],
       ["src/data"],
@@ -135,7 +136,7 @@ const LAYER_EXEMPT = [...TEST_FILES, "src/testing/**", "src/**/*.d.ts"];
 const DATA_BEHIND_ENTRY = ["layout.ts", "screen.ts", "types.ts"];
 // CLEANUP (added 2026-11-25): the bands whose groups have their entry so far. Remove it, holding
 // every group to its entry, once the last band has one (adw-0259 step 9).
-const ENTRY_BANDS = ["Foundation", "Model", "Saving", "Presentation"];
+const ENTRY_BANDS = ["Foundation", "Model", "Saving", "Presentation", "Platform"];
 const ENTRY_GROUPS = BANDS.filter(({ band }) => ENTRY_BANDS.includes(band)).flatMap(({ rows }) =>
   rows.flat(),
 );

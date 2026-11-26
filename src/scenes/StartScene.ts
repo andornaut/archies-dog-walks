@@ -100,12 +100,12 @@ import {
   networkPlayReason,
   noteInstallNudged,
   PHONE_EVENTS,
+  requestGameUpdateCheck,
   requiredUpdate,
   startWakeLock,
   stopWakeLock,
   updateAccepting,
 } from "../pwa/index.ts";
-import { requestGameUpdateCheck } from "../pwa/launch.ts";
 import { walkerOrder } from "../rules/index.ts";
 import { type SaveDocument, walksFinished, walksPlayed } from "../save/index.ts";
 import { packDogsOf } from "../state/index.ts";

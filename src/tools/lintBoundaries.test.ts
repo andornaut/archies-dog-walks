@@ -49,6 +49,8 @@ it.each([
   ["hud/probe.ts", 'import "../data/world.ts";', undefined],
   ["save/probe.ts", 'import "../rules/causes.ts";', "import-x/no-restricted-paths"],
   ["assets/probe.ts", 'import "./manifest.ts";', undefined],
+  ["homePage/probe.ts", 'import "../pwa/cachePolicy.ts";', undefined],
+  ["homePage/probe.ts", 'import "../pwa/launch.ts";', "import-x/no-restricted-paths"],
 ])("holds src/%s with %s to the bands and the entries", async (file, text, rule) => {
   const results = await lint.lintText(text, { filePath: `src/${file}` });
   const found = results.flatMap(({ messages }) =>

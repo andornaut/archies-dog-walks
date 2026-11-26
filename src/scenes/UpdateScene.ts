@@ -7,13 +7,13 @@ import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
 import { isPauseKey, menuKeyActs, screenArea } from "../input/index.ts";
 import {
   acceptUpdate,
+  bootFinished,
   dismissUpdate,
   PHONE_EVENTS,
   updateAcceptanceFailed,
   updateAccepting,
   updateOffered,
 } from "../pwa/index.ts";
-import { bootFinished } from "../pwa/launch.ts";
 import { barTitleRoom, cardTitleRow, closeControl } from "../ui/index.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
 import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";

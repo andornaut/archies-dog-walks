@@ -11,9 +11,7 @@ import {
 import { trackInputModality } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 
 import { loadingProgress } from "./loadingProgress.ts";
-import { startLaunch } from "./pwa/launch.ts";
-import { launchGame } from "./pwa/launchGame.ts";
-import { launchProgress } from "./pwa/launchProgress.ts";
+import { launchGame, launchProgress, startLaunch } from "./pwa/index.ts";
 import { mountDomLoadingBar } from "./ui/dom/domLoadingBar.ts";
 import { mountLaunchFailure } from "./ui/dom/launchFailure.ts";
 import { LOADING_TIMING, startupLoad, startupProgress } from "./ui/index.ts";
