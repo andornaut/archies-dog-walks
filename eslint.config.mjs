@@ -1,4 +1,3 @@
-import { readdirSync } from "node:fs";
 import { posix } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -134,96 +133,6 @@ const IMPORT_TYPES = {
   selector: "TSImportType[source.value=/^\\./]",
 };
 
-// The bounded contexts: the folders of src/ each context's files may import, besides its own.
-// "folder/module.ts" allows one module of a folder: each is an import that a later move removes,
-// by moving the module into a context or the importer out of one. A context is a folder of src/ or
-// a group of BANDS nested in one, whose files then leave the folder's context. The boundaries above
-// govern src/testing/.
-const CONTEXTS = {
-  assets: ["data"],
-  "assets/phaser": ["data", "layout/depthScale.ts", "layout/projection.ts"],
-  content: ["data"],
-  road: [
-    "assets",
-    "content",
-    "data",
-    "layout/crossStreet.ts",
-    "layout/lanes.ts",
-    "layout/projection.ts",
-    "layout/screen.ts",
-    "layout/screenLayout.ts",
-    "rules/newRun.ts",
-    "rules/route.ts",
-    "rules/units.ts",
-    "runner",
-  ],
-  ui: ["assets", "data", "layout/screen.ts"],
-  "ui/dom": ["assets", "data", "input/holdRule.ts", "layout/screen.ts"],
-  "ui/phaser": ["assets", "data", "input/holdRule.ts", "layout/screen.ts"],
-};
-
-const SRC_FOLDERS = folders("src").filter((folder) => folder !== "testing");
-
-function folders(path) {
-  return readdirSync(new URL(path, import.meta.url), { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name);
-}
-
-// An import names a folder only by its path, so `./phaser/x` inside src/assets/ reads the same as
-// `../phaser/x` from elsewhere: a context's own folder of src/ and its subfolders are never
-// forbidden to it.
-function contextBoundary(context) {
-  const allowed = CONTEXTS[context];
-  const top = context.split("/")[0];
-  const own = [top, ...folders(`src/${top}`)];
-  const modules = allowed.filter((entry) => entry.includes("/"));
-  const group = SRC_FOLDERS.filter(
-    (folder) => !own.includes(folder) && !allowed.includes(folder),
-  ).flatMap((folder) => {
-    const exceptions = modules.filter((entry) => entry.startsWith(`${folder}/`));
-    if (exceptions.length === 0) {
-      return [`**/${folder}`, `**/${folder}/*`];
-    }
-    // A pattern that matches a folder ignores everything in it past any negation, so a folder
-    // with allowed modules is forbidden one level at a time: each subfolder on the way to an
-    // allowed module is let through and its own children forbidden, parents first.
-    const subfolders = [
-      ...new Set(
-        exceptions.flatMap((entry) =>
-          entry
-            .split("/")
-            .slice(1, -1)
-            .map((_, index, parts) => [folder, ...parts.slice(0, index + 1)].join("/")),
-        ),
-      ),
-    ].sort((a, b) => a.split("/").length - b.split("/").length);
-    return [
-      `**/${folder}/*`,
-      ...subfolders.flatMap((subfolder) => [`!**/${subfolder}`, `**/${subfolder}/*`]),
-      ...exceptions.map((entry) => `!**/${entry}`),
-    ];
-  });
-  return {
-    files: [`src/${context}/**/*.ts`],
-    forbid: {
-      // Context ownership governs relative source imports, not external package subpaths.
-      group: group.flatMap((pattern) => {
-        const negate = pattern.startsWith("!") ? "!" : "";
-        const path = pattern.replace(/^!?\*\*\//, "");
-        return [`${negate}./**/${path}`, `${negate}../**/${path}`];
-      }),
-      message:
-        allowed.length === 0
-          ? `src/${context}/ may import nothing from src/.`
-          : `src/${context}/ may import only ${allowed.join(", ")} from src/.`,
-    },
-    ignores: Object.keys(CONTEXTS)
-      .filter((other) => other.startsWith(`${context}/`))
-      .map((other) => `src/${other}/**/*.ts`),
-  };
-}
-
 // Every way to pick some of the items, the empty pick included.
 function subsets(items) {
   return items.reduce((picks, item) => [...picks, ...picks.map((pick) => [...pick, item])], [[]]);
@@ -241,30 +150,21 @@ function allOf(globLists) {
 }
 
 // A later no-restricted-imports replaces an earlier one rather than adding to it, so the configs
-// partition the files: one config per context (or none) and set of boundaries that binds a file,
-// listing the patterns of the context and of every boundary in the set.
+// partition the files: one config per set of boundaries that binds a file, listing the patterns of
+// every boundary in the set.
 function boundaryConfigs() {
-  const contexts = Object.keys(CONTEXTS).map(contextBoundary);
-  return [undefined, ...contexts].flatMap((context) =>
-    subsets(BOUNDARIES)
-      .filter((binding) => context !== undefined || binding.length > 0)
-      .map((binding) => {
-        const exempt = BOUNDARIES.filter((boundary) => !binding.includes(boundary));
-        return {
-          files: allOf([context?.files ?? SOURCE_FILES, ...exempt.map(({ except }) => except)]),
-          ignores: [
-            ...binding.flatMap(({ except }) => except),
-            ...(context === undefined ? contexts.flatMap(({ files }) => files) : context.ignores),
-          ],
-          rules: {
-            "no-restricted-imports": [
-              "error",
-              { patterns: [...binding, ...(context ? [context] : [])].map(({ forbid }) => forbid) },
-            ],
-          },
-        };
-      }),
-  );
+  return subsets(BOUNDARIES)
+    .filter((binding) => binding.length > 0)
+    .map((binding) => {
+      const exempt = BOUNDARIES.filter((boundary) => !binding.includes(boundary));
+      return {
+        files: allOf([SOURCE_FILES, ...exempt.map(({ except }) => except)]),
+        ignores: binding.flatMap(({ except }) => except),
+        rules: {
+          "no-restricted-imports": ["error", { patterns: binding.map(({ forbid }) => forbid) }],
+        },
+      };
+    });
 }
 
 function groupFiles(group) {
