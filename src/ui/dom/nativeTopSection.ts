@@ -1,49 +1,30 @@
 import "./nativeTopSection.css";
 
-import { containsPoint } from "@andornaut/game-kit/runtime/rect";
-import {
-  advanceWidth,
-  type BitmapFont,
-  fontMetrics,
-  inkWidth,
-} from "@andornaut/game-kit/runtime/text/bitmapFont";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { BUTTON_SIZE, SCREEN_CONFIG } from "../../data/index.ts";
-import { MENU_TEXT } from "../../data/menuText.ts";
+import { SCREEN_CONFIG } from "../../data/index.ts";
 import {
   deviceX,
   deviceY,
   type DomScale,
-  fontPixel,
-  gridRect,
   gridTransform,
-  gridX,
-  gridY,
   PALETTE,
   pressedEffectWells,
-  TOP_BAR_FACE,
   TOP_BAR_TRIM,
-  TOP_BAR_WELL,
-  topBarGlyphRect,
   topBarRects,
   type TopSectionButton,
-  topSectionCurrency,
-  topSectionCurrencyText,
   topSectionLayout,
-  topSectionStateCapTop,
 } from "../index.ts";
-import { containGameButtonClicks } from "./actionBinding.ts";
-import { type DomArtSource, imageArt, imageThreeSlice, sheetArt } from "./artElements.ts";
-import { createGameButton } from "./gameButton.ts";
+import { type DomArtSource, imageArt } from "./artElements.ts";
 import { guardNativeInput, revealPaint } from "./modalLifecycle.ts";
 import { colourBox, gridFillPart } from "./parts.ts";
-import { backedTextPlaces, createTextLine, placeBox, placeText, setBox } from "./pixelLine.ts";
+import { placeBox, setBox } from "./pixelLine.ts";
+import { createTopSectionControl, type NativeTopSectionPress } from "./topSectionControl.ts";
+import { createTopSectionMoney } from "./topSectionMoney.ts";
 import type { UiLayer } from "./uiLayer.ts";
-export interface NativeTopSectionPress {
-  readonly completedAt: number;
-  readonly startedAt: number | undefined;
-  readonly via: "keyboard" | "pointer";
-}
+
+export type { NativeTopSectionPress } from "./topSectionControl.ts";
+
 export interface NativeTopSectionConfig {
   readonly accepts: (id: TopSectionButton) => boolean;
   readonly buttons: readonly TopSectionButton[];
@@ -72,16 +53,6 @@ export interface NativeTopSection {
   setMuted(muted: boolean): void;
   setPaused(menu: boolean): void;
   setShown(shown: boolean): void;
-}
-interface BarControl {
-  readonly active: () => boolean;
-  readonly button: HTMLButtonElement;
-  readonly cancel: () => void;
-  readonly down: (event: PointerEvent) => void;
-  readonly observeClick: (event: MouseEvent) => void;
-  readonly clearMetadata: () => void;
-  readonly contains: (event: PointerEvent) => boolean;
-  readonly setPressed: (pressed: boolean) => void;
 }
 const ORIGIN = { x: 0, y: 0 } as const;
 // Screen owners select actions and input guards; every native top section shares this layout.
@@ -160,231 +131,38 @@ export function createNativeTopSection(
       setPressed(pressed: boolean): void;
     }
   >();
-  const records: BarControl[] = [];
-  let held: BarControl | undefined;
-  const updateIcons: (() => void)[] = [];
+  const available = () => paint.painted() && !disposed && shown && !inert && !root.hidden;
+  const context = {
+    image,
+    inputBottom: () => inputBottom,
+    label: (id: TopSectionButton) => config.labels[id],
+    menu: () => menu,
+    muted: () => muted,
+    origin: ORIGIN,
+    readScale: () => layer.scale(),
+    root,
+    source,
+    title,
+    trackArt: (ready: Promise<readonly string[]>) => artReady.push(ready),
+  };
   // Each button covers the part of its hit it owns, so where neighbours' hits overlap a press goes
   // to the nearer face (topSectionLayout), whatever the buttons' stacking order.
-  for (const [id, { face, owned }] of layout.controls) {
-    const content = doc.createElement("span");
-    content.style.display = "contents";
-    let pressed = false;
-    let startedAt: number | undefined;
-    let clickAt: number | undefined;
-    let via: NativeTopSectionPress["via"] = "keyboard";
-    const active = () =>
-      paint.painted() && !disposed && shown && !inert && !root.hidden && config.accepts(id);
-    const view = createGameButton(doc, {
-      appearance: { className: "adw-top-section-button", role: "navigation" },
-      content: { icon: content, kind: "icon", name: config.labels[id] },
-      getAction: () =>
-        active()
-          ? {
-              activate: () => {
-                const metadata = {
-                  completedAt: clickAt ?? doc.defaultView!.performance.now(),
-                  startedAt: via === "keyboard" ? undefined : startedAt,
-                  via,
-                };
-                clickAt = undefined;
-                startedAt = undefined;
-                config.press(id, metadata);
-              },
-              identity: id === "pause" ? menu : id,
-            }
-          : null,
-      getState: () => ({ ...(id === "mute" ? { toggled: !muted } : {}) }),
-      skin: "authored",
-    });
-    cleanups.push(view.dispose);
-    const button = view.element;
-    const faces = ["normal", "pressed"].map((tag) => {
-      const art = image(`ui-icon-button-${tag}`);
-      content.append(art.element);
-      return art;
-    });
-    // The face's state fill over its art and under its glyph: ink while pressed; in forced
-    // colours ButtonFace, Highlight while focused or pressed.
-    const fill = doc.createElement("span");
-    fill.className = "adw-framed adw-top-section-fill";
-    content.append(fill);
-    const glyphRoot = doc.createElement("span");
-    glyphRoot.className = "adw-art";
-    content.append(glyphRoot);
-    const iconKey = () => (id === "pause" && menu ? "icon-menu" : `icon-${id}`);
-    const icons =
-      id === "mute"
-        ? []
-        : (id === "pause" ? ["icon-pause", "icon-menu"] : [iconKey()]).map((key) => ({
-            art: image(key),
-            key,
-          }));
-    const sound = id === "mute" ? sheetArt(doc, source, "icon-sound") : undefined;
-    const soundState =
-      sound === undefined
-        ? undefined
-        : ({
-            capTop: topSectionStateCapTop(face, fontMetrics(title).capHeight),
-            centre: "ink",
-            centreX: face.x + TOP_BAR_FACE.size / 2,
-            colour: PALETTE.cream,
-            font: "title",
-            scale: 1,
-            text: "",
-          } as const);
-    const soundLabel = soundState === undefined ? undefined : createTextLine(doc, soundState);
-    if (soundLabel !== undefined) {
-      soundLabel.setAttribute("aria-hidden", "true");
-      root.append(soundLabel);
-    }
-    if (sound !== undefined) {
-      artReady.push(sound.ready);
-    }
-    for (const { art } of icons) {
-      glyphRoot.append(art.element);
-    }
-    if (sound !== undefined) {
-      glyphRoot.append(sound.element);
-    }
-    const place = (scale: DomScale) => {
-      placeBox(
-        scale,
-        ORIGIN,
-        button,
-        inputBottom === undefined
-          ? owned
-          : {
-              ...owned,
-              height: Math.max(0, Math.min(owned.height, inputBottom - owned.y)),
-            },
-      );
-      placeBox(scale, owned, view.face, {
-        ...face,
-        height: TOP_BAR_FACE.size,
-        width: TOP_BAR_FACE.size,
-      });
-      const origin = { x: face.x, y: face.y };
-      for (const [index, art] of faces.entries()) {
-        art.element.hidden = index !== Number(pressed);
-        art.place(scale, origin, {
-          ...face,
-          height: TOP_BAR_FACE.size,
-          projection: "layout",
-          width: TOP_BAR_FACE.size,
-        });
-      }
-      // The face inside its tan rim, from its highlight row down to its lip.
-      placeBox(scale, face, fill, {
-        height: TOP_BAR_FACE.fill.height,
-        width: TOP_BAR_FACE.fill.width,
-        x: face.x + TOP_BAR_FACE.fill.x,
-        y: face.y + TOP_BAR_FACE.fill.y + (pressed ? BUTTON_SIZE.press : 0),
-      });
-      const glyphRect = topBarGlyphRect(face, pressed);
-      const glyphBox = gridRect(scale, glyphRect);
-      setBox(glyphRoot, {
-        ...glyphBox,
-        left: glyphBox.left - gridX(scale, face.x),
-        top: glyphBox.top - gridY(scale, face.y),
-      });
-      for (const { art, key } of icons) {
-        art.element.hidden = key !== iconKey();
-        art.place(scale, glyphRect, { ...glyphRect, projection: "layout" });
-      }
-      sound?.place(scale, glyphRect, {
-        projection: "layout",
-        tag: muted ? "off" : "on",
-        x: glyphRect.x,
-        y: glyphRect.y,
-      });
-      if (soundLabel !== undefined && soundState !== undefined) {
-        const text = muted ? MENU_TEXT.settings.off : MENU_TEXT.settings.on;
-        soundLabel.textContent = text.toUpperCase();
-        placeText(title, scale, ORIGIN, soundLabel, { ...soundState, text });
-      }
-    };
-    placed.push(place);
-    const setPressed = (value: boolean) => {
-      pressed = value;
-      view.setPressed(value);
-      place(layer.scale());
-    };
-    controls.set(id, { setPressed });
-    const record: BarControl = {
-      active,
-      button,
-      cancel: () => setPressed(false),
-      clearMetadata: () => {
-        startedAt = undefined;
-        clickAt = undefined;
-        via = "keyboard";
-      },
-      contains: (event) => {
-        const rect = button.getBoundingClientRect();
-        return containsPoint(
-          { height: rect.height, width: rect.width, x: rect.left, y: rect.top },
-          event.clientX,
-          event.clientY,
-        );
-      },
-      down: (event) => {
-        startedAt = event.timeStamp;
-        clickAt = undefined;
-        via = "pointer";
-        const target = event.target as Element | null;
-        if (target?.hasPointerCapture?.(event.pointerId)) {
-          target.releasePointerCapture(event.pointerId);
-        }
-        if (button.hasPointerCapture(event.pointerId)) {
-          button.releasePointerCapture(event.pointerId);
-        }
-        setPressed(true);
-      },
-      observeClick: (event) => {
-        via = event.detail === 0 ? "keyboard" : "pointer";
-        clickAt = event.timeStamp;
-        if (via === "keyboard") {
-          startedAt = undefined;
-        }
-      },
-      setPressed,
-    };
-    records.push(record);
-    button.addEventListener("blur", () => setPressed(false));
-    containGameButtonClicks(button);
-    for (const name of ["mousedown", "touchstart"]) {
-      button.addEventListener(name, (event) => event.stopPropagation());
-    }
-    button.addEventListener("keydown", (event) => {
-      if (event.code === "Enter" || event.code === "Space") {
-        event.stopPropagation();
-        if (event.repeat) {
-          event.preventDefault();
-        } else if (active()) {
-          setPressed(true);
-        }
-      }
-    });
-    button.addEventListener("keyup", (event) => {
-      if (event.code === "Enter" || event.code === "Space") {
-        setPressed(false);
-      }
-    });
-    updateIcons.push(() => {
-      view.setContent({
-        icon: content,
-        kind: "icon",
-        name: config.labels[id === "pause" && menu ? "menu" : id],
-      });
-      view.refresh();
-      if (id === "mute") {
-        button.setAttribute("aria-pressed", String(!muted));
-      }
-      place(layer.scale());
-    });
-    root.append(button);
-  }
-  const available = () => paint.painted() && !disposed && shown && !inert && !root.hidden;
+  const parts = layout.controls.map(([id, geometry]) => {
+    const control = createTopSectionControl(
+      context,
+      () => available() && config.accepts(id),
+      (metadata) => config.press(id, metadata),
+      id,
+      geometry,
+    );
+    cleanups.push(control.dispose);
+    controls.set(id, { setPressed: control.record.setPressed });
+    placed.push(control.place);
+    return control;
+  });
+  const records = parts.map(({ record }) => record);
+  let held: (typeof records)[number] | undefined;
+  const updateIcons = () => parts.forEach(({ updateIcon }) => updateIcon());
   cleanups.push(
     guardNativeInput(
       {
@@ -436,88 +214,19 @@ export function createNativeTopSection(
     doc.removeEventListener("pointercancel", clearMetadata);
     doc.removeEventListener("visibilitychange", clearMetadata);
   });
-  const money = doc.createElement("div");
-  money.className = "adw-lines";
-  underlayElement.append(money);
-  // art: the cash well's ends, a column each, and its middle column, which stretches.
-  const cashArt =
-    layout.currency === undefined
-      ? undefined
-      : imageThreeSlice(
-          doc,
-          source,
-          {
-            left: "ui-home-cash-well-left",
-            middle: "ui-home-cash-well-mid",
-            right: "ui-home-cash-well-right",
-          },
-          { left: 1, right: 1 },
-        );
-  if (cashArt !== undefined) {
-    artReady.push(cashArt.ready);
-    money.append(cashArt.element);
+  const money = createTopSectionMoney(
+    doc,
+    source,
+    title,
+    ORIGIN,
+    context.readScale,
+    layout.currency,
+  );
+  underlayElement.append(money.element);
+  if (money.ready !== undefined) {
+    artReady.push(money.ready);
   }
-  const moneyLine = {
-    capTop: 0,
-    centre: "left",
-    centreX: 0,
-    colour: PALETTE.amber,
-    font: "title",
-    scale: 1,
-    text: "$",
-  } as const;
-  const dollarElement = createTextLine(doc, moneyLine);
-  const amountElement = createTextLine(doc, { ...moneyLine, colour: PALETTE.cream, text: "" });
-  money.append(dollarElement, amountElement);
-  let amount = "";
-  let short = "";
-  const placeMoney = (scale: DomScale) => {
-    money.hidden = layout.currency === undefined || amount === "";
-    if (money.hidden) {
-      return;
-    }
-    const measure = (at: number, line: string) => inkWidth(title, at, line);
-    const text = topSectionCurrencyText(measure, layout, { full: amount, short });
-    const { scale: moneyScale } = topSectionCurrency(layout, 0);
-    const placement = topSectionCurrency(layout, measure(moneyScale, `$${text}`));
-    const rect = placement.well;
-    cashArt?.place(scale, ORIGIN, rect);
-    const dollar = {
-      ...moneyLine,
-      capTop: placement.top,
-      centreX: placement.left,
-      scale: placement.scale,
-    };
-    const digits = {
-      ...dollar,
-      centreX:
-        placement.left +
-        advanceWidth(title, placement.scale, `$${text}`) -
-        advanceWidth(title, placement.scale, text),
-      colour: PALETTE.cream,
-      text,
-    };
-    amountElement.textContent = text;
-    placeText(title, scale, ORIGIN, dollarElement, dollar);
-    placeText(title, scale, ORIGIN, amountElement, digits);
-    const whole = { ...dollar, text: `$${text}` };
-    const centred = backedTextPlaces(
-      title,
-      scale,
-      ORIGIN,
-      // The well's flat face, less its lip's row and column.
-      { ...rect, height: rect.height - TOP_BAR_WELL.lip, width: rect.width - TOP_BAR_WELL.lip },
-      [whole],
-      "layout",
-    )[0]!;
-    dollarElement.style.left = `${centred.left}px`;
-    const pen = advanceWidth(title, 1, whole.text) - advanceWidth(title, 1, text);
-    amountElement.style.left = `${centred.left + pen * fontPixel(scale, placement.scale)}px`;
-    for (const element of [dollarElement, amountElement]) {
-      element.style.top = `${centred.top}px`;
-    }
-  };
-  placed.push(placeMoney);
+  placed.push(money.place);
   const place = (scale: DomScale) => {
     root.style.transform = gridTransform(scale);
     setBox(root, {
@@ -531,7 +240,7 @@ export function createNativeTopSection(
   layer.element.append(root);
   const offScale = layer.onScale(place);
   place(layer.scale());
-  updateIcons.forEach((update) => update());
+  updateIcons();
   const fontsReady = layer.ready()
     ? Promise.resolve()
     : new Promise<void>((resolve) => {
@@ -563,14 +272,7 @@ export function createNativeTopSection(
     },
     element: root,
     revealed: reveal.revealed,
-    setAmount(full, abbreviated) {
-      if (amount === full && short === abbreviated) {
-        return;
-      }
-      amount = full;
-      short = abbreviated;
-      placeMoney(layer.scale());
-    },
+    setAmount: money.setAmount,
     setEffectCount(count) {
       if (!Number.isInteger(count) || count < 0 || count > effectArt.length) {
         throw new Error("Visible effects must fit the configured top section");
@@ -609,7 +311,7 @@ export function createNativeTopSection(
         return;
       }
       muted = value;
-      updateIcons.forEach((update) => update());
+      updateIcons();
     },
     setPaused(value) {
       if (menu === value) {
@@ -618,7 +320,7 @@ export function createNativeTopSection(
       menu = value;
       epoch += 1;
       records.forEach((record) => record.clearMetadata());
-      updateIcons.forEach((update) => update());
+      updateIcons();
     },
     setShown(value) {
       if (value !== shown) {
