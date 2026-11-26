@@ -15,7 +15,7 @@ Archie's Dog Walks is a phone-first pixel-art game playable in a web browser and
 | [Player copy](player-copy.md)       | Character voice, wording, fit and authored data            |
 | [Tuning](tuning.md)                 | Balance targets, measurements and playtesting              |
 
-[Ideas](ideas.md) collects undecided and cut proposals. [Cheats](cheats.md) covers cheats and save tools. [Layout](../art/layout.md) owns interface measurements.
+[Ideas](ideas.md) collects undecided and cut proposals. [Cheats](cheats.md) covers cheats and save tools. [Layout](../../../art/layout.md) owns interface measurements.
 
 The shared [game policies](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md) govern cross-game behaviour.
 

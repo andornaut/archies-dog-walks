@@ -1,8 +1,8 @@
 # Tuning
 
 Gameplay owns the targets, tuning values and playtesting in the
-[gameplay README](../../gameplay/README.md), and undecided ideas in
-[ideas](../../gameplay/ideas.md).
+[gameplay README](gameplay/README.md), and undecided ideas in
+[ideas](gameplay/ideas.md).
 
 ## Work items
 

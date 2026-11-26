@@ -8,7 +8,7 @@ Cheats act on the real save, as normal play does. Cash and unlocks they grant, a
 
 ## Page
 
-- **Page** is a frameless page titled Cheats under the live top bar, like Help. Its body scrolls when needed and text stays full size. See the [Layout guide](../art/layout.md#page-boundsalignment) for interface measurements.
+- **Page** is a frameless page titled Cheats under the live top bar, like Help. Its body scrolls when needed and text stays full size. See the [Layout guide](../../../art/layout.md#page-boundsalignment) for interface measurements.
 - **Leaving** uses the page Back, Escape or browser or device Back. Each returns to the invoking Menu or Pause and restores focus to Cheats. On the top bar, Menu returns there outside a walk, and Pause returns there during a walk. Outside taps leave the page open. See [Navigation](rules.md#navigation).
 - **Order** starts with Invincible owners and Start at, followed by Unlocks and Money side by side. Reset save follows without a section heading.
 - **Controls** show On or Off directly below the right-aligned switch. Add buttons are repeatable. All cheats are available from Start and during a walk.

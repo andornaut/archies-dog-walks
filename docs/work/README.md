@@ -2,7 +2,9 @@
 
 Each user request is one file, `docs/work/<id>.md`, approved or not. It records scope and milestones; live
 progress (claims, blocks, receipts and acceptance) stays in the work protocol state root. The
-[design index](../design/README.md) lists the work items of each area.
+[design index](../design/README.md) links each logical area. The [rules index](index/rules.md)
+lives in `docs/work/index/rules.md`. Other areas keep their tables in their design summaries.
+Every work item appears in exactly one table for its `design` area.
 
 | Front matter | Content                                                                                                                            |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -17,7 +19,7 @@ progress (claims, blocks, receipts and acceptance) stays in the work protocol st
 The sections are Scope, Criteria, Decisions and Outcome. Decisions and Outcome state what was
 decided or delivered, and why, in a line or two each.
 
-- Only `main` edits design index tables and approved scope. A request commits its work-file stub
+- Only `main` integrates index tables and approved scope. A request commits its work-file stub
   and index row on `main` as `proposed`, which allocates the ID; approval sets `approved`.
 - Workers edit only their own work file and the design prose that ships with their feature.
   Integration sets `status: done` in the landing merge commit itself, which is how status tools

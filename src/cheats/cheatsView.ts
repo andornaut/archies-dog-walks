@@ -1,5 +1,5 @@
 // The Cheats page laid out as it stands, free of Phaser and the DOM: its title and Back, its rows
-// in the spec's order (gameplay/cheats.md), each row's place in the page's scrolling body, and
+// in the spec's order (docs/design/gameplay/cheats.md), each row's place in the page's scrolling body, and
 // what a press on it does. The HTML interface (src/hud/dom/cheats.ts) draws it. Every rect and
 // text origin is in game pixels.
 import { fillLine, wrapWords } from "@andornaut/game-kit/runtime/lines";

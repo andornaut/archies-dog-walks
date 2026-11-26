@@ -39,7 +39,7 @@ import { followScene, htmlPanelInput, htmlPanelPlace, questionView } from "./que
 import type { RunScene } from "./RunScene.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 
-// The Cheats page (gameplay/cheats.md), which CheatsScene shows: the view of the cheats where it
+// The Cheats page (docs/design/gameplay/cheats.md), which CheatsScene shows: the view of the cheats where it
 // opened, over a walk or on the Start screen, and what each press does. It owns its HTML and
 // Reset save's question, a modal over it.
 export interface CheatsPage {

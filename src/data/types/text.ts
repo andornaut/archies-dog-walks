@@ -350,7 +350,7 @@ export interface MenuText {
     readonly titleMany: string;
     readonly titleOne: string;
   };
-  // The Cheats modal, opened from Settings in a browser tab (gameplay/cheats.md). A {cash},
+  // The Cheats page (docs/design/gameplay/cheats.md). A {cash},
   // {debuff} or {upgrade} is filled in by the game.
   readonly cheats: {
     readonly add: string;
