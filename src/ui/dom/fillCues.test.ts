@@ -354,7 +354,14 @@ describe("control state cues", () => {
       "a pressed top-bar face",
       "top",
       ".adw-top-section-button[data-ui-pressed] .adw-top-section-fill",
-      "var(--adw-ink)6.25%",
+      "var(--ui-colour-button-pressed-face)6.25%",
+    ],
+    [
+      "a top-bar face's cyan focus and ink press",
+      "top",
+      ".adw-top-section-button",
+      "--ui-colour-button-focus-face:var(--adw-cyan);--ui-colour-button-focus-text:var(--adw-ink);" +
+        "--ui-colour-button-pressed-face:var(--adw-ink)",
     ],
     [
       "a top-bar face in forced colours",
@@ -363,10 +370,23 @@ describe("control state cues", () => {
       "display:block;forced-color-adjust:none;background:ButtonFace",
     ],
     [
-      "a focused or pressed top-bar face in forced colours",
+      "a focused top-bar face in forced colours",
       "topForced",
-      ".adw-top-section-button:is(:focus-visible, [data-ui-pressed]) .adw-top-section-fill",
-      "background:Highlight",
+      ".adw-top-section-button:focus-visible .adw-top-section-fill",
+      "background:var(--ui-colour-button-focus-face)",
+    ],
+    [
+      "a pressed top-bar face in forced colours",
+      "topForced",
+      ".adw-top-section-button[data-ui-pressed] .adw-top-section-fill",
+      "background:var(--ui-colour-button-pressed-face)",
+    ],
+    [
+      "a top-bar face's focus and press in forced colours",
+      "topForced",
+      ".adw-top-section-button",
+      "--ui-colour-button-focus-face:Highlight;--ui-colour-button-focus-text:HighlightText;" +
+        "--ui-colour-button-pressed-face:Highlight",
     ],
     ["the forced-colours top-bar artwork", "top", FORCED_TOP_ARTWORK, "opacity:1"],
     [

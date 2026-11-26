@@ -1,4 +1,10 @@
+/* A top-bar face's focus and press colours are Game Kit's theme state slots, set here once and once
+   again in forced colours. Focus fills the face through Kit's focus fill under its glyph at 65%;
+   a press fills the face's state layer under its highlight row, the first of the fill's 16. */
 .adw-top-section-button {
+  --ui-colour-button-focus-face: var(--adw-cyan);
+  --ui-colour-button-focus-text: var(--adw-ink);
+  --ui-colour-button-pressed-face: var(--adw-ink);
   position: absolute;
   box-sizing: border-box;
   pointer-events: auto;
@@ -8,24 +14,32 @@
   pointer-events: none;
 }
 .adw-top-section-button:focus-visible {
-  --ui-button-focus-fill: var(--adw-cyan);
-  --ui-button-focus-text: var(--adw-ink);
+  --ui-button-focus-fill: var(--ui-colour-button-focus-face);
+  --ui-button-focus-text: var(--ui-colour-button-focus-text);
 }
 .adw-top-section-button:focus-visible > .ui-button-face > [aria-hidden="true"] {
   opacity: 0.65;
 }
-/* A pressed face turns from navy to ink under its highlight row, the first of the fill's 16. */
 .adw-top-section-fill {
   display: none;
 }
 .adw-top-section-button[data-ui-pressed] .adw-top-section-fill {
   display: block;
-  background: linear-gradient(to bottom, var(--adw-darkSlate) 0 6.25%, var(--adw-ink) 6.25%);
+  background: linear-gradient(
+    to bottom,
+    var(--adw-darkSlate) 0 6.25%,
+    var(--ui-colour-button-pressed-face) 6.25%
+  );
 }
 /* Forced colours paint the whole face under the glyph, ButtonFace normally and Highlight at full
    opacity while focused or pressed. The artwork rule names the button and its Kit class so it
    outranks Kit's focused artwork opacity whatever order the sheets load in. */
 @media (forced-colors: active) {
+  .adw-top-section-button {
+    --ui-colour-button-focus-face: Highlight;
+    --ui-colour-button-focus-text: HighlightText;
+    --ui-colour-button-pressed-face: Highlight;
+  }
   button.adw-top-section-button.ui-standard-button:is(:focus-visible, [data-ui-pressed])
     > .ui-button-face
     > [aria-hidden="true"] {
@@ -36,7 +50,10 @@
     forced-color-adjust: none;
     background: ButtonFace;
   }
-  .adw-top-section-button:is(:focus-visible, [data-ui-pressed]) .adw-top-section-fill {
-    background: Highlight;
+  .adw-top-section-button:focus-visible .adw-top-section-fill {
+    background: var(--ui-colour-button-focus-face);
+  }
+  .adw-top-section-button[data-ui-pressed] .adw-top-section-fill {
+    background: var(--ui-colour-button-pressed-face);
   }
 }

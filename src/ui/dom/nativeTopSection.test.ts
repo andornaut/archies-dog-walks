@@ -690,7 +690,8 @@ it("uses a local cyan face and translucent raster focus cue without the legacy c
   );
   expect(style).toContain(
     ".adw-top-section-button:focus-visible{" +
-      "--ui-button-focus-fill:var(--adw-cyan);--ui-button-focus-text:var(--adw-ink);}",
+      "--ui-button-focus-fill:var(--ui-colour-button-focus-face);" +
+      "--ui-button-focus-text:var(--ui-colour-button-focus-text);}",
   );
   expect(style).toContain(
     '.adw-top-section-button:focus-visible>.ui-button-face>[aria-hidden="true"]{opacity:0.65;}',
