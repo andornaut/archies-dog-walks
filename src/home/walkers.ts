@@ -1,7 +1,8 @@
 import { fillLine } from "@andornaut/game-kit/runtime/lines";
 
-import { HOME_TEXT_FIELDS, homeLine } from "../content/homeText.ts";
-import type { GameData, WalkerId } from "../data/types.ts";
+import { HOME_TEXT_FIELDS, homeLine } from "../content/index.ts";
+import type { WalkerId } from "../data/ids.ts";
+import type { GameData } from "../data/index.ts";
 import { agilityPercent, perkEffect } from "../rules/effectText.ts";
 import { walkerGoal } from "../rules/walkers.ts";
 import type { Owned, SaveDocument } from "../save/schema.ts";

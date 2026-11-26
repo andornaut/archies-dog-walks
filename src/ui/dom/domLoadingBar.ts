@@ -1,7 +1,7 @@
 import type { ProgressSource } from "@andornaut/game-kit/runtime/progressState";
 import { createDomProgressBar } from "@andornaut/game-kit/runtime/web/progress/dom/progressBar";
 
-import { SCREEN_CONFIG } from "../../data/screen.ts";
+import { SCREEN_CONFIG } from "../../data/index.ts";
 import { GAME_PROGRESS_STYLE, LOADING_TIMING } from "../progressBar.ts";
 
 export const LOADING_BAR_HEIGHT = 3;

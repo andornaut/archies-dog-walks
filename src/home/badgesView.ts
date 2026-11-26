@@ -2,16 +2,17 @@ import { fillLine, fillNames, wrapWords } from "@andornaut/game-kit/runtime/line
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
-import { badgeKey } from "../assets/spriteKeys.ts";
-import { BADGE_NAME_PAD, BADGE_STRIP } from "../data/layout.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
-import type {
-  Achievement,
-  AchievementCondition,
-  AchievementId,
-  AchievementTier,
-  GameData,
-} from "../data/types.ts";
+import { badgeKey } from "../assets/index.ts";
+import type { AchievementId } from "../data/ids.ts";
+import {
+  type Achievement,
+  type AchievementCondition,
+  type AchievementTier,
+  BADGE_NAME_PAD,
+  BADGE_STRIP,
+  type GameData,
+  SCREEN_CONFIG,
+} from "../data/index.ts";
 import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { type AchievementData, conditionTarget, isMoneyCondition } from "../rules/achievements.ts";

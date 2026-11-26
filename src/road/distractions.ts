@@ -2,9 +2,10 @@ import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
 import { type Random, weightedPick } from "@andornaut/game-kit/runtime/random";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
-import { minorObstacleSpriteKey } from "../assets/spriteKeys.ts";
-import { minorLook } from "../content/obstacleLooks.ts";
-import type { DistractionPattern, GameData, MinorObstacleId, Zone } from "../data/types.ts";
+import { minorObstacleSpriteKey } from "../assets/index.ts";
+import { minorLook } from "../content/index.ts";
+import type { MinorObstacleId } from "../data/ids.ts";
+import type { DistractionPattern, GameData, Zone } from "../data/index.ts";
 import { read, readTable } from "../rules/units.ts";
 import { type Box, overlaps } from "../runner/collision.ts";
 import { DART_VERGE_LANES, stopsOnVerge } from "../runner/dartOutcomes.ts";

@@ -1,8 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { gameData } from "../data/index.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
+import { gameData, SCREEN_CONFIG } from "../data/index.ts";
 import { LIST_FLING, type ScrollRule } from "../input/listScroll.ts";
 import { read } from "../rules/units.ts";
 import { paintRectMask } from "./rectMask.ts";

@@ -1,10 +1,10 @@
 import { type Point, type Rect, rectAboveIn } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
+import { kebabCase } from "../assets/index.ts";
 import { playEffect } from "../assets/phaser/sprites.ts";
-import { kebabCase } from "../assets/spriteKeys.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
-import type { Encounter, EncounterId } from "../data/types.ts";
+import type { EncounterId } from "../data/ids.ts";
+import { type Encounter, SCREEN_CONFIG } from "../data/index.ts";
 import { encounterFlashColour } from "../layout/bumpFlash.ts";
 import { burstWordPlace, COMIC_WORDS } from "../layout/comicWords.ts";
 import { PALETTE } from "../ui/palette.ts";

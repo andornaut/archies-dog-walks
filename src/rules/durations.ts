@@ -7,7 +7,7 @@ import type {
   SecondsKey,
   Upgrade,
   UpgradeDuration,
-} from "../data/types.ts";
+} from "../data/index.ts";
 import type { ActiveDebuff, Lasting, RunState } from "../state/runState.ts";
 import { modifiedStat } from "./modifiers.ts";
 import { read } from "./units.ts";

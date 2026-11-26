@@ -43,7 +43,12 @@ it.each([
   ["pwa/probe.ts", 'import "../tools/files.ts";', "import-x/no-restricted-paths"],
   ["rules/probe.ts", 'type T = typeof import("../state/runState.ts");', "no-restricted-syntax"],
   ["probeArea/probe.ts", "export const value = 1;", "no-restricted-syntax"],
-])("holds src/%s with %s to the bands", async (file, text, rule) => {
+  ["hud/probe.ts", 'import "../assets/index.ts";', undefined],
+  ["hud/probe.ts", 'import "../assets/manifest.ts";', "import-x/no-restricted-paths"],
+  ["hud/probe.ts", 'import "../data/layout.ts";', "import-x/no-restricted-paths"],
+  ["hud/probe.ts", 'import "../data/world.ts";', undefined],
+  ["assets/probe.ts", 'import "./manifest.ts";', undefined],
+])("holds src/%s with %s to the bands and the entries", async (file, text, rule) => {
   const results = await lint.lintText(text, { filePath: `src/${file}` });
   const found = results.flatMap(({ messages }) =>
     messages.flatMap(({ ruleId }) =>
@@ -53,4 +58,10 @@ it.each([
     ),
   );
   expect(found).toEqual(rule === undefined ? [] : [rule]);
+});
+
+it("refuses a module that imports its own group's entry, which imports it back", async () => {
+  const results = await lint.lintText('import "./index.ts";', { filePath: "src/data/layout.ts" });
+  const rules = results.flatMap(({ messages }) => messages.map(({ ruleId }) => ruleId));
+  expect(rules).toContain("import-x/no-cycle");
 });

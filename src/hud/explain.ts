@@ -1,8 +1,7 @@
 import { fillLine, fillNames } from "@andornaut/game-kit/runtime/lines";
 
-import { debuffIconKey } from "../assets/iconKeys.ts";
-import { dogPortraitKey, gearIconKey, walkerPortraitKey } from "../assets/spriteKeys.ts";
-import type { GameData } from "../data/types.ts";
+import { debuffIconKey, dogPortraitKey, gearIconKey, walkerPortraitKey } from "../assets/index.ts";
+import type { GameData } from "../data/index.ts";
 import {
   type DetailCard,
   type DetailPicture,

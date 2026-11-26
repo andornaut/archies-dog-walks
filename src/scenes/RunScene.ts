@@ -21,9 +21,8 @@ import {
 import type { InputEvent } from "../cheats/inputLog.ts";
 import type { RunSetup } from "../cheats/runSetup.ts";
 import { withSetupStart } from "../cheats/setupRun.ts";
-import { gameData } from "../data/index.ts";
-import { LANE_COUNT } from "../data/screen.ts";
-import type { DogId, ZoneId } from "../data/types.ts";
+import type { DogId, ZoneId } from "../data/ids.ts";
+import { gameData, LANE_COUNT } from "../data/index.ts";
 import { cardHintTriggers, startHintTriggers } from "../hud/hintTriggers.ts";
 import { homeQuestionNote, pauseNote } from "../hud/homeQuestion.ts";
 import { NOTHING_PAUSED, type RunPause, walkBackAction, walkPaused } from "../hud/topBar.ts";

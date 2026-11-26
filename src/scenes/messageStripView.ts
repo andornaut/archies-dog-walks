@@ -1,9 +1,8 @@
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { Scene } from "phaser";
 
-import { ownerCardFaceKey } from "../assets/spriteKeys.ts";
-import { gameData } from "../data/index.ts";
-import { SLICES } from "../data/layout.ts";
+import { ownerCardFaceKey } from "../assets/index.ts";
+import { gameData, SLICES } from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import {
   type FaceText,

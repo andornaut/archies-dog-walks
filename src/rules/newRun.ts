@@ -1,6 +1,6 @@
 import { pixels } from "@andornaut/game-kit/runtime/units";
 
-import type { Effect, GameData, Modifier } from "../data/types.ts";
+import type { Effect, GameData, Modifier } from "../data/index.ts";
 import { packFor, packOrder } from "../state/pack.ts";
 import type { EffectSource, Loadout, RunState } from "../state/runState.ts";
 import { cents } from "../units.ts";

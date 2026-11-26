@@ -1,4 +1,4 @@
-import type { GameData } from "../data/types.ts";
+import type { GameData } from "../data/index.ts";
 import { heartsOf, packDogs } from "../state/pack.ts";
 import type { EffectSource, RunState } from "../state/runState.ts";
 import type { Change, HeartChange } from "./causes.ts";

@@ -1,13 +1,7 @@
 import { type Pixels, pixels, type Seconds, seconds } from "@andornaut/game-kit/runtime/units";
 
-import type {
-  LiveTuning,
-  LuckyEncounterId,
-  World,
-  Zone,
-  ZoneId,
-  ZoneWeights,
-} from "../data/types.ts";
+import type { LuckyEncounterId, ZoneId } from "../data/ids.ts";
+import type { LiveTuning, World, Zone, ZoneWeights } from "../data/index.ts";
 import { read } from "./units.ts";
 
 interface ZoneStats {

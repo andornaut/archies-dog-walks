@@ -3,10 +3,9 @@ import { inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import { Core, Scene } from "phaser";
 
-import { domArtUrl } from "../assets/domArtFiles.ts";
-import { gameData } from "../data/index.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
-import type { AchievementId, DebuffId, DogId, HintTrigger } from "../data/types.ts";
+import { domArtUrl } from "../assets/files/index.ts";
+import type { AchievementId, DebuffId, DogId } from "../data/ids.ts";
+import { gameData, type HintTrigger, SCREEN_CONFIG } from "../data/index.ts";
 import { FEEDBACK as MENU_FEEDBACK } from "../home/feedback.ts";
 import { charmRing } from "../hud/charmRing.ts";
 import { createHudCards, type HudCards } from "../hud/dom/hudCards.ts";

@@ -3,18 +3,19 @@ import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 import { opaqueBoundsOfRgba } from "@andornaut/game-kit/runtime/opaqueBounds";
 import * as v from "valibot";
 
-import { isPlainObject, parseOrThrow } from "../assets/jsonSchema.ts";
 import {
   type AssetManifest,
   type FontAsset,
   type ImageAsset,
+  isPlainObject,
   parseManifest,
+  parseOrThrow,
   type SoundAsset,
   type SpriteAnchor,
+  spriteAnchor,
   type SpriteAsset,
-} from "../assets/manifest.ts";
-import { spriteAnchor } from "../assets/spriteAnchor.ts";
-import { standsOnGround } from "../assets/spriteKeys.ts";
+  standsOnGround,
+} from "../assets/index.ts";
 import { spriteSource } from "./atlas/atlasLayout.ts";
 import { type ArtFiles, jsonText } from "./files.ts";
 

@@ -3,7 +3,7 @@ import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene, Time } from "phaser";
 
 import { playTagOnce } from "../../assets/phaser/sprites.ts";
-import type { DogId } from "../../data/types.ts";
+import type { DogId } from "../../data/ids.ts";
 import { DEBUFF_GROUND, type DebuffHitEffect, HIT_ART } from "../../layout/hitEffects.ts";
 import { formationOrder } from "../../layout/packFormation.ts";
 import { tagFrame } from "../uiKit.ts";

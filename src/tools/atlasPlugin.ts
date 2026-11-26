@@ -4,8 +4,9 @@ import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 import { contentHash } from "@andornaut/game-kit/build/contentHash";
 import type { Plugin, ViteDevServer } from "vite";
 
-import { type ArtFileMap, artFileUrl } from "../assets/artUrl.ts";
 import {
+  type ArtFileMap,
+  artFileUrl,
   DOM_CHOICE_CARD_ART,
   DOM_DISABLED_ART_KEYS,
   DOM_SHEET_DIR,
@@ -14,8 +15,8 @@ import {
   type DomSheet,
   domSheetImagePath,
   domSheetJsonPath,
-} from "../assets/domArt.ts";
-import { parseManifest } from "../assets/manifest.ts";
+  parseManifest,
+} from "../assets/index.ts";
 import type { DomSheetJson } from "../ui/dom/sheetFrames.ts";
 import { ART_DIR, ART_MANIFEST, artManifestText, generateArtManifest } from "./artManifest.ts";
 import { buildAtlases, WEBP_PAGES } from "./atlas/atlasBuild.ts";

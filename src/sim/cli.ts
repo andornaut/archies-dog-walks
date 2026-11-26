@@ -8,8 +8,8 @@ import { isMainThread, parentPort, Worker, workerData } from "node:worker_thread
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
+import type { GearId } from "../data/ids.ts";
 import { gameData } from "../data/index.ts";
-import type { GearId } from "../data/types.ts";
 import { USAGE_EXIT_CODE, UsageError } from "../tools/usage.ts";
 import { DEFAULT_ROUTE_POLICY, MIXED_PAY_SHARE, POLICY_IDS, ROUTE_POLICY_IDS } from "./policies.ts";
 import {

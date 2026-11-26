@@ -4,10 +4,9 @@ import { containsPoint, insetRect, type Point, type Rect } from "@andornaut/game
 import { advanceWidth, type BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Scene } from "phaser";
 
-import { domArtUrl } from "../assets/domArtFiles.ts";
-import { dogFaceKey, gearIconKey } from "../assets/spriteKeys.ts";
-import { gameData } from "../data/index.ts";
-import { CHECK_SIZE, PLATE_PAD } from "../data/layout.ts";
+import { domArtUrl } from "../assets/files/index.ts";
+import { dogFaceKey, gearIconKey } from "../assets/index.ts";
+import { CHECK_SIZE, gameData, PLATE_PAD } from "../data/index.ts";
 import { FEEDBACK, shakeOffset } from "../home/feedback.ts";
 import type { Purchase } from "../home/home.ts";
 import { overlayRegion } from "../home/homeBar.ts";

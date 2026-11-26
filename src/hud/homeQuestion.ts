@@ -1,6 +1,6 @@
 import { fillLine } from "@andornaut/game-kit/runtime/lines";
 
-import type { GameData } from "../data/types.ts";
+import type { GameData } from "../data/index.ts";
 import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { currentZone, walkLength } from "../rules/route.ts";

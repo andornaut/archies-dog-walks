@@ -6,9 +6,15 @@ import {
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
-import { FACE_SIZE, FIRED_LINE, LOW_CHIP, MOMENT_PARTS } from "../data/layout.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
-import type { DogId, GameData } from "../data/types.ts";
+import type { DogId } from "../data/ids.ts";
+import {
+  FACE_SIZE,
+  FIRED_LINE,
+  type GameData,
+  LOW_CHIP,
+  MOMENT_PARTS,
+  SCREEN_CONFIG,
+} from "../data/index.ts";
 import { type FaceMood, faceMood } from "../rules/treats.ts";
 import { slotIndexOf } from "../state/pack.ts";
 import type { Pack, PackSlot } from "../state/runState.ts";

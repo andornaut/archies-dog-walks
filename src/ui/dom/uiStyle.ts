@@ -1,4 +1,4 @@
-import { SLICES } from "../../data/layout.ts";
+import { SLICES } from "../../data/index.ts";
 import { REFUSAL_STYLE } from "./refusal.ts";
 import { SETTINGS_STYLE } from "./settingsStyle.ts";
 

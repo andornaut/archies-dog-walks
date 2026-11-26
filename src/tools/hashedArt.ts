@@ -1,11 +1,15 @@
 import type { RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 import { contentHash } from "@andornaut/game-kit/build/contentHash";
 
-import { type ArtFileMap, artFileUrl } from "../assets/artUrl.ts";
-import { type AtlasManifest, packAtlasManifest } from "../assets/atlasManifest.ts";
-import type { DomSheet } from "../assets/domArt.ts";
-import type { AssetManifest } from "../assets/manifest.ts";
-import { usesPhaserArt } from "../assets/phaserArt.ts";
+import {
+  type ArtFileMap,
+  artFileUrl,
+  type AssetManifest,
+  type AtlasManifest,
+  type DomSheet,
+  packAtlasManifest,
+  usesPhaserArt,
+} from "../assets/index.ts";
 import { ART_MANIFEST } from "./artManifest.ts";
 import type { AtlasBuild } from "./atlas/atlasBuild.ts";
 import { type ArtCopy, CARD_GREY_COPY, DISABLED_COPY } from "./atlas/disabledFiles.ts";

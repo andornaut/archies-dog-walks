@@ -1,6 +1,6 @@
 import artFiles from "virtual:art-files";
 
-import { artFileUrl } from "./artUrl.ts";
+import { artFileUrl } from "../index.ts";
 
 // The URL of an art file by its path under /art/: in a build, its content-hashed copy, so the
 // code loads its own build's art whatever the service worker or the browser has cached. The

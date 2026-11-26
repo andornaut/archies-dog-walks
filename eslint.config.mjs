@@ -1,3 +1,4 @@
+import { globSync } from "node:fs";
 import { posix } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -92,7 +93,7 @@ const BANDS = [
       ["src/hud"],
     ],
   },
-  { band: "Platform", rows: [["src/pwa"], ["src/loadingProgress.ts"]] },
+  { band: "Platform", rows: [["src/assets/files", "src/pwa"], ["src/loadingProgress.ts"]] },
   {
     band: "Engine and views",
     rows: [
@@ -126,6 +127,18 @@ const GROUPS = BANDS.flatMap(({ rows }) => rows).flatMap((groups, row) =>
 );
 const SUPPORT = BANDS.at(-1).rows.flat();
 const LAYER_EXEMPT = [...TEST_FILES, "src/testing/**", "src/**/*.d.ts"];
+
+// Each folder group but src/testing/ has one public entry, its index.ts, and a module outside the
+// group imports only that entry: the group's other modules and its stylesheets stay internal, and
+// a group nested in it has an entry of its own. In src/data/ only these modules sit behind the
+// entry; every other module there is an authored data file, which any group imports directly.
+const DATA_BEHIND_ENTRY = ["layout.ts", "screen.ts", "types.ts"];
+// CLEANUP (added 2026-11-25): the bands whose groups have their entry so far. Remove it, holding
+// every group to its entry, once the last band has one (adw-0259 step 9).
+const ENTRY_BANDS = ["Foundation"];
+const ENTRY_GROUPS = BANDS.filter(({ band }) => ENTRY_BANDS.includes(band)).flatMap(({ rows }) =>
+  rows.flat(),
+);
 
 // The band rule reads import declarations, re-exports and dynamic imports, but not import() types.
 const IMPORT_TYPES = {
@@ -175,6 +188,28 @@ function nestedGroups(group) {
   return GROUPS.filter((other) => other.group.startsWith(`${group}/`));
 }
 
+// The zone that holds a lower folder group to its entry, for an importer outside it.
+function entryZone(group) {
+  const internal =
+    group === "src/data"
+      ? { except: [], from: DATA_BEHIND_ENTRY.map((file) => `${group}/${file}`) }
+      : {
+          except: [
+            "index.ts",
+            ...nestedGroups(group).map((nested) => posix.relative(group, nested.group)),
+            ...globSync(`${group}/**/*.css`, { cwd: ROOT }).map((file) =>
+              posix.relative(group, file),
+            ),
+          ],
+          from: group,
+        };
+  return {
+    ...internal,
+    message: `Import ${group}/ through its entry, ${group}/index.ts.`,
+    target: "src",
+  };
+}
+
 // One config per group, over the files it holds and no group nested in it does. Each zone forbids
 // one group in the same row or a higher one, except the groups nested in that one which sit lower
 // or are the importer's own.
@@ -193,12 +228,19 @@ function bandConfig({ group, row }) {
       target: "src",
     }),
   );
+  const entries = GROUPS.filter(
+    (other) =>
+      other.row < row &&
+      ENTRY_GROUPS.includes(other.group) &&
+      !other.group.endsWith(".ts") &&
+      other.group !== "src/testing",
+  ).map(({ group: other }) => entryZone(other));
   return {
     ...IMPORT_X,
     files: [groupFiles(group)],
     ignores: [...nestedGroups(group).map((nested) => groupFiles(nested.group)), ...LAYER_EXEMPT],
     rules: {
-      "import-x/no-restricted-paths": ["error", { basePath: ROOT, zones }],
+      "import-x/no-restricted-paths": ["error", { basePath: ROOT, zones: [...zones, ...entries] }],
       "no-restricted-syntax": [...sourceRules["no-restricted-syntax"], IMPORT_TYPES],
     },
   };

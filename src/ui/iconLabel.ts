@@ -1,6 +1,6 @@
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 
-import { ICON_LABEL_GAP, LABEL_ICON } from "../data/layout.ts";
+import { ICON_LABEL_GAP, LABEL_ICON } from "../data/index.ts";
 
 // A 16px icon beside its label: its art cell ICON_LABEL_GAP before the label's first ink column,
 // centred down the label's capitals with equal rows over and under them, an odd row under.

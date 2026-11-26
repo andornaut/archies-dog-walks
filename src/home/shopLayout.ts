@@ -7,7 +7,7 @@ import {
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { DOG_SLOTS } from "../data/dogSlots.ts";
-import { BODY_PITCH, LABEL_VALUE_GAP, PAGE, SHOP_PAGE } from "../data/layout.ts";
+import { BODY_PITCH, LABEL_VALUE_GAP, PAGE, SHOP_PAGE } from "../data/index.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { PAGE_LAYOUT, PAGE_TITLE_ROW } from "../ui/pageLayout.ts";

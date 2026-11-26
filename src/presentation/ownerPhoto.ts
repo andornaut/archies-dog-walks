@@ -1,6 +1,6 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { DOG_CARD_PARTS } from "../data/layout.ts";
+import { DOG_CARD_PARTS } from "../data/index.ts";
 
 // The owner's photo round their size-square face, its top-left at face: the face inside the
 // walk card's mat and frame.

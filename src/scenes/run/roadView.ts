@@ -2,9 +2,8 @@ import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type Scene, type Textures, WEBGL } from "phaser";
 
-import { backdropKey, roadStartKey, roadTileKey } from "../../assets/spriteKeys.ts";
-import { gameData } from "../../data/index.ts";
-import type { Zone } from "../../data/types.ts";
+import { backdropKey, roadStartKey, roadTileKey } from "../../assets/index.ts";
+import { gameData, type Zone } from "../../data/index.ts";
 import {
   drawRoad,
   type PixelImage,

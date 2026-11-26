@@ -1,7 +1,8 @@
 import { chanceRound, type Random, weightedPick } from "@andornaut/game-kit/runtime/random";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
-import type { GameData, GearId, LiveTuning } from "../data/types.ts";
+import type { GearId } from "../data/ids.ts";
+import type { GameData, LiveTuning } from "../data/index.ts";
 import { mapPack } from "../state/pack.ts";
 import type { EffectSource, ModifierSource, RunState } from "../state/runState.ts";
 import { clampHearts } from "../units.ts";

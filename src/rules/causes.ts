@@ -1,8 +1,9 @@
 import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 import { fillNames, signedText } from "@andornaut/game-kit/runtime/lines";
 
-import { minorObstacleName } from "../content/obstacleLooks.ts";
-import type { DogId, GameData, GearId } from "../data/types.ts";
+import { minorObstacleName } from "../content/index.ts";
+import type { DogId, GearId } from "../data/ids.ts";
+import type { GameData } from "../data/index.ts";
 import type { ActiveModifier, EffectSource, ModifierSource } from "../state/runState.ts";
 import { type Cents, type Hearts, roundDollars } from "../units.ts";
 import type { Contribution } from "./modifiers.ts";

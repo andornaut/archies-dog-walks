@@ -2,18 +2,16 @@ import { wrapWords } from "@andornaut/game-kit/runtime/lines";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { fontMetrics, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { DEPTH_STEPS } from "../assets/depthSteps.ts";
 import {
+  DEPTH_STEPS,
   GROUND_UI_KEYS,
   LOADING_ART,
   ROAD_HIT_SIZE,
   ROAD_SPRITE_SIZE,
   UNMEASURED_PREFIXES,
-} from "../assets/spriteKeys.ts";
-import { LOADING_WALKER_START } from "../data/layout.ts";
+} from "../assets/index.ts";
+import { type GameData, LANE_COUNT, LOADING_WALKER_START, ROAD_FAR_SCALE } from "../data/index.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
-import { LANE_COUNT, ROAD_FAR_SCALE } from "../data/screen.ts";
-import type { GameData } from "../data/types.ts";
 import { dotRects, HELP_LAYOUT, helpPager } from "../help/helpLayout.ts";
 import { END_LAYOUT } from "../home/endLayout.ts";
 import { overlayRegion } from "../home/homeBar.ts";

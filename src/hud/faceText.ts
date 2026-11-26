@@ -1,8 +1,8 @@
 import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
-import { INLINE_FACE } from "../data/layout.ts";
-import type { DogId, GameData } from "../data/types.ts";
+import type { DogId } from "../data/ids.ts";
+import { type GameData, INLINE_FACE } from "../data/index.ts";
 import { type NameData, type NameMark, pilled } from "../presentation/effectNames.ts";
 import type { FaceMood } from "../rules/treats.ts";
 

@@ -9,7 +9,7 @@ import {
   seconds,
 } from "@andornaut/game-kit/runtime/units";
 
-import type { LiveTuning, NumberKeys, UnitGroup } from "../data/types.ts";
+import type { LiveTuning, NumberKeys, UnitGroup } from "../data/index.ts";
 import { type Cents, dollarsToCents } from "../units.ts";
 
 // What reading a value from each tuning group gives. Hearts values in the tuning are

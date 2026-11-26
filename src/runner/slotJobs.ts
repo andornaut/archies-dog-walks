@@ -1,4 +1,4 @@
-import type { SpawnSlotRole } from "../data/types.ts";
+import type { SpawnSlotRole } from "../data/index.ts";
 import {
   SLOT_ROLES,
   type SlotConfiguration,

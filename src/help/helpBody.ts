@@ -1,6 +1,6 @@
 import { fillNames } from "@andornaut/game-kit/runtime/lines";
 
-import type { GameData, HelpPage } from "../data/types.ts";
+import type { GameData, HelpPage } from "../data/index.ts";
 import { dodgeInText, formatDollars } from "../rules/effectText.ts";
 import { read, readTable } from "../rules/units.ts";
 

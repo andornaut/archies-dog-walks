@@ -3,9 +3,9 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 
-import { DETAIL_WELL_KEY, ownerFaceKey } from "../assets/spriteKeys.ts";
+import { DETAIL_WELL_KEY, ownerFaceKey } from "../assets/index.ts";
+import type { GameData } from "../data/index.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
-import type { GameData } from "../data/types.ts";
 import { withNamePills } from "../presentation/effectNames.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";

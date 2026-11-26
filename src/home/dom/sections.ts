@@ -1,6 +1,6 @@
 import { type BitmapFont, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { SLICES } from "../../data/layout.ts";
+import { SLICES } from "../../data/index.ts";
 import { type DomArtSource, sheetArt, sheetNineSlice } from "../../ui/dom/artElements.ts";
 import { cutDomArt } from "../../ui/dom/domCuts.ts";
 import { fillPart } from "../../ui/dom/parts.ts";

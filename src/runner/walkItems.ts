@@ -1,12 +1,5 @@
-import type {
-  Encounter,
-  EncounterId,
-  GameData,
-  GearId,
-  MinorObstacleId,
-  Movement,
-  SkinId,
-} from "../data/types.ts";
+import type { EncounterId, GearId, MinorObstacleId, SkinId } from "../data/ids.ts";
+import type { Encounter, GameData, Movement } from "../data/index.ts";
 import type { MoverItem } from "./movers.ts";
 import { type Footprint, SINGLE_CELL, type SpawnEvent } from "./spawning.ts";
 

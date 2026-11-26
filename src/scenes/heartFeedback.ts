@@ -1,8 +1,8 @@
 import { insetRect, type Point, type Rect, ringRects } from "@andornaut/game-kit/runtime/rect";
 import type { Scene, Tweens } from "phaser";
 
-import { SCREEN_CONFIG } from "../data/screen.ts";
-import type { DogId } from "../data/types.ts";
+import type { DogId } from "../data/ids.ts";
+import { SCREEN_CONFIG } from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import {
   FEEDBACK,

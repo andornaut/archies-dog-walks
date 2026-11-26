@@ -3,8 +3,7 @@ import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
 import { playTagOnce } from "../assets/phaser/sprites.ts";
-import { gameData } from "../data/index.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
+import { gameData, SCREEN_CONFIG } from "../data/index.ts";
 import { chipLeft, FEEDBACK, FLY_HEART, type LabelAnchor, stackOverPop } from "../hud/feedback.ts";
 import { changeChipAt } from "../hud/hudLanes.ts";
 import { COMIC_WORDS } from "../layout/comicWords.ts";

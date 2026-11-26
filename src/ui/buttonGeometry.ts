@@ -1,6 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { BUTTON_FACE_EDGE, BUTTON_LIP_PX, BUTTON_SIZE } from "../data/layout.ts";
+import { BUTTON_FACE_EDGE, BUTTON_LIP_PX, BUTTON_SIZE } from "../data/index.ts";
 
 // Standard button geometry in game pixels. Text uses the existing fixed font sizes.
 export { BUTTON_SIZE };

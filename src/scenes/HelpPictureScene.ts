@@ -2,8 +2,7 @@ import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { Events, type GameObjects, Scene, Scenes } from "phaser";
 
-import { gameData } from "../data/index.ts";
-import type { HelpPictureId } from "../data/types.ts";
+import { gameData, type HelpPictureId } from "../data/index.ts";
 import {
   type DragLoop,
   type DragMoment,

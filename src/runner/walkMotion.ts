@@ -1,6 +1,6 @@
 import { type Pixels, pixels } from "@andornaut/game-kit/runtime/units";
 
-import type { GameData } from "../data/types.ts";
+import type { GameData } from "../data/index.ts";
 import { currentZone } from "../rules/route.ts";
 import { read } from "../rules/units.ts";
 import { packAgility } from "../rules/walkers.ts";

@@ -1,18 +1,16 @@
 import { resolveThreshold } from "@andornaut/game-kit/runtime/achievements";
 import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 
-import { minorObstacleNames } from "../content/obstacleLooks.ts";
+import { minorObstacleNames } from "../content/index.ts";
+import type { DebuffId, EncounterId, MinorObstacleId } from "../data/ids.ts";
 import type {
   Achievement,
   AchievementCondition,
-  DebuffId,
-  EncounterId,
   GameData,
-  MinorObstacleId,
   OptionPicks,
   TallyId,
   Threshold,
-} from "../data/types.ts";
+} from "../data/index.ts";
 import type { RunState } from "../state/runState.ts";
 import type { Cents } from "../units.ts";
 import { walkLength } from "./route.ts";

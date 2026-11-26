@@ -1,7 +1,7 @@
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
-import { gameData } from "../data/index.ts";
-import type { DogId, GameData, GearId, WalkerId } from "../data/types.ts";
+import type { DogId, GearId, WalkerId } from "../data/ids.ts";
+import { type GameData, gameData } from "../data/index.ts";
 import { walkLength } from "../rules/route.ts";
 import { MAX_RUN_DOGS } from "../save/schema.ts";
 import { browserToolsOn, pageSearch } from "./browserTools.ts";

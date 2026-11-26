@@ -3,7 +3,7 @@ import { insetRect, type Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene, Tweens } from "phaser";
 
 import { playEffect } from "../assets/phaser/sprites.ts";
-import { SLICES } from "../data/layout.ts";
+import { SLICES } from "../data/index.ts";
 import { loopFrame } from "../home/feedback.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { PALETTE } from "../ui/palette.ts";

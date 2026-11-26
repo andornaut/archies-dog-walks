@@ -2,8 +2,7 @@ import { readFile } from "node:fs/promises";
 
 import type { Plugin } from "vite";
 
-import { gameData } from "../../data/index.ts";
-import type { GameData } from "../../data/types.ts";
+import { type GameData, gameData } from "../../data/index.ts";
 
 const WEB_MANIFEST = "manifest.webmanifest";
 const DESCRIPTION = '"%INSTALL_DESCRIPTION%"';

@@ -7,9 +7,8 @@ import {
 import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 import { HIT_RULE } from "@andornaut/game-kit/runtime/ui/hitAreas";
 
-import { HOME_SCREEN, MIN_PRESS } from "../data/layout.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
-import type { DogId } from "../data/types.ts";
+import type { DogId } from "../data/ids.ts";
+import { HOME_SCREEN, MIN_PRESS, SCREEN_CONFIG } from "../data/index.ts";
 import type { PackPlacement } from "../layout/packFormation.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { ownerPhotoRect } from "../presentation/ownerPhoto.ts";

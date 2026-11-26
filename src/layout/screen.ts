@@ -1,4 +1,4 @@
-import { ROAD_FAR_SCALE, SCREEN_CONFIG } from "../data/screen.ts";
+import { ROAD_FAR_SCALE, SCREEN_CONFIG } from "../data/index.ts";
 import { TUNING } from "../data/tuning.ts";
 import { roadCameraFor } from "./projection.ts";
 import { screenLayout, walkerFootY } from "./screenLayout.ts";

@@ -1,6 +1,7 @@
 import { fillLine, fillNames } from "@andornaut/game-kit/runtime/lines";
 
-import type { Achievement, DebuffId, DogId, EncounterId, GameData, GearId } from "../data/types.ts";
+import type { DebuffId, DogId, EncounterId, GearId } from "../data/ids.ts";
+import type { Achievement, GameData } from "../data/index.ts";
 import { debuffNameMarks } from "../presentation/effectNames.ts";
 import { achievementLabel } from "../rules/achievements.ts";
 import {

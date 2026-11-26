@@ -1,4 +1,4 @@
-import { domArtPath } from "../../assets/domArt.ts";
+import { domArtPath } from "../../assets/index.ts";
 import { type BadgeCardView, CONFETTI } from "../../home/badgeCardView.ts";
 import { textPart } from "../../home/dom/detailText.ts";
 import { type DomPart, fillPart, framelessView, panelFramePart } from "../../ui/dom/parts.ts";

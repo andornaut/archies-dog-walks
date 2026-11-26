@@ -1,4 +1,4 @@
-import type { GameData } from "../data/types.ts";
+import type { GameData } from "../data/index.ts";
 import { MODAL, modalActionWidth, modalFamilyWidth } from "./modal/layout.ts";
 import type { PanelMeasure } from "./modal/types.ts";
 

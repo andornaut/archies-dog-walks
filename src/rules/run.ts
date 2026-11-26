@@ -1,4 +1,5 @@
-import type { DogId, GameData, LiveTuning } from "../data/types.ts";
+import type { DogId } from "../data/ids.ts";
+import type { GameData, LiveTuning } from "../data/index.ts";
 import { mapPack, packDogs } from "../state/pack.ts";
 import type { ActiveModifier, EndReason, RunState } from "../state/runState.ts";
 import { addCents, type Cents, cents, roundDollars } from "../units.ts";

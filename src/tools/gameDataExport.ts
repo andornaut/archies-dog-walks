@@ -1,4 +1,3 @@
-import { SKIP_CARD_ART } from "../assets/cardArt.ts";
 import {
   backdropKey,
   cardFrameTag,
@@ -15,22 +14,21 @@ import {
   ownerFaceKey,
   roadStartKey,
   roadTileKey,
+  SKIP_CARD_ART,
   zoneIconKey,
-} from "../assets/spriteKeys.ts";
+} from "../assets/index.ts";
 import { DEV_GAME_GLOBAL } from "../cheats/browserTools.ts";
-import { minorLook, obstacleSkins } from "../content/obstacleLooks.ts";
+import { minorLook, obstacleSkins } from "../content/index.ts";
 import type {
-  CardOption,
-  CardSource,
   DogId,
   EncounterId,
-  GameData,
   GearId,
   MinorObstacleId,
   ObstacleEncounterId,
   UpgradeId,
   WalkerId,
-} from "../data/types.ts";
+} from "../data/ids.ts";
+import type { CardOption, CardSource, GameData } from "../data/index.ts";
 import { sizeHearts } from "../rules/dogs.ts";
 import { upgradeDuration } from "../rules/durations.ts";
 import { effectText, gearShort, upgradeLine } from "../rules/effectText.ts";

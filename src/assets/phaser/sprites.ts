@@ -5,9 +5,13 @@ import type { GameObjects, Scene } from "phaser";
 
 import { type DepthArt, type DepthDraw, depthDraw } from "../../layout/depthScale.ts";
 import { SCALE_STEPS } from "../../layout/projection.ts";
-import type { SpriteAnchor } from "../manifest.ts";
-import { spriteAnchor } from "../spriteAnchor.ts";
-import { depthVariantKey, ROAD_SPRITE_SIZE, standsOnGround } from "../spriteKeys.ts";
+import {
+  depthVariantKey,
+  ROAD_SPRITE_SIZE,
+  type SpriteAnchor,
+  spriteAnchor,
+  standsOnGround,
+} from "../index.ts";
 
 // A shadow under a sprite drawn from key's art steps at depth, its drawn size over its 1x.
 export type Shadow = (key: string, depth: number, x: number, footY: number) => void;

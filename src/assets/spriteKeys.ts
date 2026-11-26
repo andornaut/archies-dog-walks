@@ -1,16 +1,5 @@
-import type {
-  AchievementId,
-  CardSource,
-  DogId,
-  EncounterId,
-  GameData,
-  GearId,
-  MinorLookId,
-  MovementKind,
-  Size,
-  WalkerId,
-  Zone,
-} from "../data/types.ts";
+import type { AchievementId, DogId, EncounterId, GearId, WalkerId } from "../data/ids.ts";
+import type { CardSource, GameData, MinorLookId, MovementKind, Size, Zone } from "../data/index.ts";
 import { depthStepOfScale } from "./depthSteps.ts";
 
 export const CARD_FRAME_KEY = "card-frame";

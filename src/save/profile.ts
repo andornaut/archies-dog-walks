@@ -11,7 +11,7 @@ import type {
   StoreSaveResult,
 } from "@andornaut/game-kit/runtime/save/saveStore";
 
-import type { AchievementId, HintId } from "../data/types.ts";
+import type { AchievementId, HintId } from "../data/ids.ts";
 import type { Change } from "../rules/causes.ts";
 import type { Cents } from "../units.ts";
 import {

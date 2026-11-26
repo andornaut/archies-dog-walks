@@ -1,8 +1,8 @@
 import type { Scene } from "phaser";
 
-import { ownerFaceKey } from "../assets/spriteKeys.ts";
+import { ownerFaceKey } from "../assets/index.ts";
+import type { DogId } from "../data/ids.ts";
 import { gameData } from "../data/index.ts";
-import type { DogId } from "../data/types.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import { OWNER_TAB, ownerTabRect } from "../hud/walkHud.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";

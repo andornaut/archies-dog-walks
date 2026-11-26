@@ -6,7 +6,7 @@ import {
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
-import { CHOICE_CARDS } from "../data/layout.ts";
+import { CHOICE_CARDS } from "../data/index.ts";
 import { CARD_CHARMS_HEIGHT } from "../layout/buffLayout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { CARD_HEADER, cardRowRects, type CardRowSpec } from "../ui/cardRow.ts";

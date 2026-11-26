@@ -5,8 +5,9 @@ import {
   hudUpgradeIconKey,
   perkIconKey,
   upgradeIconKey,
-} from "../assets/iconKeys.ts";
-import type { GameData, GearId, UpgradeId, WalkerId, WalkerPerkId } from "../data/types.ts";
+} from "../assets/index.ts";
+import type { GearId, UpgradeId, WalkerId, WalkerPerkId } from "../data/ids.ts";
+import type { GameData } from "../data/index.ts";
 import { gearSourceName } from "../rules/causes.ts";
 import { gearShort, perkEffect, upgradeLine } from "../rules/effectText.ts";
 import { walkLength } from "../rules/route.ts";

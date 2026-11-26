@@ -1,4 +1,5 @@
-import type { DogId, Encounter, EncounterId } from "../data/types.ts";
+import type { DogId, EncounterId } from "../data/ids.ts";
+import type { Encounter } from "../data/index.ts";
 import { packDogs } from "../state/pack.ts";
 import type { RunState } from "../state/runState.ts";
 

@@ -1,7 +1,8 @@
 import { fillLine } from "@andornaut/game-kit/runtime/lines";
 
-import { HOME_TEXT_FIELDS } from "../content/homeText.ts";
-import type { DogId, GameData, GearId, WalkerId } from "../data/types.ts";
+import { HOME_TEXT_FIELDS } from "../content/index.ts";
+import type { DogId, GearId, WalkerId } from "../data/ids.ts";
+import type { GameData } from "../data/index.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { SIZE_AGILITY, sizeHearts } from "../rules/dogs.ts";
 import {

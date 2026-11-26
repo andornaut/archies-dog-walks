@@ -5,7 +5,7 @@ import {
   progressAt,
 } from "@andornaut/game-kit/runtime/motion";
 
-import type { MoveCount, SignatureProfile } from "../data/types.ts";
+import type { MoveCount, SignatureProfile } from "../data/index.ts";
 
 interface SignatureGeometry {
   readonly cellLength: number;

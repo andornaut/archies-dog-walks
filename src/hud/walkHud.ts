@@ -8,17 +8,18 @@ import {
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { gameData } from "../data/index.ts";
+import type { DebuffId, DogId } from "../data/ids.ts";
 import {
   DEBUFF_BAR,
   DOG_CARD_PARTS,
+  type GameData,
+  gameData,
   OWNER_TAB,
+  SCREEN_CONFIG,
   SPARE_TREAT_PIP,
   TOP_BAR_SIZES,
   WALK_BAR_PARTS,
-} from "../data/layout.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
-import type { DebuffId, DogId, GameData } from "../data/types.ts";
+} from "../data/index.ts";
 import type { ScreenLayout } from "../layout/screenLayout.ts";
 import { type EffectItem, maxEffects } from "../presentation/effectIcons.ts";
 import type { OwnerNameLine } from "../presentation/ownerName.ts";

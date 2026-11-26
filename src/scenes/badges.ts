@@ -2,8 +2,8 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
 import { playTagOnce } from "../assets/phaser/sprites.ts";
+import type { AchievementId } from "../data/ids.ts";
 import { gameData } from "../data/index.ts";
-import type { AchievementId } from "../data/types.ts";
 import {
   type BadgeCardView,
   badgeCardView,

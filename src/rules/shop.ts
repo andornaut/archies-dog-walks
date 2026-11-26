@@ -1,4 +1,4 @@
-import type { GameData, LiveTuning, PriceKey, Unlock } from "../data/types.ts";
+import type { GameData, LiveTuning, PriceKey, Unlock } from "../data/index.ts";
 import { type Cents, cents } from "../units.ts";
 import { readTable } from "./units.ts";
 

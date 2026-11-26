@@ -6,8 +6,9 @@ import {
   laidGlyphs,
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { ownerFaceKey } from "../assets/spriteKeys.ts";
-import type { DogId, GameData } from "../data/types.ts";
+import { ownerFaceKey } from "../assets/index.ts";
+import type { DogId } from "../data/ids.ts";
+import type { GameData } from "../data/index.ts";
 import { withNamePills } from "../presentation/effectNames.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";

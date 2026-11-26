@@ -2,9 +2,8 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { pageToGame } from "@andornaut/game-kit/runtime/view/pagePoint";
 import { Core, type Scene, Scenes } from "phaser";
 
-import { domArtUrl } from "../assets/domArtFiles.ts";
-import { gameData } from "../data/index.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
+import { domArtUrl } from "../assets/files/index.ts";
+import { gameData, SCREEN_CONFIG } from "../data/index.ts";
 import type { HelpView } from "../help/helpView.ts";
 import type { BadgeCardView } from "../home/badgeCardView.ts";
 import type { DetailCardView } from "../home/detailCardView.ts";

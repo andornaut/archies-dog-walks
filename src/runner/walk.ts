@@ -3,15 +3,8 @@ import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 import { chance, type Random } from "@andornaut/game-kit/runtime/random";
 import { pixels } from "@andornaut/game-kit/runtime/units";
 
-import type {
-  CardSource,
-  DogId,
-  EncounterId,
-  GameData,
-  GearId,
-  MinorObstacleId,
-  MovementKind,
-} from "../data/types.ts";
+import type { DogId, EncounterId, GearId, MinorObstacleId } from "../data/ids.ts";
+import type { CardSource, GameData, MovementKind } from "../data/index.ts";
 import type { LaneDirection } from "../layout/lanes.ts";
 import { formationOrder } from "../layout/packFormation.ts";
 import { countBump, countLandedBump, countTally } from "../rules/achievements.ts";

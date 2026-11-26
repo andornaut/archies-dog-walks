@@ -7,25 +7,27 @@ import {
 import { pixels } from "@andornaut/game-kit/runtime/units";
 import * as v from "valibot";
 
-import { obstacleSkins } from "../content/obstacleLooks.ts";
+import { obstacleSkins } from "../content/index.ts";
 import type {
   DebuffId,
   DogId,
   EncounterId,
-  GameData,
   GearId,
   MinorObstacleId,
-  Modifier,
-  ProbabilityKey,
-  Size,
   SkinId,
-  Stat,
-  TallyId,
-  UnitGroup,
   UpgradeId,
   WalkerId,
   ZoneId,
-} from "../data/types.ts";
+} from "../data/ids.ts";
+import type {
+  GameData,
+  Modifier,
+  ProbabilityKey,
+  Size,
+  Stat,
+  TallyId,
+  UnitGroup,
+} from "../data/index.ts";
 import { walkLength } from "../rules/route.ts";
 import type { MoverPath } from "../runner/movers.ts";
 import type { Session, StreamDraws } from "../runner/session.ts";

@@ -1,15 +1,14 @@
 import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 
+import type { DebuffId, DogId } from "../data/ids.ts";
 import type {
-  DebuffId,
-  DogId,
   Effect,
   GameData,
   HeartsEffect,
   MoneyEffect,
   SharedHeartsEffect,
   Target,
-} from "../data/types.ts";
+} from "../data/index.ts";
 import { heartsOf, mapPack, packDogs, packOrder, walkingAmong } from "../state/pack.ts";
 import type { ActiveModifier, EffectSource, RunState } from "../state/runState.ts";
 import { type Cents, cents, clampHearts, roundDollars } from "../units.ts";

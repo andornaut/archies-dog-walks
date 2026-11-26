@@ -10,9 +10,9 @@ import type { Scene } from "phaser";
 import { playEffect, tagTopY } from "../../assets/phaser/sprites.ts";
 import { debuffSoundCue } from "../../audio/sound.ts";
 import { choiceCues, contactCues, pullCues, stepCues } from "../../audio/stepCues.ts";
-import { minorLook, minorObstacleName } from "../../content/obstacleLooks.ts";
-import { gameData } from "../../data/index.ts";
-import type { AchievementId, DogId, EncounterId, HintId, HintTrigger } from "../../data/types.ts";
+import { minorLook, minorObstacleName } from "../../content/index.ts";
+import type { AchievementId, DogId, EncounterId, HintId } from "../../data/ids.ts";
+import { gameData, type HintTrigger } from "../../data/index.ts";
 import {
   type BuffPop,
   heartPopDogs,

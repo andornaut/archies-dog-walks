@@ -1,9 +1,8 @@
 import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Scene } from "phaser";
 
-import { gameData } from "../data/index.ts";
-import { FACE_SIZE } from "../data/layout.ts";
-import type { AchievementId, DogId } from "../data/types.ts";
+import type { AchievementId, DogId } from "../data/ids.ts";
+import { FACE_SIZE, gameData } from "../data/index.ts";
 import {
   BADGE_STRIP,
   badgeRowNames,

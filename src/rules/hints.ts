@@ -1,7 +1,8 @@
 import { fillNames } from "@andornaut/game-kit/runtime/lines";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
-import type { GameData, HintId, HintTrigger } from "../data/types.ts";
+import type { HintId } from "../data/ids.ts";
+import type { GameData, HintTrigger } from "../data/index.ts";
 import { read } from "./units.ts";
 
 function matches(trigger: HintTrigger, event: HintTrigger): boolean {

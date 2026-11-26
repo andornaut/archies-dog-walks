@@ -1,7 +1,7 @@
 import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
 import { pixels } from "@andornaut/game-kit/runtime/units";
 
-import type { GameData } from "../../data/types.ts";
+import type { GameData } from "../../data/index.ts";
 import { advanceLaneControl } from "../../runner/laneControl.ts";
 import type { SessionInput } from "../../runner/session.ts";
 import { steerWalk, type Walk } from "../../runner/walk.ts";

@@ -1,6 +1,7 @@
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
-import type { DebuffId, GameData } from "../data/types.ts";
+import type { DebuffId } from "../data/ids.ts";
+import type { GameData } from "../data/index.ts";
 import { inPill } from "../ui/namePills.ts";
 
 // An effect's name where it sits beside its description, set in a pill of its kind's colours: a

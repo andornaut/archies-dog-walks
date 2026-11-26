@@ -6,17 +6,18 @@ import {
   trackInputModality,
 } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 
-import { badgeKey } from "../assets/spriteKeys.ts";
-import { gameData, onGameDataChange } from "../data/index.ts";
-import type {
-  GameData,
-  HintTrigger,
-  Modifier,
-  PackSize,
-  QuipMoment,
-  Unlock,
-  Zone,
-} from "../data/types.ts";
+import { badgeKey } from "../assets/index.ts";
+import {
+  type GameData,
+  gameData,
+  type HintTrigger,
+  type Modifier,
+  onGameDataChange,
+  type PackSize,
+  type QuipMoment,
+  type Unlock,
+  type Zone,
+} from "../data/index.ts";
 import { badgeGoalText } from "../home/badgesView.ts";
 import { achievementConditionText } from "../rules/achievements.ts";
 import { maxHearts, sizeHearts } from "../rules/dogs.ts";

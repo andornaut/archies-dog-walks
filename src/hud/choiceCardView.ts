@@ -7,9 +7,8 @@ import {
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { fittingText, type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
-import { SKIP_CARD_ART } from "../assets/cardArt.ts";
-import { cardFrameTag } from "../assets/spriteKeys.ts";
-import type { GameData } from "../data/types.ts";
+import { cardFrameTag, SKIP_CARD_ART } from "../assets/index.ts";
+import type { GameData } from "../data/index.ts";
 import type { DetailText } from "../home/detailCardView.ts";
 import { cardCharmPlates, cardCharmWidth } from "../layout/buffLayout.ts";
 import {

@@ -1,6 +1,6 @@
 import type { Random } from "@andornaut/game-kit/runtime/random";
 
-import type { MoveCount } from "../data/types.ts";
+import type { MoveCount } from "../data/index.ts";
 import type { MoverDraws, MoverMotion, MoverSpec, MoverVariation } from "./moverModel.ts";
 
 // How many move delays and lengths each mover draws: as many as the most moves any kind makes.

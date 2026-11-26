@@ -2,7 +2,7 @@ import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
 import { containsPoint, type Point } from "@andornaut/game-kit/runtime/rect";
 import { Core, Scene } from "phaser";
 
-import { domArtUrl } from "../assets/domArtFiles.ts";
+import { domArtUrl } from "../assets/files/index.ts";
 import { gameData } from "../data/index.ts";
 import { type BadgeView, badgeWall } from "../home/badgesView.ts";
 import { FEEDBACK } from "../home/feedback.ts";

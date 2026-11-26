@@ -2,8 +2,7 @@ import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { Scene, Scenes } from "phaser";
 
-import { gameData } from "../data/index.ts";
-import type { HelpPictureId } from "../data/types.ts";
+import { gameData, type HelpPictureId } from "../data/index.ts";
 import { helpActionForKey, helpActionForPointer } from "../help/helpInput.ts";
 import { HELP_LAYOUT, type HelpActionBounds } from "../help/helpLayout.ts";
 import { applyHelpAction, type HelpAction } from "../help/helpPaging.ts";

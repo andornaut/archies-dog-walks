@@ -1,5 +1,5 @@
-import { domArtPath } from "../../assets/domArt.ts";
-import { domArtUrl } from "../../assets/domArtFiles.ts";
+import { domArtUrl } from "../../assets/files/index.ts";
+import { domArtPath } from "../../assets/index.ts";
 import {
   loadedSheet,
   type SheetFrame,

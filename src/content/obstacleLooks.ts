@@ -1,4 +1,5 @@
-import type { GameData, MinorLookId, MinorObstacleId, SkinId } from "../data/types.ts";
+import type { MinorObstacleId, SkinId } from "../data/ids.ts";
+import type { GameData, MinorLookId } from "../data/index.ts";
 
 type LookData = Pick<GameData, "minorObstacles">;
 

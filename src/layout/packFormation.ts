@@ -2,8 +2,8 @@ import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import { DOGS } from "../data/dogs.ts";
-import { LANE_COUNT, SCREEN_CONFIG } from "../data/screen.ts";
-import type { DogId, Size, WalkerId } from "../data/types.ts";
+import type { DogId, WalkerId } from "../data/ids.ts";
+import { LANE_COUNT, SCREEN_CONFIG, type Size } from "../data/index.ts";
 import { packOrder } from "../state/pack.ts";
 import { distanceAtY, type RoadProjection, scaleAt } from "./projection.ts";
 

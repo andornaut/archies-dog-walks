@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { GEAR_ICON } from "../data/layout.ts";
-import type { GameData, GearId } from "../data/types.ts";
+import type { GearId } from "../data/ids.ts";
+import { type GameData, GEAR_ICON } from "../data/index.ts";
 import type { PanelText } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";
 

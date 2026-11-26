@@ -2,7 +2,8 @@ import { SECONDS_EPSILON } from "@andornaut/game-kit/runtime/clock/fixedStep";
 import type { Random } from "@andornaut/game-kit/runtime/random";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
-import type { DebuffDriftMovement, DebuffId, GameData } from "../data/types.ts";
+import type { DebuffId } from "../data/ids.ts";
+import type { DebuffDriftMovement, GameData } from "../data/index.ts";
 import type { LaneDirection } from "../layout/lanes.ts";
 import { read } from "../rules/units.ts";
 import { laneBlockedForPull, type PullData, type PullGeometry } from "./pulls.ts";

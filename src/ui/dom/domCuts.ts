@@ -1,6 +1,6 @@
 import { cutFrame } from "@andornaut/game-kit/runtime/web/ui/dom/sheetFrames";
 
-import { domArtPath } from "../../assets/domArt.ts";
+import { domArtPath } from "../../assets/index.ts";
 import type { DomArtSource } from "./artElements.ts";
 import { type DomSheetJson, sheetFrame } from "./sheetFrames.ts";
 

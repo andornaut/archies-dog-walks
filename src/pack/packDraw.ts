@@ -1,6 +1,6 @@
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 
-import type { DogId } from "../data/types.ts";
+import type { DogId } from "../data/ids.ts";
 import { COLLAR_HEIGHTS, leashHand, type PackPlacement } from "../layout/packFormation.ts";
 
 // How every screen draws the pack: the walk, the start screen's gate and the end screen's return

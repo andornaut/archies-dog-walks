@@ -5,6 +5,11 @@
   "license": "CC-BY-NC-SA-4.0",
   "private": true,
   "type": "module",
+  "sideEffects": [
+    "*.css",
+    "./src/crash/crashScreen.ts",
+    "./src/crash/install.ts"
+  ],
   "engines": {
     "node": "^24.22.2 || ^26.12.0"
   },

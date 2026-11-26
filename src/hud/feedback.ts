@@ -1,6 +1,6 @@
 import { type Point, type Rect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 
-import { FLY_REACH_ICON_GAP } from "../data/layout.ts";
+import { FLY_REACH_ICON_GAP } from "../data/index.ts";
 import { type Cents, cents } from "../units.ts";
 import { REACH_ICON } from "./hudLanes.ts";
 

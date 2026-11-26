@@ -1,13 +1,13 @@
+import type { DogId } from "../data/ids.ts";
 import type {
   Dog,
-  DogId,
   GameData,
   LiveTuning,
   Modifier,
   MultiplierKey,
   PackSize,
   Size,
-} from "../data/types.ts";
+} from "../data/index.ts";
 import type { RunState } from "../state/runState.ts";
 import { clampHearts, type Hearts } from "../units.ts";
 import { modifiedStat } from "./modifiers.ts";

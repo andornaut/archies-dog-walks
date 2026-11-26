@@ -1,7 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { BUTTON_SIZE, WIDE_BUTTON_X } from "../data/layout.ts";
-import type { ScreenConfig } from "../data/screen.ts";
+import { BUTTON_SIZE, type ScreenConfig, WIDE_BUTTON_X } from "../data/index.ts";
 
 // The smallest tap target each way, in game pixels (MIN_PRESS).
 export const MIN_TAP_SIZE = BUTTON_SIZE.icon.target;

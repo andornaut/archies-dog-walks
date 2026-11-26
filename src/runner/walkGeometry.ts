@@ -1,6 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { ROAD_HIT_SIZE } from "../assets/spriteKeys.ts";
+import { ROAD_HIT_SIZE } from "../assets/index.ts";
 import {
   packOnRoad,
   packOutline,

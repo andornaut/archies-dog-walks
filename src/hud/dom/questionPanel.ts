@@ -3,9 +3,7 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 
-import { BUTTON_SIZE } from "../../data/layout.ts";
-import { SCREEN_CONFIG } from "../../data/screen.ts";
-import type { GameData } from "../../data/types.ts";
+import { BUTTON_SIZE, type GameData, SCREEN_CONFIG } from "../../data/index.ts";
 import { MENU_TEXT_FIELDS } from "../../home/menuText.ts";
 import { cardNumberForKey, isConfirmKey, menuKeyActs } from "../../input/keyBindings.ts";
 import { closeFace } from "../../ui/closeControl.ts";

@@ -2,15 +2,8 @@ import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
 import { chanceRound, shuffled } from "@andornaut/game-kit/runtime/random";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
-import type {
-  EncounterId,
-  GameData,
-  MinorObstacleId,
-  ObstacleEncounterId,
-  SpawnSlotRole,
-  Zone,
-  ZoneId,
-} from "../data/types.ts";
+import type { EncounterId, MinorObstacleId, ObstacleEncounterId, ZoneId } from "../data/ids.ts";
+import type { GameData, SpawnSlotRole, Zone } from "../data/index.ts";
 import { PART_INSET } from "../layout/packFormation.ts";
 import { drawGearDrops } from "../rules/gearDrops.ts";
 import { modifiedStat } from "../rules/modifiers.ts";

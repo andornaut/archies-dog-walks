@@ -1,7 +1,7 @@
 import type { GameObjects, Scene } from "phaser";
 
-import { backdropKey } from "../../assets/spriteKeys.ts";
-import type { Zone } from "../../data/types.ts";
+import { backdropKey } from "../../assets/index.ts";
+import type { Zone } from "../../data/index.ts";
 import { BumpOverscan } from "./bumpOverscan.ts";
 import { DEPTH, LAYOUT } from "./stage.ts";
 

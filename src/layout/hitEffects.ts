@@ -1,13 +1,7 @@
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 
-import type {
-  DebuffId,
-  DogId,
-  Effect,
-  EncounterId,
-  GameData,
-  MinorObstacleId,
-} from "../data/types.ts";
+import type { DebuffId, DogId, EncounterId, MinorObstacleId } from "../data/ids.ts";
+import type { Effect, GameData } from "../data/index.ts";
 import type { ModifiedValue } from "../rules/modified.ts";
 import type { RunState } from "../state/runState.ts";
 

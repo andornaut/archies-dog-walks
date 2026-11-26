@@ -1,7 +1,8 @@
 import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
-import type { DogId, GameData } from "../data/types.ts";
+import type { DogId } from "../data/ids.ts";
+import type { GameData } from "../data/index.ts";
 import { dollarText } from "../presentation/currency.ts";
 import type { DogStats, Owned, SaveStats } from "../save/schema.ts";
 import { statsPage, ZERO_DOG_STATS } from "../save/stats.ts";

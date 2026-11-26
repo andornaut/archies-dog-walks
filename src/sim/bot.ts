@@ -2,7 +2,7 @@ import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
 import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import { chance, type Random } from "@andornaut/game-kit/runtime/random";
 
-import type { DebuffId, DogId } from "../data/types.ts";
+import type { DebuffId, DogId } from "../data/ids.ts";
 import { type LaneDirection, laneMask } from "../layout/lanes.ts";
 import { type RoadProjection, screenXAt } from "../layout/projection.ts";
 import { type LanedBox, type ScaledBox, sweptOverlapAt } from "../runner/collision.ts";

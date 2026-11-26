@@ -1,6 +1,6 @@
 import { type Scene, Scenes } from "phaser";
 
-import { domArtUrl } from "../assets/domArtFiles.ts";
+import { domArtUrl } from "../assets/files/index.ts";
 import {
   createNativeTopSection,
   type NativeTopSection,

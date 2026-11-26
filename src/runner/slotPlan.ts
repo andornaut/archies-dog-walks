@@ -1,4 +1,4 @@
-import type { SpawnSlotRole } from "../data/types.ts";
+import type { SpawnSlotRole } from "../data/index.ts";
 import { minimumSlotDelivery, type SlotDelivery } from "./slotDelivery.ts";
 import type { SlotPlacement } from "./slotFeasibility.ts";
 import type { AdmissionReport } from "./spawnAdmission.ts";

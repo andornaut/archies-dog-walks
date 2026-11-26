@@ -1,4 +1,4 @@
-import type { DebuffId, GearId, UpgradeId, WalkerPerkId } from "../data/types.ts";
+import type { DebuffId, GearId, UpgradeId, WalkerPerkId } from "../data/ids.ts";
 import { kebabCase } from "./spriteKeys.ts";
 
 // The 16x16 icon of a debuff, on its bar.

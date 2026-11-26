@@ -17,7 +17,7 @@ vi.mock("phaser", () => ({
   Core: { Events: { PRE_RENDER: "prerender" } },
   Scenes: { Events: { SHUTDOWN: "shutdown" } },
 }));
-vi.mock("../assets/artFiles.ts", () => ({ artUrl: (path: string) => path }));
+vi.mock("../assets/files/artFiles.ts", () => ({ artUrl: (path: string) => path }));
 vi.mock("./questionPanel.ts", () => ({
   followScene: (_scene: unknown, panel: unknown) => panel,
   htmlPanelInput: () => ({}),

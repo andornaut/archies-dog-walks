@@ -5,7 +5,7 @@ import {
   laidGlyphs,
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { SLICES } from "../../data/layout.ts";
+import { SLICES } from "../../data/index.ts";
 import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";
 import { type DomPart, fillPart, framedPart } from "../../ui/dom/parts.ts";
 import { createTextLine, namePillBoxes, placeText, setBox } from "../../ui/dom/pixelLine.ts";

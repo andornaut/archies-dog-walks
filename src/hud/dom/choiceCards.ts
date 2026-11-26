@@ -9,11 +9,8 @@ import {
   refuseButton,
 } from "@andornaut/game-kit/runtime/web/ui/dom/button";
 
-import { cardGreyPath } from "../../assets/cardArt.ts";
-import { DIFFICULTY_KEY } from "../../assets/spriteKeys.ts";
-import { SLICES } from "../../data/layout.ts";
-import { SCREEN_CONFIG } from "../../data/screen.ts";
-import type { GameData } from "../../data/types.ts";
+import { cardGreyPath, DIFFICULTY_KEY } from "../../assets/index.ts";
+import { type GameData, SCREEN_CONFIG, SLICES } from "../../data/index.ts";
 import { textPart } from "../../home/dom/detailText.ts";
 import { CHARM } from "../../layout/buffLayout.ts";
 import { SCREEN_LAYOUT } from "../../layout/screen.ts";

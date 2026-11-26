@@ -1,7 +1,7 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { CHANGE_CHIP, HUD_LANES, LABEL_ICON } from "../data/layout.ts";
+import { CHANGE_CHIP, HUD_LANES, LABEL_ICON } from "../data/index.ts";
 import type { ScreenLayout } from "../layout/screenLayout.ts";
 import { centredInkOffsets } from "../ui/centredInkBlock.ts";
 import { TEXT_STYLE } from "../ui/textFit.ts";

@@ -1,6 +1,7 @@
 import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
 
-import type { DogId, GameData, ObstacleEncounterId } from "../data/types.ts";
+import type { DogId, ObstacleEncounterId } from "../data/ids.ts";
+import type { GameData } from "../data/index.ts";
 import type { LaneDirection } from "../layout/lanes.ts";
 import { countTally } from "../rules/achievements.ts";
 import { modifiedStat } from "../rules/modifiers.ts";

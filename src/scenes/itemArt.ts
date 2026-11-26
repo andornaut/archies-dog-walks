@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { dogPortraitKey, gearIconKey } from "../assets/spriteKeys.ts";
+import { dogPortraitKey, gearIconKey } from "../assets/index.ts";
 import { gameData } from "../data/index.ts";
 import type { DetailPicture } from "../home/detail.ts";
 import type { Purchase } from "../home/home.ts";

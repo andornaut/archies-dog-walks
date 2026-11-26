@@ -1,6 +1,6 @@
 // How a tile, tab or row shows its interaction state, as ui-tile draws it: normal is cream,
 // selected gold, disabled flat grey. Colours are the scenes' PALETTE names.
-import { AFFORD_OUTSET, BUTTON_LIP_PX, SELECT_OUTSET } from "../data/layout.ts";
+import { AFFORD_OUTSET, BUTTON_LIP_PX, SELECT_OUTSET } from "../data/index.ts";
 import type { ButtonState, ItemLook, TileState } from "./interaction.ts";
 
 // Every colour a disabled, short or locked item draws in, the neutral greys among them:

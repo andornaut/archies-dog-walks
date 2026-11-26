@@ -1,6 +1,7 @@
 import { fillLine, fillNames } from "@andornaut/game-kit/runtime/lines";
 
-import type { GameData, WalkerId } from "../data/types.ts";
+import type { WalkerId } from "../data/ids.ts";
+import type { GameData } from "../data/index.ts";
 import { earningsKind } from "../home/endView.ts";
 import { signedDollarText } from "../presentation/currency.ts";
 import { perkIconKey } from "../presentation/effectIcons.ts";

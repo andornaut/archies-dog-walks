@@ -5,7 +5,7 @@ import type { Point } from "@andornaut/game-kit/runtime/rect";
 import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 import { createModalFrame } from "@andornaut/game-kit/runtime/web/ui/dom/modalFrame";
 
-import { SCREEN_CONFIG } from "../../data/screen.ts";
+import { SCREEN_CONFIG } from "../../data/index.ts";
 import { shopTabRects } from "../../home/shopLayout.ts";
 import type { PageFill, PageTab } from "../../home/shopPageView.ts";
 import { mountModalLifecycle, type NativeGesture } from "../../ui/dom/modalLifecycle.ts";

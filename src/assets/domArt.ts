@@ -1,7 +1,6 @@
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
-import { gameData } from "../data/index.ts";
-import type { GameData } from "../data/types.ts";
+import { type GameData, gameData } from "../data/index.ts";
 import { choiceCardAssets } from "./cardArt.ts";
 import {
   debuffIconKey,
@@ -210,7 +209,7 @@ export const DOM_ART_KEYS: ReadonlySet<string> = new Set([
 ]);
 
 // A DOM art file's logical path: an image's or a sprite sheet's PNG or frames, as its own files
-// under /art/ name them. domArtUrl (src/assets/artFiles.ts) resolves it to the key's DOM sheet.
+// under /art/ name them. domArtUrl (src/assets/files/domArtFiles.ts) resolves it to the key's DOM sheet.
 export function domArtPath(kind: "image" | "sheet", key: string, ext: "json" | "png"): string {
   return `${kind === "image" ? "images" : "sprites"}/${key}.${ext}`;
 }

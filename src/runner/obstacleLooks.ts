@@ -1,7 +1,8 @@
 import { type Random, randomPick } from "@andornaut/game-kit/runtime/random";
 
-import { zoneSkins } from "../content/obstacleLooks.ts";
-import type { GameData, MinorObstacleId, SkinId } from "../data/types.ts";
+import { zoneSkins } from "../content/index.ts";
+import type { MinorObstacleId, SkinId } from "../data/ids.ts";
+import type { GameData } from "../data/index.ts";
 
 type LookData = Pick<GameData, "minorObstacles">;
 

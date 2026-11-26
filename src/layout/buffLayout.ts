@@ -1,6 +1,6 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { BUFF_POP_PLACE, CHARM } from "../data/layout.ts";
+import { BUFF_POP_PLACE, CHARM } from "../data/index.ts";
 
 // The buff charm: the walk bar's ui-effect-well, size square, holding the buff's 20x20 icon at
 // icon,icon, the same on the road and the bar. Lit, it wears a ring-wide amber ring around the

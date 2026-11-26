@@ -1,6 +1,6 @@
 import type { Scene } from "phaser";
 
-import { SCREEN_CONFIG } from "../data/screen.ts";
+import { SCREEN_CONFIG } from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import { BUMP_FLASH, bumpBorder, bumpFlashOn } from "../layout/bumpFlash.ts";
 import { PALETTE } from "../ui/palette.ts";

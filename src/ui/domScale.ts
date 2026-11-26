@@ -1,6 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { SCREEN_CONFIG } from "../data/screen.ts";
+import { SCREEN_CONFIG } from "../data/index.ts";
 import { scrollbarArt, type ScrollbarRects } from "./scrollbar.ts";
 
 // The HTML interface's scale: how the #ui layer over the canvas maps game pixels to device

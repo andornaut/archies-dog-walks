@@ -1,8 +1,9 @@
 import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
-import { HOME_TEXT_FIELDS } from "../content/homeText.ts";
-import type { DogId, GameData, GearId, Size } from "../data/types.ts";
+import { HOME_TEXT_FIELDS } from "../content/index.ts";
+import type { DogId, GearId } from "../data/ids.ts";
+import type { GameData, Size } from "../data/index.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { quipLine } from "../rules/choices.ts";
 import { sizeHearts } from "../rules/dogs.ts";

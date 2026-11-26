@@ -1,4 +1,5 @@
-import type { DebuffId, DogId, EncounterId, LiveTuning, Stat } from "../data/types.ts";
+import type { DebuffId, DogId, EncounterId } from "../data/ids.ts";
+import type { LiveTuning, Stat } from "../data/index.ts";
 import type { ActiveModifier, ModifierSource } from "../state/runState.ts";
 import type { Change, ModifierCause } from "./causes.ts";
 import { statParts } from "./modifiers.ts";

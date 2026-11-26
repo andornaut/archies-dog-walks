@@ -1,7 +1,7 @@
 import { Core, type Scene, Scenes } from "phaser";
 
-import { domArtUrl } from "../assets/domArtFiles.ts";
-import type { DogId } from "../data/types.ts";
+import { domArtUrl } from "../assets/files/index.ts";
+import type { DogId } from "../data/ids.ts";
 import { BADGE_CHEER, BADGE_POP, type BadgeView } from "../home/badgesView.ts";
 import type { BadgeCelebrationView } from "../hud/dom/celebration.ts";
 import { showOrdinaryBadgeCelebration } from "../hud/dom/ordinaryBadgeCelebration.ts";

@@ -8,8 +8,8 @@ import {
   inkWidth,
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
+import { SCREEN_CONFIG } from "../../data/index.ts";
 import { MENU_TEXT } from "../../data/menuText.ts";
-import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { BUTTON_SIZE } from "../buttonGeometry.ts";
 import {
   deviceX,

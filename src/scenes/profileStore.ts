@@ -2,8 +2,8 @@ import { saveStore, type StoreLoadResult } from "@andornaut/game-kit/runtime/sav
 import { localSaveStorage } from "@andornaut/game-kit/runtime/web/save/dom/localSaveStorage";
 import { type Game, type Scene, Scenes } from "phaser";
 
+import type { AchievementId, HintId, WalkerId } from "../data/ids.ts";
 import { gameData } from "../data/index.ts";
-import type { AchievementId, HintId, WalkerId } from "../data/types.ts";
 import type { Change } from "../rules/causes.ts";
 import type { RunResult } from "../save/checkpoint.ts";
 import { saveContextFrom } from "../save/load.ts";

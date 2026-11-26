@@ -1,6 +1,6 @@
 import type { HoldRule } from "@andornaut/game-kit/runtime/input/hold";
 
-import type { LiveTuning } from "../data/types.ts";
+import type { LiveTuning } from "../data/index.ts";
 import { read } from "../rules/units.ts";
 
 // Every action reads the same live duration when its press begins.

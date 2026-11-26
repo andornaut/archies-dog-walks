@@ -5,8 +5,8 @@
 import { fillLine, wrapWords } from "@andornaut/game-kit/runtime/lines";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { SETTINGS_CARD } from "../data/layout.ts";
-import type { DebuffId, GameData, MenuText, UpgradeId, ZoneId } from "../data/types.ts";
+import type { DebuffId, UpgradeId, ZoneId } from "../data/ids.ts";
+import { type GameData, type MenuText, SETTINGS_CARD } from "../data/index.ts";
 import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
 import { SWITCH_STATE_GAP, switchRowHeight, switchStateCentre } from "../home/settings.ts";
 import { dollarText } from "../presentation/currency.ts";

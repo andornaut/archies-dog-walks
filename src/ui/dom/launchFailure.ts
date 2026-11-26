@@ -7,7 +7,7 @@ import {
 import { mountLoadingFailure } from "@andornaut/game-kit/runtime/web/progress/dom/loadingFailure";
 import { createModalLayer } from "@andornaut/game-kit/runtime/web/ui/dom/modalLayer";
 
-import { SCREEN_CONFIG } from "../../data/screen.ts";
+import { SCREEN_CONFIG } from "../../data/index.ts";
 import { bindRecoveryHold } from "./actionBinding.ts";
 import { loadingFailurePresentation } from "./loadingFailureStyle.ts";
 

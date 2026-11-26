@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { Cameras, Scene } from "phaser";
 
-import { SCREEN_CONFIG } from "../../data/screen.ts";
+import { SCREEN_CONFIG } from "../../data/index.ts";
 import { deviceFitOwned, worldFit, worldViewport } from "../worldFit.ts";
 
 const views = new WeakMap<Cameras.Scene2D.Camera, Rect>();

@@ -1,19 +1,21 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import type { Scene, Textures } from "phaser";
 
-import { artUrl } from "../artFiles.ts";
-import { filtersLinear, steppedBases } from "../atlasGroups.ts";
+import { artUrl } from "../files/index.ts";
 import {
   asepriteSheetOf,
+  type AssetManifest,
   type AtlasFrame,
   type AtlasManifest,
   atlasPageKey,
   type AtlasTexture,
   BASE_FRAME,
+  filtersLinear,
+  parseManifest,
+  steppedBases,
   unpackAtlasManifest,
-} from "../atlasManifest.ts";
-import { type AssetManifest, parseManifest } from "../manifest.ts";
-import { usesPhaserArt } from "../phaserArt.ts";
+  usesPhaserArt,
+} from "../index.ts";
 
 export { artUrl };
 

@@ -3,7 +3,6 @@ import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import type { GameObjects, Scene } from "phaser";
 
-import { addStandingSprite, ensurePlaceholder, type Shadow } from "../../assets/phaser/sprites.ts";
 import {
   encounterSpriteKey,
   gearDropSpriteKey,
@@ -14,11 +13,11 @@ import {
   WARNING_ARROW_KEY,
   WARNING_KEY,
   WARNING_WANDER_KEY,
-} from "../../assets/spriteKeys.ts";
-import { minorLooks } from "../../content/obstacleLooks.ts";
-import { gameData } from "../../data/index.ts";
-import { LANE_COUNT } from "../../data/screen.ts";
-import type { EncounterId, GearId, HintTrigger, MinorObstacleId } from "../../data/types.ts";
+} from "../../assets/index.ts";
+import { addStandingSprite, ensurePlaceholder, type Shadow } from "../../assets/phaser/sprites.ts";
+import { minorLooks } from "../../content/index.ts";
+import type { EncounterId, GearId, MinorObstacleId } from "../../data/ids.ts";
+import { gameData, type HintTrigger, LANE_COUNT } from "../../data/index.ts";
 import { moverHintTriggers } from "../../hud/hintTriggers.ts";
 import { obstacleParts } from "../../layout/obstacleArt.ts";
 import { herringNow } from "../../road/herrings.ts";

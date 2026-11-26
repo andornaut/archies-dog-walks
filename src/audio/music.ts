@@ -3,7 +3,7 @@
 
 import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 
-import type { Zone } from "../data/types.ts";
+import type { Zone } from "../data/index.ts";
 import { effectiveVolumes, type Mix } from "./sound.ts";
 
 // A fade between silence and full volume as a walk starts or ends.

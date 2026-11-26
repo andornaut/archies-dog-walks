@@ -1,7 +1,6 @@
 import type { HashedFiles } from "@andornaut/game-kit/build/precachePlugin";
 
-import type { ArtFileMap } from "../../assets/artUrl.ts";
-import { parseManifest } from "../../assets/manifest.ts";
+import { type ArtFileMap, parseManifest } from "../../assets/index.ts";
 import { SOUND_FORMATS } from "../../audio/soundFormat.ts";
 import { ART_MANIFEST } from "../artManifest.ts";
 

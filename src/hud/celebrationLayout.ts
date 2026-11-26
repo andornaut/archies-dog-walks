@@ -7,9 +7,8 @@ import {
 import type { FittedText } from "@andornaut/game-kit/runtime/text/textFit";
 import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 
-import { ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
-import { CELEBRATIONS } from "../data/layout.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
+import { ROAD_SPRITE_SIZE } from "../assets/index.ts";
+import { CELEBRATIONS, SCREEN_CONFIG } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { WIDE_BUTTON } from "../layout/screenLayout.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";

@@ -1,5 +1,5 @@
 import palette from "../../shared/palette.json" with { type: "json" };
-import { BUTTON_FACE_EDGE, BUTTON_LIP_PX, BUTTON_SIZE } from "../data/layout.ts";
+import { BUTTON_FACE_EDGE, BUTTON_LIP_PX, BUTTON_SIZE } from "../data/index.ts";
 import { MODAL } from "../ui/modalGeometry.ts";
 import { cssHex, PALETTE } from "../ui/palette.ts";
 import { CARD_PANEL, PAPER_PANEL } from "../ui/paperPanel.ts";

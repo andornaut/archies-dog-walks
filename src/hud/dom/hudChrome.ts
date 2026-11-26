@@ -1,9 +1,8 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { debuffIconKey } from "../../assets/iconKeys.ts";
-import { gameData } from "../../data/index.ts";
-import { SLICES } from "../../data/layout.ts";
-import type { DebuffId } from "../../data/types.ts";
+import { debuffIconKey } from "../../assets/index.ts";
+import type { DebuffId } from "../../data/ids.ts";
+import { gameData, SLICES } from "../../data/index.ts";
 import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import {
   effectIconFallback,

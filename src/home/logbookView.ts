@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { dogFaceKey } from "../assets/spriteKeys.ts";
-import type { GameData } from "../data/types.ts";
+import { dogFaceKey } from "../assets/index.ts";
+import type { GameData } from "../data/index.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { stackRows } from "../ui/pageLayout.ts";
 import { PALETTE } from "../ui/palette.ts";

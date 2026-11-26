@@ -1,4 +1,4 @@
-import { domArtPath } from "../../assets/domArt.ts";
+import { domArtPath } from "../../assets/index.ts";
 import type { DomArtSource } from "../../ui/dom/artElements.ts";
 import type { RequiredAsset } from "../../ui/dom/requiredAssets.ts";
 

@@ -16,7 +16,7 @@ import { Core, Game, Scale, WEBGL } from "phaser";
 import { DEV_GAME_GLOBAL } from "./cheats/browserTools.ts";
 import { pageRunSetup } from "./cheats/pageRunSetup.ts";
 import { CRASH_SCREEN } from "./crash/crashScreen.ts";
-import { SCREEN_CONFIG } from "./data/screen.ts";
+import { SCREEN_CONFIG } from "./data/index.ts";
 import { noteKeyPress } from "./input/keyNumbers.ts";
 import { bindPressAdmission, createCanvasPressAdmission } from "./input/phaser/pressAdmission.ts";
 import { lostTouches } from "./input/touches.ts";

@@ -1,5 +1,4 @@
-import { remapCardGrey } from "../../assets/cardArt.ts";
-import { DOM_CHOICE_CARD_ART, type DomCopySuffix } from "../../assets/domArt.ts";
+import { DOM_CHOICE_CARD_ART, type DomCopySuffix, remapCardGrey } from "../../assets/index.ts";
 import { greyForDisabledTile, greysOnTile } from "../../ui/disabledArt.ts";
 import { NEUTRAL_RAMP } from "../../ui/palette.ts";
 

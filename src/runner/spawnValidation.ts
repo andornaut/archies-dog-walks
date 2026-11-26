@@ -1,4 +1,4 @@
-import type { MovementKind } from "../data/types.ts";
+import type { MovementKind } from "../data/index.ts";
 import { isHerring } from "./dartOutcomes.ts";
 import {
   alternativeLanesOpen,

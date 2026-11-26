@@ -4,16 +4,8 @@ import { type Random, randomStream } from "@andornaut/game-kit/runtime/random";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { InputEvent } from "../cheats/inputLog.ts";
-import { LANE_COUNT } from "../data/screen.ts";
-import type {
-  AchievementId,
-  DebuffId,
-  DogId,
-  GameData,
-  GearId,
-  WalkerId,
-  ZoneId,
-} from "../data/types.ts";
+import type { AchievementId, DebuffId, DogId, GearId, WalkerId, ZoneId } from "../data/ids.ts";
+import { type GameData, LANE_COUNT } from "../data/index.ts";
 import { lastHeartOwnersOf, runCountersOf, type RunFacts } from "../rules/achievements.ts";
 import type { CardView, Choice, ChoiceData } from "../rules/choices.ts";
 import { newRun } from "../rules/newRun.ts";

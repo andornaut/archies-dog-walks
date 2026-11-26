@@ -1,5 +1,4 @@
-import { gameData } from "../data/index.ts";
-import type { GameData } from "../data/types.ts";
+import { type GameData, gameData } from "../data/index.ts";
 import { jsonText } from "./files.ts";
 import { gameDataExport } from "./gameDataExport.ts";
 import { layoutExport } from "./layoutExport.ts";

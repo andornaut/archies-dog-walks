@@ -1,6 +1,6 @@
 import type { LoadingFailurePresentation } from "@andornaut/game-kit/runtime/web/progress/dom/loadingFailure";
 
-import { BUTTON_SIZE, MODAL_SPACING, MODAL_WIDTHS } from "../../data/layout.ts";
+import { BUTTON_SIZE, MODAL_SPACING, MODAL_WIDTHS } from "../../data/index.ts";
 import { MODAL } from "../modalGeometry.ts";
 import { cssHex, PALETTE } from "../palette.ts";
 import { PAPER_PANEL } from "../paperPanel.ts";

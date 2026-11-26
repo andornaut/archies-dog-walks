@@ -1,7 +1,6 @@
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { ZONE_BANNER } from "../../data/layout.ts";
-import { SCREEN_CONFIG } from "../../data/screen.ts";
+import { SCREEN_CONFIG, ZONE_BANNER } from "../../data/index.ts";
 import { deviceX, deviceY, gridTransform } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";
 import { type DomArtSource, imageArt } from "./artElements.ts";

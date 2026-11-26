@@ -1,4 +1,4 @@
-import type { DogId } from "../data/types.ts";
+import type { DogId } from "../data/ids.ts";
 import type { LastWalk } from "../save/schema.ts";
 
 // The end screen's return home: the walker and pack walk up the front path, then the owners

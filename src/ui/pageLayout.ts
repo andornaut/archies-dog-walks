@@ -5,8 +5,7 @@ import {
   placeModalFrame,
 } from "@andornaut/game-kit/runtime/ui/modalFrame";
 
-import { PAGE, ROWS_PAGE, SHOP_PAGE, TOP_BAR_HEIGHT } from "../data/layout.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
+import { PAGE, ROWS_PAGE, SCREEN_CONFIG, SHOP_PAGE, TOP_BAR_HEIGHT } from "../data/index.ts";
 import { BUTTON_SIZE } from "./buttonGeometry.ts";
 import { arrangePanelActions } from "./modal/actionGroup.ts";
 import type { PanelButton, PanelMeasure } from "./modal/types.ts";

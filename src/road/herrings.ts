@@ -1,4 +1,4 @@
-import type { GameData } from "../data/types.ts";
+import type { GameData } from "../data/index.ts";
 import { hasLeftRoad, moverPlace, moverY } from "../runner/movers.ts";
 import { itemHeight } from "../runner/obstacleGeometry.ts";
 import type { SpawnEvent } from "../runner/spawning.ts";

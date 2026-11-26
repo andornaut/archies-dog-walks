@@ -1,8 +1,7 @@
 import { clampInto, containsPoint, type Point } from "@andornaut/game-kit/runtime/rect";
 import type { Input, Scene } from "phaser";
 
-import { gameData } from "../../data/index.ts";
-import { LANE_COUNT } from "../../data/screen.ts";
+import { gameData, LANE_COUNT } from "../../data/index.ts";
 import { gameplayAllowed, type RunPause, topBarButtonAt, walkPresses } from "../../hud/topBar.ts";
 import {
   debuffBarRects,

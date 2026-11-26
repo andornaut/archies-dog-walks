@@ -3,8 +3,9 @@
 
 import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
 
-import { kebabCase } from "../assets/spriteKeys.ts";
-import type { DebuffId, Encounter, EncounterId } from "../data/types.ts";
+import { kebabCase } from "../assets/index.ts";
+import type { DebuffId, EncounterId } from "../data/ids.ts";
+import type { Encounter } from "../data/index.ts";
 
 export type BaseCue =
   | "badge"

@@ -1,9 +1,8 @@
 import * as v from "valibot";
 
 import lightTable from "../../shared/lights.json" with { type: "json" };
-import { paletteColour } from "../assets/housePalette.ts";
-import { parseOrThrow } from "../assets/jsonSchema.ts";
-import type { ZoneId } from "../data/types.ts";
+import { paletteColour, parseOrThrow } from "../assets/index.ts";
+import type { ZoneId } from "../data/ids.ts";
 import { WORLD } from "../data/world.ts";
 
 // Lights: hard-stepped glows added over what lies under them, as art sets them out in

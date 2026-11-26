@@ -1,4 +1,4 @@
-import type { GameData } from "../data/types.ts";
+import type { GameData } from "../data/index.ts";
 import { packDogs } from "../state/pack.ts";
 import type { RunState } from "../state/runState.ts";
 import { baseMaxHearts, placeInPack } from "./dogs.ts";

@@ -1,4 +1,4 @@
-import type { DogId, GearId, WalkerId } from "../data/types.ts";
+import type { DogId, GearId, WalkerId } from "../data/ids.ts";
 import type { HomeLoadout } from "../home/home.ts";
 import { packDogsOf } from "../state/pack.ts";
 import type { Loadout } from "../state/runState.ts";

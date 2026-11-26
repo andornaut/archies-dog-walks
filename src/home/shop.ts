@@ -1,8 +1,8 @@
 import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
-import { HOME_TEXT_FIELDS, homeLine } from "../content/homeText.ts";
-import type { GameData } from "../data/types.ts";
+import { HOME_TEXT_FIELDS, homeLine } from "../content/index.ts";
+import type { GameData } from "../data/index.ts";
 import { capitalize, gearShort } from "../rules/effectText.ts";
 import { unlockPrice } from "../rules/shop.ts";
 import type { Owned } from "../save/schema.ts";

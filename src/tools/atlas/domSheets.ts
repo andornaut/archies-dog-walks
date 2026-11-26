@@ -5,12 +5,12 @@ import { encodeLosslessWebp } from "@andornaut/art-kit/build/webp";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import {
+  type AssetManifest,
   DOM_SHEETS,
   type DomSheet,
   domSheetImagePath,
   domSheetJsonPath,
-} from "../../assets/domArt.ts";
-import type { AssetManifest } from "../../assets/manifest.ts";
+} from "../../assets/index.ts";
 import type { DomSheetEntry, DomSheetJson } from "../../ui/dom/sheetFrames.ts";
 import { ATLAS_MAX_SIZE, spriteSource } from "./atlasLayout.ts";
 import type { ArtCopy } from "./disabledFiles.ts";

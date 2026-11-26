@@ -1,7 +1,7 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { type RenderFit, renderFit } from "@andornaut/game-kit/runtime/view/renderScale";
 
-import { SCREEN_CONFIG } from "../data/screen.ts";
+import { SCREEN_CONFIG } from "../data/index.ts";
 
 interface RenderScale {
   readonly gameSize: { readonly height: number; readonly width: number };

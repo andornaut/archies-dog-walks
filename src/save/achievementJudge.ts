@@ -6,7 +6,8 @@ import {
   resolveThreshold,
 } from "@andornaut/game-kit/runtime/achievements";
 
-import type { AchievementCondition, MinorObstacleId } from "../data/types.ts";
+import type { MinorObstacleId } from "../data/ids.ts";
+import type { AchievementCondition } from "../data/index.ts";
 import {
   type AchievementData,
   picksOf,

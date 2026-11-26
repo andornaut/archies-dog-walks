@@ -2,8 +2,8 @@ import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { MESSAGE_STRIP, OWNER_LEAD } from "../data/layout.ts";
-import type { DogId, GameData } from "../data/types.ts";
+import type { DogId } from "../data/ids.ts";
+import { type GameData, MESSAGE_STRIP, OWNER_LEAD } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { effectIconKey, type EffectItem } from "../presentation/effectIcons.ts";
 import type { NameMark } from "../presentation/effectNames.ts";

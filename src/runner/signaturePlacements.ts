@@ -1,4 +1,4 @@
-import type { SignatureProfile } from "../data/types.ts";
+import type { SignatureProfile } from "../data/index.ts";
 import { delayOf } from "./moverDraws.ts";
 import { blockCells, drawnHitLength, laneSpan, rowsCovering } from "./moverExtents.ts";
 import type { MoverPlacement, PlacementContext } from "./moverModel.ts";

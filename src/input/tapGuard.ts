@@ -1,4 +1,4 @@
-import type { LiveTuning } from "../data/types.ts";
+import type { LiveTuning } from "../data/index.ts";
 import { read } from "../rules/units.ts";
 
 // A choice card that breaks into the walk takes no

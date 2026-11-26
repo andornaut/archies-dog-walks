@@ -1,17 +1,14 @@
 import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 import { fillLine, fillNames, signedText } from "@andornaut/game-kit/runtime/lines";
 
-import { HOME_TEXT_FIELDS, homeLine } from "../content/homeText.ts";
+import { HOME_TEXT_FIELDS, homeLine } from "../content/index.ts";
+import type { DebuffId, DogId, EncounterId, GearId } from "../data/ids.ts";
 import type {
   Debuff,
-  DebuffId,
   DodgeEffect,
-  DogId,
   Duration,
   Effect,
-  EncounterId,
   GameData,
-  GearId,
   HeartsEffect,
   HomeText,
   LiveTuning,
@@ -25,7 +22,7 @@ import type {
   Target,
   Upgrade,
   WalkerPerk,
-} from "../data/types.ts";
+} from "../data/index.ts";
 import { type Cents, cents } from "../units.ts";
 import { heartsChangeText } from "./causes.ts";
 import type { ModifiedValue } from "./modified.ts";

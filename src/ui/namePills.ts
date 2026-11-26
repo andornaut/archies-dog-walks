@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { PILL, PILL_IMAGE_GAP } from "../data/layout.ts";
+import { PILL, PILL_IMAGE_GAP } from "../data/index.ts";
 import { centredInkOffsets } from "./centredInkBlock.ts";
 
 // A name set in a pill inside a line of text: a pale rounded box behind the name, laid into the

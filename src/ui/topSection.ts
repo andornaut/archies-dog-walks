@@ -7,8 +7,13 @@ import {
   pressedAction,
 } from "@andornaut/game-kit/runtime/ui/actionGroup";
 
-import { BUTTON_SIZE, MIN_PRESS, TOP_BAR_SIZES, WALK_BAR_PARTS } from "../data/layout.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
+import {
+  BUTTON_SIZE,
+  MIN_PRESS,
+  SCREEN_CONFIG,
+  TOP_BAR_SIZES,
+  WALK_BAR_PARTS,
+} from "../data/index.ts";
 import { TITLE_CAP_ROWS } from "./textFit.ts";
 import {
   TOP_BAR_FACE,

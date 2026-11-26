@@ -1,4 +1,4 @@
-import type { ZoneId } from "../data/types.ts";
+import type { ZoneId } from "../data/ids.ts";
 import { ZonePlanningError } from "../runner/session.ts";
 import type { AdmissionReport } from "../runner/spawnAdmission.ts";
 import type { SpawnAudit } from "../runner/spawnValidation.ts";

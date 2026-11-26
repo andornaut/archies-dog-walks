@@ -1,8 +1,9 @@
 import type { GameObjects, Scene } from "phaser";
 
+import { ownerFaceKey } from "../assets/index.ts";
 import { addStandingSprite, firstTag, playTag } from "../assets/phaser/sprites.ts";
-import { ownerFaceKey } from "../assets/spriteKeys.ts";
-import type { DogId, GameData } from "../data/types.ts";
+import type { DogId } from "../data/ids.ts";
+import type { GameData } from "../data/index.ts";
 
 // An owner's full-body 32x48 sprite, keyed by their dog like the faces.
 export function ownerSpriteKey(data: Pick<GameData, "dogs">, dog: DogId): string {

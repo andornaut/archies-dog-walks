@@ -8,8 +8,14 @@ import {
   sliderStepForKey,
 } from "@andornaut/game-kit/runtime/ui/slider";
 
-import { ICON_LABEL_GAP, LABEL_ICON, MIN_PRESS, SETTINGS_CARD, SLICES } from "../data/layout.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
+import {
+  ICON_LABEL_GAP,
+  LABEL_ICON,
+  MIN_PRESS,
+  SCREEN_CONFIG,
+  SETTINGS_CARD,
+  SLICES,
+} from "../data/index.ts";
 import type { Settings } from "../save/settings.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";

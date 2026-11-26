@@ -1,7 +1,8 @@
 import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 
-import { IDLE_TAG, MOVING_TAGS } from "../assets/spriteKeys.ts";
-import type { EncounterId, GameData, SignatureProfile } from "../data/types.ts";
+import { IDLE_TAG, MOVING_TAGS } from "../assets/index.ts";
+import type { EncounterId } from "../data/ids.ts";
+import type { GameData, SignatureProfile } from "../data/index.ts";
 import {
   COMPONENT_SILHOUETTES,
   hasObstacleArt,

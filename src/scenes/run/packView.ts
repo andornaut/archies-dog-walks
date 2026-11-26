@@ -1,7 +1,7 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import type { GameObjects, Scene, Tweens } from "phaser";
 
-import { SQUIRREL_ICON_KEY } from "../../assets/iconKeys.ts";
+import { dogSpriteKey, SQUIRREL_ICON_KEY } from "../../assets/index.ts";
 import {
   playEffect,
   playTag,
@@ -9,9 +9,8 @@ import {
   type Shadow,
   spriteMetrics,
 } from "../../assets/phaser/sprites.ts";
-import { dogSpriteKey } from "../../assets/spriteKeys.ts";
+import type { DogId } from "../../data/ids.ts";
 import { gameData } from "../../data/index.ts";
-import type { DogId } from "../../data/types.ts";
 import { graceAlpha } from "../../layout/graceBlink.ts";
 import { formationOrder, packDogOf, packPlacements } from "../../layout/packFormation.ts";
 import { distanceAtY, project } from "../../layout/projection.ts";

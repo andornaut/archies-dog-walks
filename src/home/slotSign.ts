@@ -1,4 +1,4 @@
-import type { GameData } from "../data/types.ts";
+import type { GameData } from "../data/index.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { cheapestDogSlot } from "../rules/shop.ts";
 import type { Owned } from "../save/schema.ts";

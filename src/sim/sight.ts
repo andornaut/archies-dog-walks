@@ -1,4 +1,4 @@
-import type { Movement } from "../data/types.ts";
+import type { Movement } from "../data/index.ts";
 import { read } from "../rules/units.ts";
 import { approachOutcomes } from "../runner/approach.ts";
 import { hopShapes, SIDESTEPS } from "../runner/moverHops.ts";

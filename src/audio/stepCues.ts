@@ -2,7 +2,8 @@
 // step's tells and pulls, and a card choice's cost. Every field of a step is named here, so a
 // new kind of event does not compile until it has a cue or a stated reason to play none.
 
-import type { EncounterId, GameData } from "../data/types.ts";
+import type { EncounterId } from "../data/ids.ts";
+import type { GameData } from "../data/index.ts";
 import { type Change, changeAmount } from "../rules/causes.ts";
 import type { PullStep } from "../runner/pulls.ts";
 import type { WalkStep } from "../runner/walk.ts";

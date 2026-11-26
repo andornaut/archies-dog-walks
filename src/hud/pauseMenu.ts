@@ -2,7 +2,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 
-import { PAUSE_PANEL } from "../data/layout.ts";
+import { PAUSE_PANEL } from "../data/index.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { MODAL, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";
 

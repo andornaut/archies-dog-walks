@@ -1,4 +1,4 @@
-import type { CardSource, HintTrigger, LiveTuning } from "../data/types.ts";
+import type { CardSource, HintTrigger, LiveTuning } from "../data/index.ts";
 import { packSizeBonus, placeInPack } from "../rules/dogs.ts";
 import type { MoverTell } from "../runner/movers.ts";
 import type { WalkStep } from "../runner/walk.ts";

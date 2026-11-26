@@ -1,4 +1,5 @@
-import type { DogId, GameData, Size } from "../data/types.ts";
+import type { DogId } from "../data/ids.ts";
+import type { GameData, Size } from "../data/index.ts";
 import type { Hearts } from "../units.ts";
 import type { Pack, PackDogs, PackSlot, RunState } from "./runState.ts";
 

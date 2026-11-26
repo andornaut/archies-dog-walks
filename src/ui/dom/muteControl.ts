@@ -5,9 +5,8 @@ import "./muteControl.css";
 import { containsPoint } from "@andornaut/game-kit/runtime/rect";
 import crashArt from "virtual:adw-crash-art";
 
-import { BUTTON_SIZE } from "../../data/layout.ts";
+import { BUTTON_SIZE, SCREEN_CONFIG } from "../../data/index.ts";
 import { MENU_TEXT } from "../../data/menuText.ts";
-import { SCREEN_CONFIG } from "../../data/screen.ts";
 import { cssHex, PALETTE } from "../palette.ts";
 import { TITLE_CAP_ROWS } from "../textFit.ts";
 import { TOP_BAR_FACE } from "../topBarTrim.ts";

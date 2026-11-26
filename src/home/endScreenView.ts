@@ -3,10 +3,9 @@ import { fillLine, wrapWords } from "@andornaut/game-kit/runtime/lines";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 
-import { ownerFaceKey, ZONE_PIPS_KEY } from "../assets/spriteKeys.ts";
-import { BADGE_STRIP } from "../data/layout.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
-import type { AchievementId, DogId, GameData } from "../data/types.ts";
+import { ownerFaceKey, ZONE_PIPS_KEY } from "../assets/index.ts";
+import type { AchievementId, DogId } from "../data/ids.ts";
+import { BADGE_STRIP, type GameData, SCREEN_CONFIG } from "../data/index.ts";
 import { signedShortDollarText } from "../presentation/currency.ts";
 import type { OwnerNameLine } from "../presentation/ownerName.ts";
 import { walkLength } from "../rules/route.ts";

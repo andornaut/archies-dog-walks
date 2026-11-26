@@ -1,7 +1,7 @@
 import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
-import type { GameData } from "../data/types.ts";
+import type { GameData } from "../data/index.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { DISMISS_FOOTER_SPACE, dismissFooter } from "../ui/modal/dismissFooter.ts";
 import { MODAL, modalFamilyWidth, modalRect } from "../ui/modal/layout.ts";

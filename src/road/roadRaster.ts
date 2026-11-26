@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { SCREEN_CONFIG } from "../data/screen.ts";
-import type { ZoneId } from "../data/types.ts";
+import type { ZoneId } from "../data/ids.ts";
+import { SCREEN_CONFIG } from "../data/index.ts";
 import { distanceAtY, type RoadProjection, roadXAt, rowScale } from "../layout/projection.ts";
 import {
   dotColour,

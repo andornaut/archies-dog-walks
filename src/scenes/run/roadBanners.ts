@@ -1,13 +1,10 @@
 import { type Point, type Rect, rectAboveIn, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 import { Core, type GameObjects, type Scene, Scenes } from "phaser";
 
-import { domArtUrl } from "../../assets/domArtFiles.ts";
-import { debuffIconKey } from "../../assets/iconKeys.ts";
-import { gearIconKey } from "../../assets/spriteKeys.ts";
-import { gameData } from "../../data/index.ts";
-import { ZONE_BANNER } from "../../data/layout.ts";
-import { SCREEN_CONFIG } from "../../data/screen.ts";
-import type { DebuffId, EncounterId, GearId } from "../../data/types.ts";
+import { domArtUrl } from "../../assets/files/index.ts";
+import { debuffIconKey, gearIconKey } from "../../assets/index.ts";
+import type { DebuffId, EncounterId, GearId } from "../../data/ids.ts";
+import { gameData, SCREEN_CONFIG, ZONE_BANNER } from "../../data/index.ts";
 import { zoneBannerHeading } from "../../hud/zoneCelebration.ts";
 import { currentZone } from "../../rules/route.ts";
 import type { RunState } from "../../state/runState.ts";

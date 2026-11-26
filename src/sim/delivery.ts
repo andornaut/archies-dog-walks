@@ -1,4 +1,5 @@
-import type { GameData, MovementKind, ZoneId } from "../data/types.ts";
+import type { ZoneId } from "../data/ids.ts";
+import type { GameData, MovementKind } from "../data/index.ts";
 import { itemCategory, opensACard, type WalkItemKind } from "../runner/walkItems.ts";
 import type { ZoneSlotDelivery } from "../runner/zonePlan.ts";
 

@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { LABEL_VALUE_GAP, LOGBOOK_PAGE, MIN_PRESS } from "../data/layout.ts";
+import { LABEL_VALUE_GAP, LOGBOOK_PAGE, MIN_PRESS } from "../data/index.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";

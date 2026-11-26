@@ -1,4 +1,4 @@
-import type { DogId } from "../data/types.ts";
+import type { DogId } from "../data/ids.ts";
 import type { EndReason } from "../state/runState.ts";
 import { type Cents, cents } from "../units.ts";
 import type { DogStats, SaveStats } from "./schema.ts";

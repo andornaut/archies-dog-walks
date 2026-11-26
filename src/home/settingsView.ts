@@ -4,9 +4,8 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { InstallStepsKind } from "@andornaut/game-kit/runtime/web/pwa/installState";
 
 import { BUILD_LABEL } from "../buildLabel.ts";
-import { ICON_LABEL_GAP, LABEL_ICON, SETTINGS_CARD } from "../data/layout.ts";
+import { ICON_LABEL_GAP, LABEL_ICON, type MenuText, SETTINGS_CARD } from "../data/index.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
-import type { MenuText } from "../data/types.ts";
 import type { Settings } from "../save/settings.ts";
 import { iconBesideLabel } from "../ui/iconLabel.ts";
 import { dismissFooter } from "../ui/modal/dismissFooter.ts";

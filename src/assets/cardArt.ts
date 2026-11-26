@@ -1,6 +1,6 @@
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
-import type { GameData } from "../data/types.ts";
+import type { GameData } from "../data/index.ts";
 import { remapToGrey } from "./greyRamp.ts";
 import { gearSmallIconKey, perkIconKey, upgradeIconKey } from "./iconKeys.ts";
 import { CARD_FRAME_KEY, cardZoneKey, DIFFICULTY_KEY } from "./spriteKeys.ts";

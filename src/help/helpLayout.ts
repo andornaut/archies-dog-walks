@@ -1,7 +1,7 @@
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { arrangePager, type PagerArrangement } from "@andornaut/game-kit/runtime/ui/pager";
 
-import { HELP_SCREEN, MIN_PRESS, PAGE } from "../data/layout.ts";
+import { HELP_SCREEN, MIN_PRESS, PAGE } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";

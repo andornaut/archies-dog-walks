@@ -1,9 +1,8 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { domArtPath } from "../../assets/domArt.ts";
-import { ownerFaceKey } from "../../assets/spriteKeys.ts";
+import { domArtPath, ownerFaceKey } from "../../assets/index.ts";
+import type { DogId } from "../../data/ids.ts";
 import { gameData } from "../../data/index.ts";
-import type { DogId } from "../../data/types.ts";
 import type { BadgeView } from "../../home/badgesView.ts";
 import { textPart } from "../../home/dom/detailText.ts";
 import { sheetArt } from "../../ui/dom/artElements.ts";

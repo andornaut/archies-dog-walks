@@ -1,6 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { CARD_HEADER } from "../data/layout.ts";
+import { CARD_HEADER } from "../data/index.ts";
 
 export interface CardRowSpec {
   cardHeight: number;

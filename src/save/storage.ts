@@ -13,7 +13,8 @@ import type { SaveStorage } from "@andornaut/game-kit/runtime/save/storage";
 import type { SaveFormat } from "@andornaut/game-kit/runtime/save/versionedSave";
 import { localSaveStorage } from "@andornaut/game-kit/runtime/web/save/dom/localSaveStorage";
 
-import type { AchievementId, GameData } from "../data/types.ts";
+import type { AchievementId } from "../data/ids.ts";
+import type { GameData } from "../data/index.ts";
 import { type SaveContext, saveFormat } from "./load.ts";
 import type { SaveDocument } from "./schema.ts";
 

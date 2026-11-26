@@ -1,4 +1,4 @@
-import type { SpawnSlotCounts, SpawnSlotRole } from "../data/types.ts";
+import type { SpawnSlotCounts, SpawnSlotRole } from "../data/index.ts";
 import type { MoverStreams } from "./moverModel.ts";
 import { type Footprint, quotaFootprint, type SpawnQuota } from "./spawning.ts";
 

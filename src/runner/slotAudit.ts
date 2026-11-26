@@ -1,4 +1,4 @@
-import type { SpawnSlotCounts, SpawnSlotRole } from "../data/types.ts";
+import type { SpawnSlotCounts, SpawnSlotRole } from "../data/index.ts";
 import { canonicalJson } from "./canonicalJson.ts";
 import { moverLeavesMinimumLanes } from "./laneAlternatives.ts";
 import { moverPlacementsWithWork } from "./moverPlanning.ts";

@@ -3,9 +3,24 @@ import { type LoaderWatch, watchLoader } from "@andornaut/game-kit/runtime/load/
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { GameObjects, Scene, Scenes, Sound } from "phaser";
 
-import { animationSpecs, type AsepriteSheet } from "../assets/asepriteAnimations.ts";
-import { domArtUrl } from "../assets/domArtFiles.ts";
-import { type AssetManifest, parseManifest, type SpriteAsset } from "../assets/manifest.ts";
+import { domArtUrl } from "../assets/files/index.ts";
+import {
+  animationSpecs,
+  type AsepriteSheet,
+  type AssetManifest,
+  DOG_FRAME_SIDES,
+  dogFaceKey,
+  dogSpriteKey,
+  encounterSpriteKey,
+  FLAT_ENCOUNTERS,
+  LOADING_ART,
+  ownerCardFaceKey,
+  ownerFaceKey,
+  parseManifest,
+  ROAD_SPRITE_SIZE,
+  type SpriteAsset,
+  usesPhaserArt,
+} from "../assets/index.ts";
 import {
   addAtlasFonts,
   addAtlasTextures,
@@ -18,24 +33,11 @@ import {
   smoothDepthArt,
 } from "../assets/phaser/manifestArt.ts";
 import { ensurePlaceholder, measureSprite, playTag } from "../assets/phaser/sprites.ts";
-import { usesPhaserArt } from "../assets/phaserArt.ts";
-import {
-  DOG_FRAME_SIDES,
-  dogFaceKey,
-  dogSpriteKey,
-  encounterSpriteKey,
-  FLAT_ENCOUNTERS,
-  LOADING_ART,
-  ownerCardFaceKey,
-  ownerFaceKey,
-  ROAD_SPRITE_SIZE,
-} from "../assets/spriteKeys.ts";
 import { pageSearch } from "../cheats/browserTools.ts";
 import { pageRunSetup } from "../cheats/pageRunSetup.ts";
 import { namesRunSetup, runLinkLoadout } from "../cheats/runLink.ts";
-import { gameData } from "../data/index.ts";
-import { FACE_SIZE, OWNER_CARD_FACE } from "../data/layout.ts";
-import type { EncounterId } from "../data/types.ts";
+import type { EncounterId } from "../data/ids.ts";
+import { FACE_SIZE, gameData, OWNER_CARD_FACE } from "../data/index.ts";
 import { hudArtResources } from "../hud/dom/prepareHudArt.ts";
 import { waitedLoad } from "../loadingProgress.ts";
 import {

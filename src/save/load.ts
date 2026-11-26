@@ -6,15 +6,13 @@ import type {
   DebuffId,
   DogId,
   EncounterId,
-  GameData,
   GearId,
   HintId,
   MinorObstacleId,
-  OptionPicks,
-  TallyId,
   WalkerId,
   ZoneId,
-} from "../data/types.ts";
+} from "../data/ids.ts";
+import type { GameData, OptionPicks, TallyId } from "../data/index.ts";
 import { startingDogSlots } from "../rules/shop.ts";
 import {
   createDefaultSave,

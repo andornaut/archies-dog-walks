@@ -1,6 +1,6 @@
 import type { Scene } from "phaser";
 
-import { domArtUrl } from "../assets/domArtFiles.ts";
+import { domArtUrl } from "../assets/files/index.ts";
 import { SETTINGS_ART_KEYS } from "../home/settingsView.ts";
 import { type DomSettings, type DomSettingsInput, showSettings } from "../hud/dom/settings.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";

@@ -2,8 +2,9 @@ import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import type { NetworkPlayNotice } from "@andornaut/game-kit/runtime/web/pwa/buildContract";
 import type { RequiredUpdateState } from "@andornaut/game-kit/runtime/web/pwa/dom/launch";
 
-import { HOME_TEXT_FIELDS, homeLine } from "../content/homeText.ts";
-import type { DogId, GameData, HomeText, WalkerId } from "../data/types.ts";
+import { HOME_TEXT_FIELDS, homeLine } from "../content/index.ts";
+import type { DogId, WalkerId } from "../data/ids.ts";
+import type { GameData, HomeText } from "../data/index.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { packPlace, packSizeRaise } from "../rules/dogs.ts";
 import { modifiersOf } from "../rules/modifiers.ts";

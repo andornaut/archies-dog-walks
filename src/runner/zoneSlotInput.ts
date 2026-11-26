@@ -1,4 +1,4 @@
-import type { GameData } from "../data/types.ts";
+import type { GameData } from "../data/index.ts";
 import type { RunState } from "../state/runState.ts";
 import type { ProfiledMovement } from "./movementAssignments.ts";
 import { moverSpec } from "./moverSpecs.ts";

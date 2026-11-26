@@ -1,4 +1,4 @@
-import type { GameData } from "../data/types.ts";
+import type { GameData } from "../data/index.ts";
 import { lastHeartOwnersOf, runCountersOf } from "../rules/achievements.ts";
 import { walkLength } from "../rules/route.ts";
 import { endReasonOf, walkEarnings } from "../rules/run.ts";

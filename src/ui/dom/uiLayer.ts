@@ -20,9 +20,8 @@ import {
   type ModalLayer,
 } from "@andornaut/game-kit/runtime/web/ui/dom/modalLayer";
 
-import { artUrl } from "../../assets/artFiles.ts";
-import { DOM_STYLE_ART } from "../../assets/domArt.ts";
-import { domArtUrl } from "../../assets/domArtFiles.ts";
+import { artUrl, domArtUrl } from "../../assets/files/index.ts";
+import { DOM_STYLE_ART } from "../../assets/index.ts";
 import { createPressAdmission, type PressAdmission } from "../../pressAdmission.ts";
 import { type DomScale, domScale, sliceLengths } from "../domScale.ts";
 import { PALETTE } from "../palette.ts";

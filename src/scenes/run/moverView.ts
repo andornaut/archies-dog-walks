@@ -1,7 +1,6 @@
 import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import type { GameObjects, Scene } from "phaser";
 
-import { firstTag, playTag, showAtDepth } from "../../assets/phaser/sprites.ts";
 import {
   IDLE_TAG,
   moverBodyTag,
@@ -11,10 +10,10 @@ import {
   WARNING_KEY,
   WARNING_TAG,
   WARNING_UP_TAG,
-} from "../../assets/spriteKeys.ts";
-import { gameData } from "../../data/index.ts";
-import { LANE_COUNT } from "../../data/screen.ts";
-import type { EncounterId, MinorObstacleId } from "../../data/types.ts";
+} from "../../assets/index.ts";
+import { firstTag, playTag, showAtDepth } from "../../assets/phaser/sprites.ts";
+import type { EncounterId, MinorObstacleId } from "../../data/ids.ts";
+import { gameData, LANE_COUNT } from "../../data/index.ts";
 import { moverBodyArt } from "../../layout/obstacleArt.ts";
 import { project } from "../../layout/projection.ts";
 import { read } from "../../rules/units.ts";

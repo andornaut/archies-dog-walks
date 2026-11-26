@@ -1,7 +1,7 @@
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { type BitmapFont, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { SLICES } from "../../data/layout.ts";
+import { SLICES } from "../../data/index.ts";
 import {
   createSelectionTile,
   type NativeSelectionTile,

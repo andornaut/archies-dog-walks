@@ -1,8 +1,8 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { FittedText } from "@andornaut/game-kit/runtime/text/textFit";
 
-import { ZONE_CELEBRATION_ART } from "../assets/spriteKeys.ts";
-import { ICON_LABEL_GAP, SLICES } from "../data/layout.ts";
+import { ZONE_CELEBRATION_ART } from "../assets/index.ts";
+import { ICON_LABEL_GAP, SLICES } from "../data/index.ts";
 import type {
   DetailArt,
   DetailArtSize,

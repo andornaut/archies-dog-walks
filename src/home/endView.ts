@@ -1,5 +1,6 @@
-import { zonePipTag } from "../assets/spriteKeys.ts";
-import type { DogId, GameData, ZoneId } from "../data/types.ts";
+import { zonePipTag } from "../assets/index.ts";
+import type { DogId, ZoneId } from "../data/ids.ts";
+import type { GameData } from "../data/index.ts";
 import type { Change, MoneyChange } from "../rules/causes.ts";
 import { quipLine } from "../rules/choices.ts";
 import { zoneById } from "../rules/route.ts";

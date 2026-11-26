@@ -3,16 +3,14 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import { DOGS } from "../data/dogs.ts";
 import type {
-  AchievementCondition,
   DebuffId,
   EncounterId,
-  GameData,
   GearId,
   MinorObstacleId,
-  TallyId,
   WalkerId,
   ZoneId,
-} from "../data/types.ts";
+} from "../data/ids.ts";
+import type { AchievementCondition, GameData, TallyId } from "../data/index.ts";
 import { DEFAULT_WALKER } from "../data/walkers.ts";
 import { type AchievementData, picksOf, type RunFacts } from "../rules/achievements.ts";
 import { slotCountTotal } from "../runner/slotConfig.ts";

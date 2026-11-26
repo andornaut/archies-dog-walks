@@ -2,10 +2,9 @@ import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import { guardSceneInput } from "@andornaut/game-kit/runtime/input/phaser/guardSceneInput";
 import { Math as PhaserMath, Scene } from "phaser";
 
+import { ZONE_CELEBRATION_ART as ART } from "../assets/index.ts";
 import { playFirstTag } from "../assets/phaser/sprites.ts";
-import { ZONE_CELEBRATION_ART as ART } from "../assets/spriteKeys.ts";
-import { gameData } from "../data/index.ts";
-import { MENU_BUTTON_KEY_GAP } from "../data/layout.ts";
+import { gameData, MENU_BUTTON_KEY_GAP } from "../data/index.ts";
 import { CELEBRATION_LAYOUT as LAYOUT } from "../hud/celebrationLayout.ts";
 import { zoneCelebrationView } from "../hud/celebrationView.ts";
 import { showZoneCelebration } from "../hud/dom/celebration.ts";

@@ -1,10 +1,9 @@
 import * as v from "valibot";
 
 import vergeTable from "../../shared/verges.json" with { type: "json" };
-import { paletteColour } from "../assets/housePalette.ts";
-import { parseOrThrow } from "../assets/jsonSchema.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
-import type { ZoneId } from "../data/types.ts";
+import { paletteColour, parseOrThrow } from "../assets/index.ts";
+import type { ZoneId } from "../data/ids.ts";
+import { SCREEN_CONFIG } from "../data/index.ts";
 import { WORLD } from "../data/world.ts";
 import { lightKeySchema, lightZonesSchema, zonesOf } from "./lights.ts";
 

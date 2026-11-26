@@ -3,8 +3,7 @@ import { guardSceneInput } from "@andornaut/game-kit/runtime/input/phaser/guardS
 import { type GameObjects, Scene } from "phaser";
 
 import { firstTag, playTag } from "../assets/phaser/sprites.ts";
-import { gameData } from "../data/index.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
+import { gameData, SCREEN_CONFIG } from "../data/index.ts";
 import { BADGE_CHEER, BADGE_POP, type BadgeView, earnedBadges } from "../home/badgesView.ts";
 import { END_LAYOUT } from "../home/endLayout.ts";
 import { endScreenView } from "../home/endScreenView.ts";

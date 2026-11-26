@@ -1,20 +1,16 @@
 import type { Pixels } from "@andornaut/game-kit/runtime/units";
 
 import type {
-  CardSource,
   DebuffId,
-  DodgeEffect,
   DogId,
   EncounterId,
   GearId,
   MinorObstacleId,
-  Modifier,
-  OptionPicks,
-  TallyId,
   UpgradeId,
   WalkerId,
   ZoneId,
-} from "../data/types.ts";
+} from "../data/ids.ts";
+import type { CardSource, DodgeEffect, Modifier, OptionPicks, TallyId } from "../data/index.ts";
 import type { Cents, Hearts } from "../units.ts";
 
 // A run in progress. Plain JSON throughout: arrays for sets, records for maps, numbers for

@@ -2,8 +2,8 @@ import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import type { GameObjects, Scene } from "phaser";
 
+import { IDLE_TAG } from "../../assets/index.ts";
 import { showAtDepth, spriteMetrics } from "../../assets/phaser/sprites.ts";
-import { IDLE_TAG } from "../../assets/spriteKeys.ts";
 import { gameData } from "../../data/index.ts";
 import type { DepthDraw } from "../../layout/depthScale.ts";
 import { distanceAtY } from "../../layout/projection.ts";

@@ -1,7 +1,7 @@
 import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 import type { Scene } from "phaser";
 
-import { domArtUrl } from "../assets/domArtFiles.ts";
+import { domArtUrl } from "../assets/files/index.ts";
 import {
   addToBank,
   grantOwned,
@@ -16,9 +16,8 @@ import { type CheatAction, type CheatsState, cheatsView } from "../cheats/cheats
 import { pageRunSetup } from "../cheats/pageRunSetup.ts";
 import { stripRunOverrides } from "../cheats/runLink.ts";
 import { randomSeed } from "../cheats/runSetup.ts";
-import { gameData } from "../data/index.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
-import type { ZoneId } from "../data/types.ts";
+import type { ZoneId } from "../data/ids.ts";
+import { gameData, SCREEN_CONFIG } from "../data/index.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import { showCheats } from "../hud/dom/cheats.ts";
 import { type DomQuestionPanel, showQuestionPanel } from "../hud/dom/questionPanel.ts";

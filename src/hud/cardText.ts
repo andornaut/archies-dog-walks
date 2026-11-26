@@ -7,7 +7,7 @@ import {
   type TextFitStyle,
 } from "@andornaut/game-kit/runtime/text/textFit";
 
-import type { GameData } from "../data/types.ts";
+import type { GameData } from "../data/index.ts";
 import { boxStyle, CARD_LAYOUT, cardEffectBox, FIRES_FIT } from "../presentation/cardLayout.ts";
 import { withNamePills } from "../presentation/effectNames.ts";
 import { firesText, type OptionView } from "../rules/choices.ts";

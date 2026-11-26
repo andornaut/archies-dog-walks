@@ -1,6 +1,7 @@
 import { type Random, randomStream } from "@andornaut/game-kit/runtime/random";
 
-import type { CardSource, DogId, GameData, ZoneId } from "../data/types.ts";
+import type { DogId, ZoneId } from "../data/ids.ts";
+import type { CardSource, GameData } from "../data/index.ts";
 import type { LaneDirection } from "../layout/lanes.ts";
 import type { MoneyChange } from "../rules/causes.ts";
 import {

@@ -1,6 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { ZONE_PILL_SIZES } from "../data/layout.ts";
+import { ZONE_PILL_SIZES } from "../data/index.ts";
 import { debuffBarRects } from "./walkHud.ts";
 
 // The neighbourhood pill (ui-zone-pill, a three-slice with 4px ends): the zone's name and its

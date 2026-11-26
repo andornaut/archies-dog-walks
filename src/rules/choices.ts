@@ -1,21 +1,17 @@
 import { fillNames } from "@andornaut/game-kit/runtime/lines";
 import { type Random, randomInt, randomPick } from "@andornaut/game-kit/runtime/random";
 
-import { cardZoneKey } from "../assets/spriteKeys.ts";
+import { cardZoneKey } from "../assets/index.ts";
+import type { DogId, EncounterId, MinorObstacleId, UpgradeId, ZoneId } from "../data/ids.ts";
 import type {
   CardOption,
   CardSource,
   Difficulty,
-  DogId,
   Effect,
-  EncounterId,
   GameData,
-  MinorObstacleId,
   QuipMoment,
   UpgradeDuration,
-  UpgradeId,
-  ZoneId,
-} from "../data/types.ts";
+} from "../data/index.ts";
 import { packDogs, walkingAmong } from "../state/pack.ts";
 import type { EffectSource, RunState } from "../state/runState.ts";
 import { type Cents, cents, type Hearts } from "../units.ts";

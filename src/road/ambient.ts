@@ -1,7 +1,8 @@
 import { type Random, randomInt } from "@andornaut/game-kit/runtime/random";
 
-import { ROAD_SPRITE_SIZE } from "../assets/spriteKeys.ts";
-import type { AmbientGait, AmbientMover, ZoneId } from "../data/types.ts";
+import { ROAD_SPRITE_SIZE } from "../assets/index.ts";
+import type { ZoneId } from "../data/ids.ts";
+import type { AmbientGait, AmbientMover } from "../data/index.ts";
 import { CROSS_STREET } from "../layout/crossStreet.ts";
 import { project, type RoadProjection, scaleAt, scaleAtY } from "../layout/projection.ts";
 import { noise, sidewalkTo, type Verge, VERGES, walkFrom } from "./roadside.ts";

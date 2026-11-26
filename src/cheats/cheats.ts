@@ -4,7 +4,8 @@ import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { pixels } from "@andornaut/game-kit/runtime/units";
 
-import type { DebuffId, GameData, GearId, UpgradeId, ZoneId } from "../data/types.ts";
+import type { DebuffId, GearId, UpgradeId, ZoneId } from "../data/ids.ts";
+import type { GameData } from "../data/index.ts";
 import { ownerMaxHearts } from "../rules/dogs.ts";
 import { applyEffects } from "../rules/effects.ts";
 import { firstZoneId, type RouteData } from "../rules/route.ts";

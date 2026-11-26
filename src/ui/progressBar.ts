@@ -1,7 +1,7 @@
 import type { ProgressBarStyle } from "@andornaut/game-kit/runtime/progress";
 import type { DomProgressTiming } from "@andornaut/game-kit/runtime/web/progress/dom/progressBar";
 
-import { PROGRESS_BORDER } from "../data/layout.ts";
+import { PROGRESS_BORDER } from "../data/index.ts";
 import { PALETTE } from "./palette.ts";
 
 export const GAME_PROGRESS = {

@@ -1,7 +1,7 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { MONEY_LABEL_PLACE } from "../data/layout.ts";
+import { MONEY_LABEL_PLACE } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { amountText } from "../rules/causes.ts";
 import { type Cents, cents } from "../units.ts";

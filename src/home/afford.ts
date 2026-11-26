@@ -1,6 +1,6 @@
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
-import type { GameData } from "../data/types.ts";
+import type { GameData } from "../data/index.ts";
 import type { LastWalk, Owned } from "../save/schema.ts";
 import { type Cents, cents } from "../units.ts";
 import { isAffordable, type Purchase } from "./home.ts";

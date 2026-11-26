@@ -1,7 +1,7 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import type { GameData } from "../data/types.ts";
+import type { GameData } from "../data/index.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";
 import { modalActionWidth } from "../ui/modal/layout.ts";
 import type { PanelButton, PanelMeasure, PanelText } from "../ui/modal/types.ts";

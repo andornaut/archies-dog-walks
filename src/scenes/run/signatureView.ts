@@ -1,7 +1,7 @@
 import { animationKey } from "@andornaut/game-kit/runtime/art/aseprite";
 
+import { moverBodyTag } from "../../assets/index.ts";
 import { playTag, showAtDepth, spriteMetrics } from "../../assets/phaser/sprites.ts";
-import { moverBodyTag } from "../../assets/spriteKeys.ts";
 import { animationPhaseAt } from "../../layout/animationPhase.ts";
 import { project } from "../../layout/projection.ts";
 import { facesLeft, inMotion, type MoverOnRoad } from "../../runner/movers.ts";

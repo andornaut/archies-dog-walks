@@ -3,7 +3,7 @@
 // Informational: it exits 0 whatever it finds.
 import { readdirSync, readFileSync } from "node:fs";
 
-import { parseManifest } from "../assets/manifest.ts";
+import { parseManifest } from "../assets/index.ts";
 import { gameData } from "../data/index.ts";
 import { keyNames, unusedKeys } from "./unusedArt.ts";
 

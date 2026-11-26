@@ -1,6 +1,6 @@
 import { type FontMetrics, inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { LABEL_HELP_GAP } from "../data/layout.ts";
+import { LABEL_HELP_GAP } from "../data/index.ts";
 
 // A label over its help text leaves LABEL_HELP_GAP clear rows between the lowest row the
 // label's font inks, its deepest descender's, and the help text's capitals: one offset per

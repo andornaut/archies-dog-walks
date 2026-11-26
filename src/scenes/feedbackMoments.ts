@@ -3,12 +3,10 @@ import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import type { GameObjects, Scene, Tweens, Types } from "phaser";
 
+import { ownerFaceKey, WARNING_KEY, WARNING_TAG } from "../assets/index.ts";
 import { playTag } from "../assets/phaser/sprites.ts";
-import { ownerFaceKey, WARNING_KEY, WARNING_TAG } from "../assets/spriteKeys.ts";
-import { gameData } from "../data/index.ts";
-import { FACE_SIZE, MOMENT_PARTS, SLICES } from "../data/layout.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
-import type { DogId } from "../data/types.ts";
+import type { DogId } from "../data/ids.ts";
+import { FACE_SIZE, gameData, MOMENT_PARTS, SCREEN_CONFIG, SLICES } from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import { inlineFaceBox, styledFaceRows } from "../hud/faceText.ts";
 import { type MoneyTick, retarget, tickShown } from "../hud/feedback.ts";

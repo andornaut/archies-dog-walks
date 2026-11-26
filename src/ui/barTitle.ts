@@ -1,6 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { BAR_TITLE_INSET } from "../data/layout.ts";
+import { BAR_TITLE_INSET } from "../data/index.ts";
 import type { CloseControl } from "./closeControl.ts";
 import { MODAL } from "./modalGeometry.ts";
 

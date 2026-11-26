@@ -1,4 +1,4 @@
-import { remapToGrey } from "../assets/greyRamp.ts";
+import { remapToGrey } from "../assets/index.ts";
 import { NEUTRAL_RAMP } from "./palette.ts";
 import { GREYED } from "./selection.ts";
 

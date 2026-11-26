@@ -1,6 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { domArtPath } from "../../assets/domArt.ts";
+import { domArtPath } from "../../assets/index.ts";
 import type { DetailArt, DetailCardView } from "../../home/detailCardView.ts";
 import { textPart } from "../../home/dom/detailText.ts";
 import { contentSeparatorPart } from "../../ui/dom/contentSeparator.ts";
