@@ -1,6 +1,6 @@
 import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
 import { randomStream } from "@andornaut/game-kit/runtime/random";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
 import { LANE_COUNT } from "../data/screen.ts";
@@ -104,13 +104,11 @@ const LAYERS: Readonly<Record<string, (seed: number) => Layer>> = {
   },
 };
 
-// A walk of STEPS steps from seed with no lane moves, each card
-// taking its first enabled option, with a scenery layer stepped each step. Returns the walk's
-// end, every event, and how many of the layer's sprites were out over the walk.
+// A walk of STEPS steps with no lane moves, taking each card's first enabled option.
 function walk(
   seed: number,
-  layer: Layer | null,
-): { events: SessionEvent[]; out: number; session: Session } {
+  observe?: (session: Session, events: readonly SessionEvent[]) => void,
+): { events: SessionEvent[]; session: Session } {
   const streams = runStreams(seed);
   const run = newRun(gameData, 3, { dogs: ["kilo", "lady"], gear: null, walker: "casey" });
   let session = startSession(gameData, streams, screenRoadGeometry, {
@@ -118,7 +116,6 @@ function walk(
     run,
   });
   const events: SessionEvent[] = [];
-  let out = 0;
   for (let step = 0; step < STEPS && session.walk.run.phase.kind !== "ended"; step++) {
     const card = session.card;
     const next =
@@ -133,47 +130,45 @@ function walk(
           );
     session = next.session;
     events.push(...next.events);
-    out += layer?.(session, next.events) ?? 0;
+    observe?.(session, next.events);
   }
-  return { events, out, session };
+  return { events, session };
 }
 
 describe("scenery layers", { timeout: 30_000 }, () => {
-  // The walk with no layer, walked once for every layer compared with it.
-  const plainWalks = new Map<number, ReturnType<typeof walk>>();
-  const plainWalk = (seed: number) => {
-    let plain = plainWalks.get(seed);
-    if (plain === undefined) {
-      plain = walk(seed, null);
-      plainWalks.set(seed, plain);
-    }
-    return plain;
-  };
+  const seed = 1;
+  const layers = Object.entries(LAYERS).map(([name, create]) => ({
+    name,
+    out: 0,
+    step: create(seed),
+  }));
+  const struck = new Set<number>();
+  let back = 0;
+  let layered: ReturnType<typeof walk>;
 
-  it.each(Object.keys(LAYERS).map((name) => [name, 1] as const))(
-    "%s leaves a same-seed walk unchanged, seed %i",
-    (name, seed) => {
-      const plain = plainWalk(seed);
-      const layered = walk(seed, LAYERS[name]?.(seed) ?? null);
-      expect(layered.out).toBeGreaterThan(0);
-      expect(layered.session).toEqual(plain.session);
-      expect(layered.events).toEqual(plain.events);
-    },
-  );
-
-  it("never puts an obstacle a hit took out of play back on the road", () => {
-    const struck = new Set<number>();
-    let back = 0;
-    const walked = walk(1, (session, events) => {
+  beforeAll(() => {
+    layered = walk(seed, (session, events) => {
+      for (const layer of layers) {
+        layer.out += layer.step(session, events);
+      }
       for (const event of events) {
         if (event.kind === "walked") {
           struckBy(event.step).forEach(({ item }) => struck.add(item.id));
         }
       }
       back += session.walk.road.items.filter(({ id }) => struck.has(id)).length;
-      return struck.size;
     });
-    expect(walked.out).toBeGreaterThan(0);
+  });
+
+  it("keeps the seeded walk and events unchanged with each scenery layer active", () => {
+    for (const { name, out } of layers) {
+      expect(out, name).toBeGreaterThan(0);
+    }
+    expect(layered).toEqual(walk(seed));
+  });
+
+  it("never puts an obstacle a hit took out of play back on the road", () => {
+    expect(struck.size).toBeGreaterThan(0);
     expect(back).toBe(0);
   });
 });

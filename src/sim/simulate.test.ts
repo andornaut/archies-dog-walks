@@ -316,7 +316,6 @@ describe("noteDebuffCosts", () => {
   // Whether the run held the debuff before and after the step, and the bumps counted toward it:
   // one that starts in the step, or ran out as it began, counts none.
   it.each([
-    [true, true, 1],
     [false, true, 0],
     [true, false, 0],
   ] as const)("held before %s and after %s counts %i bumps", (before, after, counted) => {

@@ -408,9 +408,15 @@ describe("movers", { timeout: 200_000 }, () => {
     matches: (spawn: Planned) => boolean,
     found: (spawns: readonly Planned[]) => boolean,
     sought: string,
+    preferredSeeds: readonly number[] = [],
   ): Planned[] => {
+    const knownSeeds = Array.from({ length: SEARCH_SEEDS_MOST }, (_, i) => i + 1);
+    const seeds = new Set([...preferredSeeds, ...knownSeeds]);
     const spawns: Planned[] = [];
-    for (let seed = 1; seed <= SEARCH_SEEDS_MOST && !found(spawns); seed++) {
+    for (const seed of seeds) {
+      if (found(spawns)) {
+        break;
+      }
       spawns.push(...zones.flatMap((zone) => planIn(zone, [seed])).filter(matches));
     }
     const where = zones.length > 0 ? `zones ${zones.join(", ")}` : "no zone that weighs it above 0";
@@ -432,8 +438,11 @@ describe("movers", { timeout: 200_000 }, () => {
       : weightedZones(everyMover.world, "obstacles", kind as ObstacleEncounterId);
   };
   // A kind's spawns planned in the zones that draw it, searched until found holds of them.
-  const spawnsOfKind = (kind: WalkItem["kind"], found = enough) =>
-    searchSpawns(zonesOf(kind), (spawn) => spawn.kind === kind, found, kind);
+  const spawnsOfKind = (
+    kind: WalkItem["kind"],
+    found = enough,
+    preferredSeeds?: readonly number[],
+  ) => searchSpawns(zonesOf(kind), (spawn) => spawn.kind === kind, found, kind, preferredSeeds);
   // A kind's movers planned in the zones that draw it, searched until found holds of them.
   type PlannedMover = Planned & { mover: MoverPath };
   const isMover = (spawn: Planned): spawn is PlannedMover => spawn.mover !== undefined;
@@ -954,7 +963,14 @@ describe("movers", { timeout: 200_000 }, () => {
   it.each(edgeKinds)("starts a %s against each edge of the road on some seed", (kind) => {
     const edges = [0, LANE_COUNT - footprintOf(everyMover, kind).lanes];
     const lanesOf = (spawns: readonly Planned[]) => new Set(spawns.map(({ lane }) => lane));
-    const spawns = spawnsOfKind(kind, (found) => edges.every((lane) => lanesOf(found).has(lane)));
+    // These taxi seeds witness the right edge in the first position and the left edge in the
+    // last. If tuning changes either placement, the search still tries every original seed.
+    const preferredSeeds = kind === "taxi" ? [4, 29] : [];
+    const spawns = spawnsOfKind(
+      kind,
+      (found) => edges.every((lane) => lanesOf(found).has(lane)),
+      preferredSeeds,
+    );
     expect([...lanesOf(spawns)]).toEqual(expect.arrayContaining(edges));
   });
 
