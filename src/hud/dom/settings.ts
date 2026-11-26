@@ -1,6 +1,5 @@
 import "@andornaut/game-kit/runtime/web/ui/dom/slider.css";
 
-import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { createFormRows } from "@andornaut/game-kit/runtime/web/ui/dom/formRow";
 import { createSlider } from "@andornaut/game-kit/runtime/web/ui/dom/slider";
@@ -26,10 +25,11 @@ import { cutFrameProperties, placeFormRows, rowIcon, switchFrames } from "../../
 import { createGameFormRow } from "../../ui/dom/gameButton.ts";
 import { guardNativeInput } from "../../ui/dom/modalLifecycle.ts";
 import type { DomPart } from "../../ui/dom/parts.ts";
-import { blockPlace, createTextLine, placeBox, placeText } from "../../ui/dom/pixelLine.ts";
+import { createTextLine, placeBox, placeText } from "../../ui/dom/pixelLine.ts";
 import { refuse } from "../../ui/dom/refusal.ts";
+import { textBlock } from "../../ui/dom/textBlock.ts";
 import type { UiLayer } from "../../ui/dom/uiLayer.ts";
-import { type DomScale, gridX, gridY } from "../../ui/domScale.ts";
+import { type DomScale, gridY } from "../../ui/domScale.ts";
 import { cssHex } from "../../ui/palette.ts";
 import { type DomPage, showPage } from "./page.ts";
 import { bindPanelFeedback } from "./panelButton.ts";
@@ -87,32 +87,14 @@ export interface DomSettings extends Pick<
 
 const ORIGIN = { x: 0, y: 0 } as const;
 
-// A block of text, its runs made afresh each time it is placed, since a volume's changes.
-function textElement(doc: Document, fonts: Readonly<Record<SettingsText["font"], BitmapFont>>) {
-  const element = doc.createElement("span");
-  element.className = "adw-lines";
-  element.setAttribute("aria-hidden", "true");
-  return {
-    element,
-    place: (scale: DomScale, origin: Point, text: SettingsText) => {
-      const place = blockPlace(fonts[text.font], scale, text);
-      element.replaceChildren(
-        ...place.runs.map((run) => {
-          const span = doc.createElement("span");
-          span.className = `adw-text adw-font-${text.font}`;
-          span.textContent = run.text;
-          Object.assign(span.style, {
-            color: cssHex(text.colour),
-            fontSize: `${place.fontSize}px`,
-            left: `${run.left - gridX(scale, origin.x)}px`,
-            lineHeight: `${place.lineHeight}px`,
-            top: `${run.top - gridY(scale, origin.y)}px`,
-          });
-          return span;
-        }),
-      );
-    },
-  };
+// A Settings text block, drawn for sight only: a row's kit control carries its words for a
+// screen reader.
+function textElement(
+  doc: Document,
+  fonts: Readonly<Record<SettingsText["font"], BitmapFont>>,
+  text: SettingsText,
+) {
+  return textBlock(doc, { fonts, pillColours: () => undefined, spoken: false, tag: "span" }, text);
 }
 
 // The target a switch row's press lands on.
@@ -205,13 +187,16 @@ function rowArt(doc: Document, input: DomSettingsInput, first: SettingsRowView) 
   const face = doc.createElement("span");
   face.className = "adw-framed adw-row-face";
   const icon = first.icon === undefined ? undefined : rowIcon(doc, input, first.icon.key);
-  const texts = first.texts.map(() => textElement(doc, input.fonts));
+  const texts = first.texts.map((text) => textElement(doc, input.fonts, text));
   return {
     face,
     icon,
     place(scale: DomScale, row: SettingsRowView) {
       face.style.backgroundColor = row.face === undefined ? "" : cssHex(row.face);
-      row.texts.forEach((text, i) => texts[i]?.place(scale, row.rect, text));
+      row.texts.forEach((text, i) => {
+        texts[i]?.update(text);
+        texts[i]?.place(scale, row.rect);
+      });
     },
     texts: texts.map(({ element }) => element),
   };
@@ -392,7 +377,7 @@ function showSteps(
   steps: NonNullable<SettingsView["steps"]>,
 ): DomQuestionPanel {
   const doc = layer.element.ownerDocument;
-  const text = textElement(doc, input.fonts);
+  const text = textElement(doc, input.fonts, steps.steps);
   const icon = steps.icon === undefined ? undefined : imageArt(doc, input, steps.icon.key);
   const parts: DomPart[] = [
     ...(icon === undefined || steps.icon === undefined
@@ -408,7 +393,7 @@ function showSteps(
             ready: icon.ready,
           },
         ]),
-    { element: text.element, place: (scale) => text.place(scale, ORIGIN, steps.steps) },
+    { element: text.element, place: (scale) => text.place(scale) },
   ];
   return showQuestionPanel(layer, {
     backgroundCancel: input.closeSteps,
