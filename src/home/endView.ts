@@ -1,9 +1,7 @@
 import { zonePipTag } from "../assets/index.ts";
 import type { DogId, ZoneId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
-import type { Change, MoneyChange } from "../rules/causes.ts";
-import { quipLine } from "../rules/choices.ts";
-import { zoneById } from "../rules/route.ts";
+import { type Change, type MoneyChange, quipLine, zoneById } from "../rules/index.ts";
 import type { LastWalk } from "../save/schema.ts";
 import { type Cents, cents } from "../units.ts";
 

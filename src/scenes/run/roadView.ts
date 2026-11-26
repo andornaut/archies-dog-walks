@@ -13,9 +13,9 @@ import {
   roadRaster,
   solidStrip,
   STRIP,
-} from "../../road/roadRaster.ts";
-import { previousZone } from "../../rules/route.ts";
-import type { Walk } from "../../runner/walk.ts";
+} from "../../road/index.ts";
+import { previousZone } from "../../rules/index.ts";
+import type { Walk } from "../../runner/index.ts";
 import { colourFromHex } from "../../ui/palette.ts";
 import { BumpOverscan } from "./bumpOverscan.ts";
 import { DEPTH, LAYOUT, PROJECTION } from "./stage.ts";

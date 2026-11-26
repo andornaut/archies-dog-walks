@@ -2,7 +2,7 @@ import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtim
 
 import { isMuteKey, isPauseKey } from "../input/keyBindings.ts";
 import type { PressMode } from "../input/pointerTracking.ts";
-import { SCREEN_LAYOUT } from "../layout/screen.ts";
+import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { topBarGlyphRect, topSectionButtonAt } from "../ui/topSection.ts";
 import {
   type BarButton,

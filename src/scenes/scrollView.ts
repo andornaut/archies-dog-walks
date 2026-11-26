@@ -3,7 +3,7 @@ import type { GameObjects, Scene } from "phaser";
 
 import { gameData, SCREEN_CONFIG } from "../data/index.ts";
 import { LIST_FLING, type ScrollRule } from "../input/listScroll.ts";
-import { read } from "../rules/units.ts";
+import { read } from "../rules/index.ts";
 import { paintRectMask } from "./rectMask.ts";
 
 // A scrolling list's fling, and its drag once a press travels past the tap distance.

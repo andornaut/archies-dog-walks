@@ -8,8 +8,8 @@ import {
   hasObstacleArt,
   obstacleParts,
   obstacleSilhouette,
-} from "../layout/obstacleArt.ts";
-import { PART_INSET } from "../layout/packFormation.ts";
+  PART_INSET,
+} from "../layout/index.ts";
 import { type Box, itemBox, type LanedBox } from "./collision.ts";
 import { componentHitBoxes } from "./componentHitBoxes.ts";
 import { drawnLanes, hasStopped, isSliding, type MoverPath, moverPlace } from "./movers.ts";

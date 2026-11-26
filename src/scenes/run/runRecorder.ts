@@ -29,7 +29,7 @@ import {
 import { pageRunSetup, runSetupLimitsFor } from "../../cheats/pageRunSetup.ts";
 import type { RunSetup } from "../../cheats/runSetup.ts";
 import { gameData } from "../../data/index.ts";
-import type { SessionInput } from "../../runner/session.ts";
+import type { SessionInput } from "../../runner/index.ts";
 
 // How a run starts: the cheats it plays by, its setup, and the inputs that drive it when it
 // replays a log.

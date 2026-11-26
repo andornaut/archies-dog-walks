@@ -18,7 +18,7 @@ import type {
   SettingsText,
   SettingsView,
 } from "../../home/settingsView.ts";
-import { read } from "../../rules/units.ts";
+import { read } from "../../rules/index.ts";
 import { type DomArtSource, imageArt, sheetArt } from "../../ui/dom/artElements.ts";
 import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";
 import { cutFrameProperties, placeFormRows, rowIcon, switchFrames } from "../../ui/dom/formRows.ts";

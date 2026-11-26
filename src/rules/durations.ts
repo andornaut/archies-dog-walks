@@ -8,7 +8,7 @@ import type {
   Upgrade,
   UpgradeDuration,
 } from "../data/index.ts";
-import type { ActiveDebuff, Lasting, RunState } from "../state/runState.ts";
+import type { ActiveDebuff, Lasting, RunState } from "../state/index.ts";
 import { modifiedStat } from "./modifiers.ts";
 import { read } from "./units.ts";
 

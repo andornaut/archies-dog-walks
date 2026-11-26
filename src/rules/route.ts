@@ -3,7 +3,7 @@ import { type Random, randomPick } from "@andornaut/game-kit/runtime/random";
 
 import type { ZoneId } from "../data/ids.ts";
 import type { GameData, Zone } from "../data/index.ts";
-import type { RunState } from "../state/runState.ts";
+import type { RunState } from "../state/index.ts";
 
 export type RouteData = Pick<GameData, "world">;
 

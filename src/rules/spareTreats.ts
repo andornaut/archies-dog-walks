@@ -1,6 +1,5 @@
 import type { GameData } from "../data/index.ts";
-import { heartsOf, packDogs } from "../state/pack.ts";
-import type { EffectSource, RunState } from "../state/runState.ts";
+import { type EffectSource, heartsOf, packDogs, type RunState } from "../state/index.ts";
 import type { Change, HeartChange } from "./causes.ts";
 import { ownerMaxHearts } from "./dogs.ts";
 import { changeHearts } from "./effects.ts";

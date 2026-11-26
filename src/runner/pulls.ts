@@ -2,12 +2,9 @@ import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
 
 import type { DogId, ObstacleEncounterId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
-import type { LaneDirection } from "../layout/lanes.ts";
-import { countTally } from "../rules/achievements.ts";
-import { modifiedStat } from "../rules/modifiers.ts";
-import { read } from "../rules/units.ts";
-import { packDogs } from "../state/pack.ts";
-import type { RunState } from "../state/runState.ts";
+import type { LaneDirection } from "../layout/index.ts";
+import { countTally, modifiedStat, read } from "../rules/index.ts";
+import { packDogs, type RunState } from "../state/index.ts";
 import type { RoadPoint } from "./collision.ts";
 import { componentHitBoxes } from "./componentHitBoxes.ts";
 import { pullLane } from "./laneControl.ts";

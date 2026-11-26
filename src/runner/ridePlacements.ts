@@ -1,4 +1,4 @@
-import type { LaneDirection } from "../layout/lanes.ts";
+import type { LaneDirection } from "../layout/index.ts";
 import { speedFactor } from "./moverDraws.ts";
 import { blockCells, bodyLength, drawnHitLength, rowsCovering } from "./moverExtents.ts";
 import type { MoverMotion, MoverPlacement, PlacementContext } from "./moverModel.ts";

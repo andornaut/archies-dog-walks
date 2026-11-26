@@ -5,11 +5,15 @@ import { HOME_TEXT_FIELDS } from "../content/index.ts";
 import type { DogId, GearId } from "../data/ids.ts";
 import type { GameData, Size } from "../data/index.ts";
 import { dollarText } from "../presentation/currency.ts";
-import { quipLine } from "../rules/choices.ts";
-import { sizeHearts } from "../rules/dogs.ts";
-import { effectClause, SIZE_NAMES } from "../rules/effectText.ts";
-import { price, unlockPrice } from "../rules/shop.ts";
-import { read } from "../rules/units.ts";
+import {
+  effectClause,
+  price,
+  quipLine,
+  read,
+  SIZE_NAMES,
+  sizeHearts,
+  unlockPrice,
+} from "../rules/index.ts";
 import type { Owned, SaveDocument } from "../save/schema.ts";
 import { type Cents, cents } from "../units.ts";
 

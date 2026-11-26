@@ -1,6 +1,6 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 
-import type { LaneDirection } from "../layout/lanes.ts";
+import type { LaneDirection } from "../layout/index.ts";
 import { speedFactor } from "./moverDraws.ts";
 import type {
   MoverDraws,

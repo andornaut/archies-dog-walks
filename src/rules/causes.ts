@@ -4,7 +4,7 @@ import { fillNames, signedText } from "@andornaut/game-kit/runtime/lines";
 import { minorObstacleName } from "../content/index.ts";
 import type { DogId, GearId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
-import type { ActiveModifier, EffectSource, ModifierSource } from "../state/runState.ts";
+import type { ActiveModifier, EffectSource, ModifierSource } from "../state/index.ts";
 import { type Cents, type Hearts, roundDollars } from "../units.ts";
 import type { Contribution } from "./modifiers.ts";
 

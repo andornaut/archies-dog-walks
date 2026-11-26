@@ -19,7 +19,7 @@ import {
   stripUnderClose,
 } from "../home/badgesView.ts";
 import type { DetailText } from "../home/detailCardView.ts";
-import { achievementLabel } from "../rules/achievements.ts";
+import { achievementLabel } from "../rules/index.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { labelInkWidth, type PixelTextStyle, withProbe } from "../ui/phaser/pixelText.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";

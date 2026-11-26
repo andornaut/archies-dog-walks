@@ -21,7 +21,7 @@ import type { DomEndScreen } from "../hud/dom/endScreen.ts";
 import type { DomQuestionPanel } from "../hud/dom/questionPanel.ts";
 import { isConfirmKey, isMuteKey } from "../input/keyBindings.ts";
 import { screenArea } from "../input/outsideTap.ts";
-import { SCREEN_LAYOUT } from "../layout/screen.ts";
+import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { PackFigures } from "../pack/phaser/packFigures.ts";
 import { stopWakeLock } from "../pwa/index.ts";
 import type { LastWalk } from "../save/schema.ts";

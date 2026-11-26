@@ -4,9 +4,8 @@
 
 import type { EncounterId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
-import { type Change, changeAmount } from "../rules/causes.ts";
-import type { PullStep } from "../runner/pulls.ts";
-import type { WalkStep } from "../runner/walk.ts";
+import { type Change, changeAmount } from "../rules/index.ts";
+import type { PullStep, WalkStep } from "../runner/index.ts";
 import { hitCue, type SoundCue } from "./sound.ts";
 
 type StepData = Pick<GameData, "encounters">;

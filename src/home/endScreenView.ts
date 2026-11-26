@@ -8,7 +8,7 @@ import type { AchievementId, DogId } from "../data/ids.ts";
 import { BADGE_STRIP, type GameData, SCREEN_CONFIG } from "../data/index.ts";
 import { signedShortDollarText } from "../presentation/currency.ts";
 import type { OwnerNameLine } from "../presentation/ownerName.ts";
-import { walkLength } from "../rules/route.ts";
+import { walkLength } from "../rules/index.ts";
 import type { LastWalk } from "../save/schema.ts";
 import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
 import type { PanelButton, PanelText } from "../ui/modal/types.ts";

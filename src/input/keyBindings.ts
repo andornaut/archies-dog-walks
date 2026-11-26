@@ -1,4 +1,4 @@
-import type { LaneDirection } from "../layout/lanes.ts";
+import type { LaneDirection } from "../layout/index.ts";
 import type { GestureAction } from "./gestures.ts";
 
 export type FocusDirection = "down" | "left" | "right" | "up";

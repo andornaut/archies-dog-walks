@@ -5,7 +5,7 @@ import type { GameObjects, Scene, Tweens } from "phaser";
 import { playEffect } from "../assets/phaser/sprites.ts";
 import { SLICES } from "../data/index.ts";
 import { loopFrame } from "../home/feedback.ts";
-import { SCREEN_LAYOUT } from "../layout/screen.ts";
+import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { fillRect } from "../ui/phaser/draw.ts";
 import { SELECT_OUTSET } from "../ui/selection.ts";

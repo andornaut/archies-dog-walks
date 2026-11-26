@@ -1,4 +1,4 @@
-import { laneMask } from "../layout/lanes.ts";
+import { laneMask } from "../layout/index.ts";
 import type {
   BlockCell,
   MoverBody,

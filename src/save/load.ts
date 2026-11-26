@@ -13,7 +13,7 @@ import type {
   ZoneId,
 } from "../data/ids.ts";
 import type { GameData, OptionPicks, TallyId } from "../data/index.ts";
-import { startingDogSlots } from "../rules/shop.ts";
+import { startingDogSlots } from "../rules/index.ts";
 import {
   createDefaultSave,
   MAX_RUN_DOGS,

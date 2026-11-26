@@ -1,6 +1,5 @@
 import type { GameData } from "../data/index.ts";
-import { packDogs } from "../state/pack.ts";
-import type { RunState } from "../state/runState.ts";
+import { packDogs, type RunState } from "../state/index.ts";
 import { baseMaxHearts, placeInPack } from "./dogs.ts";
 import { type ModifiedValue, statModified } from "./modified.ts";
 import { read } from "./units.ts";

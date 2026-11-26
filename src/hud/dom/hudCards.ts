@@ -4,10 +4,9 @@ import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { dogCardTag, dogFaceKey, domArtPath, ownerFaceKey } from "../../assets/index.ts";
 import { type GameData, SCREEN_CONFIG } from "../../data/index.ts";
 import { loopFrame } from "../../home/feedback.ts";
-import { SCREEN_LAYOUT } from "../../layout/screen.ts";
-import { ownerMaxHearts } from "../../rules/dogs.ts";
-import { faceMood } from "../../rules/treats.ts";
-import type { RunState } from "../../state/runState.ts";
+import { SCREEN_LAYOUT } from "../../layout/index.ts";
+import { faceMood, ownerMaxHearts } from "../../rules/index.ts";
+import type { RunState } from "../../state/index.ts";
 import { type DomArtSource, imageArt, sheetArt } from "../../ui/dom/artElements.ts";
 import { gridFillPart } from "../../ui/dom/parts.ts";
 import {

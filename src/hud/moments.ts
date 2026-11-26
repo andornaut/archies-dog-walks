@@ -15,9 +15,8 @@ import {
   MOMENT_PARTS,
   SCREEN_CONFIG,
 } from "../data/index.ts";
-import { type FaceMood, faceMood } from "../rules/treats.ts";
-import { slotIndexOf } from "../state/pack.ts";
-import type { Pack, PackSlot } from "../state/runState.ts";
+import { type FaceMood, faceMood } from "../rules/index.ts";
+import { type Pack, type PackSlot, slotIndexOf } from "../state/index.ts";
 import { TEXT_STYLE, TITLE_CAP_ROWS } from "../ui/textFit.ts";
 import type { Cents } from "../units.ts";
 import { type FaceBox, type FaceText, fillFaceText, ownerFaceText } from "./faceText.ts";

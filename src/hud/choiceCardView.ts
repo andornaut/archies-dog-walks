@@ -10,7 +10,7 @@ import { fittingText, type TextFitStyle } from "@andornaut/game-kit/runtime/text
 import { cardFrameTag, SKIP_CARD_ART } from "../assets/index.ts";
 import type { GameData } from "../data/index.ts";
 import type { DetailText } from "../home/detailCardView.ts";
-import { cardCharmPlates, cardCharmWidth } from "../layout/buffLayout.ts";
+import { cardCharmPlates, cardCharmWidth } from "../layout/index.ts";
 import {
   CARD_LAYOUT as CARD,
   FIRES_FIT,
@@ -26,7 +26,7 @@ import {
   firesText,
   hasPlaque,
   type OptionView,
-} from "../rules/choices.ts";
+} from "../rules/index.ts";
 import { inkWithPills } from "../ui/namePills.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { plainMarks } from "../ui/pixelFont.ts";

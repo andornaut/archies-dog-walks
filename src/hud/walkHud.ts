@@ -20,12 +20,12 @@ import {
   TOP_BAR_SIZES,
   WALK_BAR_PARTS,
 } from "../data/index.ts";
-import type { ScreenLayout } from "../layout/screenLayout.ts";
+import type { ScreenLayout } from "../layout/index.ts";
 import { type EffectItem, maxEffects } from "../presentation/effectIcons.ts";
 import type { OwnerNameLine } from "../presentation/ownerName.ts";
-import { walkLength } from "../rules/route.ts";
-import { zoneLength } from "../runner/walkMotion.ts";
-import type { RunState } from "../state/runState.ts";
+import { walkLength } from "../rules/index.ts";
+import { zoneLength } from "../runner/index.ts";
+import type { RunState } from "../state/index.ts";
 import { lineInk } from "../ui/lineInk.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { GAME_PROGRESS, GAME_PROGRESS_STYLE } from "../ui/progressBar.ts";

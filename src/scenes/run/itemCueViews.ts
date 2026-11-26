@@ -1,8 +1,7 @@
 import type { GameObjects } from "phaser";
 
 import { gameData } from "../../data/index.ts";
-import { bobOffset, itemBobs } from "../../runner/itemCues.ts";
-import type { WalkItem } from "../../runner/walkItems.ts";
+import { bobOffset, itemBobs, type WalkItem } from "../../runner/index.ts";
 
 // The walk screen's reading aid for road items: the grab-worthy ones bob, from the item's
 // data. View-only. Call after the item's sprites are placed, with the scene's time.

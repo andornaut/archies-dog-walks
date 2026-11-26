@@ -9,8 +9,7 @@ import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 
 import { ROAD_SPRITE_SIZE } from "../assets/index.ts";
 import { CELEBRATIONS, SCREEN_CONFIG } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../layout/screen.ts";
-import { WIDE_BUTTON } from "../layout/screenLayout.ts";
+import { SCREEN_LAYOUT, WIDE_BUTTON } from "../layout/index.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { iconBesideLabel } from "../ui/iconLabel.ts";
 import { LABEL_HELP_GAP } from "../ui/labelHelpGap.ts";

@@ -9,8 +9,7 @@ import { HIT_RULE } from "@andornaut/game-kit/runtime/ui/hitAreas";
 
 import type { DogId } from "../data/ids.ts";
 import { HOME_SCREEN, MIN_PRESS, SCREEN_CONFIG } from "../data/index.ts";
-import type { PackPlacement } from "../layout/packFormation.ts";
-import { SCREEN_LAYOUT } from "../layout/screen.ts";
+import { type PackPlacement, SCREEN_LAYOUT } from "../layout/index.ts";
 import { ownerPhotoRect } from "../presentation/ownerPhoto.ts";
 import { BUTTON_SIZE, raisedLabelCapTop } from "../ui/buttonGeometry.ts";
 import type { GridSpec } from "../ui/grid.ts";

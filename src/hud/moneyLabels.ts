@@ -2,8 +2,8 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { MONEY_LABEL_PLACE } from "../data/index.ts";
-import { SCREEN_LAYOUT } from "../layout/screen.ts";
-import { amountText } from "../rules/causes.ts";
+import { SCREEN_LAYOUT } from "../layout/index.ts";
+import { amountText } from "../rules/index.ts";
 import { type Cents, cents } from "../units.ts";
 import { FEEDBACK, tickMs } from "./feedback.ts";
 import { CHANGE_LABEL_STYLE, changeChipAt, changeLabelRoom } from "./hudLanes.ts";

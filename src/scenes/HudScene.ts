@@ -58,8 +58,7 @@ import {
   type WalkBarButtonId,
   walkBarLayout,
 } from "../hud/walkHud.ts";
-import { BUFF_POP, sparkleAt } from "../layout/buffLayout.ts";
-import { SCREEN_LAYOUT } from "../layout/screen.ts";
+import { BUFF_POP, SCREEN_LAYOUT, sparkleAt } from "../layout/index.ts";
 import { dollarAmountText, shortDollarAmountText } from "../presentation/currency.ts";
 import {
   effectIconKey,
@@ -68,12 +67,8 @@ import {
   perkIconKey,
 } from "../presentation/effectIcons.ts";
 import { pillKind } from "../presentation/effectNames.ts";
-import { ownerMaxHearts } from "../rules/dogs.ts";
-import { hintFor, hintJumpsQueue } from "../rules/hints.ts";
-import { walkEarnings } from "../rules/run.ts";
-import { faceMood } from "../rules/treats.ts";
-import { heartsOf, slotIndexOf } from "../state/pack.ts";
-import type { RunState } from "../state/runState.ts";
+import { faceMood, hintFor, hintJumpsQueue, ownerMaxHearts, walkEarnings } from "../rules/index.ts";
+import { heartsOf, type RunState, slotIndexOf } from "../state/index.ts";
 import {
   createNativeTopSection,
   type NativeTopSection,

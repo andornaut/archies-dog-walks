@@ -5,43 +5,45 @@ import { pixels } from "@andornaut/game-kit/runtime/units";
 
 import type { DogId, EncounterId, GearId, MinorObstacleId } from "../data/ids.ts";
 import type { CardSource, GameData, MovementKind } from "../data/index.ts";
-import type { LaneDirection } from "../layout/lanes.ts";
-import { formationOrder } from "../layout/packFormation.ts";
-import { countBump, countLandedBump, countTally } from "../rules/achievements.ts";
+import { formationOrder, type LaneDirection } from "../layout/index.ts";
 import {
-  type HeartChange,
-  modifierCauses,
-  type MoneyChange,
-  negatedCauses,
-} from "../rules/causes.ts";
-import { applyInstantEncounter, applyMinorContact, type ChoiceOutcome } from "../rules/choices.ts";
-import { expireAtZoneEnd, tickDebuffs } from "../rules/durations.ts";
-import { changeHearts } from "../rules/effects.ts";
-import { affectedDogs, hitLabel, opensCard } from "../rules/encounters.ts";
-import { grabGear } from "../rules/gearDrops.ts";
-import {
+  affectedDogs,
+  applyInstantEncounter,
+  applyMinorContact,
+  bumpCash,
+  bumpParts,
+  changeHearts,
   changeModified,
+  type ChoiceOutcome,
+  countBump,
+  countLandedBump,
+  countTally,
+  expireAtZoneEnd,
+  fireOwnersAtZero,
+  fullPackBonus,
+  grabGear,
+  grabTreat,
+  type HeartChange,
+  hitLabel,
+  modifiedStat,
   type ModifiedValue,
   modifiedValue,
   modifierCause,
+  modifierCauses,
   modifierCausesOf,
-} from "../rules/modified.ts";
-import { modifiedStat } from "../rules/modifiers.ts";
-import { walkLength } from "../rules/route.ts";
-import {
-  bumpCash,
-  bumpParts,
-  fireOwnersAtZero,
-  fullPackBonus,
+  type MoneyChange,
+  negatedCauses,
+  opensCard,
   payZone,
+  reachModified,
+  read,
+  spendSpareTreat,
+  tickDebuffs,
   tipValue,
-} from "../rules/run.ts";
-import { spendSpareTreat } from "../rules/spareTreats.ts";
-import { reachModified } from "../rules/standing.ts";
-import { grabTreat, type TreatGrabbed } from "../rules/treats.ts";
-import { read } from "../rules/units.ts";
-import { packDogs } from "../state/pack.ts";
-import type { RunState } from "../state/runState.ts";
+  type TreatGrabbed,
+  walkLength,
+} from "../rules/index.ts";
+import { packDogs, type RunState } from "../state/index.ts";
 import { addCents } from "../units.ts";
 import {
   approachChoices,

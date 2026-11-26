@@ -27,10 +27,9 @@ import {
   type TrackContext,
   trackPointer,
 } from "../../input/pointerTracking.ts";
-import type { LaneDirection } from "../../layout/lanes.ts";
-import { read } from "../../rules/units.ts";
-import type { SessionInput } from "../../runner/session.ts";
-import { steerWalk, type Walk } from "../../runner/walk.ts";
+import type { LaneDirection } from "../../layout/index.ts";
+import { read } from "../../rules/index.ts";
+import { type SessionInput, steerWalk, type Walk } from "../../runner/index.ts";
 import { deviceFitOwned } from "../../ui/worldFit.ts";
 import { listenPagePresses } from "../pagePresses.ts";
 import { addTapBurst } from "../uiKit.ts";

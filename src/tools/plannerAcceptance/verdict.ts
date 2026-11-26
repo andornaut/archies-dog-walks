@@ -2,7 +2,7 @@
 // The criteria follow the planner contract in docs/planner-work.md and the gameplay acceptance
 // rule.
 
-import { minimumSlotDelivery } from "../../runner/slotDelivery.ts";
+import { minimumSlotDelivery } from "../../runner/index.ts";
 
 export const ACCEPTANCE_PACK = ["ginger", "lady", "kilo"] as const;
 export const ACCEPTANCE_ROUTES = ["left", "straight", "right"] as const;

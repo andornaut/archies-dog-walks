@@ -3,7 +3,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { debuffIconKey } from "../../assets/index.ts";
 import type { DebuffId } from "../../data/ids.ts";
 import { gameData, SLICES } from "../../data/index.ts";
-import { SCREEN_LAYOUT } from "../../layout/screen.ts";
+import { SCREEN_LAYOUT } from "../../layout/index.ts";
 import {
   effectIconFallback,
   type EffectItem,
@@ -12,10 +12,8 @@ import {
   hudEffectIconKey,
   spareTreatWell,
 } from "../../presentation/effectIcons.ts";
-import { debuffLasting } from "../../rules/durations.ts";
-import { currentZone } from "../../rules/route.ts";
-import { read } from "../../rules/units.ts";
-import type { RunState } from "../../state/runState.ts";
+import { currentZone, debuffLasting, read } from "../../rules/index.ts";
+import type { RunState } from "../../state/index.ts";
 import { lineInk } from "../../ui/lineInk.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";

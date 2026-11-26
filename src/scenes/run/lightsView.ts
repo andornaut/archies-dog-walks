@@ -4,11 +4,16 @@ import { BlendModes, GameObjects, type Scene } from "phaser";
 import { spriteMetrics } from "../../assets/phaser/sprites.ts";
 import type { ZoneId } from "../../data/ids.ts";
 import { gameData } from "../../data/index.ts";
-import { distanceAtY } from "../../layout/projection.ts";
+import { distanceAtY } from "../../layout/index.ts";
 import {
   anchorSprite,
+  type BakedLight,
+  bakeLight,
   distanceBehind,
+  LIGHT_ATTACHMENTS,
   type LightAnchor,
+  LIGHTS,
+  lightTextureKey,
   newAttachedLightPlaces,
   newLightPlaces,
   placeAttachedLights,
@@ -17,15 +22,8 @@ import {
   VERGE_LIGHT_LIMIT,
   type VergeLightFrame,
   type VergeLightStage,
-} from "../../road/lightPlaces.ts";
-import {
-  type BakedLight,
-  bakeLight,
-  LIGHT_ATTACHMENTS,
-  LIGHTS,
-  lightTextureKey,
-} from "../../road/lights.ts";
-import { zoneLength } from "../../runner/walkMotion.ts";
+} from "../../road/index.ts";
+import { zoneLength } from "../../runner/index.ts";
 import { DEPTH, JUNCTURE_Y, LAYOUT, PROJECTION, sceneryFade, showOnRoad } from "./stage.ts";
 
 // The lights' sprites: each light def baked once into a texture of its stepped rings, drawn

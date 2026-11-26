@@ -1,7 +1,6 @@
 import type { DogId, EncounterId } from "../data/ids.ts";
 import type { Encounter } from "../data/index.ts";
-import { packDogs } from "../state/pack.ts";
-import type { RunState } from "../state/runState.ts";
+import { packDogs, type RunState } from "../state/index.ts";
 
 // The dogs an encounter affects when the pack meets it: every card hits the whole pack.
 export function affectedDogs(state: Pick<RunState, "pack">): DogId[] {

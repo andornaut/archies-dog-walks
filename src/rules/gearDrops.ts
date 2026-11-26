@@ -3,8 +3,7 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { GearId } from "../data/ids.ts";
 import type { GameData, LiveTuning } from "../data/index.ts";
-import { mapPack } from "../state/pack.ts";
-import type { EffectSource, ModifierSource, RunState } from "../state/runState.ts";
+import { type EffectSource, mapPack, type ModifierSource, type RunState } from "../state/index.ts";
 import { clampHearts } from "../units.ts";
 import { ownerMaxHearts } from "./dogs.ts";
 import { resolveEffects } from "./effects.ts";

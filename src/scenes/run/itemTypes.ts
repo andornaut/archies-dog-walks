@@ -1,6 +1,6 @@
 import type { GameObjects } from "phaser";
 
-import type { WalkItem } from "../../runner/walkItems.ts";
+import type { WalkItem } from "../../runner/index.ts";
 
 // One sprite of an item. dx is across the road from the item's centre and footY the flat
 // road row it stands on, both in road pixels. feet "bottom" stands it on its frame's bottom

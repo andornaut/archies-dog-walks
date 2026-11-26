@@ -1,5 +1,4 @@
-import { COMPONENT_SILHOUETTES } from "../layout/obstacleArt.ts";
-import { PART_INSET } from "../layout/packFormation.ts";
+import { COMPONENT_SILHOUETTES, PART_INSET } from "../layout/index.ts";
 import type { LanedBox } from "./collision.ts";
 import { facesLeft } from "./movers.ts";
 import { drawnObstacleBox, type RoadLens } from "./obstacleBox.ts";

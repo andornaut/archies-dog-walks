@@ -21,7 +21,7 @@ import { gameData, SCREEN_CONFIG } from "../data/index.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import { showCheats } from "../hud/dom/cheats.ts";
 import { type DomQuestionPanel, showQuestionPanel } from "../hud/dom/questionPanel.ts";
-import { packDogsOf } from "../state/pack.ts";
+import { packDogsOf } from "../state/index.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
 import { PALETTE } from "../ui/palette.ts";

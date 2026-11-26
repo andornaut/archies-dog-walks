@@ -9,8 +9,16 @@ import type {
   SharedHeartsEffect,
   Target,
 } from "../data/index.ts";
-import { heartsOf, mapPack, packDogs, packOrder, walkingAmong } from "../state/pack.ts";
-import type { ActiveModifier, EffectSource, RunState } from "../state/runState.ts";
+import {
+  type ActiveModifier,
+  type EffectSource,
+  heartsOf,
+  mapPack,
+  packDogs,
+  packOrder,
+  type RunState,
+  walkingAmong,
+} from "../state/index.ts";
 import { type Cents, cents, clampHearts, roundDollars } from "../units.ts";
 import {
   type Cause,

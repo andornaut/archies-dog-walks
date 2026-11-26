@@ -1,4 +1,4 @@
-import { laneMask } from "../layout/lanes.ts";
+import { laneMask } from "../layout/index.ts";
 import { type PreparedSlotKind, slotPlacementsAt } from "./slotCandidates.ts";
 import { createSlotFeasibility, type SlotPlacement } from "./slotFeasibility.ts";
 import {

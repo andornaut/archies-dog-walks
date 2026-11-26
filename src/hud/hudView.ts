@@ -1,7 +1,7 @@
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 
 import type { DebuffId, DogId } from "../data/ids.ts";
-import { amountText, type Change, changeAmount, type MoneyChange } from "../rules/causes.ts";
+import { amountText, type Change, changeAmount, type MoneyChange } from "../rules/index.ts";
 
 // A floating label for a change: over the dog's slot (dog), from where money changed hands to
 // the bank (bank), or, for a money gain, from by the cash total into it (cash), tip marking a

@@ -1,7 +1,10 @@
-import { stopsOnVerge } from "../runner/dartOutcomes.ts";
-import { moverPlace, moverY } from "../runner/movers.ts";
-import type { RoadGeometry } from "../runner/walkGeometry.ts";
-import type { WalkItem } from "../runner/walkItems.ts";
+import {
+  moverPlace,
+  moverY,
+  type RoadGeometry,
+  stopsOnVerge,
+  type WalkItem,
+} from "../runner/index.ts";
 import type { KeptScenery, RoadPlace } from "./struckScenery.ts";
 
 // Whether an item is a dart that stops on the verge. It leaves the walk as it leaves the road, so

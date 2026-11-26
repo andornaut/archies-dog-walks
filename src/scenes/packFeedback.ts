@@ -6,7 +6,7 @@ import { playTagOnce } from "../assets/phaser/sprites.ts";
 import { gameData, SCREEN_CONFIG } from "../data/index.ts";
 import { chipLeft, FEEDBACK, FLY_HEART, type LabelAnchor, stackOverPop } from "../hud/feedback.ts";
 import { changeChipAt } from "../hud/hudLanes.ts";
-import { COMIC_WORDS } from "../layout/comicWords.ts";
+import { COMIC_WORDS } from "../layout/index.ts";
 import { lineInk } from "../ui/lineInk.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { CREAM_PANEL_COLOURS, drawFramedRect } from "../ui/phaser/draw.ts";

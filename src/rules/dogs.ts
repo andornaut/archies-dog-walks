@@ -8,7 +8,7 @@ import type {
   PackSize,
   Size,
 } from "../data/index.ts";
-import type { RunState } from "../state/runState.ts";
+import type { RunState } from "../state/index.ts";
 import { clampHearts, type Hearts } from "../units.ts";
 import { modifiedStat } from "./modifiers.ts";
 import { read, readTable } from "./units.ts";

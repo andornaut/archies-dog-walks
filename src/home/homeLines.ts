@@ -6,12 +6,10 @@ import { HOME_TEXT_FIELDS, homeLine } from "../content/index.ts";
 import type { DogId, WalkerId } from "../data/ids.ts";
 import type { GameData, HomeText } from "../data/index.ts";
 import { dollarText } from "../presentation/currency.ts";
-import { packPlace, packSizeRaise } from "../rules/dogs.ts";
-import { modifiersOf } from "../rules/modifiers.ts";
-import { walkerOrder } from "../rules/walkers.ts";
+import { modifiersOf, packPlace, packSizeRaise, walkerOrder } from "../rules/index.ts";
 import type { StorageState } from "../save/profile.ts";
 import { type LastWalk, MAX_RUN_DOGS, type Owned } from "../save/schema.ts";
-import { packOrder } from "../state/pack.ts";
+import { packOrder } from "../state/index.ts";
 import type { Cents } from "../units.ts";
 import { type HomeLoadout, packCapacity, type Purchase } from "./home.ts";
 

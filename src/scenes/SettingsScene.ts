@@ -42,7 +42,7 @@ import {
   isPauseKey,
   menuKeyActs,
 } from "../input/keyBindings.ts";
-import { SCREEN_LAYOUT } from "../layout/screen.ts";
+import { SCREEN_LAYOUT } from "../layout/index.ts";
 import {
   installApp,
   installState,

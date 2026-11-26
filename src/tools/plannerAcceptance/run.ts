@@ -2,12 +2,11 @@ import { appendFileSync, existsSync, mkdirSync, readdirSync, writeFileSync } fro
 import { join } from "node:path";
 
 import { gameData } from "../../data/index.ts";
-import { SLOT_LIMITS } from "../../runner/slotPlanner.ts";
-import type { ZonePlanObservation } from "../../runner/zonePlan.ts";
+import { SLOT_LIMITS, type ZonePlanObservation } from "../../runner/index.ts";
 import { type RunResult, simulateRun } from "../../sim/simulate.ts";
 import { SKILL_PRESETS } from "../../sim/skills.ts";
 import type { ZoneWalkEvents } from "../../sim/walkEvents.ts";
-import type { RunState } from "../../state/runState.ts";
+import type { RunState } from "../../state/index.ts";
 import { UsageError } from "../usage.ts";
 import { certifyPlan, geometryValid } from "./certify.ts";
 import {

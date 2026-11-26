@@ -3,7 +3,7 @@ import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 import { chance, type Random, randomPick } from "@andornaut/game-kit/runtime/random";
 
 import type { GameData, MoveCount, Movement, NeighbourhoodId } from "../data/index.ts";
-import { read } from "../rules/units.ts";
+import { read } from "../rules/index.ts";
 import { assignedMovement, type ProfiledMovement } from "./movementAssignments.ts";
 import { hopSequences, hopShapes, SIDESTEPS } from "./moverHops.ts";
 import type { MoverFootprint, MoverMotion, MoverSpec, MoverStreams } from "./moverModel.ts";

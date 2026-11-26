@@ -15,12 +15,9 @@ import {
 } from "../help/helpPictures.ts";
 import { changeLabels } from "../hud/hudView.ts";
 import { NOTHING_PAUSED } from "../hud/topBar.ts";
-import { SCREEN_LAYOUT } from "../layout/screen.ts";
-import { currentZone } from "../rules/route.ts";
-import { read } from "../rules/units.ts";
-import { laneControlIn } from "../runner/laneControl.ts";
-import { laneMotionX } from "../runner/laneMotion.ts";
-import type { Walk } from "../runner/walk.ts";
+import { SCREEN_LAYOUT } from "../layout/index.ts";
+import { currentZone, read } from "../rules/index.ts";
+import { laneControlIn, laneMotionX, type Walk } from "../runner/index.ts";
 import { colourFromHex } from "../ui/palette.ts";
 import type { CardSceneData } from "./CardScene.ts";
 import type { HudSceneData } from "./HudScene.ts";

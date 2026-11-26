@@ -1,5 +1,5 @@
 import type { LiveTuning } from "../data/index.ts";
-import { read } from "../rules/units.ts";
+import { read } from "../rules/index.ts";
 
 // A choice card that breaks into the walk takes no
 // tap, press or key until seconds.screenTapGuard has passed since the first frame it is drawn

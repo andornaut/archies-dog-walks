@@ -1,7 +1,7 @@
 import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 import * as v from "valibot";
 
-import type { LaneDirection } from "../layout/lanes.ts";
+import type { LaneDirection } from "../layout/index.ts";
 import { parseRunSetup, type RunSetup, type RunSetupLimits, runSetupToQuery } from "./runSetup.ts";
 
 // The replay version covers encoded inputs and seeded planning; other versions are rejected.

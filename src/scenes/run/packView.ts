@@ -11,17 +11,19 @@ import {
 } from "../../assets/phaser/sprites.ts";
 import type { DogId } from "../../data/ids.ts";
 import { gameData } from "../../data/index.ts";
-import { graceAlpha } from "../../layout/graceBlink.ts";
-import { formationOrder, packDogOf, packPlacements } from "../../layout/packFormation.ts";
-import { distanceAtY, project } from "../../layout/projection.ts";
+import {
+  distanceAtY,
+  formationOrder,
+  graceAlpha,
+  packDogOf,
+  packPlacements,
+  project,
+} from "../../layout/index.ts";
 import type { StandingDog } from "../../pack/packDraw.ts";
 import { type Figure, PackFigures } from "../../pack/phaser/packFigures.ts";
-import { currentZone } from "../../rules/route.ts";
-import { read } from "../../rules/units.ts";
-import { laneMotionX } from "../../runner/laneMotion.ts";
-import { pullPose, type Pulls } from "../../runner/pulls.ts";
-import type { Walk } from "../../runner/walk.ts";
-import { packDogs } from "../../state/pack.ts";
+import { currentZone, read } from "../../rules/index.ts";
+import { laneMotionX, pullPose, type Pulls, type Walk } from "../../runner/index.ts";
+import { packDogs } from "../../state/index.ts";
 import { colourFromHex } from "../../ui/palette.ts";
 import { playBarkWord } from "../comicWord.ts";
 import { trotOffRoad } from "../feedbackMoments.ts";

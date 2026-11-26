@@ -1,8 +1,12 @@
 import type { DogId, EncounterId, WalkerId, ZoneId } from "../data/ids.ts";
 import type { OptionPicks } from "../data/index.ts";
-import type { AchievementData, RunCounters, RunFacts } from "../rules/achievements.ts";
-import { newWalkers } from "../rules/walkers.ts";
-import type { EndReason } from "../state/runState.ts";
+import {
+  type AchievementData,
+  newWalkers,
+  type RunCounters,
+  type RunFacts,
+} from "../rules/index.ts";
+import type { EndReason } from "../state/index.ts";
 import { addCents, type Cents, cents } from "../units.ts";
 import type { Checkpoint, DogRun, DogStats, LastWalk, SaveDocument, SaveStats } from "./schema.ts";
 import { bestWalkCents, ZERO_DOG_STATS } from "./stats.ts";

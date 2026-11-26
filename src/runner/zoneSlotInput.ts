@@ -1,5 +1,5 @@
 import type { GameData } from "../data/index.ts";
-import type { RunState } from "../state/runState.ts";
+import type { RunState } from "../state/index.ts";
 import type { ProfiledMovement } from "./movementAssignments.ts";
 import { moverSpec } from "./moverSpecs.ts";
 import type { SlotConfiguration, SlotKind } from "./slotConfig.ts";

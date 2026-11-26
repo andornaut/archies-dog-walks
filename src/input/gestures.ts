@@ -1,7 +1,6 @@
 import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 
-import type { LaneDirection } from "../layout/lanes.ts";
-import type { ScreenLayout } from "../layout/screenLayout.ts";
+import type { LaneDirection, ScreenLayout } from "../layout/index.ts";
 
 // Distances are in screen pixels. A lane-width is the road width over laneCount.
 // swipeStartDistance: the travel that takes a drag's first lane step, and the travel back that

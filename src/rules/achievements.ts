@@ -11,7 +11,7 @@ import type {
   TallyId,
   Threshold,
 } from "../data/index.ts";
-import type { RunState } from "../state/runState.ts";
+import type { RunState } from "../state/index.ts";
 import type { Cents } from "../units.ts";
 import { walkLength } from "./route.ts";
 

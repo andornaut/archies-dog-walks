@@ -4,8 +4,8 @@ import * as v from "valibot";
 import type { DogId, GearId, HintId, MinorObstacleId, WalkerId, ZoneId } from "../data/ids.ts";
 import type { OptionPicks, TallyId } from "../data/index.ts";
 import { MAX_PACK_DOGS } from "../packCapacity.ts";
-import type { RunCounters } from "../rules/achievements.ts";
-import type { EndReason } from "../state/runState.ts";
+import type { RunCounters } from "../rules/index.ts";
+import type { EndReason } from "../state/index.ts";
 import { type Cents, cents as toCents } from "../units.ts";
 
 export const SAVE_VERSION = 28;

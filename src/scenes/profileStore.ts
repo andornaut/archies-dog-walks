@@ -4,7 +4,7 @@ import { type Game, type Scene, Scenes } from "phaser";
 
 import type { AchievementId, HintId, WalkerId } from "../data/ids.ts";
 import { gameData } from "../data/index.ts";
-import type { Change } from "../rules/causes.ts";
+import type { Change } from "../rules/index.ts";
 import type { RunResult } from "../save/checkpoint.ts";
 import { saveContextFrom } from "../save/load.ts";
 import { ProfileSession, type RunEnd, type StorageState } from "../save/profile.ts";

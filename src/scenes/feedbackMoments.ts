@@ -45,9 +45,8 @@ import {
 } from "../hud/moments.ts";
 import { playerPaused, type RunPause, walkPaused } from "../hud/topBar.ts";
 import { DOG_CARD } from "../hud/walkHud.ts";
-import { SCREEN_LAYOUT } from "../layout/screen.ts";
-import { slotIndexOf } from "../state/pack.ts";
-import type { RunState } from "../state/runState.ts";
+import { SCREEN_LAYOUT } from "../layout/index.ts";
+import { type RunState, slotIndexOf } from "../state/index.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { type Cents, cents } from "../units.ts";
 import { arcFlight } from "./arcFlight.ts";

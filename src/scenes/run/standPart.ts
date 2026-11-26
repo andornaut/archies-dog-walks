@@ -1,6 +1,6 @@
 import { playFirstTag, type Shadow, showAtDepth } from "../../assets/phaser/sprites.ts";
-import { project } from "../../layout/projection.ts";
-import type { WalkItem } from "../../runner/walkItems.ts";
+import { project } from "../../layout/index.ts";
+import type { WalkItem } from "../../runner/index.ts";
 import type { ItemPart } from "./itemTypes.ts";
 import { DEPTH, PROJECTION, showOnRoad } from "./stage.ts";
 

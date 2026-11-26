@@ -1,7 +1,7 @@
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
-import { COMIC_WORDS, type ComicGlyph, comicWordWidth } from "../layout/comicWords.ts";
+import { COMIC_WORDS, type ComicGlyph, comicWordWidth } from "../layout/index.ts";
 
 // font-comic: the comic words' lettering, colours baked in, so drawn untinted.
 const COMIC_FONT = "font-comic";

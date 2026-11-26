@@ -10,13 +10,12 @@ import {
 } from "@andornaut/game-kit/runtime/web/ui/dom/button";
 
 import { cardGreyPath, DIFFICULTY_KEY } from "../../assets/index.ts";
-import { type GameData, SCREEN_CONFIG, SLICES } from "../../data/index.ts";
+import { CHARM, type GameData, SCREEN_CONFIG, SLICES } from "../../data/index.ts";
 import { textPart } from "../../home/dom/detailText.ts";
-import { CHARM } from "../../layout/buffLayout.ts";
-import { SCREEN_LAYOUT } from "../../layout/screen.ts";
+import { SCREEN_LAYOUT } from "../../layout/index.ts";
 import { CARD_LAYOUT, cardRowIn, forkHomeRect } from "../../presentation/cardLayout.ts";
 import { walkBarIconKey } from "../../presentation/effectIcons.ts";
-import { type CardView, MAX_CARD_OPTIONS } from "../../rules/choices.ts";
+import { type CardView, MAX_CARD_OPTIONS } from "../../rules/index.ts";
 import { cardHeader } from "../../ui/cardRow.ts";
 import { registerScenePointer } from "../../ui/dom/actionBinding.ts";
 import { type DomArtSource, imageArt, imageNineSlice, sheetArt } from "../../ui/dom/artElements.ts";

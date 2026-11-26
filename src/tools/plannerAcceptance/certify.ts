@@ -1,15 +1,22 @@
 import { gameData } from "../../data/index.ts";
-import { modifiedStat } from "../../rules/modifiers.ts";
-import { canonicalJson } from "../../runner/canonicalJson.ts";
-import { auditSlotPartialPlan, auditSlotPlan } from "../../runner/slotAudit.ts";
-import { apportionSlotCounts, SLOT_ROLES, slotCountTotal } from "../../runner/slotConfig.ts";
-import { quietCoverage } from "../../runner/slotCoverage.ts";
-import { minimumSlotDelivery } from "../../runner/slotDelivery.ts";
-import { materialisePartialSlotPlan, materialiseSlotPlan } from "../../runner/slotPlan.ts";
-import type { SpawnAudit } from "../../runner/spawnValidation.ts";
-import { type ZonePlanObservation, zoneSlotGuarantees } from "../../runner/zonePlan.ts";
-import { compileZoneSlotInput } from "../../runner/zoneSlotInput.ts";
-import type { RunState } from "../../state/runState.ts";
+import { modifiedStat } from "../../rules/index.ts";
+import {
+  apportionSlotCounts,
+  auditSlotPartialPlan,
+  auditSlotPlan,
+  canonicalJson,
+  compileZoneSlotInput,
+  materialisePartialSlotPlan,
+  materialiseSlotPlan,
+  minimumSlotDelivery,
+  quietCoverage,
+  SLOT_ROLES,
+  slotCountTotal,
+  type SpawnAudit,
+  type ZonePlanObservation,
+  zoneSlotGuarantees,
+} from "../../runner/index.ts";
+import type { RunState } from "../../state/index.ts";
 import type { PlanEvidence } from "./verdict.ts";
 import { visibleWitness } from "./visibility.ts";
 

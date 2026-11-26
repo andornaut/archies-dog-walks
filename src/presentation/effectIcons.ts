@@ -8,12 +8,16 @@ import {
 } from "../assets/index.ts";
 import type { GearId, UpgradeId, WalkerId, WalkerPerkId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
-import { gearSourceName } from "../rules/causes.ts";
-import { gearShort, perkEffect, upgradeLine } from "../rules/effectText.ts";
-import { walkLength } from "../rules/route.ts";
-import { spareTreatSource } from "../rules/spareTreats.ts";
-import { read } from "../rules/units.ts";
-import type { EffectSource, RunState } from "../state/runState.ts";
+import {
+  gearShort,
+  gearSourceName,
+  perkEffect,
+  read,
+  spareTreatSource,
+  upgradeLine,
+  walkLength,
+} from "../rules/index.ts";
+import type { EffectSource, RunState } from "../state/index.ts";
 
 // An effect in force on the walk, shown as an icon in the walk bar's effect wells. Holding one
 // explains it. A gear drop's charm is its gear, found, which has no well of its own.

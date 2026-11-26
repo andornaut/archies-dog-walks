@@ -2,7 +2,7 @@ import type { Scene } from "phaser";
 
 import { SCREEN_CONFIG } from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
-import { BUMP_FLASH, bumpBorder, bumpFlashOn } from "../layout/bumpFlash.ts";
+import { BUMP_FLASH, bumpBorder, bumpFlashOn } from "../layout/index.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";
 const SCREEN = { height: SCREEN_CONFIG.height, width: SCREEN_CONFIG.width, x: 0, y: 0 };

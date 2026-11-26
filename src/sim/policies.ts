@@ -1,8 +1,13 @@
 import { chance, type Random, randomInt } from "@andornaut/game-kit/runtime/random";
 
-import { heartsForgiven } from "../rules/causes.ts";
-import { type CardView, type Choice, type ChoiceData, chooseOption } from "../rules/choices.ts";
-import type { RunState } from "../state/runState.ts";
+import {
+  type CardView,
+  type Choice,
+  type ChoiceData,
+  chooseOption,
+  heartsForgiven,
+} from "../rules/index.ts";
+import type { RunState } from "../state/index.ts";
 import type { Cents } from "../units.ts";
 
 // heartsUnlessLow: take hearts unless an owner whose meter falls would end at LOW_HEARTS or

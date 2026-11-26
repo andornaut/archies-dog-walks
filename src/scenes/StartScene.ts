@@ -86,8 +86,7 @@ import {
   menuKeyActs,
 } from "../input/keyBindings.ts";
 import { screenArea } from "../input/outsideTap.ts";
-import type { PackPlacement } from "../layout/packFormation.ts";
-import { SCREEN_LAYOUT } from "../layout/screen.ts";
+import { type PackPlacement, SCREEN_LAYOUT } from "../layout/index.ts";
 import { waitedLoad } from "../loadingProgress.ts";
 import { addFigure, PackFigures } from "../pack/phaser/packFigures.ts";
 import { dollarAmountText, shortDollarAmountText } from "../presentation/currency.ts";
@@ -104,10 +103,10 @@ import {
   updateAccepting,
 } from "../pwa/index.ts";
 import { requestGameUpdateCheck } from "../pwa/launch.ts";
-import { walkerOrder } from "../rules/walkers.ts";
+import { walkerOrder } from "../rules/index.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { walksFinished, walksPlayed } from "../save/stats.ts";
-import { packDogsOf } from "../state/pack.ts";
+import { packDogsOf } from "../state/index.ts";
 import { disabledArtKey } from "../ui/disabledArt.ts";
 import type { NativeTopSection } from "../ui/dom/nativeTopSection.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";

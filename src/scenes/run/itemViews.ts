@@ -19,17 +19,29 @@ import { minorLooks } from "../../content/index.ts";
 import type { EncounterId, GearId, MinorObstacleId } from "../../data/ids.ts";
 import { gameData, type HintTrigger, LANE_COUNT } from "../../data/index.ts";
 import { moverHintTriggers } from "../../hud/hintTriggers.ts";
-import { obstacleParts } from "../../layout/obstacleArt.ts";
-import { herringNow } from "../../road/herrings.ts";
-import { type KeptScenery, struckBy, struckNow } from "../../road/struckScenery.ts";
-import { goesToVerge, vergeNow } from "../../road/vergeScenery.ts";
-import { type MoverOnRoad, moverTell } from "../../runner/movers.ts";
-import { screenRoadGeometry } from "../../runner/screenGeometry.ts";
-import { signaturePlace } from "../../runner/signaturePaths.ts";
-import type { SpawnEvent } from "../../runner/spawning.ts";
-import type { Walk, WalkStep } from "../../runner/walk.ts";
-import { type RoadGeometry, walkGeometry } from "../../runner/walkGeometry.ts";
-import { itemCategory, type WalkItem, type WalkItemKind } from "../../runner/walkItems.ts";
+import { obstacleParts } from "../../layout/index.ts";
+import {
+  goesToVerge,
+  herringNow,
+  type KeptScenery,
+  struckBy,
+  struckNow,
+  vergeNow,
+} from "../../road/index.ts";
+import {
+  itemCategory,
+  type MoverOnRoad,
+  moverTell,
+  type RoadGeometry,
+  screenRoadGeometry,
+  signaturePlace,
+  type SpawnEvent,
+  type Walk,
+  walkGeometry,
+  type WalkItem,
+  type WalkItemKind,
+  type WalkStep,
+} from "../../runner/index.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { applyItemCue } from "./itemCueViews.ts";
 import type { ItemPart, ItemView } from "./itemTypes.ts";

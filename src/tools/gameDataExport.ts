@@ -29,11 +29,15 @@ import type {
   WalkerId,
 } from "../data/ids.ts";
 import type { CardOption, CardSource, GameData } from "../data/index.ts";
-import { sizeHearts } from "../rules/dogs.ts";
-import { upgradeDuration } from "../rules/durations.ts";
-import { effectText, gearShort, upgradeLine } from "../rules/effectText.ts";
-import { faceMood } from "../rules/treats.ts";
-import { weightedZones } from "../rules/zones.ts";
+import {
+  effectText,
+  faceMood,
+  gearShort,
+  sizeHearts,
+  upgradeDuration,
+  upgradeLine,
+  weightedZones,
+} from "../rules/index.ts";
 import { SAVE_KEYS } from "../save/storage.ts";
 import { PREVIEW_HOST } from "./previewHost.ts";
 

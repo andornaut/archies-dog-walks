@@ -1,14 +1,18 @@
 import { gameData } from "../../data/index.ts";
-import { herringNow } from "../../road/herrings.ts";
-import { nextChoiceAt } from "../../runner/approach.ts";
-import { drawnLanes, type MoverPath, moverPlace } from "../../runner/movers.ts";
-import { screenRoadGeometry } from "../../runner/screenGeometry.ts";
-import { nextShyChoiceAt } from "../../runner/shy.ts";
-import { signaturePlace } from "../../runner/signaturePaths.ts";
-import type { SlotAssignment } from "../../runner/slotPlan.ts";
-import type { SpawnPlan } from "../../runner/spawning.ts";
-import type { WalkItemKind } from "../../runner/walkItems.ts";
-import type { RunState } from "../../state/runState.ts";
+import { herringNow } from "../../road/index.ts";
+import {
+  drawnLanes,
+  type MoverPath,
+  moverPlace,
+  nextChoiceAt,
+  nextShyChoiceAt,
+  screenRoadGeometry,
+  signaturePlace,
+  type SlotAssignment,
+  type SpawnPlan,
+  type WalkItemKind,
+} from "../../runner/index.ts";
+import type { RunState } from "../../state/index.ts";
 
 export type VisibleGeometry = Pick<
   SpawnPlan<WalkItemKind>,

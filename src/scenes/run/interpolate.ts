@@ -2,11 +2,14 @@ import { clamp01 } from "@andornaut/game-kit/runtime/numbers";
 import { pixels } from "@andornaut/game-kit/runtime/units";
 
 import type { GameData } from "../../data/index.ts";
-import { advanceLaneControl } from "../../runner/laneControl.ts";
-import type { SessionInput } from "../../runner/session.ts";
-import { steerWalk, type Walk } from "../../runner/walk.ts";
-import type { WalkItem } from "../../runner/walkItems.ts";
-import { laneMotionConfig } from "../../runner/walkMotion.ts";
+import {
+  advanceLaneControl,
+  laneMotionConfig,
+  type SessionInput,
+  steerWalk,
+  type Walk,
+  type WalkItem,
+} from "../../runner/index.ts";
 
 // The walk as drawn between two fixed steps. The session steps at 60 Hz while the screen may
 // refresh at any rate, so each frame draws the last two steps' walks blended by how far the

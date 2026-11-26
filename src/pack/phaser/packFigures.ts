@@ -10,8 +10,7 @@ import {
 } from "../../assets/phaser/sprites.ts";
 import type { DogId } from "../../data/ids.ts";
 import { gameData } from "../../data/index.ts";
-import type { DepthDraw } from "../../layout/depthScale.ts";
-import { PACK_DEPTH, tautLeashLine } from "../../layout/packFormation.ts";
+import { type DepthDraw, PACK_DEPTH, tautLeashLine } from "../../layout/index.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { drawPixelLine, drawShadow } from "../../ui/phaser/draw.ts";
 import { type Feet, type LeashLine, leashLine, packLayers, type StandingDog } from "../packDraw.ts";

@@ -1,5 +1,5 @@
 import type { StopLanes } from "../data/index.ts";
-import type { LaneDirection } from "../layout/lanes.ts";
+import type { LaneDirection } from "../layout/index.ts";
 import { DART_VERGE_LANES, dartOutcome } from "./dartOutcomes.ts";
 import { drawnCount, rangeAt, speedFactor } from "./moverDraws.ts";
 import {

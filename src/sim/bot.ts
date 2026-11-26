@@ -3,25 +3,37 @@ import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import { chance, type Random } from "@andornaut/game-kit/runtime/random";
 
 import type { DebuffId, DogId } from "../data/ids.ts";
-import { type LaneDirection, laneMask } from "../layout/lanes.ts";
-import { type RoadProjection, screenXAt } from "../layout/projection.ts";
-import { type LanedBox, type ScaledBox, sweptOverlapAt } from "../runner/collision.ts";
-import { type LaneControl, steerLane } from "../runner/laneControl.ts";
-import { hasLeftRoad, laneAt, type MoverPath, moverPlace, moverY } from "../runner/movers.ts";
-import { obstacleHitBoxes } from "../runner/obstacleGeometry.ts";
-import { moverOutcomes } from "../runner/outcomes.ts";
-import { contactWindow, type PullEvent, type Pulls } from "../runner/pulls.ts";
-import { signatureAlive } from "../runner/signaturePaths.ts";
-import { pickupReach, steerWalk, type Walk, type WalkData } from "../runner/walk.ts";
-import type { RoadGeometry } from "../runner/walkGeometry.ts";
+import { type LaneDirection, laneMask, type RoadProjection, screenXAt } from "../layout/index.ts";
 import {
+  contactWindow,
+  hasLeftRoad,
   isObstacleCategory,
   isPullObstacle,
   itemCategory,
+  laneAt,
+  type LaneControl,
+  type LanedBox,
+  laneMotionConfig,
+  laneMoveSeconds,
+  moverOutcomes,
+  type MoverPath,
+  moverPlace,
+  moverY,
+  obstacleHitBoxes,
+  pickupReach,
+  type PullEvent,
+  type Pulls,
+  type RoadGeometry,
+  type ScaledBox,
+  signatureAlive,
+  steerLane,
+  steerWalk,
+  sweptOverlapAt,
+  type Walk,
+  type WalkData,
   type WalkItem,
-} from "../runner/walkItems.ts";
-import { laneMotionConfig, laneMoveSeconds } from "../runner/walkMotion.ts";
-import type { RunState } from "../state/runState.ts";
+} from "../runner/index.ts";
+import type { RunState } from "../state/index.ts";
 import {
   type LaneHazard,
   type LanePrize,

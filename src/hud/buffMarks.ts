@@ -8,16 +8,23 @@ import {
   effectLine,
   effectName,
 } from "../presentation/effectIcons.ts";
-import { amountText, changeAmount } from "../rules/causes.ts";
-import { type CardView, type OptionView, outcomeChanges } from "../rules/choices.ts";
-import { packSizeRaise, placeInPack, SIZE_AGILITY } from "../rules/dogs.ts";
-import { laneSpeedText } from "../rules/effectText.ts";
-import type { ModifiedSubject, ModifiedValue } from "../rules/modified.ts";
-import { standingModified, type StandingRun } from "../rules/standing.ts";
-import type { WalkStep } from "../runner/walk.ts";
-import type { WalkItem } from "../runner/walkItems.ts";
-import { packDogs } from "../state/pack.ts";
-import type { ModifierSource } from "../state/runState.ts";
+import {
+  amountText,
+  type CardView,
+  changeAmount,
+  laneSpeedText,
+  type ModifiedSubject,
+  type ModifiedValue,
+  type OptionView,
+  outcomeChanges,
+  packSizeRaise,
+  placeInPack,
+  SIZE_AGILITY,
+  standingModified,
+  type StandingRun,
+} from "../rules/index.ts";
+import type { WalkItem, WalkStep } from "../runner/index.ts";
+import { type ModifierSource, packDogs } from "../state/index.ts";
 import type { MessageLine } from "./messageStrip.ts";
 import { RUN_TEXT_FIELDS } from "./runText.ts";
 import { stripLine } from "./stripLines.ts";

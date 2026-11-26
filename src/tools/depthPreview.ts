@@ -1,8 +1,13 @@
 import { blankImage, type RgbaImage } from "@andornaut/art-kit/build/rgbaImage";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { type DepthArt, type DepthDraw, depthDraw } from "../layout/depthScale.ts";
-import { project, type RoadProjection } from "../layout/projection.ts";
+import {
+  type DepthArt,
+  type DepthDraw,
+  depthDraw,
+  project,
+  type RoadProjection,
+} from "../layout/index.ts";
 import { glyphAdvance, normalizePixelText, PIXEL_GLYPHS } from "../ui/pixelFont.ts";
 
 // npm run art:depth-preview: a road sprite drawn as the game draws it at a sweep of

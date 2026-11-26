@@ -1,5 +1,11 @@
-import type { Silhouette } from "../layout/packFormation.ts";
-import { distanceAtY, roadXAt, scaleAt, screenXAt, screenYAt } from "../layout/projection.ts";
+import {
+  distanceAtY,
+  roadXAt,
+  scaleAt,
+  screenXAt,
+  screenYAt,
+  type Silhouette,
+} from "../layout/index.ts";
 import type { ScaledBox } from "./collision.ts";
 
 // An obstacle's hit box is what it draws, as the pack's parts are: the bounding box of its

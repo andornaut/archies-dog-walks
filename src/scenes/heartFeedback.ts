@@ -17,7 +17,7 @@ import { REACH_ICON } from "../hud/hudLanes.ts";
 import type { ChangeLabel } from "../hud/hudView.ts";
 import { arcControl } from "../hud/moments.ts";
 import { cardHearts } from "../hud/walkHud.ts";
-import { slotIndexOf } from "../state/pack.ts";
+import { slotIndexOf } from "../state/index.ts";
 import { lineInk } from "../ui/lineInk.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { plainMarks } from "../ui/pixelFont.ts";

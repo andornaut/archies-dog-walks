@@ -1,7 +1,6 @@
 import type { DogId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
-import { heartsOf, packDogs } from "../state/pack.ts";
-import type { RunState } from "../state/runState.ts";
+import { heartsOf, packDogs, type RunState } from "../state/index.ts";
 import { addCents } from "../units.ts";
 import type { HeartChange, MoneyChange } from "./causes.ts";
 import { ownerMaxHearts } from "./dogs.ts";

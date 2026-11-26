@@ -2,7 +2,7 @@ import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 
 import table from "../../shared/roadside.json" with { type: "json" };
-import { project, type RoadProjection } from "../layout/projection.ts";
+import { project, type RoadProjection } from "../layout/index.ts";
 import { STRIP } from "./roadRaster.ts";
 
 // The roadside props: houses, fences, trees and yard props standing on the lawns beyond the

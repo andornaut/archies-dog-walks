@@ -5,7 +5,7 @@ import type { RunSetup } from "../../cheats/runSetup.ts";
 import { loadoutFor } from "../../cheats/setupRun.ts";
 import type { DogId } from "../../data/ids.ts";
 import type { ResumeWalk } from "../../save/resume.ts";
-import type { Loadout, PackDogs } from "../../state/runState.ts";
+import type { Loadout, PackDogs } from "../../state/index.ts";
 import type { RunSceneData } from "../RunScene.ts";
 import type { RunStart } from "./runRecorder.ts";
 

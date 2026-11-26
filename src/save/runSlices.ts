@@ -1,8 +1,12 @@
 import type { GameData } from "../data/index.ts";
-import { lastHeartOwnersOf, runCountersOf } from "../rules/achievements.ts";
-import { walkLength } from "../rules/route.ts";
-import { endReasonOf, walkEarnings } from "../rules/run.ts";
-import type { RunState } from "../state/runState.ts";
+import {
+  endReasonOf,
+  lastHeartOwnersOf,
+  runCountersOf,
+  walkEarnings,
+  walkLength,
+} from "../rules/index.ts";
+import type { RunState } from "../state/index.ts";
 import type { RunResult } from "./checkpoint.ts";
 import type { Checkpoint, DogRun } from "./schema.ts";
 

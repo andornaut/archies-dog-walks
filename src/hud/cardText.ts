@@ -10,8 +10,7 @@ import {
 import type { GameData } from "../data/index.ts";
 import { boxStyle, CARD_LAYOUT, cardEffectBox, FIRES_FIT } from "../presentation/cardLayout.ts";
 import { withNamePills } from "../presentation/effectNames.ts";
-import { firesText, type OptionView } from "../rules/choices.ts";
-import { formatDollars, upgradeLine } from "../rules/effectText.ts";
+import { firesText, formatDollars, type OptionView, upgradeLine } from "../rules/index.ts";
 import { RUN_TEXT_FIELDS } from "./runText.ts";
 
 // What a card's plaque may say, longest first: the first that fits its room is shown. A path

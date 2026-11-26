@@ -5,10 +5,11 @@ import type { GameObjects, Scene } from "phaser";
 import { IDLE_TAG } from "../../assets/index.ts";
 import { showAtDepth, spriteMetrics } from "../../assets/phaser/sprites.ts";
 import { gameData } from "../../data/index.ts";
-import type { DepthDraw } from "../../layout/depthScale.ts";
-import { distanceAtY } from "../../layout/projection.ts";
-import { CARRIED_LIGHT_UP, carriedLightReach, distanceBehind } from "../../road/lightPlaces.ts";
+import { type DepthDraw, distanceAtY } from "../../layout/index.ts";
 import {
+  CARRIED_LIGHT_UP,
+  carriedLightReach,
+  distanceBehind,
   idleFrame,
   newRoadsidePlaces,
   placeRoadside,
@@ -19,8 +20,8 @@ import {
   type RoadsideLights,
   type RoadsidePlace,
   type RoadsideStage,
-} from "../../road/roadsideProps.ts";
-import { zoneLength } from "../../runner/walkMotion.ts";
+} from "../../road/index.ts";
+import { zoneLength } from "../../runner/index.ts";
 import { ShadowPool } from "./shadowPool.ts";
 import {
   DEPTH,

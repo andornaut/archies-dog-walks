@@ -5,7 +5,7 @@ import type { DogId } from "../data/ids.ts";
 import { gameData } from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
 import { OWNER_TAB, ownerTabRect } from "../hud/walkHud.ts";
-import { SCREEN_LAYOUT } from "../layout/screen.ts";
+import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { HUD_DEPTH } from "./hudDepth.ts";
 import type { TimedGroup } from "./timedGroup.ts";

@@ -13,8 +13,8 @@ import {
   picksOf,
   type RunFacts,
   thresholdWholes,
-} from "../rules/achievements.ts";
-import { walkLength } from "../rules/route.ts";
+  walkLength,
+} from "../rules/index.ts";
 import { dollarsToCents } from "../units.ts";
 import type { SaveDocument, SaveStats } from "./schema.ts";
 import { lifetimeEarnedNet, timesFired, walksFinished, walksPlayed } from "./stats.ts";

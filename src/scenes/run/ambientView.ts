@@ -15,7 +15,7 @@ import {
   placeAmbient,
   startAmbient,
   stepAmbient,
-} from "../../road/ambient.ts";
+} from "../../road/index.ts";
 import { DEPTH, LAYOUT, PROJECTION, showOnRoad } from "./stage.ts";
 
 // The art of a slot with no mover: none.

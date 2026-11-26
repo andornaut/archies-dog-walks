@@ -6,15 +6,26 @@ import { minorObstacleSpriteKey } from "../assets/index.ts";
 import { minorLook } from "../content/index.ts";
 import type { MinorObstacleId } from "../data/ids.ts";
 import type { DistractionPattern, GameData, Zone } from "../data/index.ts";
-import { read, readTable } from "../rules/units.ts";
-import { type Box, overlaps } from "../runner/collision.ts";
-import { DART_VERGE_LANES, stopsOnVerge } from "../runner/dartOutcomes.ts";
-import { drawnLanes, hasLeftRoad, type MoverOnRoad, moverPlace, moverY } from "../runner/movers.ts";
-import { itemHeight } from "../runner/obstacleGeometry.ts";
-import { signaturePlace, signatureSweeps } from "../runner/signaturePaths.ts";
-import type { RoadGeometry } from "../runner/walkGeometry.ts";
-import { footprintOf, type WalkItem, type WalkSpawn } from "../runner/walkItems.ts";
-import { zoneLength } from "../runner/walkMotion.ts";
+import { read, readTable } from "../rules/index.ts";
+import {
+  type Box,
+  DART_VERGE_LANES,
+  drawnLanes,
+  footprintOf,
+  hasLeftRoad,
+  itemHeight,
+  type MoverOnRoad,
+  moverPlace,
+  moverY,
+  overlaps,
+  type RoadGeometry,
+  signaturePlace,
+  signatureSweeps,
+  stopsOnVerge,
+  type WalkItem,
+  type WalkSpawn,
+  zoneLength,
+} from "../runner/index.ts";
 import { eachRoadsideProp, type RoadsideTable, START_STRIP_LENGTH } from "./roadsideProps.ts";
 
 // The distraction movers: red herrings. They wear the zone's own hazards (distractionKinds), step

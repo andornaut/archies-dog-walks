@@ -1,7 +1,7 @@
 import { progressAt, segmentAt } from "@andornaut/game-kit/runtime/motion";
 
 import type { MovementKind } from "../data/index.ts";
-import type { LaneDirection } from "../layout/lanes.ts";
+import type { LaneDirection } from "../layout/index.ts";
 import type { RoadItem } from "./roadItems.ts";
 import { signatureAlive, type SignaturePath, signaturePlace } from "./signaturePaths.ts";
 

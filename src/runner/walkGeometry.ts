@@ -7,10 +7,12 @@ import {
   type PackSprites,
   PART_INSET,
   type PartBox,
+  type RoadCamera,
+  type RoadProjection,
+  roadProjection,
   tallestPackLength,
-} from "../layout/packFormation.ts";
-import { type RoadCamera, type RoadProjection, roadProjection } from "../layout/projection.ts";
-import { walkerFootY } from "../layout/screenLayout.ts";
+  walkerFootY,
+} from "../layout/index.ts";
 import type { Box, ScaledBox } from "./collision.ts";
 import type { RoadLens } from "./obstacleBox.ts";
 import type { PickupKind } from "./walkItems.ts";

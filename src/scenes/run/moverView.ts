@@ -14,9 +14,8 @@ import {
 import { firstTag, playTag, showAtDepth } from "../../assets/phaser/sprites.ts";
 import type { EncounterId, MinorObstacleId } from "../../data/ids.ts";
 import { gameData, LANE_COUNT } from "../../data/index.ts";
-import { moverBodyArt } from "../../layout/obstacleArt.ts";
-import { project } from "../../layout/projection.ts";
-import { read } from "../../rules/units.ts";
+import { moverBodyArt, project } from "../../layout/index.ts";
+import { read } from "../../rules/index.ts";
 import {
   drawnLanes,
   facesLeft,
@@ -24,11 +23,12 @@ import {
   inMotion,
   isMerging,
   isSliding,
+  itemCategory,
   type MoverOnRoad,
   moverPlace,
   moverTell,
-} from "../../runner/movers.ts";
-import { itemCategory, type WalkItem } from "../../runner/walkItems.ts";
+  type WalkItem,
+} from "../../runner/index.ts";
 import type { ItemPart, ItemView } from "./itemTypes.ts";
 import { riderCuePosition } from "./riderCuePosition.ts";
 import { drawSignatureTrail } from "./signatureView.ts";

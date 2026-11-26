@@ -3,8 +3,7 @@ import type { Point } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
 import { playTagOnce } from "../../assets/phaser/sprites.ts";
-import type { WalkStep } from "../../runner/walk.ts";
-import type { WalkItem } from "../../runner/walkItems.ts";
+import type { WalkItem, WalkStep } from "../../runner/index.ts";
 
 // The sprite a collected tip, or a treat that pays cash, twinkles once over the lead dog: centred
 // on the dog's centre column, gap px plus half its frame height above the dog's top opaque row,

@@ -57,27 +57,27 @@ import {
   ZONE_PROGRESS,
   zoneProgressLayout,
 } from "../hud/walkHud.ts";
-import { COMIC_WORDS } from "../layout/comicWords.ts";
-import { laneCentreXs, laneDividerXs } from "../layout/lanes.ts";
 import {
   COLLAR_HEIGHTS,
+  columnSpan,
+  COMIC_WORDS,
+  distanceAtY,
   DOG_SILHOUETTES,
   LANE_HALF_WIDTH,
+  laneCentreXs,
+  laneDividerXs,
+  lineColumn,
   PACK_FEET,
   PACK_SLOTS,
   PART_INSET,
-  WALKER_HANDS,
-  WALKER_SILHOUETTES,
-} from "../layout/packFormation.ts";
-import {
-  columnSpan,
-  distanceAtY,
-  lineColumn,
+  ROAD_CAMERA,
   type RoadProjection,
   rowScale,
-} from "../layout/projection.ts";
-import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
-import { walkerFootY } from "../layout/screenLayout.ts";
+  SCREEN_LAYOUT,
+  WALKER_HANDS,
+  WALKER_SILHOUETTES,
+  walkerFootY,
+} from "../layout/index.ts";
 import {
   CARD_LAYOUT,
   cardEffectArea,
@@ -85,9 +85,8 @@ import {
   largeBodyBox,
   largeCardRect,
 } from "../presentation/cardLayout.ts";
-import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
-import { read } from "../rules/units.ts";
-import { walkProjection } from "../runner/walkGeometry.ts";
+import { MAX_CARD_OPTIONS, read } from "../rules/index.ts";
+import { walkProjection } from "../runner/index.ts";
 import { gridRects } from "../ui/grid.ts";
 import { type LineInk, lineInk } from "../ui/lineInk.ts";
 import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";

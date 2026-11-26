@@ -2,9 +2,9 @@ import { insetRect, type Point } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
 import { playEffect } from "../assets/phaser/sprites.ts";
-import { gameData } from "../data/index.ts";
+import { CHARM, gameData } from "../data/index.ts";
 import type { LabelAnchor } from "../hud/feedback.ts";
-import { BUFF_POP, CHARM, sparkleAt } from "../layout/buffLayout.ts";
+import { BUFF_POP, sparkleAt } from "../layout/index.ts";
 import {
   effectIconFallback,
   type EffectItem,

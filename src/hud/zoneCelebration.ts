@@ -5,10 +5,8 @@ import type { GameData } from "../data/index.ts";
 import { earningsKind } from "../home/endView.ts";
 import { signedDollarText } from "../presentation/currency.ts";
 import { perkIconKey } from "../presentation/effectIcons.ts";
-import type { Change } from "../rules/causes.ts";
-import { agilityPercent } from "../rules/effectText.ts";
-import { newWalkers } from "../rules/walkers.ts";
-import type { RunState } from "../state/runState.ts";
+import { agilityPercent, type Change, newWalkers } from "../rules/index.ts";
+import type { RunState } from "../state/index.ts";
 import { type Cents, cents } from "../units.ts";
 import { RUN_TEXT_FIELDS as FIELDS } from "./runText.ts";
 

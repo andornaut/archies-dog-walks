@@ -4,7 +4,7 @@ import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 import type { DogId } from "../data/ids.ts";
 import { type GameData, INLINE_FACE } from "../data/index.ts";
 import { type NameData, type NameMark, pilled } from "../presentation/effectNames.ts";
-import type { FaceMood } from "../rules/treats.ts";
+import type { FaceMood } from "../rules/index.ts";
 
 // Walk text that names owners, each name drawn led by the owner's face: the face, then the
 // name, then the rest of the line. A filled {owner} becomes a face and name token, which wraps

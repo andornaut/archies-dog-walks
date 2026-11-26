@@ -2,8 +2,7 @@ import { type Random, randomStream } from "@andornaut/game-kit/runtime/random";
 
 import type { DogId, ZoneId } from "../data/ids.ts";
 import type { CardSource, GameData } from "../data/index.ts";
-import type { LaneDirection } from "../layout/lanes.ts";
-import type { MoneyChange } from "../rules/causes.ts";
+import type { LaneDirection } from "../layout/index.ts";
 import {
   type CardData,
   cardFor,
@@ -11,12 +10,13 @@ import {
   type Choice,
   type ChoiceOutcome,
   chooseOption,
+  expireAtZoneEnd,
+  type MoneyChange,
   offerFork,
   openCard,
-} from "../rules/choices.ts";
-import { expireAtZoneEnd } from "../rules/durations.ts";
-import { read } from "../rules/units.ts";
-import type { RunState } from "../state/runState.ts";
+  read,
+} from "../rules/index.ts";
+import type { RunState } from "../state/index.ts";
 import { holdForFiring } from "./firingStop.ts";
 import { NO_PULLS, type PullData, type Pulls, type PullStep, stepPulls } from "./pulls.ts";
 import {

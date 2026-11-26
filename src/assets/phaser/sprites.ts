@@ -3,8 +3,7 @@ import { getOrInsertComputed } from "@andornaut/game-kit/runtime/maps";
 import { opaqueBoundsOfRgba, type PixelBounds } from "@andornaut/game-kit/runtime/opaqueBounds";
 import type { GameObjects, Scene } from "phaser";
 
-import { type DepthArt, type DepthDraw, depthDraw } from "../../layout/depthScale.ts";
-import { SCALE_STEPS } from "../../layout/projection.ts";
+import { type DepthArt, type DepthDraw, depthDraw, SCALE_STEPS } from "../../layout/index.ts";
 import {
   depthVariantKey,
   ROAD_SPRITE_SIZE,

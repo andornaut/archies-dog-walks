@@ -3,7 +3,7 @@ import type { Point } from "@andornaut/game-kit/runtime/rect";
 import { gameData } from "../data/index.ts";
 import { exceedsTapDistance, swipeDirection } from "../input/gestures.ts";
 import { isConfirmKey, isPauseKey, laneDirectionForKey } from "../input/keyBindings.ts";
-import { read } from "../rules/units.ts";
+import { read } from "../rules/index.ts";
 import { helpActionAt, type HelpActionBounds } from "./helpLayout.ts";
 import type { HelpAction } from "./helpPaging.ts";
 

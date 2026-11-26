@@ -1,7 +1,7 @@
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 
 import type { DogId } from "../data/ids.ts";
-import { COLLAR_HEIGHTS, leashHand, type PackPlacement } from "../layout/packFormation.ts";
+import { COLLAR_HEIGHTS, leashHand, type PackPlacement } from "../layout/index.ts";
 
 // How every screen draws the pack: the walk, the start screen's gate and the end screen's return
 // home stand it through these, so their leashes and draw order agree.

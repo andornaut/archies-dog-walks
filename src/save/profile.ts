@@ -12,7 +12,7 @@ import type {
 } from "@andornaut/game-kit/runtime/save/saveStore";
 
 import type { AchievementId, HintId } from "../data/ids.ts";
-import type { Change } from "../rules/causes.ts";
+import type { Change } from "../rules/index.ts";
 import type { Cents } from "../units.ts";
 import {
   type AchievementFacts,

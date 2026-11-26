@@ -12,7 +12,7 @@ import { debuffSoundCue } from "../../audio/sound.ts";
 import { choiceCues, contactCues, pullCues, stepCues } from "../../audio/stepCues.ts";
 import { minorLook, minorObstacleName } from "../../content/index.ts";
 import type { AchievementId, DogId, EncounterId, HintId } from "../../data/ids.ts";
-import { gameData, type HintTrigger } from "../../data/index.ts";
+import { CHARM, gameData, type HintTrigger } from "../../data/index.ts";
 import {
   type BuffPop,
   heartPopDogs,
@@ -59,9 +59,12 @@ import {
   spareTreatUsedLine,
   treatGrabLine,
 } from "../../hud/stripLines.ts";
-import { BUFF_POP, CHARM, charmByWalkerRect, charmOverRect } from "../../layout/buffLayout.ts";
-import { bumpFlash, type BumpSource } from "../../layout/bumpFlash.ts";
 import {
+  BUFF_POP,
+  bumpFlash,
+  type BumpSource,
+  charmByWalkerRect,
+  charmOverRect,
   contactDebuffBatch,
   ContactImpactFrame,
   contactImpacts,
@@ -71,28 +74,29 @@ import {
   obstacleMotion,
   splashEffect,
   whiteFlash,
-} from "../../layout/hitEffects.ts";
+} from "../../layout/index.ts";
 import { type EffectItem, effectItems, gearWell } from "../../presentation/effectIcons.ts";
 import {
   type Change,
+  type ChoiceOutcome,
   type HeartChange,
   heartsForgiven,
+  hintFor,
+  hitWord,
   type MoneyChange,
-} from "../../rules/causes.ts";
-import { type ChoiceOutcome, outcomeChanges, type QuipCue, quipLine } from "../../rules/choices.ts";
-import { hitWord } from "../../rules/encounters.ts";
-import { hintFor } from "../../rules/hints.ts";
-import { walkLength } from "../../rules/route.ts";
-import { walkEarnings } from "../../rules/run.ts";
-import { spareTreatGiver, spareTreatSource } from "../../rules/spareTreats.ts";
-import { read } from "../../rules/units.ts";
-import type { PullStep } from "../../runner/pulls.ts";
-import type { EncounterCard, MinorBump, WalkStep } from "../../runner/walk.ts";
-import type { WalkItem } from "../../runner/walkItems.ts";
+  outcomeChanges,
+  type QuipCue,
+  quipLine,
+  read,
+  spareTreatGiver,
+  spareTreatSource,
+  walkEarnings,
+  walkLength,
+} from "../../rules/index.ts";
+import type { EncounterCard, MinorBump, PullStep, WalkItem, WalkStep } from "../../runner/index.ts";
 import { previewedEarned, previewKey } from "../../save/achievementPreview.ts";
 import type { RunResult } from "../../save/checkpoint.ts";
-import { packDogs } from "../../state/pack.ts";
-import type { EffectSource, EndReason, RunState } from "../../state/runState.ts";
+import { type EffectSource, type EndReason, packDogs, type RunState } from "../../state/index.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { fillRect } from "../../ui/phaser/draw.ts";
 import { pixelLinePoints } from "../../ui/pixelShapes.ts";

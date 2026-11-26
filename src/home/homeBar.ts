@@ -1,6 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { SCREEN_LAYOUT } from "../layout/screen.ts";
+import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { topSectionButtonAt } from "../ui/topSection.ts";
 import { HOME_LAYOUT, type HomeBarButton, homeBarShown } from "./homeLayout.ts";
 

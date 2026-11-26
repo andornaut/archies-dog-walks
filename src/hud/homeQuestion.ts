@@ -3,9 +3,8 @@ import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import type { GameData } from "../data/index.ts";
 import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
 import { dollarText } from "../presentation/currency.ts";
-import { currentZone, walkLength } from "../rules/route.ts";
-import { payZone, walkEarnings } from "../rules/run.ts";
-import type { RunState } from "../state/runState.ts";
+import { currentZone, payZone, walkEarnings, walkLength } from "../rules/index.ts";
+import type { RunState } from "../state/index.ts";
 import { addCents, type Cents, cents } from "../units.ts";
 import { RUN_TEXT_FIELDS } from "./runText.ts";
 

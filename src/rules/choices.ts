@@ -12,8 +12,7 @@ import type {
   QuipMoment,
   UpgradeDuration,
 } from "../data/index.ts";
-import { packDogs, walkingAmong } from "../state/pack.ts";
-import type { EffectSource, RunState } from "../state/runState.ts";
+import { type EffectSource, packDogs, type RunState, walkingAmong } from "../state/index.ts";
 import { type Cents, cents, type Hearts } from "../units.ts";
 import { countOptionPick } from "./achievements.ts";
 import {

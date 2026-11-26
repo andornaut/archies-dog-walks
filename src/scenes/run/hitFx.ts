@@ -1,13 +1,14 @@
 import { type GameObjects, type Scene, TintModes } from "phaser";
 
 import { playEffect } from "../../assets/phaser/sprites.ts";
-import { BUMP_FLASH, bumpWorldOffset } from "../../layout/bumpFlash.ts";
 import {
+  BUMP_FLASH,
+  bumpWorldOffset,
   type FlashCue,
   HIT_ART,
   type HitEffect,
   type MotionStep,
-} from "../../layout/hitEffects.ts";
+} from "../../layout/index.ts";
 import { tagFrame } from "../uiKit.ts";
 import type { StruckBody } from "./itemViews.ts";
 

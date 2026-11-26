@@ -13,9 +13,9 @@ import {
   type GameData,
   SCREEN_CONFIG,
 } from "../data/index.ts";
-import { MIN_TAP_SIZE } from "../layout/screenLayout.ts";
+import { MIN_TAP_SIZE } from "../layout/index.ts";
 import { dollarText } from "../presentation/currency.ts";
-import { type AchievementData, conditionTarget, isMoneyCondition } from "../rules/achievements.ts";
+import { type AchievementData, conditionTarget, isMoneyCondition } from "../rules/index.ts";
 import { achievementJudge } from "../save/achievementJudge.ts";
 import type { SaveDocument } from "../save/schema.ts";
 import { closeControl } from "../ui/closeControl.ts";

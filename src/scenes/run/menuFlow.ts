@@ -2,7 +2,7 @@ import type { Scene } from "phaser";
 
 import type { HomeNoteLine } from "../../hud/homeQuestion.ts";
 import { playerPaused, type RunPause } from "../../hud/topBar.ts";
-import type { CardView, Choice } from "../../rules/choices.ts";
+import type { CardView, Choice } from "../../rules/index.ts";
 import type { CardSceneData } from "../CardScene.ts";
 import type { PauseOverlay, PauseSceneData } from "../PauseScene.ts";
 import { SCENE_KEYS, type SceneKey } from "../sceneKeys.ts";

@@ -1,7 +1,7 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import type { ZoneId } from "../data/ids.ts";
-import { project, type RoadProjection } from "../layout/projection.ts";
+import { project, type RoadProjection } from "../layout/index.ts";
 import {
   LIGHT_ATTACHMENTS,
   type LightAttachment,

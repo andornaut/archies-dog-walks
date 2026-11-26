@@ -4,7 +4,7 @@ import type { Events } from "phaser";
 import type { DogId } from "../data/ids.ts";
 import type { RunPause } from "../hud/topBar.ts";
 import type { ExplainTarget } from "../hud/walkHud.ts";
-import type { RunState } from "../state/runState.ts";
+import type { RunState } from "../state/index.ts";
 import type { PauseSceneData } from "./PauseScene.ts";
 
 // What the HUD draws: the run, the dogs the open card affects, what a held press explains, the

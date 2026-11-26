@@ -13,9 +13,7 @@ import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 
 import { type AssetManifest, backdropKey, depthVariantKey, roadTileKey } from "../assets/index.ts";
 import { gameData, LANE_COUNT, SCREEN_CONFIG, type Zone } from "../data/index.ts";
-import { laneCentreXs } from "../layout/lanes.ts";
-import { SCALE_STEPS } from "../layout/projection.ts";
-import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
+import { laneCentreXs, ROAD_CAMERA, SCALE_STEPS, SCREEN_LAYOUT } from "../layout/index.ts";
 import {
   drawRoad,
   type PixelImage,
@@ -24,8 +22,8 @@ import {
   roadRaster,
   solidStrip,
   STRIP,
-} from "../road/roadRaster.ts";
-import { walkProjection } from "../runner/walkGeometry.ts";
+} from "../road/index.ts";
+import { walkProjection } from "../runner/index.ts";
 import { GLYPH_HEIGHT } from "../ui/pixelFont.ts";
 import { ART_DIR, ART_MANIFEST, generateArtManifest, measureAnchor } from "./artManifest.ts";
 import { encodePng } from "./atlas/atlasBuild.ts";

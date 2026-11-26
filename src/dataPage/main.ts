@@ -19,22 +19,26 @@ import {
   type Zone,
 } from "../data/index.ts";
 import { badgeGoalText } from "../home/badgesView.ts";
-import { achievementConditionText } from "../rules/achievements.ts";
-import { maxHearts, sizeHearts } from "../rules/dogs.ts";
 import {
+  achievementConditionText,
   agilityPercent,
   capitalize,
   debuffText,
   effectText,
+  firstZoneId,
   formatDollars,
+  hintText,
+  maxHearts,
+  modifiersOf,
   perkEffect,
+  price,
   SIZE_NAMES,
-} from "../rules/effectText.ts";
-import { hintText } from "../rules/hints.ts";
-import { modifiersOf } from "../rules/modifiers.ts";
-import { firstZoneId, walkLength, zoneById } from "../rules/route.ts";
-import { price, unlockPrice } from "../rules/shop.ts";
-import { zoneStats } from "../rules/zones.ts";
+  sizeHearts,
+  unlockPrice,
+  walkLength,
+  zoneById,
+  zoneStats,
+} from "../rules/index.ts";
 import {
   activeValues,
   type Cell,

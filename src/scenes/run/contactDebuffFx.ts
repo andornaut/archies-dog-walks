@@ -4,8 +4,12 @@ import type { GameObjects, Scene, Time } from "phaser";
 
 import { playTagOnce } from "../../assets/phaser/sprites.ts";
 import type { DogId } from "../../data/ids.ts";
-import { DEBUFF_GROUND, type DebuffHitEffect, HIT_ART } from "../../layout/hitEffects.ts";
-import { formationOrder } from "../../layout/packFormation.ts";
+import {
+  DEBUFF_GROUND,
+  type DebuffHitEffect,
+  formationOrder,
+  HIT_ART,
+} from "../../layout/index.ts";
 import { tagFrame } from "../uiKit.ts";
 
 // One ground animation follows the dog selected as formation lead when the cue begins.

@@ -12,27 +12,38 @@ import {
   LANE_COUNT,
   SCREEN_CONFIG,
 } from "../data/index.ts";
-import { laneCentreXs } from "../layout/lanes.ts";
-import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
+import { laneCentreXs, ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/index.ts";
 import { cardRowIn } from "../presentation/cardLayout.ts";
-import type { Change } from "../rules/causes.ts";
-import { cardFor, type CardView, forkCard, MAX_CARD_OPTIONS } from "../rules/choices.ts";
-import { newRun } from "../rules/newRun.ts";
-import { firstZoneId, forkPaths, middleZoneId } from "../rules/route.ts";
-import { tipValue } from "../rules/run.ts";
-import { read } from "../rules/units.ts";
-import { laneControlIn } from "../runner/laneControl.ts";
-import { type LaneMotion, stillInLane } from "../runner/laneMotion.ts";
-import type { MoverOnRoad } from "../runner/movers.ts";
-import { itemHeight } from "../runner/obstacleGeometry.ts";
-import { NO_PULLS, type Pulls } from "../runner/pulls.ts";
-import { screenRoadGeometry } from "../runner/screenGeometry.ts";
-import { startRoad, type Walk } from "../runner/walk.ts";
-import { walkProjection } from "../runner/walkGeometry.ts";
-import type { WalkItem, WalkItemKind } from "../runner/walkItems.ts";
-import { zoneLength } from "../runner/walkMotion.ts";
-import { heartsOf, mapPack } from "../state/pack.ts";
-import type { PackDogs, PackSlot, RunState } from "../state/runState.ts";
+import {
+  cardFor,
+  type CardView,
+  type Change,
+  firstZoneId,
+  forkCard,
+  forkPaths,
+  MAX_CARD_OPTIONS,
+  middleZoneId,
+  newRun,
+  read,
+  tipValue,
+} from "../rules/index.ts";
+import {
+  itemHeight,
+  laneControlIn,
+  type LaneMotion,
+  type MoverOnRoad,
+  NO_PULLS,
+  type Pulls,
+  screenRoadGeometry,
+  startRoad,
+  stillInLane,
+  type Walk,
+  type WalkItem,
+  type WalkItemKind,
+  walkProjection,
+  zoneLength,
+} from "../runner/index.ts";
+import { heartsOf, mapPack, type PackDogs, type PackSlot, type RunState } from "../state/index.ts";
 import { addCents, cents, clampHearts } from "../units.ts";
 import { HELP_LAYOUT } from "./helpLayout.ts";
 

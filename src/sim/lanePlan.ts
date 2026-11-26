@@ -1,6 +1,6 @@
 import { clampIndex, partitionPoint } from "@andornaut/game-kit/runtime/arrays";
 
-import type { LaneDirection } from "../layout/lanes.ts";
+import type { LaneDirection } from "../layout/index.ts";
 
 // Times are seconds of walking from now, and lanes are lane masks: bit n set means lane n.
 // A hazard is hit by a pack that occupies one of its lanes during the open interval

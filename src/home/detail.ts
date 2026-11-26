@@ -4,14 +4,15 @@ import { HOME_TEXT_FIELDS } from "../content/index.ts";
 import type { DogId, GearId, WalkerId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
 import { dollarText } from "../presentation/currency.ts";
-import { SIZE_AGILITY, sizeHearts } from "../rules/dogs.ts";
 import {
   capitalize,
   dodgeInText,
   effectText,
   laneSpeedText,
+  SIZE_AGILITY,
   SIZE_NAMES,
-} from "../rules/effectText.ts";
+  sizeHearts,
+} from "../rules/index.ts";
 import type { Owned } from "../save/schema.ts";
 import type { Cents } from "../units.ts";
 import { type HomeLoadout, isAffordable, type Purchase, purchasePrice } from "./home.ts";

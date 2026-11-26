@@ -1,7 +1,7 @@
 import { itemAt, partitionPoint } from "@andornaut/game-kit/runtime/arrays";
 import type { Random } from "@andornaut/game-kit/runtime/random";
 
-import { laneMask } from "../layout/lanes.ts";
+import { laneMask } from "../layout/index.ts";
 import { approachOutcomes } from "./approach.ts";
 import { stopsOnVerge } from "./dartOutcomes.ts";
 import type { MoverSpec, MoverStand } from "./moverModel.ts";

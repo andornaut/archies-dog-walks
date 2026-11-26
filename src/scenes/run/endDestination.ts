@@ -1,4 +1,4 @@
-import type { RunState } from "../../state/runState.ts";
+import type { RunState } from "../../state/index.ts";
 import { SCENE_KEYS } from "../sceneKeys.ts";
 
 export type EndDestination = "end" | "title";

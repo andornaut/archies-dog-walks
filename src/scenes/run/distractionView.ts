@@ -7,20 +7,18 @@ import type { GameObjects, Scene } from "phaser";
 import { IDLE_TAG } from "../../assets/index.ts";
 import { firstTag, playTag, showAtDepth, spriteMetrics } from "../../assets/phaser/sprites.ts";
 import { gameData } from "../../data/index.ts";
-import { project } from "../../layout/projection.ts";
+import { project } from "../../layout/index.ts";
 import {
   type Distraction,
   type DistractionDeps,
   newDistractionPlace,
   placeDistraction,
+  ROADSIDE,
   startDistractions,
   stepDistractions,
-} from "../../road/distractions.ts";
-import { ROADSIDE } from "../../road/roadsideProps.ts";
-import { currentZone, previousZone } from "../../rules/route.ts";
-import { screenRoadGeometry } from "../../runner/screenGeometry.ts";
-import type { Walk } from "../../runner/walk.ts";
-import type { WalkItem } from "../../runner/walkItems.ts";
+} from "../../road/index.ts";
+import { currentZone, previousZone } from "../../rules/index.ts";
+import { screenRoadGeometry, type Walk, type WalkItem } from "../../runner/index.ts";
 import { DEPTH, LANE_XS, laneX, PROJECTION, ROW_DEPTH, showOnRoad } from "./stage.ts";
 
 // The tags a distraction moves in, the first its art has: it walks, or hops.

@@ -2,8 +2,7 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { WalkerId } from "../data/ids.ts";
 import type { Effect, GameData, Modifier, Walker } from "../data/index.ts";
-import { packDogs } from "../state/pack.ts";
-import type { RunState } from "../state/runState.ts";
+import { packDogs, type RunState } from "../state/index.ts";
 import { dogAgility } from "./dogs.ts";
 import { modifiedStat } from "./modifiers.ts";
 import { packModifiers } from "./run.ts";
