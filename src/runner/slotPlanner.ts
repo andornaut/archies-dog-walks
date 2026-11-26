@@ -1,55 +1,35 @@
-import { weightedPick } from "@andornaut/game-kit/runtime/random";
-
 import { deepFreeze } from "./deepFreeze.ts";
-import { auditSlotPartialPlan, auditSlotPlan, type SlotAudit } from "./slotAudit.ts";
+import type { SlotAudit } from "./slotAudit.ts";
 import { createSlotCandidateDomains } from "./slotCandidateDomains.ts";
-import {
-  isNativeSlotPreparation,
-  type PreparedSlotKind,
-  prepareSlotKindWithin,
-  SlotProfileError,
-} from "./slotCandidates.ts";
-import {
-  type SlotConfiguration,
-  slotConfigurationFailures,
-  slotCountTotal,
-  type SlotFailure,
-  type SlotKind,
-  type SlotLimits,
-  type SlotSource,
-} from "./slotConfig.ts";
+import { isNativeSlotPreparation } from "./slotCandidates.ts";
+import { createSlotCertification } from "./slotCertify.ts";
+import type { SlotConfiguration, SlotFailure, SlotKind, SlotLimits } from "./slotConfig.ts";
 import { createSlotConstructionState } from "./slotConstraintState.ts";
 import {
   describeSlotDelivery,
   minimumSlotDelivery,
   type SlotDelivery,
   type SlotDeliveryPolicy,
-  type SlotOmission,
   type SlotPartialAudit,
 } from "./slotDelivery.ts";
-import { slotMotionStreams, slotRandom } from "./slotEntropy.ts";
-import { makeSlotJobs, type SlotJob } from "./slotJobs.ts";
+import { slotRandom } from "./slotEntropy.ts";
+import { makeSlotJobs } from "./slotJobs.ts";
 import { guaranteeCompatiblePath } from "./slotPath.ts";
 import {
   materialisePartialSlotPlan,
   materialiseSlotPlan,
   type SlotAssignment,
 } from "./slotPlan.ts";
+import { createSlotPlanFrame } from "./slotPlanFrame.ts";
+import { createSlotPreparationCache, createSlotWitnessJobs } from "./slotPreparationCache.ts";
 import {
   createSlotWitnessSearch,
-  type WitnessJob,
   type WitnessOmission,
   type WitnessSelection,
   type WitnessWork,
 } from "./slotWitnessSearch.ts";
-import {
-  drawPath,
-  type PlannedSpawns,
-  rowSpacing,
-  type SpawnPlan,
-  type SpawnQuota,
-  zoneRows,
-} from "./spawning.ts";
+import { createSlotWorkMeter } from "./slotWorkMeter.ts";
+import type { PlannedSpawns, SpawnPlan, SpawnQuota } from "./spawning.ts";
 
 export const SLOT_LIMITS: SlotLimits = {
   anchors: 32768,
@@ -140,30 +120,26 @@ export function planSlotSpawns<Kind extends string>(
 ): SlotPlanningResult<Kind> {
   const policy: SlotDeliveryPolicy = "runtime-90";
   const limits = context.limits;
-  const attempts: SlotAttemptDiagnostics[] = [];
-  let attemptStart = { candidateChecks: 0, propagationChecks: 0 };
-  let attemptFloor: SlotAttemptDiagnostics["firstFloor"];
-  let attemptRestarted = false;
-  let attemptStopped = false;
   const assignments: SlotAssignment<Kind>[] = [];
   let path: PlannedSpawns<Kind>["path"] = [];
-  const stats = {
-    activeCommits: 0,
-    anchors: 0,
-    audits: 0,
-    candidateChecks: 0,
-    certificateTemplates: 0,
-    commits: 0,
-    compiledTemplates: 0,
-    profileCompiles: 0,
-    propagationChecks: 0,
-    rejections: {} as Record<string, number>,
+  let workFailure: SlotPlanningFailure<Kind> | undefined;
+  const fail = (stage: SlotPlanningFailure<Kind>["stage"], failure: SlotFailure<Kind>) => {
+    workFailure = unsupported(stage, [failure]);
   };
-  const diagnostics = (): SlotDiagnostics => ({
-    ...stats,
-    attempts: [...attempts],
-    rejections: { ...stats.rejections },
-  });
+  const {
+    attemptProgress,
+    attemptStopped,
+    diagnostics,
+    meter,
+    recordAttempt,
+    startAttempt,
+    stats,
+  } = createSlotWorkMeter<Kind>(
+    limits,
+    SLOT_LIMITS,
+    () => workFailure !== undefined,
+    (failure) => fail("construction", failure),
+  );
   const unsupported = (
     stage: "configuration" | "construction" | "invariant",
     failures: readonly SlotFailure<Kind>[],
@@ -177,95 +153,20 @@ export function planSlotSpawns<Kind extends string>(
     stage,
     status: "unsupported",
   });
-  const failures = slotConfigurationFailures(catalogue, limits, config);
-  if (
-    limits.candidateChecks > 2 * SLOT_LIMITS.candidateChecks ||
-    limits.anchors > SLOT_LIMITS.anchors ||
-    limits.compiledTemplates > SLOT_LIMITS.compiledTemplates ||
-    limits.slots > SLOT_LIMITS.slots
-  ) {
-    failures.push({ code: "portfolio-work-limit" });
-  }
-  const auxiliaryTotal = auxiliary.reduce((total, request) => total + request.count, 0);
-  if (auxiliary.some((request) => !Number.isSafeInteger(request.count) || request.count < 0)) {
-    failures.push({ code: "invalid-auxiliary-count" });
-  }
-  if (
-    Number.isSafeInteger(auxiliaryTotal) &&
-    slotCountTotal(config.capacity) + auxiliaryTotal > limits.slots
-  ) {
-    failures.push({
-      available: limits.slots,
-      code: "slot-limit",
-      required: slotCountTotal(config.capacity) + auxiliaryTotal,
-    });
-  }
-  if (auxiliary.some((request) => request.hazard ?? request.blocksLane)) {
-    failures.push({ code: "hazard-in-auxiliary-budget" });
-  }
-  if (
-    !Number.isSafeInteger(context.seed) ||
-    context.seed < 0 ||
-    context.seed > 0xffffffff ||
-    !Number.isSafeInteger(context.zoneIndex) ||
-    context.zoneIndex < 0
-  ) {
-    failures.push({ code: "invalid-seed-context" });
-  }
-  if (failures.length) {
-    return unsupported("configuration", failures);
-  }
-  const base: SpawnPlan<Kind> = { ...geometry, quotas: [] };
-  let spacing: number;
-  try {
-    spacing = rowSpacing(base);
-  } catch {
-    return unsupported("configuration", [{ code: "invalid-row-grid" }]);
-  }
-  if (
-    !Number.isFinite(spacing) ||
-    spacing <= 0 ||
-    !Number.isFinite(geometry.zoneLength) ||
-    geometry.zoneLength <= 0 ||
-    !Number.isFinite(geometry.sightLength) ||
-    geometry.sightLength < 0
-  ) {
-    return unsupported("configuration", [{ code: "invalid-row-grid" }]);
-  }
-  const rowBound =
-    Math.ceil(geometry.zoneLength / spacing) + Math.ceil(geometry.sightLength / spacing) + 2;
-  if (rowBound > limits.anchors) {
-    return unsupported("configuration", [
-      { available: limits.anchors, code: "grid-work-limit", required: rowBound },
-    ]);
-  }
-  const rows = zoneRows(base, spacing);
-  if (rows.length === 0 || rows.length > limits.anchors) {
-    return unsupported("configuration", [
-      { available: limits.anchors, code: "row-grid-limit", required: rows.length },
-    ]);
-  }
-  const invalidFootprint = catalogue.find(
-    (source) => source.footprint.lanes > geometry.laneCount || source.footprint.rows > rows.length,
+  const frame = createSlotPlanFrame(
+    SLOT_LIMITS,
+    limits,
+    context,
+    geometry,
+    catalogue,
+    auxiliary,
+    config,
   );
-  if (invalidFootprint !== undefined) {
-    return unsupported("configuration", [
-      { code: "footprint-does-not-fit", kind: invalidFootprint.kind, role: invalidFootprint.role },
-    ]);
+  if (frame.status === "unsupported") {
+    return unsupported("configuration", frame.failures);
   }
-  const fork = (name: string) => slotRandom(context, name);
-  const pathDraws: number[] = [];
-  const pathRandom = fork("path");
-  const pathLanes = drawPath(
-    () => {
-      const value = pathRandom();
-      pathDraws.push(value);
-      return value;
-    },
-    base,
-    rows.length,
-  );
-  path = rows.map((distance, row) => ({ distance, lane: pathLanes[row]! }));
+  path = frame.path;
+  const { pathDraws } = frame;
   if (
     geometry.maxEmptyRows !== Infinity &&
     (!Number.isSafeInteger(geometry.maxEmptyRows) || geometry.maxEmptyRows < 0)
@@ -274,81 +175,16 @@ export function planSlotSpawns<Kind extends string>(
   }
   const originalJobs = makeSlotJobs(catalogue, auxiliary, config);
   const guarantees = originalJobs.filter((job) => job.guaranteed === true);
-  const preparedCache = new Map<string, PreparedSlotKind<Kind>>();
-  let workFailure: Extract<SlotPlanningResult<Kind>, { status: "unsupported" }> | undefined;
   const finishWorkFailure = () =>
     workFailure === undefined ? undefined : { ...workFailure, diagnostics: diagnostics() };
-  const prepareSource = (
-    job: SlotJob<Kind>,
-    source: SlotSource<Kind>,
-  ): PreparedSlotKind<Kind> | undefined => {
-    if (workFailure !== undefined || attemptStopped) {
-      return undefined;
-    }
-    const key = `${job.key}:${source.kind}`;
-    const cached = preparedCache.get(key);
-    if (cached !== undefined) {
-      return cached;
-    }
-    if (stats.compiledTemplates >= limits.compiledTemplates) {
-      workFailure = unsupported("construction", [
-        {
-          available: limits.compiledTemplates,
-          code: "template-budget",
-          kind: source.kind,
-          role: job.role,
-        },
-      ]);
-      return undefined;
-    }
-    try {
-      const before = stats.compiledTemplates;
-      stats.profileCompiles++;
-      const prepared = prepareSlotKindWithin(
-        {
-          template() {
-            if (stats.compiledTemplates >= limits.compiledTemplates) {
-              return false;
-            }
-            stats.compiledTemplates++;
-            return true;
-          },
-        },
-        slotMotionStreams(context, job.key, source.kind),
-        geometry,
-        source,
-      );
-      if (prepared.status === "budget") {
-        workFailure = unsupported("construction", [
-          {
-            available: limits.compiledTemplates,
-            code: "template-budget",
-            kind: source.kind,
-            role: job.role,
-          },
-        ]);
-        return undefined;
-      }
-      const option = prepared.prepared;
-      if (
-        stats.compiledTemplates > limits.compiledTemplates ||
-        stats.compiledTemplates - before !== option.compiledCount
-      ) {
-        workFailure = unsupported("invariant", [{ code: "template-accounting" }]);
-        return undefined;
-      }
-      preparedCache.set(key, option);
-      return option;
-    } catch (error) {
-      if (!(error instanceof SlotProfileError)) {
-        throw error;
-      }
-      workFailure = unsupported("configuration", [
-        { code: "invalid-profile", kind: source.kind, role: job.role },
-      ]);
-      return undefined;
-    }
-  };
+  const { cachedPreparations, prepareSource } = createSlotPreparationCache(
+    limits,
+    context,
+    geometry,
+    stats,
+    meter.stopped,
+    fail,
+  );
   const mandatory = [];
   for (const job of guarantees) {
     for (const source of job.sources) {
@@ -359,37 +195,14 @@ export function planSlotSpawns<Kind extends string>(
       mandatory.push({ ordinal: job.ordinal, prepared, total: job.total });
     }
   }
-  const pathBudget = (type: "anchors" | "candidateChecks") => {
-    if (workFailure !== undefined || attemptStopped) {
-      return false;
-    }
-    if (stats[type] >= limits[type]) {
-      workFailure ??= unsupported("construction", [
-        {
-          available: limits[type],
-          code: type === "anchors" ? "anchor-budget" : "candidate-budget",
-        },
-      ]);
-      return false;
-    }
-    if (
-      type === "candidateChecks" &&
-      stats[type] - attemptStart[type] >= SLOT_LIMITS.candidateChecks
-    ) {
-      attemptStopped = true;
-      return false;
-    }
-    stats[type]++;
-    return true;
-  };
   const conditioned = guaranteeCompatiblePath(geometry, path, pathDraws, mandatory, {
-    anchor: () => pathBudget("anchors"),
-    check: () => pathBudget("candidateChecks"),
+    anchor: meter.anchor,
+    check: meter.check,
   });
   if (workFailure !== undefined) {
     return finishWorkFailure()!;
   }
-  if (attemptStopped) {
+  if (attemptStopped()) {
     return unsupported("construction", [
       { available: SLOT_LIMITS.candidateChecks, code: "candidate-attempt-budget" },
     ]);
@@ -403,190 +216,23 @@ export function planSlotSpawns<Kind extends string>(
   deepFreeze(geometry);
   path = deepFreeze(conditioned.path);
   const domains = createSlotCandidateDomains(geometry, path);
-  const layouts = new Map<string, number>();
-  const sourceOrders = new Map<SlotJob<Kind>, readonly SlotSource<Kind>[]>();
-  const orderSources = (job: SlotJob<Kind>) => {
-    let ordered = sourceOrders.get(job);
-    if (ordered === undefined) {
-      const remaining = [...job.sources];
-      const values: SlotSource<Kind>[] = [];
-      const draw = fork(`${job.key}-source-order`);
-      while (remaining.length > 0) {
-        const selected = weightedPick(
-          draw,
-          remaining,
-          remaining.map((source) => source.weight),
-        );
-        values.push(selected);
-        remaining.splice(remaining.indexOf(selected), 1);
-      }
-      ordered = Object.freeze(values);
-      sourceOrders.set(job, ordered);
-    }
-    return ordered;
-  };
-  const witnessJobs: WitnessJob<Kind>[] = originalJobs.map((job) => ({
-    columnPick: () => {
-      let draw = layouts.get(job.key);
-      if (draw === undefined) {
-        draw = fork(`${job.key}-layout`)();
-        layouts.set(job.key, draw);
-      }
-      return draw;
-    },
-    fixed: job.role === "encounterFixed" || job.role === "minorFixed",
-    guaranteed: job.guaranteed === true,
-    key: job.key,
-    laneEffect: job.laneEffect,
-    ...(job.guaranteed ? {} : { optional: true as const }),
-    ordinal: job.ordinal,
-    phase: job.phase,
-    *preparations() {
-      if (workFailure !== undefined || attemptStopped) {
-        return;
-      }
-      for (const source of orderSources(job)) {
-        const prepared = prepareSource(job, source);
-        if (prepared === undefined) {
-          return;
-        }
-        yield prepared;
-      }
-    },
-    total: job.total,
-  }));
-  const witnessByKey = new Map(witnessJobs.map((job) => [job.key, job]));
-  const sourceByKey = new Map(originalJobs.map((job) => [job.key, job]));
-  const bind = (
-    selected: readonly WitnessSelection<Kind>[],
-  ): SlotAssignment<Kind>[] | undefined => {
-    const ledger: SlotAssignment<Kind>[] = [];
-    for (const value of selected) {
-      const job = sourceByKey.get(value.job.key),
-        source = value.candidate.prepared.source;
-      if (
-        job === undefined ||
-        witnessByKey.get(job.key) !== value.job ||
-        value.owner !== value.job ||
-        !job.sources.includes(source) ||
-        source.role !== job.role ||
-        value.entry.trace.quotaIndex !== ledger.length ||
-        value.entry.trace.memberIndex !== 0 ||
-        value.entry.event !== value.candidate.entry.event ||
-        value.entry.request !== value.candidate.entry.request ||
-        value.entry.placement !== value.candidate.entry.placement
-      ) {
-        return undefined;
-      }
-      ledger.push({
-        ...(job.auxiliary === undefined ? {} : { auxiliary: job.auxiliary }),
-        binding: { kind: source.kind, role: source.role, weight: source.weight },
-        entry: value.entry,
-        key: job.key,
-        phase: job.phase,
-        role: job.role,
-      });
-    }
-    return ledger;
-  };
-  const bindOmissions = (
-    missing: readonly WitnessOmission<Kind>[],
-  ): readonly SlotOmission<Kind>[] | undefined => {
-    const omitted: SlotOmission<Kind>[] = [];
-    for (const value of missing) {
-      const job = sourceByKey.get(value.job.key);
-      if (job === undefined || witnessByKey.get(job.key) !== value.job || job.guaranteed) {
-        return undefined;
-      }
-      const kinds = new Set(job.sources.map((source) => source.kind));
-      omitted.push(
-        Object.freeze({
-          ...(job.auxiliary === undefined ? {} : { auxiliary: job.auxiliary }),
-          ...(kinds.size === 1 ? { kind: job.sources[0]!.kind } : {}),
-          key: job.key,
-          reason: value.reason,
-          role: job.role,
-        }),
-      );
-    }
-    return Object.freeze(omitted);
-  };
-  const certifyPartial = (
-    missing: readonly SlotOmission<Kind>[],
-    ledger: readonly SlotAssignment<Kind>[],
-  ) => {
-    const audit = auditSlotPartialPlan(
-      context,
-      geometry,
-      path,
-      catalogue,
-      auxiliary,
-      config,
-      missing,
-      ledger,
-    );
-    stats.audits++;
-    stats.certificateTemplates += audit.compiledTemplates;
-    return audit;
-  };
-  const certify = (ledger: readonly SlotAssignment<Kind>[]) => {
-    const audit = auditSlotPlan(
-      context,
-      geometry,
-      path,
-      catalogue,
-      auxiliary,
-      config,
-      "active",
-      ledger,
-    );
-    stats.audits++;
-    stats.certificateTemplates += audit.compiledTemplates;
-    return audit;
-  };
-  const certificate = (
-    audit: SlotAudit,
-    ledger: readonly SlotAssignment<Kind>[],
-  ): SlotCertificate<Kind> => ({
-    ...materialiseSlotPlan(geometry, path, ledger),
-    assignments: ledger,
-    audit,
-    phase: "active",
-  });
-  const meter = {
-    anchor: () => pathBudget("anchors"),
-    check: () => pathBudget("candidateChecks"),
-    progress: () => {
-      const allowance = SLOT_LIMITS.candidateChecks;
-      const share = (type: "candidateChecks" | "propagationChecks") => {
-        const used = stats[type] - attemptStart[type];
-        const remaining = Math.max(
-          0,
-          Math.min(allowance - used, limits.candidateChecks - stats[type]),
-        );
-        return used + remaining === 0 ? 1 : used / (used + remaining);
-      };
-      return Math.max(share("candidateChecks"), share("propagationChecks"));
-    },
-    propagate: () => {
-      if (workFailure !== undefined || attemptStopped) {
-        return false;
-      }
-      if (stats.propagationChecks >= limits.candidateChecks) {
-        workFailure = unsupported("construction", [
-          { available: limits.candidateChecks, code: "propagation-budget" },
-        ]);
-        return false;
-      }
-      if (stats.propagationChecks - attemptStart.propagationChecks >= SLOT_LIMITS.candidateChecks) {
-        attemptStopped = true;
-        return false;
-      }
-      stats.propagationChecks++;
-      return true;
-    },
-    stopped: () => workFailure !== undefined || attemptStopped,
-  };
+  const witnessJobs = createSlotWitnessJobs(
+    (name) => slotRandom(context, name),
+    meter.stopped,
+    prepareSource,
+    originalJobs,
+  );
+  const { bind, bindOmissions, certificate, certify, certifyPartial } = createSlotCertification(
+    context,
+    geometry,
+    path,
+    catalogue,
+    auxiliary,
+    config,
+    stats,
+    originalJobs,
+    witnessJobs,
+  );
   if (!meter.propagate()) {
     return (
       finishWorkFailure() ?? unsupported("construction", [{ code: "propagation-attempt-budget" }])
@@ -611,34 +257,7 @@ export function planSlotSpawns<Kind extends string>(
     },
     minimumDelivery: minimumSlotDelivery(policy, originalJobs.length),
     ...meter,
-    floorMet() {
-      attemptFloor ??= {
-        candidateChecks: stats.candidateChecks - attemptStart.candidateChecks,
-        propagationChecks: stats.propagationChecks - attemptStart.propagationChecks,
-      };
-    },
-    rejected(candidate, failure) {
-      const key = `${candidate.prepared.source.kind}:${failure.rule}`;
-      stats.rejections[key] = (stats.rejections[key] ?? 0) + 1;
-    },
-    reserveRestarted() {
-      attemptRestarted = true;
-    },
-  };
-  const recordAttempt = (
-    ordering: "original" | "balanced",
-    status: SlotAttemptDiagnostics["status"],
-  ) => {
-    attempts.push({
-      candidateChecks: stats.candidateChecks - attemptStart.candidateChecks,
-      ...(attemptFloor === undefined ? {} : { firstFloor: attemptFloor }),
-      ordering,
-      propagationChecks: stats.propagationChecks - attemptStart.propagationChecks,
-      reserveRestart: attemptRestarted,
-      status,
-    });
-    attemptFloor = undefined;
-    attemptRestarted = false;
+    ...attemptProgress,
   };
   const solve = (ordering: "original" | "balanced") => {
     const board = createSlotConstructionState(geometry, path);
@@ -659,14 +278,10 @@ export function planSlotSpawns<Kind extends string>(
     solved.status !== "partial" &&
     !(solved.status === "blocked" && solved.failure.classification === "unattributed")
   ) {
-    attemptStart = {
-      candidateChecks: stats.candidateChecks,
-      propagationChecks: stats.propagationChecks,
-    };
-    attemptStopped = false;
+    startAttempt();
     // The balanced attempt bills one boundary check, then one per reused preparation.
     meter.propagate();
-    for (const prepared of preparedCache.values()) {
+    for (const prepared of cachedPreparations()) {
       if (!meter.propagate()) {
         break;
       }
