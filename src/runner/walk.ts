@@ -1,4 +1,3 @@
-import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 import { chance, type Random } from "@andornaut/game-kit/runtime/random";
 import { pixels } from "@andornaut/game-kit/runtime/units";
@@ -46,25 +45,12 @@ import {
 import { packDogs, type RunState } from "../state/index.ts";
 import { addCents } from "../units.ts";
 import {
-  approachChoices,
-  type ApproachPath,
-  nearestStep,
-  nextChoiceAt,
-  nextStepAt,
-  takeStep,
-} from "./approach.ts";
-import {
   type Box,
   collideWithPack,
   type CollisionRules,
-  type DogBox,
   hitDog,
-  type LanedBox,
   overlaps,
-  type PackBoxes,
   pickupDog,
-  type RoadPoint,
-  sweptHitDog,
   tickInvulnerability,
 } from "./collision.ts";
 import {
@@ -75,27 +61,12 @@ import {
   tickHitStop,
 } from "./hitStop.ts";
 import { advanceLaneControl, type LaneControl, laneControlIn, steerLane } from "./laneControl.ts";
-import { type LaneMotion, laneMotionX, stillInLane } from "./laneMotion.ts";
-import {
-  hasLeftRoad,
-  isWarning,
-  laneAt,
-  moveMovers,
-  type MoverItem,
-  moverPlace,
-  moverY,
-} from "./movers.ts";
-import {
-  componentHitLength,
-  itemHeight,
-  obstacleHitBox,
-  obstacleHitBoxes,
-  walkItemBox,
-} from "./obstacleGeometry.ts";
-import { awayHop, nextShyChoiceAt, shyChoices, type ShyPath, takeHop } from "./shy.ts";
-import { signatureAlive, signatureSweeps } from "./signaturePaths.ts";
+import { stillInLane } from "./laneMotion.ts";
+import { laneAt, moveMovers, type MoverItem, moverPlace, moverY } from "./movers.ts";
+import { componentHitLength, itemHeight, obstacleHitBox, walkItemBox } from "./obstacleGeometry.ts";
 import type { AdmissionReport } from "./spawnAdmission.ts";
 import { type PathRow, type SpawnEvent, takeDueSpawns } from "./spawning.ts";
+import { signatureContact } from "./walkContacts.ts";
 import type { RoadGeometry } from "./walkGeometry.ts";
 import {
   footprintOf,
@@ -110,6 +81,11 @@ import {
   type WalkSpawn,
 } from "./walkItems.ts";
 import { laneMotionConfig, roadScrollSpeed, zoneLength } from "./walkMotion.ts";
+import { shyHopped, stalkersStepped } from "./walkMoverChoices.ts";
+import { packBoxes, sweptPackBoxes } from "./walkPackPlacement.ts";
+import { passedWalker, scrolledItems, signatureOnRoad } from "./walkRoadItems.ts";
+
+export { packBoxes, sweptPackBoxes };
 
 export type WalkData = Pick<
   GameData,
@@ -340,213 +316,6 @@ function bumpDog(
   const base = -read(data.tuning, "hearts", "bump");
   const hearts = modifiedValue({ dog, kind: "hearts" }, base, by);
   return { cash, change: bumped.change, modified: [hearts, paid], state };
-}
-
-// The pack's place across the road, in road pixels from its left edge: the walker's lane
-// centre, moving linearly between lanes.
-function packX(cellLength: number, laneCount: number, motion: LaneMotion): number {
-  const centres = Array.from({ length: laneCount }, (_, lane) => (lane + 0.5) * cellLength);
-  return laneMotionX(centres, motion);
-}
-
-// The pack's outline and hit rectangles swept across the road from its place in one motion to
-// its place in another: each spans every place between, so a quick lane change passes nothing
-// by between two steps. The walking dogs' rectangles are in pack order.
-export function sweptPackBoxes(
-  geometry: Pick<RoadGeometry, "cell" | "laneCount" | "lens" | "packParts">,
-  from: LaneMotion,
-  to: LaneMotion,
-  run: Pick<RunState, "pack">,
-): PackBoxes<DogId> {
-  const fromX = packX(geometry.cell.length, geometry.laneCount, from);
-  const toX = packX(geometry.cell.length, geometry.laneCount, to);
-  const across = <Part extends Box>(part: Part): Part => ({
-    ...part,
-    left: Math.min(fromX, toX) + part.left,
-    right: Math.max(fromX, toX) + part.right,
-  });
-  const { packParts } = geometry;
-  return {
-    centreX: geometry.lens.centreX,
-    dogs: formationOrder(packDogs(run)).map((dog, index): DogBox<DogId> => ({
-      ...across(itemAt(packParts.dogs, index)),
-      dog,
-    })),
-    outline: across(packParts.outline),
-    walker: across(packParts.walker),
-  };
-}
-
-// The pack's outline and hit rectangles at its place on the road.
-export function packBoxes(
-  geometry: Pick<RoadGeometry, "cell" | "laneCount" | "lens" | "packParts">,
-  motion: LaneMotion,
-  run: Pick<RunState, "pack">,
-): PackBoxes<DogId> {
-  return sweptPackBoxes(geometry, motion, motion, run);
-}
-
-// The pack's centre on the road: across from where its lane motion has it, and half way down its
-// band.
-function packCentre(
-  geometry: Pick<RoadGeometry, "cell" | "laneCount" | "packBand">,
-  motion: LaneMotion,
-): RoadPoint {
-  const { cell, laneCount, packBand } = geometry;
-  return { x: packX(cell.length, laneCount, motion), y: (packBand.top + packBand.bottom) / 2 };
-}
-
-// A mover's centre on the road at a place.
-function moverCentre(
-  geometry: Pick<RoadGeometry, "cell" | "roadTop">,
-  item: WalkItem,
-  place: { readonly lanePosition: number; readonly travel: number },
-): RoadPoint {
-  return {
-    x: (place.lanePosition + item.laneSpan / 2) * geometry.cell.length,
-    y: geometry.roadTop - item.height / 2 + place.travel,
-  };
-}
-
-// Each stalker whose next step is due to be chosen, as its cue begins or, with no cue, as it
-// starts, chooses that step toward the pack where it is now (approach.ts): the pack's centre
-// (packCentre), and the stalker's centre as the step starts.
-function stalkersStepped(
-  geometry: Pick<RoadGeometry, "cell" | "laneCount" | "packBand" | "roadTop">,
-  motion: LaneMotion,
-  items: readonly WalkItem[],
-): WalkItem[] {
-  const { cell, laneCount } = geometry;
-  const pack = packCentre(geometry, motion);
-  return items.map((item) => {
-    const { mover } = item;
-    if (mover?.path.motion !== "approach") {
-      return item;
-    }
-    let path: ApproachPath = mover.path;
-    for (let choice = nextChoiceAt(path); choice !== null && mover.since >= choice;) {
-      const at = nextStepAt(path) ?? choice;
-      const centre = moverCentre(geometry, item, moverPlace(laneCount, path, at));
-      path = takeStep(
-        path,
-        nearestStep(cell.length, path.burst, centre, pack, approachChoices(path)),
-      );
-      choice = nextChoiceAt(path);
-    }
-    return path === mover.path ? item : { ...item, mover: { ...mover, path } };
-  });
-}
-
-// Each shy hopper whose next hop is due to be chosen, as its cue begins or, with no cue, as it
-// starts, chooses that hop away from the pack where it is now (shy.ts): the pack's centre
-// (packCentre), with the lanes it is in or moving into, and the hopper's centre as the hop starts.
-function shyHopped(
-  geometry: Pick<RoadGeometry, "cell" | "laneCount" | "packBand" | "roadTop">,
-  motion: LaneMotion,
-  items: readonly WalkItem[],
-): WalkItem[] {
-  const { cell, laneCount } = geometry;
-  const pack = {
-    ...packCentre(geometry, motion),
-    lanes: motion.kind === "still" ? [motion.lane] : [motion.from, motion.to],
-  };
-  return items.map((item) => {
-    const { mover } = item;
-    if (mover?.path.motion !== "shy") {
-      return item;
-    }
-    let path: ShyPath = mover.path;
-    for (let choice = nextShyChoiceAt(path); choice !== null && mover.since >= choice;) {
-      const centre = moverCentre(
-        geometry,
-        item,
-        moverPlace(laneCount, path, path.pending[0] ?? choice),
-      );
-      path = takeHop(path, awayHop(cell.length, path.burst, centre, pack, shyChoices(path)));
-      choice = nextShyChoiceAt(path);
-    }
-    return path === mover.path ? item : { ...item, mover: { ...mover, path } };
-  });
-}
-
-function blendPack(
-  alpha: number,
-  before: PackBoxes<DogId>,
-  after: PackBoxes<DogId>,
-): PackBoxes<DogId> {
-  const blend = <Part extends Box>(a: Part, b: Part): Part => ({
-    ...b,
-    bottom: a.bottom + (b.bottom - a.bottom) * alpha,
-    left: a.left + (b.left - a.left) * alpha,
-    right: a.right + (b.right - a.right) * alpha,
-    top: a.top + (b.top - a.top) * alpha,
-  });
-  return {
-    ...after,
-    dogs: before.dogs.map((part, index) => blend(part, after.dogs[index] ?? part)),
-    outline: blend(before.outline, after.outline),
-    walker: blend(before.walker, after.walker),
-  };
-}
-
-function signatureContact(
-  data: Pick<GameData, "encounters" | "minorObstacles">,
-  geometry: RoadGeometry,
-  before: PackBoxes<DogId>,
-  after: PackBoxes<DogId>,
-  travel: number,
-  item: WalkItem,
-): DogId | null {
-  const { mover } = item;
-  if (mover?.path.motion !== "signature") {
-    return null;
-  }
-  const { path, since } = mover;
-  const first = Math.max(0, since - travel);
-  if (first === since) {
-    return (
-      obstacleHitBoxes(data, geometry, item)
-        .map((box) => hitDog(after, box))
-        .find((dog) => dog !== null) ?? null
-    );
-  }
-  const at = (position: number, component: number): LanedBox => {
-    const place = moverPlace(geometry.laneCount, path, position);
-    const shown = {
-      ...item,
-      mover: { path, since: position },
-      y: moverY(geometry.roadTop, item.height, place),
-    };
-    return itemAt(obstacleHitBoxes(data, geometry, shown), component);
-  };
-  const packAt = (position: number) =>
-    blendPack((position - since + travel) / travel, before, after);
-  const sweeps = signatureSweeps(path.route, first, since).sort((a, b) => a.start - b.start);
-  for (const sweep of sweeps) {
-    const dog = sweptHitDog(
-      packAt(sweep.start),
-      packAt(sweep.end),
-      at(sweep.start, sweep.component),
-      at(sweep.end, sweep.component),
-    );
-    if (dog !== null) {
-      return dog;
-    }
-  }
-  return null;
-}
-
-function signatureOnRoad(geometry: RoadGeometry, item: WalkItem): boolean {
-  const { mover } = item;
-  return (
-    mover?.path.motion !== "signature" ||
-    signatureAlive(
-      { laneCount: geometry.laneCount, roadLength: geometry.roadBottom - geometry.roadTop },
-      { height: item.height, span: item.laneSpan },
-      mover.path.route,
-      mover.since,
-    )
-  );
 }
 
 // The chance a plain hit landing on the dog misses it: probability.smallDodgeChance for a small
@@ -907,82 +676,6 @@ export function stepWalk(
     },
     zoneEnded: hitStop === null && zoneEnded,
   };
-}
-
-interface SortedItems {
-  readonly cues: WalkItem[];
-  readonly passed: WalkItem[];
-  readonly pickups: WalkItem[];
-  readonly solid: WalkItem[];
-}
-
-// The road's items, in order, after the road scrolls travel, then the items arriving: each
-// moved down by travel, each mover moved on by it, and the crossers that have left the road
-// and whatever has scrolled wholly past its bottom dropped. They are sorted into the movers
-// that are still only a cue, which cannot be hit, the pickups, and the solid items, which can.
-function scrolledItems(
-  data: WalkData,
-  geometry: RoadGeometry,
-  travel: number,
-  items: readonly WalkItem[],
-  arrived: readonly WalkItem[],
-): SortedItems {
-  const { laneCount, roadBottom, roadTop } = geometry;
-  const sorted: SortedItems = { cues: [], passed: [], pickups: [], solid: [] };
-  for (const item of items) {
-    if (passedWalker(data, geometry, item)) {
-      sorted.passed.push(item);
-      continue;
-    }
-    const { mover } = item;
-    if (mover === undefined) {
-      const y = item.y + travel;
-      if (y < roadBottom) {
-        sortItem(laneCount, sorted, { ...item, y });
-      }
-      continue;
-    }
-    const since = mover.since + travel;
-    const place = moverPlace(laneCount, mover.path, since);
-    const y = moverY(roadTop, item.height, place);
-    const advanced = { ...item, mover: { ...mover, since }, y };
-    const live =
-      mover.path.motion === "signature"
-        ? signatureOnRoad(geometry, advanced) || signatureOnRoad(geometry, item)
-        : !hasLeftRoad(laneCount, place) && y < roadBottom;
-    if (live) {
-      const lane = laneAt(place.lanePosition);
-      sortItem(laneCount, sorted, { ...advanced, lane });
-    }
-  }
-  for (const item of arrived) {
-    if (item.mover?.path.motion === "signature" || item.y < roadBottom) {
-      sortItem(laneCount, sorted, item);
-    }
-  }
-  return sorted;
-}
-
-// A mover is passed only when its whole hit extent, including every trailing component,
-// is below the walker. Removing it from the road makes that retirement irreversible.
-function passedWalker(data: WalkData, geometry: RoadGeometry, item: WalkItem): boolean {
-  return (
-    item.mover !== undefined &&
-    isObstacle(data, item.kind) &&
-    obstacleHitBoxes(data, geometry, item).every(({ top }) => top >= geometry.lens.footY)
-  );
-}
-
-function sortItem(laneCount: number, sorted: SortedItems, item: WalkItem): void {
-  const cue = isWarning(laneCount, item);
-  if (cue) {
-    sorted.cues.push(item);
-  }
-  if (isPickup(item.kind)) {
-    sorted.pickups.push(item);
-  } else if (!cue) {
-    sorted.solid.push(item);
-  }
 }
 
 function opensFor(run: RunState, encounter: EncounterId): boolean {
