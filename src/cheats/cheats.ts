@@ -8,7 +8,7 @@ import type { DebuffId, GearId, UpgradeId, ZoneId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
 import { applyEffects, firstZoneId, ownerMaxHearts, type RouteData } from "../rules/index.ts";
 import { type Walk, zoneLength } from "../runner/index.ts";
-import { MAX_RUN_DOGS, type SaveDocument } from "../save/schema.ts";
+import { MAX_RUN_DOGS, type SaveDocument } from "../save/index.ts";
 import { mapPack, type PackSlot, type RunState } from "../state/index.ts";
 import { addCents, type Cents, cents, clampHearts } from "../units.ts";
 import { MAX_SEED, type RunSetup, runSetupLink } from "./runSetup.ts";

@@ -46,7 +46,7 @@ import {
   type WalkStep,
   type ZonePlanObservation,
 } from "../runner/index.ts";
-import { achievementJudge } from "../save/achievementJudge.ts";
+import { achievementJudge } from "../save/index.ts";
 import { type PackDogs, packDogs, type RunState } from "../state/index.ts";
 import { addCents, type Cents, cents } from "../units.ts";
 import {

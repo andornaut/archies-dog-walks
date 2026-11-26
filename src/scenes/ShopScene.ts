@@ -72,7 +72,7 @@ import {
   wheelScroll,
 } from "../input/listScroll.ts";
 import { dollarText } from "../presentation/currency.ts";
-import type { SaveDocument } from "../save/schema.ts";
+import type { SaveDocument } from "../save/index.ts";
 import { disabledArtKey } from "../ui/disabledArt.ts";
 import { shownText } from "../ui/dom/pixelLine.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";

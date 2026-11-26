@@ -6,7 +6,7 @@ import type { InstallStepsKind } from "@andornaut/game-kit/runtime/web/pwa/insta
 import { BUILD_LABEL } from "../buildLabel.ts";
 import { ICON_LABEL_GAP, LABEL_ICON, type MenuText, SETTINGS_CARD } from "../data/index.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
-import type { Settings } from "../save/settings.ts";
+import type { Settings } from "../save/index.ts";
 import { iconBesideLabel } from "../ui/iconLabel.ts";
 import { dismissFooter } from "../ui/modal/dismissFooter.ts";
 import type { PanelButton, PanelMeasure, PanelText, QuestionPanelView } from "../ui/modal/types.ts";

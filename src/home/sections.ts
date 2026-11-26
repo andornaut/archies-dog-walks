@@ -1,6 +1,6 @@
 import type { WalkerId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
-import type { Owned } from "../save/schema.ts";
+import type { Owned } from "../save/index.ts";
 import type { HomeLoadout } from "./home.ts";
 import { packCountLine } from "./homeLines.ts";
 

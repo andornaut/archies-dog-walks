@@ -16,7 +16,7 @@ import {
   SETTINGS_CARD,
   SLICES,
 } from "../data/index.ts";
-import type { Settings } from "../save/settings.ts";
+import type { Settings } from "../save/index.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
 import { helpCapDy } from "../ui/labelHelpGap.ts";

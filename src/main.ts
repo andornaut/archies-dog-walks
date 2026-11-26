@@ -21,7 +21,7 @@ import { noteKeyPress } from "./input/keyNumbers.ts";
 import { bindPressAdmission, createCanvasPressAdmission } from "./input/phaser/pressAdmission.ts";
 import { lostTouches } from "./input/touches.ts";
 import { pageFrameWatch, setupPhoneApp } from "./pwa/index.ts";
-import { pageDeviceSettings } from "./save/settings.ts";
+import { pageDeviceSettings } from "./save/index.ts";
 import { BootScene } from "./scenes/BootScene.ts";
 import { CardScene } from "./scenes/CardScene.ts";
 import { CelebrationScene } from "./scenes/CelebrationScene.ts";

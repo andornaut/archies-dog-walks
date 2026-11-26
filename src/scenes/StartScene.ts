@@ -104,8 +104,7 @@ import {
 } from "../pwa/index.ts";
 import { requestGameUpdateCheck } from "../pwa/launch.ts";
 import { walkerOrder } from "../rules/index.ts";
-import type { SaveDocument } from "../save/schema.ts";
-import { walksFinished, walksPlayed } from "../save/stats.ts";
+import { type SaveDocument, walksFinished, walksPlayed } from "../save/index.ts";
 import { packDogsOf } from "../state/index.ts";
 import { disabledArtKey } from "../ui/disabledArt.ts";
 import type { NativeTopSection } from "../ui/dom/nativeTopSection.ts";

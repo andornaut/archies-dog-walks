@@ -9,7 +9,7 @@ import { BADGE_STRIP, type GameData, SCREEN_CONFIG } from "../data/index.ts";
 import { signedShortDollarText } from "../presentation/currency.ts";
 import type { OwnerNameLine } from "../presentation/ownerName.ts";
 import { walkLength } from "../rules/index.ts";
-import type { LastWalk } from "../save/schema.ts";
+import type { LastWalk } from "../save/index.ts";
 import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
 import type { PanelButton, PanelText } from "../ui/modal/types.ts";
 import { panelButton } from "../ui/modal/view.ts";

@@ -15,7 +15,7 @@ import { BUILD_LABEL } from "../buildLabel.ts";
 import { pageSearch } from "../cheats/browserTools.ts";
 import { devInSearch } from "../cheats/runSetup.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
-import { pageDeviceSettings } from "../save/settings.ts";
+import { pageDeviceSettings } from "../save/index.ts";
 import { bindRecoveryHold } from "../ui/dom/actionBinding.ts";
 import { mountMuteControl } from "../ui/dom/muteControl.ts";
 

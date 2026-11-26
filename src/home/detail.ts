@@ -13,7 +13,7 @@ import {
   SIZE_NAMES,
   sizeHearts,
 } from "../rules/index.ts";
-import type { Owned } from "../save/schema.ts";
+import type { Owned } from "../save/index.ts";
 import type { Cents } from "../units.ts";
 import { type HomeLoadout, isAffordable, type Purchase, purchasePrice } from "./home.ts";
 import { walkerDetailLines, walkerLockedLine } from "./walkers.ts";

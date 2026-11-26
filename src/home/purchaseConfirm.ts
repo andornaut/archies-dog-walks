@@ -1,5 +1,5 @@
 import type { GameData } from "../data/index.ts";
-import type { SaveDocument } from "../save/schema.ts";
+import type { SaveDocument } from "../save/index.ts";
 import { type Cents, cents } from "../units.ts";
 import { buy, type BuyResult, isAffordable, type Purchase, purchasePrice } from "./home.ts";
 

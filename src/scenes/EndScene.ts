@@ -24,7 +24,7 @@ import { screenArea } from "../input/outsideTap.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { PackFigures } from "../pack/phaser/packFigures.ts";
 import { stopWakeLock } from "../pwa/index.ts";
-import type { LastWalk } from "../save/schema.ts";
+import type { LastWalk } from "../save/index.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { hasDisplayFont } from "../ui/phaser/displayText.ts";
 import { fillRect } from "../ui/phaser/draw.ts";

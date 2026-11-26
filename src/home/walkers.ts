@@ -4,7 +4,7 @@ import { HOME_TEXT_FIELDS, homeLine } from "../content/index.ts";
 import type { WalkerId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
 import { agilityPercent, perkEffect, walkerGoal } from "../rules/index.ts";
-import type { Owned, SaveDocument } from "../save/schema.ts";
+import type { Owned, SaveDocument } from "../save/index.ts";
 import { type ItemTile, itemTile } from "../ui/interaction.ts";
 import { togglePick } from "./home.ts";
 

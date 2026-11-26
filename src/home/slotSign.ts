@@ -1,7 +1,7 @@
 import type { GameData } from "../data/index.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { cheapestDogSlot } from "../rules/index.ts";
-import type { Owned } from "../save/schema.ts";
+import type { Owned } from "../save/index.ts";
 import type { Cents } from "../units.ts";
 import { isAffordable, type Purchase, purchasePrice } from "./home.ts";
 

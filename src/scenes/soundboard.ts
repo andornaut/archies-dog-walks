@@ -24,7 +24,7 @@ import {
   type Volumes,
 } from "../audio/sound.ts";
 import { AUDIO_UNLOCK_EVENTS, PHONE_EVENTS } from "../pwa/index.ts";
-import type { DeviceSettings, Settings } from "../save/settings.ts";
+import type { DeviceSettings, Settings } from "../save/index.ts";
 import { deviceSettingsOf } from "./sceneSettings.ts";
 
 // Every concrete sound class (Web Audio, HTML5 audio, no audio) has setVolume; BaseSound does not.

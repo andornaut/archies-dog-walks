@@ -5,19 +5,25 @@ import { type Game, type Scene, Scenes } from "phaser";
 import type { AchievementId, HintId, WalkerId } from "../data/ids.ts";
 import { gameData } from "../data/index.ts";
 import type { Change } from "../rules/index.ts";
-import type { RunResult } from "../save/checkpoint.ts";
-import { saveContextFrom } from "../save/load.ts";
-import { ProfileSession, type RunEnd, type StorageState } from "../save/profile.ts";
-import { encodeResume, launchWalk, type ResumeWalk } from "../save/resume.ts";
-import { type Checkpoint, createDefaultSave, type SaveDocument } from "../save/schema.ts";
-import type { Settings } from "../save/settings.ts";
 import {
+  type Checkpoint,
+  createDefaultSave,
   EARNED_KEYS,
   earnedRecordFormat,
+  encodeResume,
+  launchWalk,
   pageEarnedStore,
   pageSaveStore,
+  ProfileSession,
   RESUME_BACKUP_KEY,
-} from "../save/storage.ts";
+  type ResumeWalk,
+  type RunEnd,
+  type RunResult,
+  saveContextFrom,
+  type SaveDocument,
+  type Settings,
+  type StorageState,
+} from "../save/index.ts";
 import {
   currentSettings,
   deviceSettingsOf,
@@ -25,7 +31,7 @@ import {
 } from "./sceneSettings.ts";
 import { soundboardOf } from "./soundboard.ts";
 
-export type { Settings } from "../save/settings.ts";
+export type { Settings } from "../save/index.ts";
 export { currentSettings } from "./sceneSettings.ts";
 
 // The player's save, shared by every scene through the game's registry. BootScene opens it

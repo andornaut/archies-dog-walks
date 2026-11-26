@@ -1,5 +1,5 @@
 import type { DogId } from "../data/ids.ts";
-import type { LastWalk } from "../save/schema.ts";
+import type { LastWalk } from "../save/index.ts";
 
 // The end screen's return home: the walker and pack walk up the front path, then the owners
 // waiting there wave. With reduced motion everyone is already in place and nobody moves.

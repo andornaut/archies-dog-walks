@@ -7,7 +7,7 @@ import type { DogId, GearId, WalkerId } from "../data/ids.ts";
 import { type GameData, PLATE_PAD } from "../data/index.ts";
 import { dollarText } from "../presentation/currency.ts";
 import { hudEffectIconKey, walkerEffectItems } from "../presentation/effectIcons.ts";
-import type { SaveDocument } from "../save/schema.ts";
+import type { SaveDocument } from "../save/index.ts";
 import {
   type ArtLook,
   type Badge,

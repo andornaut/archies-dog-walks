@@ -2,7 +2,7 @@ import { zonePipTag } from "../assets/index.ts";
 import type { DogId, ZoneId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
 import { type Change, type MoneyChange, quipLine, zoneById } from "../rules/index.ts";
-import type { LastWalk } from "../save/schema.ts";
+import type { LastWalk } from "../save/index.ts";
 import { type Cents, cents } from "../units.ts";
 
 type EarningsKind =

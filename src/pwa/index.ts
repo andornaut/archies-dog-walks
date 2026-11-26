@@ -31,7 +31,7 @@ import {
   watchFrameTurn,
 } from "@andornaut/game-kit/runtime/web/view/dom/watchFrameTurn";
 
-import type { StorageState } from "../save/profile.ts";
+import type { StorageState } from "../save/index.ts";
 import { dispatchPhoneEvent, PHONE_EVENTS } from "./events.ts";
 import { createInstallNudge, type InstallNudge } from "./installNudge.ts";
 import { requireNewer } from "./launch.ts";

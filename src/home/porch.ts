@@ -2,7 +2,7 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 
 import type { DogId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
-import type { SaveStats } from "../save/schema.ts";
+import type { SaveStats } from "../save/index.ts";
 
 // A starter owner waiting at the gate, and whether their dog still waits with them: a dog
 // the player has picked has gone to the walker.

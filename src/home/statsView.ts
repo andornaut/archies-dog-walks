@@ -4,8 +4,13 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 import type { DogId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
 import { dollarText } from "../presentation/currency.ts";
-import type { DogStats, Owned, SaveStats } from "../save/schema.ts";
-import { statsPage, ZERO_DOG_STATS } from "../save/stats.ts";
+import {
+  type DogStats,
+  type Owned,
+  type SaveStats,
+  statsPage,
+  ZERO_DOG_STATS,
+} from "../save/index.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 
 export interface StatsRow {

@@ -51,7 +51,7 @@ import {
   onInstallStateChange,
   stepsKind,
 } from "../pwa/index.ts";
-import type { Settings } from "../save/settings.ts";
+import type { Settings } from "../save/index.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import {

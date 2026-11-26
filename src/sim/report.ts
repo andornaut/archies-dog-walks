@@ -22,8 +22,7 @@ import {
   slotCountTotal,
   type WalkItemKind,
 } from "../runner/index.ts";
-import { achievementJudge } from "../save/achievementJudge.ts";
-import { MAX_RUN_DOGS, TALLY_IDS } from "../save/schema.ts";
+import { achievementJudge, MAX_RUN_DOGS, TALLY_IDS } from "../save/index.ts";
 import type { PackDogs } from "../state/index.ts";
 import { type Delivered, DELIVERY_GROUPS, sumDeliveries, type ZoneDelivery } from "./delivery.ts";
 import { DEFAULT_ROUTE_POLICY, POLICY_IDS, type PolicyId, type RoutePolicyId } from "./policies.ts";

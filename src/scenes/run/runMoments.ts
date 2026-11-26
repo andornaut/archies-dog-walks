@@ -94,8 +94,7 @@ import {
   walkLength,
 } from "../../rules/index.ts";
 import type { EncounterCard, MinorBump, PullStep, WalkItem, WalkStep } from "../../runner/index.ts";
-import { previewedEarned, previewKey } from "../../save/achievementPreview.ts";
-import type { RunResult } from "../../save/checkpoint.ts";
+import { previewedEarned, previewKey, type RunResult } from "../../save/index.ts";
 import { type EffectSource, type EndReason, packDogs, type RunState } from "../../state/index.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { fillRect } from "../../ui/phaser/draw.ts";

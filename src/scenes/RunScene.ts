@@ -69,9 +69,7 @@ import {
   withZonePlan,
   zoneStartPoint,
 } from "../runner/index.ts";
-import { dogsFinishedWith } from "../save/checkpoint.ts";
-import type { ResumeWalk } from "../save/resume.ts";
-import { checkpointOf, runResultOf } from "../save/runSlices.ts";
+import { checkpointOf, dogsFinishedWith, type ResumeWalk, runResultOf } from "../save/index.ts";
 import type { Loadout, RunState } from "../state/index.ts";
 import { colourFromHex, PALETTE } from "../ui/palette.ts";
 import { noteWalkStarted } from "./cheatChoices.ts";

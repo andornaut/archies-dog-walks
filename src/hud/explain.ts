@@ -11,7 +11,7 @@ import {
 } from "../home/detail.ts";
 import { effectIconKey, effectItems, effectName } from "../presentation/effectIcons.ts";
 import { capitalize, debuffFields, ownerMaxHearts } from "../rules/index.ts";
-import type { Owned, SaveStats } from "../save/schema.ts";
+import type { Owned, SaveStats } from "../save/index.ts";
 import { heartsOf, type RunState } from "../state/index.ts";
 import type { Cents } from "../units.ts";
 import { extraHearts } from "./buffMarks.ts";

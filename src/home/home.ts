@@ -14,7 +14,7 @@ import {
   sizeHearts,
   unlockPrice,
 } from "../rules/index.ts";
-import type { Owned, SaveDocument } from "../save/schema.ts";
+import type { Owned, SaveDocument } from "../save/index.ts";
 import { type Cents, cents } from "../units.ts";
 
 // The pack being picked, in the order picked, and the gear to take.
