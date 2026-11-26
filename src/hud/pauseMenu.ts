@@ -12,20 +12,13 @@ export const HOME_QUESTION_ANSWERS = ["keepWalking", "headHome"] as const;
 // Source digit order, with the safe primary retaining key 1.
 export const QUIT_QUESTION_ANSWERS = ["keepPlaying", "quit"] as const;
 
-// Offsets from the panel's top-left corner, and the room under the last part.
-const TITLE_Y = MODAL.titleTop;
-const BUTTON = { ...BUTTON_SIZE.wide, gap: BUTTON_SIZE.stackGap, x: MODAL.pad, y: MODAL.header };
+// A button's size, and the first row's offset under the panel's top, below the header.
+const BUTTON = { ...BUTTON_SIZE.wide, y: MODAL.header };
 
-// The width a button's label has on panel, its key number included: a button is as wide as its
-// label's ink and the label's padding either side (modalActionWidth), at most the panel's inside.
-// The panel's title is placed beside its close control, as on every modal card (panelTitle).
-export function labelTextRoom(panel: Pick<Rect, "width">): number {
-  return panel.width - 4 * MODAL.pad;
-}
-// The note plate spans the panel inside its padding. The note is body text at scale, wrapped to
-// the plate's width less padX each side (noteTextRoom), its first line's capitals padTop under
-// the plate's top, a line of the body font apart, and the last line's lowest ink padBottom over
-// its bottom.
+// The note plate spans the panel inside its padding, gap over the buttons. The note is body text
+// at scale, wrapped to the plate's width less padX each side (noteTextRoom), its first line's
+// capitals padTop under the plate's top, a line of the body font apart, and the last line's lowest
+// ink padBottom over its bottom.
 export const NOTE_PLATE = {
   gap: MODAL.gap,
   padBottom: MODAL.rowGap,
@@ -57,31 +50,28 @@ interface QuestionParts {
   // The primary button's index, placed last (arrangeActions).
   primary?: number;
   noteLines: number;
-  noteWidth?: number;
   panelWidth?: number;
-  titleWidth?: number;
   titleExtraHeight?: number;
 }
 
-interface PauseMenuLayout {
+interface QuestionLayout {
   buttons: Rect[];
   hits: Rect[];
   notePlate: Rect;
   panel: Rect;
-  titleY: number;
 }
 
-// The panel centred on the logical viewport and clamped to area, as wide as parts.panelWidth or
-// the Medium family, sized to its parts: the title, then the buttons with the note plate under
-// them, or the note plate first when it is the question. With no note lines there is no plate,
-// and the buttons follow the title. Two buttons sit in a row when both fit inside the panel's
-// padding at the row gap, otherwise every button stacks, the primary last (arrangeActions).
-function panelLayout(
+// A question panel, as the pause menu, the Home question, Quit? and Reset save? lay it out:
+// centred on the logical viewport and clamped to area, as wide as parts.panelWidth or the Medium
+// family, sized to its parts: the title, the note plate under it, then the buttons. With no note
+// lines there is no plate, and the buttons follow the title. Two buttons sit in a row when both
+// fit inside the panel's padding at the row gap, otherwise every button stacks, the primary last
+// (arrangeActions).
+export function questionLayout(
   body: FontMetrics,
   area: Rect,
   parts: QuestionParts,
-  noteFirst: boolean,
-): PauseMenuLayout {
+): QuestionLayout {
   const { buttonCount } = parts;
   // The Medium family's width, or the caller's, each held to the area within its margins.
   const available = area.width - 2 * MODAL.margin;
@@ -109,12 +99,10 @@ function panelLayout(
     })),
   );
   const buttonsHeight = arrangement.group.height;
-  // Offsets down the panel: a note first sits where the buttons would start, less its gap.
-  const header = BUTTON.y + (parts.titleExtraHeight ?? 0);
-  const noteFirstY = header;
-  const buttonsY = noteFirst && noted ? noteFirstY + noteHeight + MODAL.gap : header;
-  const noteY = noteFirst ? noteFirstY : header + buttonsHeight + NOTE_PLATE.gap;
-  const height = Math.max(buttonsY + buttonsHeight, noted ? noteY + noteHeight : 0) + BOTTOM;
+  // Offsets down the panel: the note plate under the header, then the buttons its gap under it.
+  const noteY = BUTTON.y + (parts.titleExtraHeight ?? 0);
+  const buttonsY = noted ? noteY + noteHeight + NOTE_PLATE.gap : noteY;
+  const height = buttonsY + buttonsHeight + BOTTOM;
   const panel = modalRect(area, parts.avoid, { height, width });
   const buttons = arrangement.actions.map((action) => {
     if (action.hidden) {
@@ -140,17 +128,7 @@ function panelLayout(
       y: panel.y + noteY,
     },
     panel,
-    titleY: panel.y + TITLE_Y,
   };
-}
-
-// The pause menu: its buttons, then the note plate, its note noteLines lines long.
-export function pauseMenuLayout(
-  body: FontMetrics,
-  area: Rect,
-  parts: QuestionParts,
-): PauseMenuLayout {
-  return panelLayout(body, area, parts, true);
 }
 
 // The capitals' top of each part of a note drawn in parts down its plate, one under another,
@@ -166,14 +144,4 @@ export function notePartTops(
     lines += count;
     return top;
   });
-}
-
-// The Home question: the title, the note plate saying what going home keeps and gives
-// up, then the answers.
-export function homeQuestionLayout(
-  body: FontMetrics,
-  area: Rect,
-  parts: QuestionParts,
-): PauseMenuLayout {
-  return panelLayout(body, area, parts, true);
 }

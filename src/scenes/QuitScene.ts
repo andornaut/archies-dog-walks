@@ -3,7 +3,7 @@ import { Scene } from "phaser";
 import { gameData } from "../data/index.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import { HOME_LAYOUT } from "../home/homeLayout.ts";
-import { homeQuestionLayout, QUIT_QUESTION_ANSWERS } from "../hud/pauseMenu.ts";
+import { QUIT_QUESTION_ANSWERS } from "../hud/pauseMenu.ts";
 import { isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import { screenArea } from "../input/outsideTap.ts";
 import { addRampDim } from "../ui/phaser/rampDim.ts";
@@ -42,7 +42,6 @@ export class QuitScene extends Scene {
         label: words[answer],
         press: answer === "quit" ? quit : keepPlaying,
       })),
-      layout: homeQuestionLayout,
       note: [],
       sentenceLines: false,
       title: words.title,

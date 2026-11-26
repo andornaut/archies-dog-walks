@@ -3,7 +3,7 @@ import { Core, Scene, Scenes } from "phaser";
 import { gameData } from "../data/index.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import type { HomeNoteLine } from "../hud/homeQuestion.ts";
-import { HOME_QUESTION_ANSWERS, homeQuestionLayout, pauseMenuLayout } from "../hud/pauseMenu.ts";
+import { HOME_QUESTION_ANSWERS } from "../hud/pauseMenu.ts";
 import { screenArea } from "../input/outsideTap.ts";
 import { WALKER_SILHOUETTES } from "../layout/packFormation.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
@@ -121,7 +121,6 @@ export class PauseScene extends Scene {
             backgroundCancel: onResume,
             close: onResume,
             entries,
-            layout: homeQuestionLayout,
             note: data.note.map((line) => ({ colour: NOTE_COLOURS[line.kind], text: line.text })),
             sentenceLines: false,
             title: question.title,
@@ -131,7 +130,6 @@ export class PauseScene extends Scene {
             backgroundCancel: onResume,
             close: onResume,
             entries,
-            layout: pauseMenuLayout,
             note: [{ colour: PALETTE.plum, text: data.note }],
             numberPresses: PAUSE_MENU_KEY_ORDER.map((item) => presses[item]),
             panelWidth: navigationMenuWidth(

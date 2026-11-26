@@ -156,7 +156,6 @@ export interface BadgeCelebrationView {
   readonly names: readonly Parameters<typeof textPart>[2][];
   readonly panel: Rect;
   readonly title: readonly PanelText[];
-  readonly titleY: number;
   readonly titleExtraHeight?: number;
 }
 

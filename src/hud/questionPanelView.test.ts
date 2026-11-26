@@ -14,7 +14,7 @@ import { PAUSE_MENU_ITEMS, pauseMenuItemLabel } from "../ui/navigationMenu.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
-import { homeQuestionLayout, NOTE_PLATE, pauseMenuLayout } from "./pauseMenu.ts";
+import { NOTE_PLATE } from "./pauseMenu.ts";
 import { questionPanelView } from "./questionPanelView.ts";
 
 // The view measured on the .fnt files the canvas loads, the title font in capitals as it draws.
@@ -43,7 +43,6 @@ function inkSpan(line: PanelText): { left: number; right: number } {
 const PANELS = [
   {
     labels: PAUSE_MENU_ITEMS.map((item) => pauseMenuItemLabel(gameData, item)),
-    layout: pauseMenuLayout,
     name: "the pause menu",
     note: fillNames(words.note, { cash, kept: cash }),
     sentenceLines: true,
@@ -51,7 +50,6 @@ const PANELS = [
   },
   {
     labels: [gameData.runText.homeQuestion.keepWalking, gameData.runText.homeQuestion.headHome],
-    layout: homeQuestionLayout,
     name: "the Home question",
     note: fillNames(words.note, { cash, kept: cash }),
     sentenceLines: false,
@@ -120,7 +118,6 @@ it("keeps the existing safe End-walk answer last without a redundant dismissal r
   ];
   const view = questionPanelView(MEASURE, walkView, {
     labels,
-    layout: homeQuestionLayout,
     note: [],
     sentenceLines: false,
     showKeyNumbers: false,

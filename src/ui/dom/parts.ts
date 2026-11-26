@@ -166,9 +166,7 @@ export function panelFramePart(
 // buttons or note, and a tap outside it missing nothing, unless given.
 export function framelessView(
   panel: Rect,
-  view: Partial<
-    Pick<QuestionPanelView, "buttons" | "close" | "covered" | "footer" | "title" | "titleY">
-  > = {},
+  view: Partial<Pick<QuestionPanelView, "buttons" | "close" | "covered" | "footer" | "title">> = {},
 ): QuestionPanelView {
   return {
     buttons: view.buttons ?? [],
@@ -180,6 +178,5 @@ export function framelessView(
     notePlate: undefined,
     panel,
     title: view.title ?? [],
-    titleY: view.titleY ?? panel.y,
   };
 }

@@ -11,7 +11,7 @@ import { MODAL, modalActionWidth, modalTitleLayout } from "../ui/modal/layout.ts
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
-import { HOME_LAYOUT, updateModalLayout } from "./homeLayout.ts";
+import { updateModalLayout } from "./homeLayout.ts";
 
 describe("update offer and failed retry titles", () => {
   it.each([gameData.homeText.update.title, gameData.homeText.update.failure])(
@@ -39,7 +39,6 @@ describe("update offer and failed retry titles", () => {
         ...wrapped.lines.map(
           (line, index) =>
             cardTitleRow(panel).y +
-            HOME_LAYOUT.card.titleRow.titleY +
             wrapped.capOffset +
             index * wrapped.linePitch +
             modalTitleInk(gameFont("font-title"), line).bottom,

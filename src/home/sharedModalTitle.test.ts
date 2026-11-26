@@ -3,7 +3,6 @@ import { expect, it } from "vitest";
 
 import { gearSmallIconKey } from "../assets/iconKeys.ts";
 import { gameData } from "../data/index.ts";
-import { pauseMenuLayout } from "../hud/pauseMenu.ts";
 import { questionPanelView } from "../hud/questionPanelView.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
@@ -48,7 +47,6 @@ it.each([
 ])("keeps actual %s title ink equally clear of panel top and first action", (title) => {
   const view = questionPanelView(measure, SCREEN_LAYOUT.screen, {
     labels: [gameData.menuText.common.close],
-    layout: pauseMenuLayout,
     note: [],
     panelWidth: navigationMenuWidth(gameData, measure, 328),
     sentenceLines: false,

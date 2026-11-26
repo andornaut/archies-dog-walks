@@ -18,7 +18,6 @@ import {
   type DomQuestionPanelInput,
   showQuestionPanel,
 } from "../hud/dom/questionPanel.ts";
-import type { pauseMenuLayout } from "../hud/pauseMenu.ts";
 import { questionPanelView } from "../hud/questionPanelView.ts";
 import { pillKind } from "../presentation/effectNames.ts";
 import { pageFrameTurn } from "../pwa/index.ts";
@@ -48,8 +47,6 @@ export interface QuestionPanel {
   readonly close: () => void;
   // Source callback and digit order; placement moves the existing primary last.
   readonly entries: readonly PanelEntry[];
-  // pauseMenuLayout, the buttons then the note, or homeQuestionLayout, the note first.
-  readonly layout: typeof pauseMenuLayout;
   // No parts draws no note plate.
   readonly note: readonly PanelNotePart[];
   readonly panelWidth?: number;
@@ -66,7 +63,6 @@ export function questionView(scene: Scene, area: Rect, question: QuestionPanel):
   return questionPanelView(canvasPanelMeasure(scene), area, {
     avoid: question.avoid,
     labels: question.entries.map(({ label }) => label),
-    layout: question.layout,
     note: question.note,
     ...(question.panelWidth === undefined ? {} : { panelWidth: question.panelWidth }),
     ...(question.primary === undefined ? {} : { primary: question.primary }),

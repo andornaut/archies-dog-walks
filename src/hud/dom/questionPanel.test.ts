@@ -12,7 +12,6 @@ import type { PanelMeasure } from "../../ui/modal/types.ts";
 import { modalCardView, panelButton } from "../../ui/modal/view.ts";
 import { inPill } from "../../ui/namePills.ts";
 import { PAUSE_MENU_ITEMS, pauseMenuItemLabel } from "../../ui/navigationMenu.ts";
-import { pauseMenuLayout } from "../pauseMenu.ts";
 import { questionPanelView } from "../questionPanelView.ts";
 import { showZoneCelebration } from "./celebration.ts";
 import { showDetailCard } from "./detailCard.ts";
@@ -38,7 +37,6 @@ function menu(context = menuContext(), customNumbers = false) {
   const close = vi.fn();
   const view = questionPanelView(MEASURE, SCREEN_LAYOUT.walkView, {
     labels: PAUSE_MENU_ITEMS.map((item) => pauseMenuItemLabel(gameData, item)),
-    layout: pauseMenuLayout,
     note: [{ colour: 0, text: "Ending now keeps $5 of $9." }],
     primary: "last",
     sentenceLines: true,
@@ -722,7 +720,6 @@ it("keeps action identity while DOM order follows the button and footer position
   const { layer } = menuContext();
   const original = questionPanelView(MEASURE, SCREEN_LAYOUT.walkView, {
     labels: [gameData.menuText.pause.resume, gameData.menuText.pause.help],
-    layout: pauseMenuLayout,
     note: [],
     sentenceLines: true,
     title: gameData.menuText.pause.title,
@@ -835,7 +832,6 @@ it("captures the exact admitted source control without relying on native focus o
       gameData.menuText.pause.help,
       gameData.menuText.pause.settings,
     ],
-    layout: pauseMenuLayout,
     note: [],
     primary: "last",
     sentenceLines: false,

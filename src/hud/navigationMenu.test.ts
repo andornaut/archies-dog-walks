@@ -19,7 +19,7 @@ import {
 } from "../ui/navigationMenu.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
-import { NOTE_PLATE, pauseMenuLayout } from "./pauseMenu.ts";
+import { NOTE_PLATE } from "./pauseMenu.ts";
 import { questionPanelView } from "./questionPanelView.ts";
 
 const measure: PanelMeasure = {
@@ -69,7 +69,6 @@ describe.each(["home", "pause"] as const)("%s navigation geometry", (context) =>
   );
   const view = questionPanelView(measure, SCREEN_LAYOUT.walkView, {
     labels,
-    layout: pauseMenuLayout,
     note:
       context === "home"
         ? []

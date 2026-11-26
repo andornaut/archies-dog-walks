@@ -212,8 +212,8 @@ export const HOME_LAYOUT = {
     scale: HOME.bonus.scale,
   },
   // The detail card that opens over the screen, centred and as tall as what it shows, in card
-  // pixels: the paper starts 2px in, the title row (no bar is drawn) runs across its top 6px in
-  // with the title's caps 7px below the row's top, and the well starts at the shared header.
+  // pixels: the paper starts 2px in, the title sits on the modal title row (cardTitleRow), and
+  // the well starts at the shared header.
   // Identity and description wrap right of the well from besideX, besideDy under well.y,
   // using the column through the shared right pad. Owner and status follow the taller group. A dog's owner photo, name
   // and role stay together after its other details (detailOwner): their face-owner-<art> face (owner.face
@@ -228,11 +228,6 @@ export const HOME_LAYOUT = {
     owner: { ...HOME.card.owner, nameColour: "plum", roleColour: "darkBrown" },
     pad: MODAL.pad,
     rowGap: HOME.card.rowGap,
-    titleRow: {
-      height: HOME.card.titleRow.height,
-      inset: MODAL.pad,
-      titleY: HOME.card.titleRow.titleY,
-    },
     well: { ...HOME.card.well, x: MODAL.pad, y: MODAL.header },
     width: HOME.card.width,
   },

@@ -59,7 +59,6 @@ it("renders the complete award as one native modal with badge and cheering-owner
       names: [],
       panel,
       title: panelTitle(measure, panel, 190, gameData.menuText.common.close),
-      titleY: 190,
     },
   });
   await Promise.all([...shown.badges.parts, ...shown.faces].map((part) => part.ready));

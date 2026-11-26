@@ -61,12 +61,10 @@ import { FIRED_LINE_FIT, LOW_CHIP_FIT, lowHeartsText } from "../hud/moments.ts";
 import { MONEY_LABEL } from "../hud/moneyLabels.ts";
 import {
   HOME_QUESTION_ANSWERS,
-  homeQuestionLayout,
-  labelTextRoom,
   NOTE_PLATE,
   noteTextRoom,
   PAUSE_NOTE_LINES,
-  pauseMenuLayout,
+  questionLayout,
   QUIT_QUESTION_ANSWERS,
 } from "../hud/pauseMenu.ts";
 import { DOG_CARD, WALK_BAR } from "../hud/walkHud.ts";
@@ -474,7 +472,7 @@ function pauseNoteRoles(): TextRoleCase[] {
     fillLine(fields, words, "noteAll", { cash }),
     ...amounts.map((kept) => fillLine(fields, words, "note", { cash, kept })),
   ]);
-  const { notePlate } = pauseMenuLayout(BODY, SCREEN_LAYOUT.walkView, {
+  const { notePlate } = questionLayout(BODY, SCREEN_LAYOUT.walkView, {
     buttonCount: PAUSE_MENU_ITEMS.length,
     noteLines: PAUSE_NOTE_LINES,
   });
@@ -483,6 +481,12 @@ function pauseNoteRoles(): TextRoleCase[] {
     style: { lines: PAUSE_NOTE_LINES, scale: NOTE_PLATE.scale },
   };
   return plainRole("pause menu's note", "font-body", fit, notes);
+}
+
+// The width a button's label has on panel, its key number included: a button is as wide as its
+// label's ink and the label's padding either side (modalActionWidth), at most the panel's inside.
+function labelTextRoom(panel: Pick<Rect, "width">): number {
+  return panel.width - 4 * MODAL.pad;
 }
 
 // The pause menu's buttons' labels, and the Home question's and Quit?'s with the number key that
@@ -495,17 +499,15 @@ function questionPanelRoles(): TextRoleCase[] {
   const menus = [
     {
       labels: PAUSE_MENU_ITEMS.map((item) => pauseMenuItemLabel(gameData, item)),
-      panel: pauseMenuLayout(BODY, overlayRegion("walk"), parts(PAUSE_MENU_ITEMS.length)).panel,
+      panel: questionLayout(BODY, overlayRegion("walk"), parts(PAUSE_MENU_ITEMS.length)).panel,
     },
     {
       labels: numbered(HOME_QUESTION_ANSWERS.map((answer) => home[answer])),
-      panel: homeQuestionLayout(BODY, overlayRegion("walk"), parts(HOME_QUESTION_ANSWERS.length))
-        .panel,
+      panel: questionLayout(BODY, overlayRegion("walk"), parts(HOME_QUESTION_ANSWERS.length)).panel,
     },
     {
       labels: numbered(QUIT_QUESTION_ANSWERS.map((answer) => quit[answer])),
-      panel: homeQuestionLayout(BODY, overlayRegion("home"), parts(QUIT_QUESTION_ANSWERS.length))
-        .panel,
+      panel: questionLayout(BODY, overlayRegion("home"), parts(QUIT_QUESTION_ANSWERS.length)).panel,
     },
   ];
   return menus.flatMap(({ labels, panel }) =>
@@ -542,7 +544,7 @@ export function cardTitles(): CardTitles[] {
   const screen = SCREEN_LAYOUT.screen;
   const home = overlayRegion("home");
   const { installSteps } = gameData.menuText.settings;
-  const questions = pauseMenuLayout(BODY, screen, {
+  const questions = questionLayout(BODY, screen, {
     buttonCount: PAUSE_MENU_ITEMS.length,
     noteLines: 0,
   });
@@ -730,7 +732,7 @@ export function textRoleCases(): TextRoleCase[] {
     ...plainRole(
       "update notice's buttons",
       "font-title",
-      { room: updateNotice().panel.width - 4 * MODAL.pad, style: TEXT_STYLE },
+      { room: labelTextRoom(updateNotice().panel), style: TEXT_STYLE },
       [gameData.homeText.update.button, gameData.homeText.shop.confirmCancel],
     ),
     ...endRoles(),

@@ -74,8 +74,6 @@ export interface QuestionPanelView {
   readonly notePlate: Rect | undefined;
   readonly panel: Rect;
   readonly title: readonly PanelText[];
-  // The title's first line's capitals.
-  readonly titleY: number;
 }
 
 // A modal card's button: its face and label and whether it is the primary.

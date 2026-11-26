@@ -22,7 +22,6 @@ import type { ZoneId } from "../data/types.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import { showCheats } from "../hud/dom/cheats.ts";
 import { type DomQuestionPanel, showQuestionPanel } from "../hud/dom/questionPanel.ts";
-import { homeQuestionLayout } from "../hud/pauseMenu.ts";
 import { packDogsOf } from "../state/pack.ts";
 import { loadSheet } from "../ui/dom/sheetFrames.ts";
 import { MODAL, modalFamilyWidth } from "../ui/modal/layout.ts";
@@ -176,7 +175,6 @@ export function openCheatsPage(
         { label: words.cancel, press: closeQuestion },
         { label: words.confirm, press: reset },
       ],
-      layout: homeQuestionLayout,
       note: [{ colour: PALETTE.plum, text: words.note }],
       panelWidth: RESET_WIDTH,
       primary: "last",

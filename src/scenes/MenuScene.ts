@@ -2,7 +2,6 @@ import { Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
 import { overlayRegion } from "../home/homeBar.ts";
-import { pauseMenuLayout } from "../hud/pauseMenu.ts";
 import { isPauseKey, menuKeyActs } from "../input/keyBindings.ts";
 import { screenArea } from "../input/outsideTap.ts";
 import { MODAL } from "../ui/modal/layout.ts";
@@ -90,7 +89,6 @@ export class MenuScene extends Scene {
         label: menuItemLabel(gameData, item),
         press: actions[item],
       })),
-      layout: pauseMenuLayout,
       note: [],
       panelWidth: navigationMenuWidth(
         gameData,

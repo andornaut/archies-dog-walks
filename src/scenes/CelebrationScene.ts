@@ -110,7 +110,6 @@ export class CelebrationScene extends Scene {
     });
     const top = panel.y;
     const close = () => closeOverlay(resume, this);
-    const titleY = panel.y + MODAL.titleTop;
     const left = SCREEN.width / 2 - ((cheering.length - 1) * FACES.pitch + FACES.size) / 2;
     const facesY = top + badgesHeight + MODAL.gap;
     const html = addNativeBadgeCelebration(
@@ -119,9 +118,13 @@ export class CelebrationScene extends Scene {
         button: panelButton(measure, buttonRect, true, gameData.menuText.common.close),
         names: badgeCelebrationNames(this, panel, rows, achievements, true, titleExtraHeight),
         panel,
-        title: panelTitle(measure, panel, titleY, celebrationTitle(gameData, achievements.length)),
+        title: panelTitle(
+          measure,
+          panel,
+          cardTitleRow(panel).y,
+          celebrationTitle(gameData, achievements.length),
+        ),
         titleExtraHeight,
-        titleY,
       },
       {
         badges: earnedBadges(gameData, achievements),

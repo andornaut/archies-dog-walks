@@ -9,21 +9,18 @@ import { modalActionWidth, modalTitleLayout } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import type {
   PanelButton,
-  PanelFont,
   PanelMeasure,
   PanelNotePart,
   PanelText,
   QuestionPanelView,
 } from "../ui/modal/types.ts";
 import { panelButton, panelTitle } from "../ui/modal/view.ts";
-import { NOTE_PLATE, notePartTops, noteTextRoom, type pauseMenuLayout } from "./pauseMenu.ts";
+import { NOTE_PLATE, notePartTops, noteTextRoom, questionLayout } from "./pauseMenu.ts";
 
 export interface PanelQuestion {
   readonly avoid?: Rect | undefined;
   // Source label and digit order; placement moves the existing primary last.
   readonly labels: readonly string[];
-  // pauseMenuLayout, the buttons then the note, or homeQuestionLayout, the note first.
-  readonly layout: typeof pauseMenuLayout;
   // No parts draws no note plate.
   readonly note: readonly PanelNotePart[];
   readonly panelWidth?: number;
@@ -35,7 +32,7 @@ export interface PanelQuestion {
 }
 
 // The panel centred in area: its title beside the close control in its top-right corner, as on
-// every modal card, the buttons, and the note plate.
+// every modal card, the note plate, and the buttons.
 export function questionPanelView(
   measure: PanelMeasure,
   area: Rect,
@@ -44,21 +41,14 @@ export function questionPanelView(
   const shown = question.labels.map((label, i) =>
     question.showKeyNumbers === false ? label : withKeyNumber(i + 1, label),
   );
-  const widest = (font: PanelFont, lines: readonly string[]) =>
-    Math.max(0, ...lines.map((line) => measure.inkWidth(font, line)));
   const parts = {
     avoid: question.avoid,
     buttonCount: shown.length,
-    buttonWidths: shown.map((label) => modalActionWidth(widest("title", [label]))),
+    buttonWidths: shown.map((label) => modalActionWidth(measure.inkWidth("title", label))),
     primary: question.primary === "last" ? shown.length - 1 : 0,
     ...(question.panelWidth === undefined ? {} : { panelWidth: question.panelWidth }),
-    noteWidth: widest(
-      "body",
-      question.note.map(({ text }) => text),
-    ),
-    titleWidth: widest("title", [question.title]),
   };
-  const preview = question.layout(measure.body, area, { ...parts, noteLines: 0 });
+  const preview = questionLayout(measure.body, area, { ...parts, noteLines: 0 });
   const titleLayout = modalTitleLayout(
     {
       font: measure.title,
@@ -76,7 +66,7 @@ export function questionPanelView(
     ),
   }));
   const noteLines = noteParts.reduce((sum, part) => sum + part.lines.length, 0);
-  const layout = question.layout(measure.body, area, {
+  const layout = questionLayout(measure.body, area, {
     ...parts,
     noteLines,
     titleExtraHeight: titleLayout.extraHeight,
@@ -85,7 +75,7 @@ export function questionPanelView(
   const close = closeControl(panel);
   const centreX = panel.x + panel.width / 2;
 
-  const title = panelTitle(measure, panel, layout.titleY, question.title);
+  const title = panelTitle(measure, panel, cardTitleRow(panel).y, question.title);
   const buttons = shown.map((text, i): PanelButton => ({
     ...panelButton(measure, itemAt(layout.buttons, i), i === parts.primary, text),
     hit: itemAt(layout.hits, i),
@@ -130,6 +120,5 @@ export function questionPanelView(
     notePlate: noted ? layout.notePlate : undefined,
     panel,
     title,
-    titleY: layout.titleY,
   };
 }

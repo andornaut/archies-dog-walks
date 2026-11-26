@@ -15,12 +15,11 @@ import { PAUSE_MENU_ITEMS, pauseMenuItemLabel } from "../ui/navigationMenu.ts";
 import { cents } from "../units.ts";
 import {
   HOME_QUESTION_ANSWERS,
-  homeQuestionLayout,
   NOTE_PLATE,
   notePartTops,
   noteTextRoom,
   PAUSE_NOTE_LINES,
-  pauseMenuLayout,
+  questionLayout,
   QUIT_QUESTION_ANSWERS,
 } from "./pauseMenu.ts";
 import { TOP_BAR_BUTTONS } from "./topBar.ts";
@@ -37,25 +36,22 @@ describe("the menus' hit areas", () => {
     const cases = [
       {
         labels: PAUSE_MENU_ITEMS.map((key) => pauseMenuItemLabel(gameData, key)),
-        layout: pauseMenuLayout,
         noteLines: 2,
       },
       {
         labels: HOME_QUESTION_ANSWERS.map((key) => gameData.runText.homeQuestion[key]),
-        layout: homeQuestionLayout,
         noteLines: 3,
       },
       {
         labels: QUIT_QUESTION_ANSWERS.map((key) => gameData.homeText.quit[key]),
-        layout: homeQuestionLayout,
         noteLines: 0,
       },
     ];
-    for (const { labels, layout, noteLines } of cases) {
+    for (const { labels, noteLines } of cases) {
       const buttonWidths = labels.map((label, i) =>
         modalActionWidth(inkWidth("font-title", { scale: 2 }, `${i + 1} ${label}`.toUpperCase())),
       );
-      const { hits, panel } = layout(BODY, walkView, {
+      const { hits, panel } = questionLayout(BODY, walkView, {
         buttonCount: labels.length,
         buttonWidths,
         noteLines,
@@ -83,7 +79,7 @@ describe("the menus' hit areas", () => {
 
 describe("notePartTops", () => {
   it("starts the first part at the plate's padding and each next on the line after", () => {
-    const plate = homeQuestionLayout(BODY, walkView, { buttonCount: 2, noteLines: 4 }).notePlate;
+    const plate = questionLayout(BODY, walkView, { buttonCount: 2, noteLines: 4 }).notePlate;
     const first = plate.y + NOTE_PLATE.padTop;
     const pitch = BODY.lineHeight * NOTE_PLATE.scale;
     expect(notePartTops(BODY, plate, [2, 1, 1])).toEqual([
@@ -104,10 +100,10 @@ describe("the Home question's panel", () => {
       fillNames(words.zonesLeft, { count: String(walkLength(gameData) - 1) }),
     ];
     const parts = { buttonCount: 2, noteLines: 0 };
-    const room = noteTextRoom(homeQuestionLayout(BODY, walkView, parts).notePlate);
+    const room = noteTextRoom(questionLayout(BODY, walkView, parts).notePlate);
     const lines = note.flatMap((text) => wrapWords(bodyWidth, room, text));
     expect(lines.filter((line) => bodyWidth(line) > room)).toEqual([]);
-    const { panel } = homeQuestionLayout(BODY, walkView, { ...parts, noteLines: lines.length });
+    const { panel } = questionLayout(BODY, walkView, { ...parts, noteLines: lines.length });
     expect(panel.y).toBeGreaterThanOrEqual(walkView.y);
     expect(panel.y + panel.height).toBeLessThanOrEqual(walkView.y + walkView.height);
   });
@@ -118,18 +114,15 @@ describe("a question's panel width", () => {
   const medium = modalFamilyWidth(walkView.width - 2 * MODAL.margin, "medium");
   const large = modalFamilyWidth(walkView.width - 2 * MODAL.margin, "large");
 
-  it.each([homeQuestionLayout, pauseMenuLayout])(
-    "is the Medium family's without one given",
-    (layout) => {
-      expect(layout(BODY, walkView, parts).panel.width).toBe(medium);
-      expect(layout(BODY, walkView, { ...parts, panelWidth: medium })).toEqual(
-        layout(BODY, walkView, parts),
-      );
-    },
-  );
+  it("is the Medium family's without one given", () => {
+    expect(questionLayout(BODY, walkView, parts).panel.width).toBe(medium);
+    expect(questionLayout(BODY, walkView, { ...parts, panelWidth: medium })).toEqual(
+      questionLayout(BODY, walkView, parts),
+    );
+  });
 
   it("is the one given, held to the area within its margins, the buttons centred in it", () => {
-    const { buttons, notePlate, panel } = homeQuestionLayout(BODY, walkView, {
+    const { buttons, notePlate, panel } = questionLayout(BODY, walkView, {
       ...parts,
       panelWidth: large,
     });
@@ -138,20 +131,18 @@ describe("a question's panel width", () => {
     for (const button of buttons) {
       expect(button.x - panel.x).toBe(panel.x + panel.width - (button.x + button.width));
     }
-    const wide = homeQuestionLayout(BODY, walkView, { ...parts, panelWidth: 1000 });
+    const wide = questionLayout(BODY, walkView, { ...parts, panelWidth: 1000 });
     expect(wide.panel.width).toBe(walkView.width - 2 * MODAL.margin);
   });
 });
 
 describe("the Quit question's panel", () => {
-  // No note: the buttons follow the title, as the pause menu's do, in the home screen under its
-  // top bar.
-  it("puts its buttons where the pause menu's start, inside the home screen", () => {
+  // No note: the buttons follow the title, in the home screen under its top bar.
+  it("puts its buttons under the header, inside the home screen", () => {
     const home = overlayRegion("home");
     const parts = { buttonCount: QUIT_QUESTION_ANSWERS.length, noteLines: 0 };
-    const quit = homeQuestionLayout(BODY, home, parts);
-    const menu = pauseMenuLayout(BODY, home, parts);
-    expect({ ...quit, notePlate: undefined }).toEqual({ ...menu, notePlate: undefined });
+    const quit = questionLayout(BODY, home, parts);
+    expect(Math.min(...quit.buttons.map(({ y }) => y))).toBe(quit.panel.y + MODAL.header);
     expect(quit.panel.y).toBeGreaterThanOrEqual(home.y);
     expect(quit.panel.y + quit.panel.height).toBeLessThanOrEqual(home.y + home.height);
   });
@@ -169,7 +160,7 @@ describe("the pause menu's note", () => {
     ["keeping all the cash", fillNames(words.noteAll, { cash })],
   ])("sets its note %s on the lines of its plate", (_name, note) => {
     const parts = { buttonCount: PAUSE_MENU_ITEMS.length, noteLines: PAUSE_NOTE_LINES };
-    const { buttons, notePlate, panel } = pauseMenuLayout(BODY, walkView, parts);
+    const { buttons, notePlate, panel } = questionLayout(BODY, walkView, parts);
     const room = noteTextRoom(notePlate);
     const lines = sentences(note).flatMap((sentence) => wrapWords(bodyWidth, room, sentence));
     expect(lines.filter((line) => bodyWidth(line) > room)).toEqual([]);
@@ -187,7 +178,7 @@ describe("the pause menu's note", () => {
 });
 
 it("fits confirmation choices without a separate dismissal reservation", () => {
-  const layout = homeQuestionLayout(BODY, walkView, {
+  const layout = questionLayout(BODY, walkView, {
     buttonCount: HOME_QUESTION_ANSWERS.length,
     noteLines: 2,
   });

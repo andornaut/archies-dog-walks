@@ -44,7 +44,7 @@ import {
   ownerLeadPanel,
   stripLeadSlot,
 } from "../hud/messageStrip.ts";
-import { PAUSE_NOTE_LINES, pauseMenuLayout } from "../hud/pauseMenu.ts";
+import { PAUSE_NOTE_LINES, questionLayout } from "../hud/pauseMenu.ts";
 import { buttonIcon, TOP_BAR_BUTTONS } from "../hud/topBar.ts";
 import {
   type BarButton,
@@ -355,7 +355,7 @@ export function layoutExport(
       pause: {
         labels: PAUSE_MENU_ITEMS.map((item) => pauseMenuItemLabel(data, item)),
         // The note takes a line per sentence at 2x on the plate.
-        ...pauseMenuLayout(body, walkView, {
+        ...questionLayout(body, walkView, {
           buttonCount: PAUSE_MENU_ITEMS.length,
           buttonWidths: PAUSE_MENU_ITEMS.map((item) =>
             modalActionWidth(
@@ -378,11 +378,6 @@ export function layoutExport(
                 ),
             },
             walkView.width - 2 * MODAL.margin,
-          ),
-          titleWidth: inkWidth(
-            readBitmapFont("font-title"),
-            2,
-            plainMarks(data.menuText.pause.title).toUpperCase(),
           ),
         }),
       },

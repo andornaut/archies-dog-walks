@@ -1,6 +1,5 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { HOME_SCREEN } from "../../data/layout.ts";
 import { barTitleLeft, barTitleRoom } from "../barTitle.ts";
 import { type LabelInk, raisedLabelCapTop } from "../buttonGeometry.ts";
 import { closeControl } from "../closeControl.ts";
@@ -106,7 +105,6 @@ export function modalCardView(
   title: string,
   actions: readonly CardAction[],
 ): QuestionPanelView {
-  const titleY = cardTitleRow(card).y + HOME_SCREEN.card.titleRow.titleY;
   const buttons = actions.map(({ label, primary, rect, secondary }) => ({
     ...panelButton(measure, rect, primary, label),
     ...(secondary === true ? { secondary } : {}),
@@ -125,7 +123,6 @@ export function modalCardView(
     note: [],
     notePlate: undefined,
     panel: card,
-    title: panelTitle(measure, card, titleY, title),
-    titleY,
+    title: panelTitle(measure, card, cardTitleRow(card).y, title),
   };
 }

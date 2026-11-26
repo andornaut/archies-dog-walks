@@ -594,8 +594,6 @@ export const HOME_SCREEN = {
     owner: { face: FACE_SIZE, gap: 6 },
     // The gap between rows.
     rowGap: 8,
-    // The title row's height, and the title's capitals' top in it.
-    titleRow: { height: 20, titleY: 0 },
     // The well: the picture's inset and the well's side.
     well: { picture: 2, size: 68 },
     // The card's widest.

@@ -495,7 +495,6 @@ export function showChoiceCards(
                 input.data.runText.homeQuestion.headHome,
               ),
             ],
-      titleY: 0,
     }),
   });
   if (input.picture) {

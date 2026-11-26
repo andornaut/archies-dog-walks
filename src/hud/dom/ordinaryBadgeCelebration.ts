@@ -99,7 +99,6 @@ export function showOrdinaryBadgeCelebration(
       buttons: [view.button],
       covered: [view.panel, view.button.hit],
       title: view.title,
-      titleY: view.titleY,
     }),
   });
   return {

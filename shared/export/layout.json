@@ -1819,11 +1819,6 @@
         },
         "pad": 16,
         "rowGap": 8,
-        "titleRow": {
-          "height": 20,
-          "inset": 16,
-          "titleY": 0
-        },
         "well": {
           "picture": 2,
           "size": 68,
@@ -2484,8 +2479,7 @@
         "width": 264,
         "x": 48,
         "y": 65
-      },
-      "titleY": 89
+      }
     },
     "settings": {
       "buildLabelY": 480,
