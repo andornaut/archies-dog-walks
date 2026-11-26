@@ -1,12 +1,9 @@
-import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
-import { wrapWords } from "@andornaut/game-kit/runtime/lines";
-import { containsPoint, insetRect, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
-import { advanceWidth, type BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { containsPoint, type Point, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { Scene } from "phaser";
 
 import { domArtUrl } from "../assets/files/index.ts";
 import { dogFaceKey, gearIconKey } from "../assets/index.ts";
-import { CHECK_SIZE, gameData, PLATE_PAD } from "../data/index.ts";
+import { gameData } from "../data/index.ts";
 import {
   answerPurchase,
   type ConfirmChoice,
@@ -17,36 +14,28 @@ import {
   itemModal,
   messageLine,
   overlayRegion,
-  ownedCountNote,
   type PendingPurchase,
-  pricePlateView,
   type Purchase,
   shakeOffset,
   SHOP_LAYOUT,
-  SHOP_MESSAGE_FIT,
   SHOP_ROW_VIEWS,
-  SHOP_TABS,
-  shopHeadingBand,
+  shopFocusForArrow,
   shopListFrame,
-  shopMessageLayout,
-  shopNextHeading,
   shopOpenTab,
-  shopPageView,
+  type ShopPlacedRow,
   type ShopRow,
   shopRowId,
   shopRowLook,
-  shopRowsBottom,
-  shopRowTextLayout,
-  shopRowTextRoom,
+  shopScreenView,
   type ShopTab,
-  shopTabRects,
+  shopTabForArrow,
+  type ShopTarget,
+  shopTargetAt,
   slotRows,
 } from "../home/index.ts";
 import {
   addTapBurst as addNativeTapBurst,
   type NativeShopScreen,
-  type ShopScreenRow,
-  type ShopScreenView,
   showShopScreen,
 } from "../hud/dom/index.ts";
 import {
@@ -67,21 +56,9 @@ import {
   stepScroll,
   wheelScroll,
 } from "../input/index.ts";
-import { dollarText } from "../presentation/index.ts";
 import type { SaveDocument } from "../save/index.ts";
 import { loadSheet, shownText, uiLayer } from "../ui/dom/index.ts";
-import {
-  disabledArtKey,
-  GREYED,
-  PALETTE,
-  type PanelMeasure,
-  type PanelText,
-  pictureBox,
-  refusalRed,
-  selectLook,
-  stackRows,
-  TEXT_SCALE,
-} from "../ui/index.ts";
+import { refusalRed } from "../ui/index.ts";
 import { cents } from "../units.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
 import { listenHomeBar } from "./homeBarPress.ts";
@@ -123,14 +100,7 @@ export interface ShopClosed {
   readonly action: HomeAction;
 }
 
-// While a detail card is open, a press anywhere on the shop's panel is dismiss: its tap closes
-// the card. An item modal owns its dismissal and purchase actions.
-type Target = { id: string; kind: "row" } | { kind: "tab"; tab: ShopTab };
-
 const LAYOUT = SHOP_LAYOUT;
-const TAB_RECTS: readonly Rect[] = shopTabRects(SHOP_TABS.length);
-const ROW = LAYOUT.row;
-const OWNED_DX = ROW.ownedDx;
 const LIST: Rect = LAYOUT.list.rect;
 const PLATE: Rect = LAYOUT.message.plate;
 
@@ -146,89 +116,6 @@ function purchaseArt(purchase: Purchase): string {
     default:
       return purchase satisfies never;
   }
-}
-
-// A row as laid out on the open tab.
-interface PlacedRow {
-  readonly rect: Rect;
-  readonly row: ShopRow;
-}
-
-// Text is measured once into the same rows used by native painting, scrolling and contacts.
-function shopTextLayout(
-  fonts: Readonly<Record<"body" | "title", BitmapFont>>,
-  measure: Pick<PanelMeasure, "body">,
-  subject: { readonly message: string | null; readonly save: SaveDocument; readonly tab: ShopTab },
-) {
-  const widthOf = (text: string) => advanceWidth(fonts.body, TEXT_SCALE, shownText("body", text));
-  const lines =
-    subject.message === null ? [] : wrapWords(widthOf, SHOP_MESSAGE_FIT.room, subject.message);
-  const message = shopMessageLayout(measure.body, Math.max(1, lines.length));
-  const build = (frame: ReturnType<typeof shopListFrame>) => {
-    const headings: { readonly note: string; readonly text: string; readonly y: number }[] = [];
-    const placed: (PlacedRow & {
-      readonly lines: readonly string[];
-      readonly text: ReturnType<typeof shopRowTextLayout>;
-    })[] = [];
-    const add = (
-      spec: { readonly gap: number; readonly height: number; readonly y: number },
-      rows: readonly ShopRow[],
-    ) => {
-      const described = rows.map((row) => {
-        const right =
-          row.price === null
-            ? OWNED_DX +
-              advanceWidth(fonts.title, TEXT_SCALE, gameData.homeText.shop.owned.toUpperCase())
-            : widthOf(dollarText(row.price)) + 2 * PLATE_PAD;
-        const room = shopRowTextRoom(frame.rowWidth, right);
-        const lines = row.line === "" ? [] : wrapWords(widthOf, room, row.line);
-        return {
-          lines,
-          text: shopRowTextLayout(fonts.body, spec.height, { descriptions: lines, name: row.name }),
-        };
-      });
-      const rects = stackRows(
-        { ...spec, width: frame.rowWidth, x: SHOP_LAYOUT.row.x },
-        described.map(({ text }) => text.height),
-      );
-      rows.forEach((row, index) => placed.push({ ...described[index]!, rect: rects[index]!, row }));
-      return rects;
-    };
-    const words = gameData.homeText.shop;
-    const shift = message.extraHeight;
-    let bottom: number;
-    if (subject.tab === "gear") {
-      const spec = { ...LAYOUT.gear.rows, y: LAYOUT.gear.rows.y + shift };
-      headings.push({
-        note: ownedCountNote(gameData, subject.save.owned, "gear"),
-        text: words.tabs.gear,
-        y: LAYOUT.gear.headingY + shift,
-      });
-      bottom = shopRowsBottom(spec, add(spec, gearRows(gameData, subject.save.owned)));
-    } else {
-      const slots = { ...LAYOUT.dogs.slotRows, y: LAYOUT.dogs.slotRows.y + shift };
-      headings.push({
-        note: ownedCountNote(gameData, subject.save.owned, "slots"),
-        text: words.slots,
-        y: LAYOUT.dogs.slotHeadingY + shift,
-      });
-      const slotRects = add(slots, slotRows(gameData, subject.save.owned));
-      const heading = shopNextHeading(slots, slotRects);
-      headings.push({
-        note: ownedCountNote(gameData, subject.save.owned, "dogs"),
-        text: words.dogs,
-        y: heading,
-      });
-      const dogs = {
-        ...LAYOUT.dogs.dogRows,
-        y: heading + LAYOUT.dogs.dogRows.y - LAYOUT.dogs.dogHeadingY,
-      };
-      bottom = shopRowsBottom(dogs, add(dogs, dogRows(gameData, subject.save.owned)));
-    }
-    return { bottom: bottom + LAYOUT.list.padBottom, frame, headings, rows: placed };
-  };
-  const layout = build(shopListFrame());
-  return { ...layout, message: { ...message, lines } };
 }
 
 // The Pet shop under the home screen's top bar: a Dogs tab of dog slots and dogs, and a Gear
@@ -255,9 +142,9 @@ export class ShopScene extends Scene {
   // The last tap's message, on its plate over the list's top: a purchase in green, a refusal
   // in dark red.
   private message: { readonly refused: boolean; readonly text: string } | null = null;
-  private placed: PlacedRow[] = [];
+  private placed: ShopPlacedRow[] = [];
   private messagePlate: Rect = PLATE;
-  private pressed: Target | undefined;
+  private pressed: ShopTarget | undefined;
   private resumeKey: SceneKey | undefined;
   // The open tab's scroll and fling state.
   private scroll: ListScroll = listScroll(0);
@@ -399,176 +286,28 @@ export class ShopScene extends Scene {
     const save = this.save();
     const measure = canvasPanelMeasure(this);
     const { fonts, layer } = place;
-    const layout = shopTextLayout(fonts, measure, {
-      message: this.message?.text ?? null,
-      save,
-      tab: this.tab,
-    });
+    const { focusId, layout, view } = shopScreenView(
+      {
+        art: {
+          badge: (badge) => {
+            const key = BADGE_KEYS[badge];
+            const { height, width } = this.textures.getFrame(key);
+            return { height, key, width };
+          },
+          frame: this.textures.exists("ui-tile") ? "art" : "fallback",
+          pictureKey: purchaseArt,
+        },
+        fonts,
+        measure,
+        shownText,
+      },
+      { focusId: this.focusId, message: this.message, pressed: this.pressed, save, tab: this.tab },
+    );
+    this.focusId = focusId;
     this.scroll = resizeScroll(scrollMax(layout.frame.rect, layout.bottom), this.scroll);
     this.frame = layout.frame;
     this.messagePlate = layout.message.plate;
-    const line = (
-      text: string,
-      x: number,
-      capTop: number,
-      colour: number,
-      font: "body" | "title" = "body",
-    ): PanelText => ({
-      capTop,
-      centre: "left",
-      centreX: x,
-      colour,
-      font,
-      line: 0,
-      scale: TEXT_SCALE,
-      text,
-    });
-    const rows: ShopScreenRow[] = [];
     this.placed = layout.rows;
-    for (const { lines: descriptions, rect, row, text } of layout.rows) {
-      const rowLook = this.rowLook(save, row);
-      const selectable = rowLook !== "short";
-      if (!selectable && this.focusId === row.id) {
-        this.focusId = null;
-      }
-      const look = SHOP_ROW_VIEWS[rowLook];
-      const mid = rect.y + Math.floor(rect.height / 2);
-      const right = rect.x + rect.width - ROW.plateInset;
-      const box = {
-        height: ROW.box.size,
-        width: ROW.box.size,
-        x: rect.x + ROW.box.dx,
-        y: rect.y + Math.floor((rect.height - ROW.box.size) / 2),
-      };
-      const key = purchaseArt(row.purchase);
-      const texts = [
-        line(
-          row.name,
-          rect.x + ROW.textDx,
-          rect.y + text.name,
-          PALETTE[selectLook(look.state).text],
-        ),
-      ];
-      descriptions.forEach((description, index) => {
-        texts.push(
-          line(
-            description,
-            rect.x + ROW.textDx,
-            rect.y + text.descriptions[index]!,
-            look.state === "disabled" ? PALETTE[GREYED.text] : PALETTE.darkBrown,
-          ),
-        );
-      });
-      const art: ShopScreenRow["art"][number][] = [
-        {
-          key,
-          projection: "layout",
-          rect: insetRect(ROW.art, box),
-          sheet: row.purchase.kind === "dog",
-          ...(look.art === "grey" ? { imageKey: disabledArtKey(key) } : {}),
-          tag: "happy",
-        },
-      ];
-      if (look.badge !== null) {
-        art.push({
-          key: BADGE_KEYS[look.badge],
-          rect: {
-            height: this.textures.getFrame(BADGE_KEYS[look.badge]).height,
-            width: this.textures.getFrame(BADGE_KEYS[look.badge]).width,
-            x: rect.x + ROW.badge.dx,
-            y: rect.y + ROW.badge.dy,
-          },
-          sheet: false,
-        });
-      }
-      let plate: ShopScreenRow["plate"];
-      if (row.price === null || look.plate === null) {
-        const owned = gameData.homeText.shop.owned;
-        const ownedTop = shopRowTextLayout(fonts.title, rect.height, {
-          descriptions: [],
-          name: shownText("title", owned),
-        }).name;
-        texts.push(
-          line(
-            owned,
-            right - OWNED_DX - advanceWidth(fonts.title, TEXT_SCALE, owned.toUpperCase()),
-            rect.y + ownedTop,
-            PALETTE.forest,
-            "title",
-          ),
-        );
-        art.push({
-          key: "ui-check",
-          rect: {
-            height: CHECK_SIZE,
-            width: CHECK_SIZE,
-            x: right - CHECK_SIZE,
-            y: mid - CHECK_SIZE / 2,
-          },
-          sheet: true,
-          tag: "tick",
-        });
-      } else {
-        plate = pricePlateView(
-          {
-            capHeight: measure.body.capHeight,
-            padding: PLATE_PAD,
-            scale: TEXT_SCALE,
-            width: (value) => advanceWidth(fonts.body, TEXT_SCALE, value),
-          },
-          { capTop: mid - (measure.body.capHeight * TEXT_SCALE) / 2, originX: 1, x: right },
-          look.plate,
-          dollarText(row.price),
-        );
-      }
-      rows.push({
-        art,
-        fills: [{ colour: PALETTE[pictureBox(look)], rect: box }],
-        frame: this.textures.exists("ui-tile") ? "art" : "fallback",
-        holdDetail: true,
-        id: row.id,
-        label: row.name,
-        rect,
-        selectable,
-        state: look.state,
-        texts,
-        ...(plate === undefined ? {} : { plate }),
-      });
-    }
-    const words = gameData.homeText.shop;
-    const view: ShopScreenView = {
-      clip: this.frame.rect,
-      headings: layout.headings.map(({ note, text, y }) => ({
-        band: shopHeadingBand(y),
-        note,
-        title: text,
-      })),
-      page: shopPageView(measure, {
-        tabs: SHOP_TABS.map((tab) => ({
-          label: words.tabs[tab],
-          open: tab === this.tab,
-          pressed: this.pressed?.kind === "tab" && this.pressed.tab === tab,
-        })),
-        title: words.title,
-      }),
-      rows,
-      ...(this.message === null
-        ? {}
-        : {
-            message: {
-              lines: layout.message.lines.map((text, index) => ({
-                ...line(
-                  text,
-                  layout.message.plate.x + layout.message.plate.width / 2,
-                  layout.message.capTops[index]!,
-                  this.message!.refused ? PALETTE.darkRed : PALETTE.forest,
-                ),
-                centre: "ink",
-              })),
-              rect: layout.message.plate,
-            },
-          }),
-    };
     if (this.native === undefined) {
       const panelInput = htmlPanelInput(place);
       this.native = followScene(
@@ -674,8 +413,7 @@ export class ShopScene extends Scene {
     }
     const direction = focusDirectionForKey(code);
     if (direction === "left" || direction === "right") {
-      const index = SHOP_TABS.indexOf(this.tab) + (direction === "left" ? -1 : 1);
-      const tab = SHOP_TABS[clampIndex(SHOP_TABS.length, index)];
+      const tab = shopTabForArrow(this.tab, direction);
       if (tab !== undefined && tab !== this.tab) {
         this.actAfterDip({ kind: "tab", tab });
       }
@@ -683,12 +421,7 @@ export class ShopScene extends Scene {
     }
     if (direction === "up" || direction === "down") {
       const save = this.save();
-      const ids = this.rows()
-        .filter((row) => this.rowLook(save, row) !== "short")
-        .map(({ id }) => id);
-      const at = this.focusId === null ? -1 : ids.indexOf(this.focusId);
-      const next = clampIndex(ids.length, at + (direction === "up" ? -1 : 1));
-      this.focusId = ids[next] ?? this.focusId;
+      this.focusId = shopFocusForArrow(save, this.rows(), this.focusId, direction);
       this.message = null;
       this.render();
       this.showFocus();
@@ -705,7 +438,7 @@ export class ShopScene extends Scene {
   }
 
   // A key presses the tab or row; affordable rows open their modal during the dip.
-  private actAfterDip(target: Target): void {
+  private actAfterDip(target: ShopTarget): void {
     this.pressed = target;
     this.render();
     const opens = this.opensItem(target);
@@ -722,7 +455,7 @@ export class ShopScene extends Scene {
   }
 
   // Whether a tap opens an affordable unowned item's modal.
-  private opensItem(target: Target): boolean {
+  private opensItem(target: ShopTarget): boolean {
     const row = target.kind === "row" ? this.rowById(target.id) : undefined;
     if (row === undefined) {
       return false;
@@ -744,22 +477,16 @@ export class ShopScene extends Scene {
       : [...slotRows(gameData, owned), ...dogRows(gameData, owned)];
   }
 
-  private targetAt(x: number, y: number): Target | undefined {
-    const tab = TAB_RECTS.findIndex((rect) => containsPoint(rect, x, y));
-    const tabId = SHOP_TABS[tab];
-    if (tabId !== undefined) {
-      return { kind: "tab", tab: tabId };
-    }
-    // The message's plate lies over the rows; only the list area's part of a row is pressed.
-    if (this.message !== null && containsPoint(this.messagePlate, x, y)) {
-      return undefined;
-    }
-    if (!containsPoint(this.frame.rect, x, y)) {
-      return undefined;
-    }
-    const listY = y + this.scroll.y;
-    const hit = this.placed.find(({ rect }) => containsPoint(rect, x, listY));
-    return hit === undefined ? undefined : { id: hit.row.id, kind: "row" };
+  private targetAt(x: number, y: number): ShopTarget | undefined {
+    return shopTargetAt(
+      {
+        clip: this.frame.rect,
+        messagePlate: this.message === null ? null : this.messagePlate,
+        rows: this.placed,
+        scrollY: this.scroll.y,
+      },
+      { x, y },
+    );
   }
 
   private rowLook(save: SaveDocument, row: ShopRow): keyof typeof SHOP_ROW_VIEWS {
@@ -787,7 +514,7 @@ export class ShopScene extends Scene {
     this.placeNative();
   }
 
-  private act(target: Target): void {
+  private act(target: ShopTarget): void {
     switch (target.kind) {
       case "tab":
         if (target.tab !== this.tab) {

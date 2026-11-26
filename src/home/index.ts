@@ -181,6 +181,14 @@ export {
   shopTabRects,
 } from "./shopLayout.ts";
 export { type PageFill, type PageTab, type ShopPageView, shopPageView } from "./shopPageView.ts";
+export { shopScreenView } from "./shopScreenView.ts";
+export {
+  shopFocusForArrow,
+  shopTabForArrow,
+  type ShopTarget,
+  shopTargetAt,
+} from "./shopTargets.ts";
+export { type ShopPlacedRow } from "./shopTextLayout.ts";
 export { slotSign, slotSignPurchase } from "./slotSign.ts";
 export { type HomeSpeechView, homeSpeechView } from "./speechView.ts";
 export { STATS_LAYOUT, STATS_TABS, type StatsTab, statsTabRects } from "./statsLayout.ts";
