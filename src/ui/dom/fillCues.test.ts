@@ -230,13 +230,13 @@ describe("control state cues", () => {
       "a focused Settings row's face",
       "ui",
       ".adw-row:focus-visible>.adw-row-face",
-      "background-color:var(--adw-cyan)!important",
+      "background-color:var(--ui-colour-button-focus-face)!important",
     ],
     [
       "a pressed Settings or Cheats switch row's face",
       "ui",
       '.adw-row:not([role=slider],[aria-disabled="true"],.adw-standard-button)[data-ui-pressed]>.adw-row-face',
-      "background-color:var(--adw-green)!important",
+      "background-color:var(--ui-colour-button-pressed-face)!important",
     ],
     [
       "a refused row's icon, a white silhouette on the dark red face",
@@ -246,9 +246,10 @@ describe("control state cues", () => {
     ],
     [
       "a focused or pressed row in forced colours",
-      "ui",
-      ".adw-row:not(.adw-standard-button):is(:focus-visible,[data-ui-pressed]:not([role=slider]))>.adw-row-face",
-      "background-color:Highlight!important",
+      "uiForced",
+      ".adw-row",
+      "--ui-colour-button-focus-face:Highlight;--ui-colour-button-focus-text:HighlightText;" +
+        "--ui-colour-button-pressed-face:Highlight;--ui-colour-button-pressed-text:HighlightText",
     ],
     [
       "a refusing standard button's dark red face over its focus",
@@ -525,12 +526,12 @@ describe("control state cues", () => {
     ["standard button's forced face", "game", REFUSING_BUTTON, "", "--adw-button-fill:"],
     [
       "row's forced face",
-      "uiForced",
+      "ui",
       `${REFUSING_ROW}>.adw-row-face`,
       ".adw-row-face",
       "background-color:",
     ],
-    ["row's forced label", "uiForced", `${REFUSING_ROW} .adw-text`, ".adw-text", ";color:"],
+    ["row's forced label", "ui", `${REFUSING_ROW} .adw-text`, ".adw-text", ";color:"],
     [
       "choice card's forced band",
       "choice",
