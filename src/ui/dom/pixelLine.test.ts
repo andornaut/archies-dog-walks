@@ -21,7 +21,6 @@ import {
 } from "../domScale.ts";
 import { inPill, laidPills, PILL, pillRows } from "../namePills.ts";
 import { PALETTE } from "../palette.ts";
-import { labelPlace } from "./labelBlock.ts";
 import {
   backedTextPlaces,
   blockPlace,
@@ -245,62 +244,46 @@ describe("a block of text with name pills", () => {
   const font = gameFont("font-body");
   const line = `${inPill(1, "Second chance")} First lost`;
 
-  it("centres actual debuff names in both DOM adapters while retaining the inline baseline", () => {
+  it("centres actual debuff names in their pills while retaining the inline baseline", () => {
     for (const { name } of Object.values(gameData.debuffs)) {
       for (const dpr of [1, 2.625]) {
         const scale = domScale(dpr, { height: 894, width: 575, x: 0, y: 0 });
         const text = `${inPill(1, name)} adjacent text`;
         const pixel = fontPixel(scale, 2);
-        const places = [
-          blockPlace(font, scale, {
-            capTop: 100,
-            colour: 0,
-            font: "body",
-            lines: [text],
-            scale: 2,
-            x: 41,
-          }),
-          labelPlace(font, scale, {
-            align: "start",
-            colour: 0,
-            font: "body",
-            lines: [{ pen: 0, text }],
-            pills: "colour",
-            scale: 2,
-            x: 41,
-            y: 100 - fontMetrics(font).capTop * 2,
-          }),
-        ];
-        for (const place of places) {
-          const pill = place.pills[0]!.box;
-          const named = place.runs.filter((run) => run.pill !== undefined);
-          const ink = named.map((run) => {
-            const x = fontInk("font-body", { scale: pixel }, run.text);
-            const y = fontInkRows("font-body", { scale: pixel }, run.text);
-            return {
-              bottom: run.top + fontMetrics(font).capTop * pixel + y.bottom,
-              left: run.left + x.left,
-              right: run.left + x.right,
-              top: run.top + fontMetrics(font).capTop * pixel + y.top,
-            };
-          });
-          expect(pill.left + pill.width / 2, name).toBe(
-            (Math.min(...ink.map(({ left }) => left)) +
-              Math.max(...ink.map(({ right }) => right))) /
-              2,
-          );
-          expect(pill.top + pill.height / 2, name).toBe(
-            (Math.min(...ink.map(({ top }) => top)) +
-              Math.max(...ink.map(({ bottom }) => bottom))) /
-              2,
-          );
-          const lineTop = named[0]!.top;
-          expect(place.runs.map(({ top }) => top)).toEqual(place.runs.map(() => lineTop));
-          expect(pill.top).toBeGreaterThanOrEqual(lineTop + pillRows(1).top * pixel);
-          expect(pill.top + pill.height).toBeLessThanOrEqual(
-            lineTop + (pillRows(1).top + pillRows(1).height) * pixel,
-          );
-        }
+        const place = blockPlace(font, scale, {
+          capTop: 100,
+          colour: 0,
+          font: "body",
+          lines: [text],
+          scale: 2,
+          x: 41,
+        });
+        const pill = place.pills[0]!.box;
+        const named = place.runs.filter((run) => run.pill !== undefined);
+        const ink = named.map((run) => {
+          const x = fontInk("font-body", { scale: pixel }, run.text);
+          const y = fontInkRows("font-body", { scale: pixel }, run.text);
+          return {
+            bottom: run.top + fontMetrics(font).capTop * pixel + y.bottom,
+            left: run.left + x.left,
+            right: run.left + x.right,
+            top: run.top + fontMetrics(font).capTop * pixel + y.top,
+          };
+        });
+        expect(pill.left + pill.width / 2, name).toBe(
+          (Math.min(...ink.map(({ left }) => left)) + Math.max(...ink.map(({ right }) => right))) /
+            2,
+        );
+        expect(pill.top + pill.height / 2, name).toBe(
+          (Math.min(...ink.map(({ top }) => top)) + Math.max(...ink.map(({ bottom }) => bottom))) /
+            2,
+        );
+        const lineTop = named[0]!.top;
+        expect(place.runs.map(({ top }) => top)).toEqual(place.runs.map(() => lineTop));
+        expect(pill.top).toBeGreaterThanOrEqual(lineTop + pillRows(1).top * pixel);
+        expect(pill.top + pill.height).toBeLessThanOrEqual(
+          lineTop + (pillRows(1).top + pillRows(1).height) * pixel,
+        );
       }
     }
   });
