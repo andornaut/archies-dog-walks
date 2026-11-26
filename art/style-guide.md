@@ -6,7 +6,7 @@ The rules for drawing and placing the art. Exact sizes, tags, timings and coordi
 
 - Pixel art: simple, cute, a little retro, refined. Mood: casual, cozy, low-stress.
 - Chibi: heads about as big as bodies, so a breed reads from head shape, ears and markings on its road sprite and 32×32 face. Dogs come in three sizes: large dogs (54×54) are drawn narrower than their frame's scale, about 30px wide (Penny 28), medium dogs (48×48) at their frame's scale, and small dogs (38×38) larger inside theirs, about 20px wide and 31 to 32 tall, so the widths step about 30, 24 and 20. Faces and portraits keep one frame for every dog, sat on the bottom edge. Every face is drawn at the largest size at which each of its moods fits the 32×32 frame whole, ears, ruff, topknot and chest included, so every dog's face fills its frame, its picker box and its walk card alike, with no size classes. Each portrait is drawn at the size that brings its inked area to its class's target (about 35, 40 and 46px square), so the classes step evenly whatever a breed's ears, ruff or topknot fill. A dog's coat and accessory read on both its road sprite and its face.
-- Everything, UI included, is pixel art at the 360×560 base resolution, scaled up with no smoothing.
+- Characters, portraits, environments and illustrations use pixel art on the 360×560 logical grid and scale without smoothing. Use clean SVG shapes for functional UI controls and glyphs, preserving square corners and deliberate bevels where the control family uses them. See the [control guide](controls.md) for current native and fallback implementations.
 
 ## Quality bar
 

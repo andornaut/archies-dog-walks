@@ -238,8 +238,11 @@ function lobedTree(
   const draw = (g: Drawable): void => {
     const base = h - 2;
     const cx = Math.floor(w / 2);
-    g.rect(cx - 5, h - 44, 10, 43, trunk);
-    g.rect(cx + 1, h - 44, 4, 43, dk(trunk));
+    // Both trunks start inside the lower edge of the central foliage lobe.
+    const trunkTop = 60;
+    const trunkHeight = h - trunkTop - 1;
+    g.rect(cx - 5, trunkTop, 10, trunkHeight, trunk);
+    g.rect(cx + 1, trunkTop, 4, trunkHeight, dk(trunk));
     g.rect(cx - 9, base - 3, 18, 4, trunk);
     const lobes: readonly (readonly [number, number, number, number])[] = big
       ? [

@@ -1316,8 +1316,8 @@ function partyBalloons(f: number): Frame {
     "ink",
     [
       [8, 24],
-      [8 + (f % 2), 25],
-      [8, 26],
+      [8, 25],
+      [8 + (f === 1 || f === 2 ? 1 : 0), 26],
     ],
     out,
   );
