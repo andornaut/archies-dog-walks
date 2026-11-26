@@ -103,6 +103,10 @@ function itemBottom(shown: Pick<WalkItem, "height" | "y">): number {
 // with its body.
 const MOVER_ARROW_PART = 2;
 
+function destroyView(view: ItemView): void {
+  view.parts.forEach(({ sprite }) => sprite.destroy());
+}
+
 // The sprites of everything spawned on the road, by item id.
 export class ItemViews {
   // The red herring crossers on the road, by their planned spawn.
@@ -120,6 +124,18 @@ export class ItemViews {
   constructor(scene: Scene, hint: (event: HintTrigger) => void) {
     this.scene = scene;
     this.hint = hint;
+  }
+
+  clear(): void {
+    this.herrings.forEach(destroyView);
+    this.struck.forEach(({ view }) => destroyView(view));
+    this.verge.forEach(({ view }) => destroyView(view));
+    this.views.forEach(destroyView);
+    this.herrings.clear();
+    this.struck.clear();
+    this.verge.clear();
+    this.vergeBound.clear();
+    this.views.clear();
   }
 
   // Each item's sprites stand on the road through the projection, sized for where they stand
@@ -155,7 +171,7 @@ export class ItemViews {
       if (!seen.has(id)) {
         const kept = this.vergeBound.get(id);
         if (kept === undefined) {
-          view.parts.forEach(({ sprite }) => sprite.destroy());
+          destroyView(view);
         } else {
           this.verge.set(id, { kept, view });
         }
@@ -196,7 +212,7 @@ export class ItemViews {
     }
     for (const [herring, view] of this.herrings) {
       if (!shown.has(herring)) {
-        view.parts.forEach(({ sprite }) => sprite.destroy());
+        destroyView(view);
         this.herrings.delete(herring);
       }
     }
@@ -208,7 +224,7 @@ export class ItemViews {
     for (const [id, { kept, view }] of this.verge) {
       const item = vergeNow(geometry, walk.run, kept);
       if (item?.mover === undefined) {
-        view.parts.forEach(({ sprite }) => sprite.destroy());
+        destroyView(view);
         this.verge.delete(id);
         continue;
       }

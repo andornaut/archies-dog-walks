@@ -38,6 +38,15 @@ export function createRunViews(
 
 export type RunViews = ReturnType<typeof createRunViews>;
 
+// Retire the replaced neighbourhood's views; a jump may keep both the route index and ID.
+export function clearRunZoneViews(
+  views: Pick<RunViews, "ambient" | "distractions" | "items">,
+): void {
+  views.ambient.clear();
+  views.distractions.clear();
+  views.items.clear();
+}
+
 export function drawRunViews(
   views: RunViews & { readonly shadows: ShadowPool },
   {

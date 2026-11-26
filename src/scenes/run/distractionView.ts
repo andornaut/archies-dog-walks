@@ -49,6 +49,13 @@ export class DistractionView {
     };
   }
 
+  clear(): void {
+    this.sprites.forEach((sprite) => sprite.destroy());
+    this.sprites.clear();
+    this.state.distractions = [];
+    this.state.zoneIndex = null;
+  }
+
   // kept is the verge scenery as it stands now, which a distraction keeps clear of too.
   draw(walk: Walk, kept: readonly WalkItem[], frame: { halted: boolean; still: boolean }): void {
     const { run } = walk;

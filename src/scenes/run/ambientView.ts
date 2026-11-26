@@ -50,6 +50,11 @@ export class AmbientView {
     };
   }
 
+  clear(): void {
+    clearAmbient(this.state);
+    this.sprites.forEach((sprite) => sprite.setVisible(false));
+  }
+
   // now is the walk's time in seconds and travelled its road distance from the start.
   draw(
     movers: readonly AmbientMover[],
@@ -58,8 +63,7 @@ export class AmbientView {
   ): void {
     const { state } = this;
     if (walk.still) {
-      clearAmbient(state);
-      this.sprites.forEach((sprite) => sprite.setVisible(false));
+      this.clear();
       return;
     }
     const frame = this.frame ?? { movers, now: 0, travelled: 0, zone };

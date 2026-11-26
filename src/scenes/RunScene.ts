@@ -42,7 +42,14 @@ import {
   startWakeLock,
   stopWakeLock,
 } from "../pwa/index.ts";
-import { type CardView, type Choice, currentZone, newRun, outcomeChanges } from "../rules/index.ts";
+import {
+  type CardView,
+  type Choice,
+  currentZone,
+  currentZoneId,
+  newRun,
+  outcomeChanges,
+} from "../rules/index.ts";
 import { pageZonePlanner } from "../runner/dom/index.ts";
 import {
   awaitsZonePlan,
@@ -97,7 +104,7 @@ import { RunInput } from "./run/runInput.ts";
 import { RunMoments, showHint } from "./run/runMoments.ts";
 import { RunRecorder } from "./run/runRecorder.ts";
 import { type RunRandom, runRandom } from "./run/runStart.ts";
-import { createRunViews, drawRunViews, type RunViews } from "./run/runViews.ts";
+import { clearRunZoneViews, createRunViews, drawRunViews, type RunViews } from "./run/runViews.ts";
 import { ShadowPool } from "./run/shadowPool.ts";
 import { LAYOUT, overPack, packPoint } from "./run/stage.ts";
 import { UpdateHold } from "./run/updateHold.ts";
@@ -498,7 +505,7 @@ export class RunScene extends Scene implements HudRun {
     world.input.takePending();
     this.stepClock = holdStepClock(this.stepClock);
     this.stepBefore = next.session.walk;
-    this.apply(next);
+    this.apply(next, { zoneReplaced: next.session !== session });
     this.draw();
   }
 
@@ -579,11 +586,22 @@ export class RunScene extends Scene implements HudRun {
 
   // Takes the session's next state and plays its events, then ends the walk, or previews the
   // badges earned so far and shows the card it opened.
-  private apply(step: SessionStep): void {
+  private apply(step: SessionStep, options?: { readonly zoneReplaced: boolean }): void {
     const before = this.session?.walk.run;
+    const { run } = step.session.walk;
+    const { world } = this;
     this.session = step.session;
+    // The fork reserves the next index before the player chooses its neighbourhood. Its
+    // interim draw still uses the old neighbourhood; retire those visuals when the choice lands.
+    if (
+      world !== undefined &&
+      (options?.zoneReplaced === true ||
+        (before !== undefined && currentZoneId(gameData, before) !== currentZoneId(gameData, run)))
+    ) {
+      clearRunZoneViews(world);
+    }
     if (before !== undefined) {
-      this.world?.moments.debuffsChanged(before, step.session.walk.run);
+      world?.moments.debuffsChanged(before, run);
     }
     let opened: CardView | undefined;
     let celebration: CelebrationBatch | undefined;
@@ -596,7 +614,6 @@ export class RunScene extends Scene implements HudRun {
         this.react(before ?? step.session.walk.run, event);
       }
     }
-    const { run } = step.session.walk;
     if (run.phase.kind === "ended") {
       if (run.phase.reason === "wentHome") {
         this.world?.moments.headedHome(run);
