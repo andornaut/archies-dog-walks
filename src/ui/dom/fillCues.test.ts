@@ -213,13 +213,15 @@ describe("control state cues", () => {
       "a pressed Logbook row's or end-screen badge's face",
       "logbook",
       ":is(.adw-logbook-badge, .adw-end-badge-control)[data-ui-pressed] > .ui-button-face",
-      "background-color:var(--ui-button-focus-fill)",
+      "background-color:var(--ui-colour-button-pressed-face)",
     ],
     [
       "a Logbook row's and end-screen badge's 35% focus fill",
       "logbook",
       ":is(.adw-logbook-badge, .adw-end-badge-control)",
-      "--ui-button-focus-fill:color-mix(in srgb,var(--adw-cyan) 35%,transparent)",
+      "--ui-colour-button-focus-face:color-mix(in srgb,var(--adw-cyan) 35%,transparent);" +
+        "--ui-colour-button-pressed-face:var(--ui-colour-button-focus-face);" +
+        "--ui-button-focus-fill:var(--ui-colour-button-focus-face)",
     ],
     [
       "a focused or pressed locked badge's goal",
@@ -231,7 +233,7 @@ describe("control state cues", () => {
       "a focused or pressed Logbook row's text in forced colours",
       "logbook",
       ".adw-logbook-badge:is(:focus-visible, [data-ui-pressed]) .adw-text",
-      "color:HighlightText!important",
+      "color:var(--ui-colour-button-focus-text)!important",
     ],
     [
       "a focused Settings row's face",

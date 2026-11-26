@@ -1,8 +1,11 @@
 /* Illustrated badge controls (Logbook rows and the end screen's badges) retain their authored
-   colours; Kit supplies the native focus fill, a press takes the same fill, and the content stays
-   opaque over it so its text keeps its contrast. */
+   colours. Their focus and press colours are Game Kit's theme state slots, set here once and once
+   again in forced colours: Kit's focus fill paints the focus slot, a press takes the same fill,
+   and the content stays opaque over it so its text keeps its contrast. */
 :is(.adw-logbook-badge, .adw-end-badge-control) {
-  --ui-button-focus-fill: color-mix(in srgb, var(--adw-cyan) 35%, transparent);
+  --ui-colour-button-focus-face: color-mix(in srgb, var(--adw-cyan) 35%, transparent);
+  --ui-colour-button-pressed-face: var(--ui-colour-button-focus-face);
+  --ui-button-focus-fill: var(--ui-colour-button-focus-face);
   position: absolute;
   box-sizing: border-box;
   pointer-events: auto;
@@ -12,7 +15,7 @@
   pointer-events: none;
 }
 :is(.adw-logbook-badge, .adw-end-badge-control)[data-ui-pressed] > .ui-button-face {
-  background-color: var(--ui-button-focus-fill);
+  background-color: var(--ui-colour-button-pressed-face);
 }
 :is(.adw-logbook-badge, .adw-end-badge-control).ui-standard-button:is(
     :focus-visible,
@@ -31,13 +34,15 @@
 }
 @media (forced-colors: active) {
   :is(.adw-logbook-badge, .adw-end-badge-control) {
-    --ui-button-focus-fill: Highlight;
+    --ui-colour-button-focus-face: Highlight;
+    --ui-colour-button-focus-text: HighlightText;
+    --ui-colour-button-pressed-face: Highlight;
   }
   :is(.adw-logbook-badge, .adw-end-badge-control)[data-ui-pressed] > .ui-button-face {
     forced-color-adjust: none;
   }
   .adw-logbook-badge:is(:focus-visible, [data-ui-pressed]) .adw-text {
     forced-color-adjust: none;
-    color: HighlightText !important;
+    color: var(--ui-colour-button-focus-text) !important;
   }
 }
