@@ -115,10 +115,10 @@ export interface DistractionPlace {
 // it walks out past it as it fades out.
 const VERGE_OUT = DART_VERGE_LANES + 0.5;
 const FADE_OUT = 0.5;
-// A stretch's row is drawn within this first share of it.
-const ROW_SHARE = 0.5;
 // A distraction that has no clear side tries again this many cell lengths further up the zone.
 const SHIFT_ROWS = 1;
+// Reserve room for at least two retry rows when the stretch is long enough.
+const RESERVED_RETRIES = 2;
 // Scroll between the moments a placement is checked at.
 const SAMPLE_SCROLL = 8;
 // A distraction's body runs a cell length up the road from its feet, and keeps this share of a
@@ -186,9 +186,8 @@ export function distractionKinds(
     : AMBIENT_WALKERS.filter((key) => drawable(key)).map((key) => [key, 1]);
 }
 
-// The zone's distractions: one in each of distractionsPerZone equal stretches of it, its row
-// drawn in the stretch's first ROW_SHARE, each wearing one of distractionKinds by its weight and
-// taking one of the three patterns at its odds. Each takes the same draws whatever is picked.
+// One distraction per stretch, with its initial row drawn from the usable space before the
+// retry rows. Kind and pattern draws keep their weights and order.
 export function planDistractions(
   deps: Pick<DistractionDeps, "data" | "drawable" | "random">,
   geometry: Pick<RoadGeometry, "cell" | "sightLength">,
@@ -201,6 +200,7 @@ export function planDistractions(
   const stretch = count > 0 ? length / count : 0;
   // Every row is gone from the road before the zone ends.
   const last = length - distractionScroll(data, geometry) - geometry.cell.length;
+  const retryRoom = RESERVED_RETRIES * SHIFT_ROWS * geometry.cell.length;
   const patterns = keysOf(data.tuning.probability.distractionPatternOdds);
   const odds = patterns.map((pattern) =>
     readTable(data.tuning, "probability", "distractionPatternOdds", pattern),
@@ -210,7 +210,9 @@ export function planDistractions(
     const pick = random();
     const pattern = weightedPick(random, patterns, odds);
     const side = random() < 0.5 ? -1 : 1;
-    const row = stretch * (i + ROW_SHARE * random());
+    const first = i * stretch;
+    const latest = Math.min(stretch * (i + 1) - geometry.cell.length, last);
+    const row = first + Math.max(0, latest - first - retryRoom) * random();
     const step = random();
     if (kinds.length === 0) {
       continue;
@@ -220,7 +222,6 @@ export function planDistractions(
       kinds.map(([kind]) => kind),
       kinds.map(([, weight]) => weight),
     );
-    const latest = Math.min(stretch * (i + 1) - geometry.cell.length, last);
     planned.push({
       key,
       latest,

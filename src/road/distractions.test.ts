@@ -260,6 +260,24 @@ describe("planDistractions", () => {
       expect(latest + END).toBeLessThan(zoneLength(gameData));
     });
   });
+
+  it("varies starts across each usable stretch while leaving room for two retries", () => {
+    const starts = (draw: number) =>
+      planDistractions({ ...deps(1), random: () => draw }, GEOMETRY, FIRST_ZONE);
+    const earliest = starts(0);
+    const latestStarts = starts(0.999);
+    const zoneEnd = zoneLength(gameData);
+    const midpoint = zoneEnd / COUNT / 2;
+
+    earliest.forEach(({ latest, row: first }, index) => {
+      const late = defined(latestStarts[index]);
+      expect(first).toBeCloseTo((index * zoneEnd) / COUNT);
+      expect(late.row - first).toBeGreaterThan(midpoint);
+      expect(late.row + 2 * GEOMETRY.cell.length).toBeLessThanOrEqual(latest);
+      expect(latest + END).toBeLessThan(zoneEnd);
+      expect(late.skipped).toBe(false);
+    });
+  });
 });
 
 describe("stepDistractions", () => {
