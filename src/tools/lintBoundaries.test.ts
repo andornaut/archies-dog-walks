@@ -46,6 +46,7 @@ it.each([
   ["hud/probe.ts", 'import "../assets/index.ts";', undefined],
   ["hud/probe.ts", 'import "../assets/manifest.ts";', "import-x/no-restricted-paths"],
   ["hud/probe.ts", 'import "../data/layout.ts";', "import-x/no-restricted-paths"],
+  ["hud/probe.ts", 'import "../data/layout/controls.ts";', "import-x/no-restricted-paths"],
   [
     "hud/probe.ts",
     'import type { World } from "../data/types/world.ts";',

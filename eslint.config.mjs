@@ -174,7 +174,7 @@ const EFFECT_GLOBALS = Object.entries({
 // and its stylesheets stay internal, and a group nested in it has an entry of its own. In
 // src/data/ only these modules sit behind the entry; every other module there is an authored data
 // file, which any group imports directly.
-const DATA_BEHIND_ENTRY = ["layout.ts", "screen.ts", "types", "types.ts"];
+const DATA_BEHIND_ENTRY = ["layout", "layout.ts", "screen.ts", "types", "types.ts"];
 
 // The band rule reads import declarations, re-exports and dynamic imports, but not import() types.
 const IMPORT_TYPES = {
