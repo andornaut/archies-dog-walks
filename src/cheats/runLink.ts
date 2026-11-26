@@ -5,7 +5,7 @@ import type { Loadout } from "../state/runState.ts";
 import { PARAM_NAMES, type RunSetup } from "./runSetup.ts";
 import { loadoutFor } from "./setupRun.ts";
 
-// Every parameter that overrides a walk: all but `dev`, which only shows the overlay.
+// Every parameter that overrides a walk: all but `dev`, which turns on dev mode.
 const OVERRIDE_PARAMS = PARAM_NAMES.filter((name) => name !== "dev");
 
 // The parameters that describe a run: a URL with any of them skips the home screen. `route`
@@ -17,9 +17,9 @@ export function namesRunSetup(search: string): boolean {
   return RUN_PARAMS.some((name) => params.has(name));
 }
 
-// The run a dev link starts: its pack, gear and walker over the saved last loadout and walker,
+// The run a run link starts: its pack, gear and walker over the saved last loadout and walker,
 // or over the first owned dog when nothing was picked yet.
-export function devRunLoadout(
+export function runLinkLoadout(
   saved: HomeLoadout,
   walker: WalkerId,
   firstOwned: DogId,
@@ -33,7 +33,7 @@ export function devRunLoadout(
 
 // The URL without its run overrides, and without `dev` too when dev mode is being disabled. The
 // path, the hash and every other parameter stay.
-export function stripDevParams(href: string, disableDev: boolean): string {
+export function stripRunOverrides(href: string, disableDev: boolean): string {
   const url = new URL(href);
   const names = disableDev ? [...OVERRIDE_PARAMS, "dev"] : OVERRIDE_PARAMS;
   names.forEach((name) => url.searchParams.delete(name));

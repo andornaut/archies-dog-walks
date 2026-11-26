@@ -4,7 +4,7 @@ import {
   sessionWrite,
 } from "@andornaut/game-kit/runtime/web/save/dom/pageSessionStore";
 
-import { gameData } from "../../data/index.ts";
+import { browserToolsOn } from "../../cheats/browserTools.ts";
 import {
   DEV_LAST_LOG_KEY,
   DEV_REPLAY_KEY,
@@ -13,8 +13,7 @@ import {
   nextWalkSetup,
   WALK_CHEATS_OFF,
   type WalkCheats,
-} from "../../dev/cheats.ts";
-import { devToolsOn } from "../../dev/devTools.ts";
+} from "../../cheats/cheats.ts";
 import {
   type CardChoice,
   decodeInputLog,
@@ -26,9 +25,10 @@ import {
   startInputLog,
   takeCardChoice,
   takeDueInputs,
-} from "../../dev/inputLog.ts";
-import { pageRunSetup, runSetupLimitsFor } from "../../dev/pageRunSetup.ts";
-import type { RunSetup } from "../../dev/runSetup.ts";
+} from "../../cheats/inputLog.ts";
+import { pageRunSetup, runSetupLimitsFor } from "../../cheats/pageRunSetup.ts";
+import type { RunSetup } from "../../cheats/runSetup.ts";
+import { gameData } from "../../data/index.ts";
 import type { SessionInput } from "../../runner/session.ts";
 
 // How a run starts: the cheats it plays by, its setup, and the inputs that drive it when it
@@ -43,7 +43,7 @@ export interface RunStart {
 // with no cheats but the setup's Invincible owners; otherwise the page's URL sets the run up, with
 // the next walk's cheats over it. Reading the log clears it. The installed app reads no log.
 export function nextRunStart(next: NextWalk = NEXT_WALK_OFF): RunStart {
-  const raw = devToolsOn() ? sessionRead(DEV_REPLAY_KEY) : null;
+  const raw = browserToolsOn() ? sessionRead(DEV_REPLAY_KEY) : null;
   if (raw !== null) {
     sessionRemove(DEV_REPLAY_KEY);
     const decoded = decodeInputLog(runSetupLimitsFor(gameData), raw);
@@ -65,7 +65,7 @@ export function nextRunStart(next: NextWalk = NEXT_WALK_OFF): RunStart {
   };
 }
 
-// The run's dev hooks: the input log it records and the replay that drives it.
+// The run's cheat hooks: the input log it records and the replay that drives it.
 export class RunRecorder {
   private inputLog: InputLog | undefined;
   private replay: { events: readonly InputEvent[]; next: number } | undefined;

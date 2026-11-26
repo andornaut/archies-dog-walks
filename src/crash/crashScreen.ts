@@ -12,9 +12,9 @@ import crashArt from "virtual:adw-crash-art";
 
 import palette from "../../shared/palette.json" with { type: "json" };
 import { BUILD_LABEL } from "../buildLabel.ts";
+import { pageSearch } from "../cheats/browserTools.ts";
+import { devInSearch } from "../cheats/runSetup.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
-import { pageSearch } from "../dev/devTools.ts";
-import { devInSearch } from "../dev/runSetup.ts";
 import { pageDeviceSettings } from "../save/settings.ts";
 import { bindRecoveryHold } from "../ui/dom/actionBinding.ts";
 import { mountMuteControl } from "../ui/dom/muteControl.ts";

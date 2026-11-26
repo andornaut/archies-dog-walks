@@ -5,9 +5,9 @@ import { encodeSave } from "@andornaut/game-kit/runtime/save/versionedSave";
 import { storageFixture } from "@andornaut/game-kit/test/storageFixture";
 import { describe, expect, it, vi } from "vitest";
 
+import { addToBank, BANK_GRANTS, grantOwned } from "../cheats/cheats.ts";
 import { gameData } from "../data/index.ts";
 import type { AchievementId } from "../data/types.ts";
-import { addToBank, BANK_GRANTS, grantOwned } from "../dev/cheats.ts";
 import { packOf, runFactsFor, saveFor } from "../testing/achievements.ts";
 import {
   newPlayerSave,

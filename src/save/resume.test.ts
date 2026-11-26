@@ -55,7 +55,7 @@ const DART: WalkItem = {
 };
 
 // Zone 2 about to start, its fork taken: Kilo and Lady walking with the Fanny pack, Muddy on,
-// a dart left on the road from zone 1, and the dev panel's invincibility on.
+// a dart left on the road from zone 1, and the Cheats page's invincibility on.
 function zoneStartRun(): RunState {
   const run = newRun(gameData, 2, { dogs: ["kilo", "lady"], gear: "fannyPack", walker: "casey" });
   return {
@@ -451,10 +451,10 @@ describe("encodeResume and launchWalk", () => {
     );
   });
 
-  it("banks a good resume point when a dev link starts its own walk", () => {
+  it("banks a good resume point when a run link starts its own walk", () => {
     expect(launchWalk(gameData, false, checkpointFor(ZONE_START))).toEqual({
       kind: "bank",
-      reason: "a dev link starts its own walk",
+      reason: "a run link starts its own walk",
     });
   });
 

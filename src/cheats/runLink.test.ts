@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { DogId, GearId, WalkerId } from "../data/types.ts";
 import type { HomeLoadout } from "../home/home.ts";
 import type { Loadout } from "../state/runState.ts";
-import { devRunLoadout, homeRunSetup, namesRunSetup, stripDevParams } from "./devStart.ts";
+import { homeRunSetup, namesRunSetup, runLinkLoadout, stripRunOverrides } from "./runLink.ts";
 import type { RunSetup } from "./runSetup.ts";
 
 const setup: RunSetup<DogId, GearId, WalkerId> = {
@@ -30,7 +30,7 @@ describe("namesRunSetup", () => {
   });
 });
 
-describe("devRunLoadout", () => {
+describe("runLinkLoadout", () => {
   it("derives each case", () => {
     for (const [, saved, overrides, expected] of [
       [
@@ -57,12 +57,12 @@ describe("devRunLoadout", () => {
       Partial<RunSetup<DogId, GearId, WalkerId>>,
       Loadout,
     ][]) {
-      expect(devRunLoadout(saved, "mrB", "kilo", { ...setup, ...overrides })).toEqual(expected);
+      expect(runLinkLoadout(saved, "mrB", "kilo", { ...setup, ...overrides })).toEqual(expected);
     }
   });
 });
 
-describe("stripDevParams", () => {
+describe("stripRunOverrides", () => {
   const base = "http://host/play/";
   it("strips the dev parameters", () => {
     for (const [search, disableDev, expected] of [
@@ -76,7 +76,7 @@ describe("stripDevParams", () => {
       ["?dev=1&lang=fr", true, "?lang=fr"],
       ["", false, ""],
     ] as const) {
-      expect(stripDevParams(`${base}${search}`, disableDev)).toBe(`${base}${expected}`);
+      expect(stripRunOverrides(`${base}${search}`, disableDev)).toBe(`${base}${expected}`);
     }
   });
 });

@@ -736,7 +736,7 @@ export interface World {
   readonly firstZone: ZoneId;
   readonly lastZone: ZoneId;
   readonly name: string;
-  // The zones every walk took before forks, in order: a dev start at a later zone with no
+  // The zones every walk took before forks, in order: a cheat start at a later zone with no
   // route walks them.
   readonly preForkRoute: readonly ZoneId[];
   // How many zones a walk visits, none twice.

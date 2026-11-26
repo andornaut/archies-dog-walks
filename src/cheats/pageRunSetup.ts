@@ -4,8 +4,8 @@ import { gameData } from "../data/index.ts";
 import type { DogId, GameData, GearId, WalkerId } from "../data/types.ts";
 import { walkLength } from "../rules/route.ts";
 import { MAX_RUN_DOGS } from "../save/schema.ts";
-import { homeRunSetup, stripDevParams } from "./devStart.ts";
-import { devToolsOn, pageSearch } from "./devTools.ts";
+import { browserToolsOn, pageSearch } from "./browserTools.ts";
+import { homeRunSetup, stripRunOverrides } from "./runLink.ts";
 import { type ParsedRunSetup, parseRunSetup, randomSeed, type RunSetupLimits } from "./runSetup.ts";
 
 const SPEED_LIMITS = { max: 10, min: 0.1 };
@@ -31,7 +31,7 @@ let appParsed: ParsedRunSetup<DogId, GearId, WalkerId> | undefined;
 // scene sees the same random seed when the URL has none. Warnings go to the console. The
 // installed app reads no setup from its URL.
 export function pageRunSetup(): ParsedRunSetup<DogId, GearId, WalkerId> {
-  if (!devToolsOn()) {
+  if (!browserToolsOn()) {
     appParsed ??= parseRunSetup(runSetupLimitsFor(gameData), randomSeed, "");
     return appParsed;
   }
@@ -51,7 +51,7 @@ export function clearRunOverrides(): void {
     warnings: [],
   };
   const href = globalThis.location.href;
-  const stripped = stripDevParams(href, false);
+  const stripped = stripRunOverrides(href, false);
   if (stripped !== href) {
     globalThis.history.replaceState(globalThis.history.state, "", stripped);
   }

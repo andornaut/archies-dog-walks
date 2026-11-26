@@ -13,10 +13,10 @@ import { MAX_RENDER_SCALE } from "@andornaut/game-kit/runtime/view/renderScale";
 import { followFrameTurn } from "@andornaut/game-kit/runtime/web/view/phaser/followFrameTurn";
 import { Core, Game, Scale, WEBGL } from "phaser";
 
+import { DEV_GAME_GLOBAL } from "./cheats/browserTools.ts";
+import { pageRunSetup } from "./cheats/pageRunSetup.ts";
 import { CRASH_SCREEN } from "./crash/crashScreen.ts";
 import { SCREEN_CONFIG } from "./data/screen.ts";
-import { DEV_GAME_GLOBAL } from "./dev/devTools.ts";
-import { pageRunSetup } from "./dev/pageRunSetup.ts";
 import { noteKeyPress } from "./input/keyNumbers.ts";
 import { bindPressAdmission, createCanvasPressAdmission } from "./input/phaser/pressAdmission.ts";
 import { lostTouches } from "./input/touches.ts";

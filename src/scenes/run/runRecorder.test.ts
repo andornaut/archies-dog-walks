@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 
-import { DEV_REPLAY_KEY } from "../../dev/cheats.ts";
-import { encodeInputLog, startInputLog } from "../../dev/inputLog.ts";
+import { DEV_REPLAY_KEY } from "../../cheats/cheats.ts";
+import { encodeInputLog, startInputLog } from "../../cheats/inputLog.ts";
 
 afterEach(() => {
   vi.unstubAllGlobals();

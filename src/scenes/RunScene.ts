@@ -9,9 +9,6 @@ import {
 import { Scene } from "phaser";
 
 import { musicKey } from "../audio/music.ts";
-import { gameData } from "../data/index.ts";
-import { LANE_COUNT } from "../data/screen.ts";
-import type { DogId, ZoneId } from "../data/types.ts";
 import {
   finishZone,
   timeScaleOf,
@@ -20,10 +17,13 @@ import {
   walkCheat,
   type WalkCheats,
   withCheats,
-} from "../dev/cheats.ts";
-import type { InputEvent } from "../dev/inputLog.ts";
-import type { RunSetup } from "../dev/runSetup.ts";
-import { withSetupStart } from "../dev/setupRun.ts";
+} from "../cheats/cheats.ts";
+import type { InputEvent } from "../cheats/inputLog.ts";
+import type { RunSetup } from "../cheats/runSetup.ts";
+import { withSetupStart } from "../cheats/setupRun.ts";
+import { gameData } from "../data/index.ts";
+import { LANE_COUNT } from "../data/screen.ts";
+import type { DogId, ZoneId } from "../data/types.ts";
 import { cardHintTriggers, startHintTriggers } from "../hud/hintTriggers.ts";
 import { homeQuestionNote, pauseNote } from "../hud/homeQuestion.ts";
 import { NOTHING_PAUSED, type RunPause, walkBackAction, walkPaused } from "../hud/topBar.ts";
@@ -130,7 +130,7 @@ interface Celebration {
   delayMs: number;
 }
 
-// One run's views, input, menus and dev hooks, made as it starts.
+// One run's views, input, menus and cheat hooks, made as it starts.
 interface RunWorld {
   ambient: AmbientView;
   backdrop: BackdropView;

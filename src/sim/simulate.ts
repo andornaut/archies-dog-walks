@@ -3,6 +3,7 @@ import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
 import { type Random, randomStream } from "@andornaut/game-kit/runtime/random";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 
+import type { InputEvent } from "../cheats/inputLog.ts";
 import { LANE_COUNT } from "../data/screen.ts";
 import type {
   AchievementId,
@@ -13,7 +14,6 @@ import type {
   WalkerId,
   ZoneId,
 } from "../data/types.ts";
-import type { InputEvent } from "../dev/inputLog.ts";
 import { lastHeartOwnersOf, runCountersOf, type RunFacts } from "../rules/achievements.ts";
 import type { CardView, Choice, ChoiceData } from "../rules/choices.ts";
 import { newRun } from "../rules/newRun.ts";

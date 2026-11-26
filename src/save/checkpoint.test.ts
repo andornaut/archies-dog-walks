@@ -172,7 +172,7 @@ describe("recordRunEnd", () => {
     expect([...bankCheckpoint(testAwards, save).owned.walkers].sort()).toEqual(unlockedBy(0));
   });
 
-  it("unlocks, for a walk a dev start began past zone 1 and finished, every walker its dogs reach", () => {
+  it("unlocks, for a walk a cheat start began past zone 1 and finished, every walker its dogs reach", () => {
     const changes = { ...walkingOf(3), counters: { ...quietCounters(), firstZone: 2 } };
     expect(walkersAfter(changes)).toEqual(unlockedBy(3));
   });
@@ -185,7 +185,7 @@ describe("recordRunEnd", () => {
     );
   });
 
-  it("banks a walk a dev start began past zone 1 as one begun there, counting only the zones it walked", () => {
+  it("banks a walk a cheat start began past zone 1 as one begun there, counting only the zones it walked", () => {
     const result = runResult({
       counters: { ...quietCounters(), firstZone: 2, startCents: cents(1_500) },
     });
@@ -371,7 +371,7 @@ describe("achievements at banking", () => {
       ROUTE.slice(0, 2),
     ],
     [
-      "counts only the zones walked by a walk a dev start began past zone 1",
+      "counts only the zones walked by a walk a cheat start began past zone 1",
       { counters: { ...quietCounters(), firstZone: 2 } },
       [ROUTE[0], ...ROUTE.slice(2)] as ZoneId[],
     ],
@@ -415,7 +415,7 @@ describe("achievements at banking", () => {
     ["adds a walker only once", {}, ["casey"]],
     ["not for a walk headed home", { outcome: "wentHome", walker: "mrB", zone: 3 }, ["casey"]],
     [
-      "adds the walker of a finished walk a dev start began past zone 1",
+      "adds the walker of a finished walk a cheat start began past zone 1",
       { counters: { ...quietCounters(), firstZone: 2 }, walker: "mrB" },
       ["casey", "mrB"],
     ],

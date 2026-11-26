@@ -98,7 +98,7 @@ export interface RunState {
   readonly debuffs: readonly ActiveDebuff[];
   // The dodges effects such as the Whistle's gave, which last the walk.
   readonly dodges: readonly ActiveDodge[];
-  // The zone index the run began in: a dev start's zone is the run's first, and the zones before
+  // The zone index the run began in: a cheat start's zone is the run's first, and the zones before
   // it, never walked, count toward no stat or achievement.
   readonly firstZone: number;
   // The gear drop grabbed last, in effect on top of the Pocket's gear until the walk ends or the
@@ -109,7 +109,7 @@ export interface RunState {
   // Hearts lost this zone that forgivenHearts modifiers forgave.
   readonly heartsForgiven: number;
   readonly immunities: readonly ActiveImmunity[];
-  // The dev panel's cheat: no owner loses hearts. Absent in normal play.
+  // The Cheats page's cheat: no owner loses hearts. Absent in normal play.
   readonly invincible?: boolean;
   readonly modifiers: readonly ActiveModifier[];
   readonly money: Cents;

@@ -30,11 +30,11 @@ import {
   ownerFaceKey,
   ROAD_SPRITE_SIZE,
 } from "../assets/spriteKeys.ts";
+import { pageSearch } from "../cheats/browserTools.ts";
+import { pageRunSetup } from "../cheats/pageRunSetup.ts";
+import { namesRunSetup, runLinkLoadout } from "../cheats/runLink.ts";
 import { gameData } from "../data/index.ts";
 import type { EncounterId } from "../data/types.ts";
-import { devRunLoadout, namesRunSetup } from "../dev/devStart.ts";
-import { pageSearch } from "../dev/devTools.ts";
-import { pageRunSetup } from "../dev/pageRunSetup.ts";
 import { hudArtResources } from "../hud/dom/prepareHudArt.ts";
 import { waitedLoad } from "../loadingProgress.ts";
 import {
@@ -202,7 +202,7 @@ export class BootScene extends Scene {
       this.manifestReady = false;
       console.error("The art manifest is invalid; required UI is unavailable.", error);
     }
-    // A dev link that names a run starts its walk, and banks a walk left unfinished rather than
+    // A run link that names a run starts its walk, and banks a walk left unfinished rather than
     // resuming it.
     const walkNow = namesRunSetup(pageSearch());
     // Open the profile while the art loads. A save from a newer version requires that version.
@@ -621,7 +621,7 @@ export class BootScene extends Scene {
     });
   }
 
-  // Starts the walk a dev link names, with everything loaded. It saves like any walk.
+  // Starts the walk a run link names, with everything loaded. It saves like any walk.
   private startWalk(): void {
     this.requireNativeUi(HUD_UI_KEYS, () => {
       if (requiredUpdate() !== undefined) {
@@ -631,7 +631,7 @@ export class BootScene extends Scene {
       markArtReady(this);
       const { lastLoadout, owned } = profileSave(this);
       const walker = walkerInUse(profileSave(this));
-      const loadout = devRunLoadout(
+      const loadout = runLinkLoadout(
         lastLoadout,
         walker,
         itemAt(owned.dogs, 0),

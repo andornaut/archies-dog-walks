@@ -354,8 +354,8 @@ function resumeSchema(data: ResumeData) {
 }
 
 // The resume point as stored: the road's plan for the zone before, which the next plan
-// replaces, left out but for the path's last row. The schema leaves out the dev panel's
-// invincibility, which the walk sets again from the panel.
+// replaces, left out but for the path's last row. The schema leaves out the Cheats page's
+// invincibility, which the walk sets again from the page.
 function storedWalk(walk: ResumeWalk) {
   const { session } = walk;
   const { road } = session.walk;
@@ -457,7 +457,7 @@ function sameWalk(checkpoint: Checkpoint, walk: ResumeWalk): boolean {
   );
 }
 
-// A checkpoint resumes when resuming is allowed (a dev link's walk never resumes one) and its
+// A checkpoint resumes when resuming is allowed (a run link's walk never resumes one) and its
 // resume point reads at this version, names only content the game has and is the checkpoint's
 // own walk; any other banks as heading home.
 export function launchWalk(
@@ -469,7 +469,7 @@ export function launchWalk(
     return { kind: "none" };
   }
   if (!allowed) {
-    return { kind: "bank", reason: "a dev link starts its own walk" };
+    return { kind: "bank", reason: "a run link starts its own walk" };
   }
   if (checkpoint.resume === undefined) {
     return { kind: "bank", reason: "the checkpoint has no resume point" };

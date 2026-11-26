@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import { DEV_LAST_LOG_KEY, DEV_REPLAY_KEY } from "../dev/cheats.ts";
+import { DEV_LAST_LOG_KEY, DEV_REPLAY_KEY } from "../cheats/cheats.ts";
 import { INSTALL_NUDGE_KEY } from "../pwa/installNudge.ts";
 import { SETTINGS_KEYS } from "./settings.ts";
 import { EARNED_KEYS, RESUME_BACKUP_KEY, SAVE_KEYS } from "./storage.ts";

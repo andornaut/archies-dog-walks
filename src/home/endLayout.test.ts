@@ -194,7 +194,7 @@ describe("results and badge placement", () => {
   it.each([
     ["short results", 3, 1, false, 1],
     ["tall normal results", 5, 3, true, 2],
-    ["tall dev results", 6, 3, true, 1],
+    ["tall cheat results", 6, 3, true, 1],
     ["results without badges", 5, 3, true, 0],
   ] as const)(
     "fits %s and centres the allocated badge panel above the button",

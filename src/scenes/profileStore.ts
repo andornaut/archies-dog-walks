@@ -193,7 +193,7 @@ export function finishRun(
   return session(scene).finishRun(result, changes);
 }
 
-// The walker a walk uses: the one picked, or the default while none is, as after a dev link
+// The walker a walk uses: the one picked, or the default while none is, as after a run link
 // starts a run.
 export function walkerInUse(save: Pick<SaveDocument, "walker">): WalkerId {
   return save.walker ?? gameData.defaultWalker;

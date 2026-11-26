@@ -2,9 +2,6 @@ import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 import type { Scene } from "phaser";
 
 import { domArtUrl } from "../assets/domArtFiles.ts";
-import { gameData } from "../data/index.ts";
-import { SCREEN_CONFIG } from "../data/screen.ts";
-import type { ZoneId } from "../data/types.ts";
 import {
   addToBank,
   grantOwned,
@@ -14,11 +11,14 @@ import {
   pocketChoices,
   seedFrom,
   SPEEDS,
-} from "../dev/cheats.ts";
-import { type CheatAction, type CheatsState, cheatsView } from "../dev/cheatsView.ts";
-import { stripDevParams } from "../dev/devStart.ts";
-import { pageRunSetup } from "../dev/pageRunSetup.ts";
-import { randomSeed } from "../dev/runSetup.ts";
+} from "../cheats/cheats.ts";
+import { type CheatAction, type CheatsState, cheatsView } from "../cheats/cheatsView.ts";
+import { pageRunSetup } from "../cheats/pageRunSetup.ts";
+import { stripRunOverrides } from "../cheats/runLink.ts";
+import { randomSeed } from "../cheats/runSetup.ts";
+import { gameData } from "../data/index.ts";
+import { SCREEN_CONFIG } from "../data/screen.ts";
+import type { ZoneId } from "../data/types.ts";
 import { overlayRegion } from "../home/homeBar.ts";
 import { showCheats } from "../hud/dom/cheats.ts";
 import { type DomQuestionPanel, showQuestionPanel } from "../hud/dom/questionPanel.ts";
@@ -161,7 +161,7 @@ export function openCheatsPage(
     }
     const words = gameData.menuText.cheats.reset;
     const reset = () => {
-      const home = stripDevParams(globalThis.location.href, false);
+      const home = stripRunOverrides(globalThis.location.href, false);
       void resetSave(scene).then((started) => {
         if (started) {
           globalThis.location.replace(home);

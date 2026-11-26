@@ -88,7 +88,7 @@ const BANDS = [
       ["src/input"],
       ["src/help"],
       ["src/home"],
-      ["src/dev"],
+      ["src/cheats"],
       ["src/hud"],
     ],
   },

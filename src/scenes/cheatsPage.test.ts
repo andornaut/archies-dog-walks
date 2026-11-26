@@ -3,10 +3,10 @@ import { EventEmitter } from "node:events";
 import type { Scene } from "phaser";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
+import { NEXT_WALK_OFF, startZones } from "../cheats/cheats.ts";
+import type { CheatsState } from "../cheats/cheatsView.ts";
 import { gameData } from "../data/index.ts";
 import type { ZoneId } from "../data/types.ts";
-import { NEXT_WALK_OFF, startZones } from "../dev/cheats.ts";
-import type { CheatsState } from "../dev/cheatsView.ts";
 import type { DomCheatsInput } from "../hud/dom/cheats.ts";
 import type { DomQuestionPanelInput } from "../hud/dom/questionPanel.ts";
 import { cents } from "../units.ts";
@@ -30,8 +30,8 @@ const fake = vi.hoisted(() => ({
   },
   update: vi.fn(),
 }));
-vi.mock("../dev/devTools.ts", () => ({ devToolsOn: () => false }));
-vi.mock("../dev/cheatsView.ts", () => ({
+vi.mock("../cheats/browserTools.ts", () => ({ browserToolsOn: () => false }));
+vi.mock("../cheats/cheatsView.ts", () => ({
   cheatsView: (_measure: unknown, _input: unknown, state: CheatsState) => {
     fake.projection(state);
     return { layout: {} };

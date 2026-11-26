@@ -59,7 +59,7 @@ describe("the walk's zones", () => {
     );
   });
 
-  it("starts a later dev start on the pre-fork route", () => {
+  it("starts a later cheat start on the pre-fork route", () => {
     expect(defaultRoute(data, 1)).toEqual(WORLD.preForkRoute.slice(0, 1));
     expect(defaultRoute(data, 3)).toEqual(WORLD.preForkRoute.slice(0, 3));
   });

@@ -105,7 +105,7 @@ type BankedRun = Pick<
   walker: WalkerId | null;
 };
 
-// Banks the earnings, counts the outcome and updates every stat and the logbook. A dev start's
+// Banks the earnings, counts the outcome and updates every stat and the logbook. A cheat start's
 // zone is the run's first, so its zone counts leave out the zones before it, which it never
 // walked. Unlocks the walkers that a finished walk's dogs still
 // walking at its end reach (dogsFinishedWith). Clears the checkpoint, since the run it belonged

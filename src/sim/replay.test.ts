@@ -1,9 +1,6 @@
 import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { gameData } from "../data/index.ts";
-import { LANE_COUNT } from "../data/screen.ts";
-import type { GearId } from "../data/types.ts";
 import {
   decodeInputLog,
   encodeInputLog,
@@ -11,9 +8,12 @@ import {
   replayInputs,
   takeCardChoice,
   takeDueInputs,
-} from "../dev/inputLog.ts";
-import { runSetupLimitsFor } from "../dev/pageRunSetup.ts";
-import { loadoutFor, withSetupStart } from "../dev/setupRun.ts";
+} from "../cheats/inputLog.ts";
+import { runSetupLimitsFor } from "../cheats/pageRunSetup.ts";
+import { loadoutFor, withSetupStart } from "../cheats/setupRun.ts";
+import { gameData } from "../data/index.ts";
+import { LANE_COUNT } from "../data/screen.ts";
+import type { GearId } from "../data/types.ts";
 import { newRun } from "../rules/newRun.ts";
 import { screenRoadGeometry } from "../runner/screenGeometry.ts";
 import { chooseCard, runStreams, startSession, stepSession } from "../runner/session.ts";
@@ -85,7 +85,7 @@ interface Recorded {
 }
 
 // The row's first qualifying simulated walk, with its seed and inputs written as the game's input
-// log and read back as the dev panel reads a replay.
+// log and read back as RunRecorder reads a replay.
 function record(row: ReplayRow): Recorded {
   const { gear, pack, policy, skill, spares } = row;
   const dogs = pack.split(",") as [never];
@@ -132,8 +132,8 @@ function record(row: ReplayRow): Recorded {
   return { log: decoded.log, result };
 }
 
-// A simulated run's seed and inputs, written as the game's input log and read back as the dev
-// panel reads a replay, play the same run in the game's replay. Each row simulates its walk in a
+// A simulated run's seed and inputs, written as the game's input log and read back as RunRecorder
+// reads a replay, play the same run in the game's replay. Each row simulates its walk in a
 // hook and replays it in its test, so neither holds more than one walk's work.
 describe("a simulated run", { timeout: 60_000 }, () => {
   // spares is how many spare treats the walk stores and spends at least, which the replay matches.

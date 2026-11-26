@@ -1,8 +1,8 @@
 import { expect, it, vi } from "vitest";
 
+import { NEXT_WALK_OFF, startZones } from "../../cheats/cheats.ts";
+import { cheatsView } from "../../cheats/cheatsView.ts";
 import { gameData } from "../../data/index.ts";
-import { NEXT_WALK_OFF, startZones } from "../../dev/cheats.ts";
-import { cheatsView } from "../../dev/cheatsView.ts";
 import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";

@@ -4,7 +4,7 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { createActionGroup } from "@andornaut/game-kit/runtime/web/ui/dom/actionGroup";
 import { createFormRows } from "@andornaut/game-kit/runtime/web/ui/dom/formRow";
 
-import type { CheatAction, CheatRowView, CheatsView } from "../../dev/cheatsView.ts";
+import type { CheatAction, CheatRowView, CheatsView } from "../../cheats/cheatsView.ts";
 import { SWITCH_ROWS } from "../../home/settings.ts";
 import type { DomArtSource } from "../../ui/dom/artElements.ts";
 import { createContentSeparator, placeContentSeparator } from "../../ui/dom/contentSeparator.ts";

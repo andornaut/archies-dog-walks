@@ -23,7 +23,7 @@ function earnedNet(facts: RunFacts): number {
   return facts.earnedCents - facts.startCents;
 }
 
-// The zones a run finished that it walked, leaving out those before a dev start's first.
+// The zones a run finished that it walked, leaving out those before a cheat start's first.
 function zonesWalked(facts: RunFacts): number {
   return Math.max(0, facts.zonesFinished - facts.firstZone);
 }

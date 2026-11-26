@@ -1,9 +1,9 @@
 import { STEP_SECONDS } from "@andornaut/game-kit/runtime/clock/fixedStep";
 import { beforeAll, describe, expect, it } from "vitest";
 
+import { type InputEvent, takeCardChoice, takeDueInputs } from "../cheats/inputLog.ts";
 import { gameData } from "../data/index.ts";
 import { LANE_COUNT } from "../data/screen.ts";
-import { type InputEvent, takeCardChoice, takeDueInputs } from "../dev/inputLog.ts";
 import { newRun } from "../rules/newRun.ts";
 import { screenRoadGeometry } from "../runner/screenGeometry.ts";
 import {

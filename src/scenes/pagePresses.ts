@@ -24,8 +24,8 @@ interface PagePressHandlers {
 }
 
 // Follows each press that lands on the bare page beside the game's canvas (onBarePage: the
-// page's root, its body and #game, never the canvas or page UI such as the nav bar or the dev
-// panel) while scene is running and takes input, wherever it then travels, until it lifts or the
+// page's root, its body and #game, never the canvas or page UI such as the nav bar or the Cheats
+// page) while scene is running and takes input, wherever it then travels, until it lifts or the
 // browser cancels it (the kit's listenPagePresses). Phaser hears these only as presses outside
 // the canvas, with no moves. A press's id is negative, so it is never taken for a Phaser
 // pointer's, which count from 0. The page's listeners go when the scene shuts down.

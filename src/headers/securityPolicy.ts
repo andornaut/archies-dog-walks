@@ -20,8 +20,8 @@ export const BUILD_MANIFEST_PATH = "/.game-kit/manifest-*";
 // browser sees a new /sw.js on the next launch.
 export const COMMON_RULE = {
   comment:
-    "Every response. The game requests fullscreen and a screen wake lock; the clipboard (dev " +
-    "panel, art gallery) keeps its default of self.",
+    "Every response. The game requests fullscreen and a screen wake lock; the clipboard (Cheats " +
+    "page, art gallery) keeps its default of self.",
   headers: [
     ["X-Content-Type-Options", "nosniff"],
     ["Referrer-Policy", "strict-origin-when-cross-origin"],

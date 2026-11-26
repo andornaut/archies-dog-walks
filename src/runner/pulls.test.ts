@@ -2,6 +2,7 @@ import { seededRandom } from "@andornaut/game-kit/runtime/random";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
+import { recordInput, replayInputs, startInputLog } from "../cheats/inputLog.ts";
 import { DEBUFFS } from "../data/debuffs.ts";
 import { DOGS } from "../data/dogs.ts";
 import { ENCOUNTERS } from "../data/encounters.ts";
@@ -12,7 +13,6 @@ import { RUN_TEXT } from "../data/runText.ts";
 import { SHOP_GEAR } from "../data/shop.ts";
 import type { Modifier } from "../data/types.ts";
 import { UPGRADES } from "../data/upgrades.ts";
-import { recordInput, replayInputs, startInputLog } from "../dev/inputLog.ts";
 import type { LaneDirection } from "../layout/lanes.ts";
 import { newRun } from "../rules/newRun.ts";
 import { mapPack } from "../state/pack.ts";

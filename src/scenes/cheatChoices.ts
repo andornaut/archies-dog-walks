@@ -1,6 +1,6 @@
 import type { Scene } from "phaser";
 
-import { NEXT_WALK_OFF, type NextWalk } from "../dev/cheats.ts";
+import { NEXT_WALK_OFF, type NextWalk } from "../cheats/cheats.ts";
 
 // The Cheats modal's choices for the next walk as the scenes share them through the game's
 // registry, and whether a walk has started since the Start screen last showed. Nothing here is

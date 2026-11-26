@@ -17,6 +17,7 @@ import {
   roadTileKey,
   zoneIconKey,
 } from "../assets/spriteKeys.ts";
+import { DEV_GAME_GLOBAL } from "../cheats/browserTools.ts";
 import { minorLook, obstacleSkins } from "../content/obstacleLooks.ts";
 import type {
   CardOption,
@@ -30,7 +31,6 @@ import type {
   UpgradeId,
   WalkerId,
 } from "../data/types.ts";
-import { DEV_GAME_GLOBAL } from "../dev/devTools.ts";
 import { sizeHearts } from "../rules/dogs.ts";
 import { upgradeDuration } from "../rules/durations.ts";
 import { effectText, gearShort, upgradeLine } from "../rules/effectText.ts";

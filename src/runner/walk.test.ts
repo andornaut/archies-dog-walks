@@ -6,6 +6,14 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { pixels } from "@andornaut/game-kit/runtime/units";
 import { describe, expect, it } from "vitest";
 
+import {
+  type CardChoice,
+  recordInput,
+  replayInputs,
+  startInputLog,
+  type StepInput,
+  takeDueInputs,
+} from "../cheats/inputLog.ts";
 import { zoneSkins } from "../content/obstacleLooks.ts";
 import { ACHIEVEMENTS } from "../data/achievements.ts";
 import { DEBUFFS } from "../data/debuffs.ts";
@@ -31,14 +39,6 @@ import type {
 import { UPGRADES } from "../data/upgrades.ts";
 import { DEFAULT_WALKER, WALKER_PERKS, WALKERS } from "../data/walkers.ts";
 import { WORLD } from "../data/world.ts";
-import {
-  type CardChoice,
-  recordInput,
-  replayInputs,
-  startInputLog,
-  type StepInput,
-  takeDueInputs,
-} from "../dev/inputLog.ts";
 import type { LaneDirection } from "../layout/lanes.ts";
 import { runCountersOf } from "../rules/achievements.ts";
 import { cardFor, type CardView, chooseOption, openCard } from "../rules/choices.ts";

@@ -69,7 +69,7 @@ const minorBump = [...countBump(testState({ kilo: 5 })).bumpsByZone];
 const spotlight3 = { count: 3, debuff: "spotlight", kind: "debuffsGot" } as const;
 
 describe("run conditions", () => {
-  // A dev start from zone 3 never walked zones 1 and 2: they count as neither finished nor clean.
+  // A cheat start from zone 3 never walked zones 1 and 2: they count as neither finished nor clean.
   const cases: [string, AchievementCondition, Partial<RunFacts>, boolean][] = [
     ["zonesFinished below the count", zonesFinished(1), { zonesFinished: 0 }, false],
     ["zonesFinished at the count", zonesFinished(1), { zonesFinished: 1 }, true],
@@ -83,13 +83,13 @@ describe("run conditions", () => {
     ["cleanZones all, no bump", cleanZones("all"), { zonesFinished: 4 }, true],
     ["cleanZones all, a bump in the last zone", cleanZones("all"), bumped([0, 0, 0, 1], 4), false],
     ["cleanZones all, a zone short", cleanZones("all"), { zonesFinished: 3 }, false],
-    ["dev start from zone 3, zonesFinished 2", zonesFinished(2), fromZone3, true],
-    ["dev start from zone 3, zonesFinished 3", zonesFinished(3), fromZone3, false],
-    ["dev start from zone 3, zonesFinished all", zonesFinished("all"), fromZone3, false],
-    ["dev start from zone 3, cleanZones 2", cleanZones(2), fromZone3, true],
-    ["dev start from zone 3, cleanZones all", cleanZones("all"), fromZone3, false],
-    ["dev start home in zone 4, zonesFinished", zonesFinished(1), homeInZone4, false],
-    ["dev start home in zone 4, cleanZones", cleanZones(1), homeInZone4, false],
+    ["cheat start from zone 3, zonesFinished 2", zonesFinished(2), fromZone3, true],
+    ["cheat start from zone 3, zonesFinished 3", zonesFinished(3), fromZone3, false],
+    ["cheat start from zone 3, zonesFinished all", zonesFinished("all"), fromZone3, false],
+    ["cheat start from zone 3, cleanZones 2", cleanZones(2), fromZone3, true],
+    ["cheat start from zone 3, cleanZones all", cleanZones("all"), fromZone3, false],
+    ["cheat start home in zone 4, zonesFinished", zonesFinished(1), homeInZone4, false],
+    ["cheat start home in zone 4, cleanZones", cleanZones(1), homeInZone4, false],
     ["packSize, fewer dogs set out", packOf2, { packSize: 1 }, false],
     ["packSize, more dogs set out, fired or not", packOf2, { packSize: 3 }, true],
     ["earnings a cent short", payday, { earnedCents: cents(49_999) }, false],
@@ -120,7 +120,7 @@ describe("run conditions", () => {
       { lastHeartOwners: 1, zonesFinished: 3 },
       false,
     ],
-    ["finishOnLastHeart, dev start", closeShave, { ...fromZone3, lastHeartOwners: 1 }, true],
+    ["finishOnLastHeart, cheat start", closeShave, { ...fromZone3, lastHeartOwners: 1 }, true],
     [
       "fullPackBonus, every dog of 3 home",
       everybodyHome,

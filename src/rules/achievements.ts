@@ -23,7 +23,7 @@ export type AchievementData = Pick<
 >;
 
 // The counters a run keeps for its achievements, copied out of the run state for the save.
-// A dev start's zone is the run's first: zones before firstZone were never walked, so they are
+// A cheat start's zone is the run's first: zones before firstZone were never walked, so they are
 // neither finished nor clean.
 // startCents is the money the run began with, which a money goal leaves out. bumpsByKind,
 // optionPicks and tallies are this run's share of the lifetime ones.
