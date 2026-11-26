@@ -252,7 +252,7 @@ Source contracts: [`interaction.ts`](../src/ui/interaction.ts), [`home.ts`](../s
 
 The game shell supplies an accessible game label and control instructions. Where controls render on canvas, the shell supplies that context for keyboard interaction. Native Settings rows expose labels, roles and control state through the DOM.
 
-DOM buttons keep native Tab and Enter/Space behaviour, visible focus, meaningful labels, `disabled` where unavailable and `aria-pressed` where they toggle selection. Disabled labels remain readable instead of fading the whole control.
+DOM buttons keep native Tab and Enter/Space behaviour, visible focus, meaningful labels (no two controls in one dialog share a spoken name: a modal with both a corner X and a footer Close names its X "Close" plus the modal's title, such as "Close install steps", while the footer keeps its visible label), `disabled` where unavailable and `aria-pressed` where they toggle selection. Disabled labels remain readable instead of fading the whole control.
 
 ## Asset and code contract
 
