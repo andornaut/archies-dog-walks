@@ -71,3 +71,29 @@ it("refuses a module that imports its own group's entry, which imports it back",
   const rules = results.flatMap(({ messages }) => messages.map(({ ruleId }) => ruleId));
   expect(rules).toContain("import-x/no-cycle");
 });
+
+it.each([
+  ["save/probe.ts", "void globalThis.localStorage;", "no-restricted-globals"],
+  ["audio/probe.ts", "void document;", "no-restricted-globals"],
+  ["cheats/probe.ts", "void globalThis.location;", "no-restricted-globals"],
+  ["rules/probe.ts", "void performance.now();", "no-restricted-globals"],
+  ["assets/probe.ts", "console.error('missing art');", "no-restricted-globals"],
+  ["runner/probe.ts", "void fetch('/');", "no-restricted-globals"],
+  ["audio/probe.ts", "void AudioContext;", "no-restricted-globals"],
+  ["runner/probe.ts", "void setTimeout;", "no-restricted-globals"],
+  ["runner/probe.ts", "void Worker;", "no-restricted-globals"],
+  ["cheats/probe.ts", "void Math.random();", "no-restricted-properties"],
+  ["state/probe.ts", "type Port = Storage | MessageEvent;", undefined],
+  ["home/probe.ts", "const window = 1; void window;", undefined],
+  ["scenes/probe.ts", "void document;", undefined],
+  ["save/probe.test.ts", "void localStorage;", undefined],
+  ["audio/dom/probe.ts", "void document;", undefined],
+])("holds src/%s with %s to the effects boundary", async (file, text, rule) => {
+  const results = await lint.lintText(text, { filePath: `src/${file}` });
+  const found = results.flatMap(({ messages }) =>
+    messages.flatMap(({ ruleId }) =>
+      ruleId === "no-restricted-globals" || ruleId === "no-restricted-properties" ? [ruleId] : [],
+    ),
+  );
+  expect(found).toEqual(rule === undefined ? [] : [rule]);
+});

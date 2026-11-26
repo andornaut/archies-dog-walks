@@ -23,5 +23,5 @@ export {
   soundKeysOf,
   type Volumes,
 } from "./sound.ts";
-export { browserSoundFormat, SOUND_FORMATS } from "./soundFormat.ts";
+export { chooseSoundFormat, SOUND_FORMATS, type SoundFormat } from "./soundFormat.ts";
 export { choiceCues, contactCues, pullCues, stepCues } from "./stepCues.ts";

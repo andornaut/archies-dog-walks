@@ -94,7 +94,14 @@ const BANDS = [
       ["src/hud"],
     ],
   },
-  { band: "Platform", rows: [["src/assets/files", "src/pwa"], ["src/loadingProgress.ts"]] },
+  {
+    band: "Platform",
+    rows: [
+      ["src/audio/dom", "src/cheats/dom", "src/runner/dom", "src/save/dom"],
+      ["src/assets/files", "src/pwa"],
+      ["src/loadingProgress.ts"],
+    ],
+  },
   {
     band: "Engine and views",
     rows: [
@@ -128,6 +135,39 @@ const GROUPS = BANDS.flatMap(({ rows }) => rows).flatMap((groups, row) =>
 );
 const SUPPORT = BANDS.at(-1).rows.flat();
 const LAYER_EXEMPT = [...TEST_FILES, "src/testing/**", "src/**/*.d.ts"];
+
+// Browser and process effects enter at the Platform band, through ports or from callers higher up.
+const PLATFORM_AND_ABOVE = BANDS.slice(BANDS.findIndex(({ band }) => band === "Platform"));
+const EFFECT_GLOBALS = Object.entries({
+  "Keep browser DOM access at the Platform edge.": [
+    "addEventListener",
+    "document",
+    "matchMedia",
+    "navigator",
+    "removeEventListener",
+    "window",
+  ],
+  "Keep browser address changes at the Platform edge.": ["history", "location"],
+  "Keep clock reads at the Platform edge.": ["Date", "performance"],
+  "Keep console reporting at the Platform edge.": ["console"],
+  "Keep network access at the Platform edge.": ["fetch", "WebSocket", "XMLHttpRequest"],
+  "Keep real-time audio at the Platform edge.": ["Audio", "AudioContext", "webkitAudioContext"],
+  "Keep storage at the Platform edge.": ["indexedDB", "localStorage", "sessionStorage"],
+  "Keep timers at the Platform edge.": [
+    "cancelAnimationFrame",
+    "clearInterval",
+    "clearTimeout",
+    "requestAnimationFrame",
+    "setInterval",
+    "setTimeout",
+  ],
+  "Keep worker and service-worker access at the Platform edge.": [
+    "caches",
+    "postMessage",
+    "ServiceWorker",
+    "Worker",
+  ],
+}).flatMap(([message, names]) => names.map((name) => ({ message, name })));
 
 // Each folder group that other groups import, src/testing/ aside, has one public entry, its
 // index.ts, and a module outside the group imports only that entry: the group's other modules
@@ -268,6 +308,24 @@ export default defineConfig(
       "no-restricted-syntax": [
         ...sourceRules["no-restricted-syntax"],
         { message: "Place this module in a group of BANDS.", selector: "Program" },
+      ],
+    },
+  },
+  {
+    files: ["src/**/*.ts"],
+    ignores: [
+      ...PLATFORM_AND_ABOVE.flatMap(({ rows }) => rows.flat()).map(groupFiles),
+      ...LAYER_EXEMPT,
+    ],
+    rules: {
+      "no-restricted-globals": ["error", { checkGlobalObject: true, globals: EFFECT_GLOBALS }],
+      "no-restricted-properties": [
+        "error",
+        {
+          message: "Pass randomness in from the Platform edge.",
+          object: "Math",
+          property: "random",
+        },
       ],
     },
   },
