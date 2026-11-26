@@ -186,6 +186,11 @@
   }
 }
 
+/* The slot sign's focus colours are Game Kit's focus slots, set here once and once again in forced
+   colours; its focus fills its inner text panel. Its press draws its pressed art (slotSign.ts). */
+.adw-slot-sign {
+  --ui-colour-button-focus-face: var(--adw-cyan);
+}
 .adw-slot-sign-focus {
   display: none;
   pointer-events: none;
@@ -202,15 +207,14 @@
   )
   .adw-slot-sign-focus {
   display: block;
-  background-color: var(--adw-cyan);
+  background-color: var(--ui-colour-button-focus-face);
 }
 @media (forced-colors: active) {
-  .adw-slot-sign:is(
-      :focus-visible,
-      .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
-    )
-    .adw-slot-sign-focus {
-    background-color: Highlight;
+  .adw-slot-sign {
+    --ui-colour-button-focus-face: Highlight;
+    --ui-colour-button-focus-text: HighlightText;
+  }
+  .adw-slot-sign-focus {
     forced-color-adjust: none;
   }
   .adw-slot-sign:is(
@@ -218,7 +222,7 @@
       .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
     )
     .adw-text {
-    color: HighlightText !important;
+    color: var(--ui-colour-button-focus-text) !important;
     forced-color-adjust: none;
   }
 }
