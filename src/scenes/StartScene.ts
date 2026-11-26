@@ -1,5 +1,4 @@
 import { clampIndex, itemAt } from "@andornaut/game-kit/runtime/arrays";
-import type { ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
 import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Core, type GameObjects, Scene, Scenes, type Time } from "phaser";
@@ -85,7 +84,6 @@ import {
   tickHold,
   TILE_SLOP_PX,
 } from "../input/index.ts";
-import { waitedLoad } from "../loadingProgress.ts";
 import { dollarAmountText, pillKind, shortDollarAmountText } from "../presentation/index.ts";
 import {
   exitShown,
@@ -95,7 +93,6 @@ import {
   PHONE_EVENTS,
   requestGameUpdateCheck,
   requiredUpdate,
-  startWakeLock,
   stopWakeLock,
   updateAccepting,
 } from "../pwa/index.ts";
@@ -104,12 +101,10 @@ import { packDogsOf } from "../state/index.ts";
 import { loadSheet, type NativeTopSection, uiLayer } from "../ui/dom/index.ts";
 import { disabledArtKey, refusalRed, REFUSE } from "../ui/index.ts";
 import type { Cents } from "../units.ts";
-import { artReady, waitForWalkArt, whenArtReady } from "./artReady.ts";
+import { artReady } from "./artReady.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
-import { CHEATS_CHANGED_EVENT, clearNextWalkAfterWalk, nextWalk } from "./cheatChoices.ts";
+import { CHEATS_CHANGED_EVENT, clearNextWalkAfterWalk } from "./cheatChoices.ts";
 import { pillColours } from "./effectNameColours.ts";
-import { HELP_CLOSED_EVENT } from "./HelpScene.ts";
-import { openHelp } from "./helpScreen.ts";
 import { exitGame, HOME_PAGE_OPENING_EVENT, openHomePage, routeHomeBar } from "./homeBarPress.ts";
 import { detailView } from "./homePanels.ts";
 import { purchasePicture } from "./itemArt.ts";
@@ -119,7 +114,6 @@ import {
   BAR_MUTED_EVENT,
   listenOutsideTap,
   onBackPressed,
-  onceSceneEvent,
   onSceneEvent,
   onWindowEvent,
   openOverlay,
@@ -144,8 +138,7 @@ import {
   keepPanel,
   type KeptPanel,
 } from "./questionPanel.ts";
-import { nextRunStart } from "./run/runRecorder.ts";
-import { type RunPick, runSceneData } from "./run/runStart.ts";
+import type { RunPick } from "./run/runStart.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { SETTINGS_CLOSED_EVENT } from "./SettingsScene.ts";
 import {
@@ -171,6 +164,7 @@ import {
   walkerIds,
   walkerTiles,
 } from "./start/targets.ts";
+import { createWalkLaunch } from "./start/walkLaunch.ts";
 import {
   drawStartGate,
   drawStartShop,
@@ -208,17 +202,7 @@ const LAST_VISIT_WALKERS_KEY = "homeLastVisitWalkers";
 export class StartScene extends Scene {
   // The last action, for the message line and the bubble.
   private action: HomeAction = { kind: "none" };
-  // A press of Start walk or help made before boot has loaded the rest of the art: the latest
-  // runs once it has, and Start walk shows held down and dimmed while it waits.
-  private artWait:
-    | {
-        action: () => void;
-        kind: "help" | "start";
-      }
-    | undefined;
-  private entry: object | undefined;
-  // The walk's planning, which the line shows travelling from Start walk until the walk starts.
-  private planning: ProgressHandle | undefined;
+  private launch!: ReturnType<typeof createWalkLaunch>;
   // Whether keyboard Quit is offered by the current browser or installed window.
   private exit = true;
   private focus: Focus | null = null;
@@ -279,10 +263,9 @@ export class StartScene extends Scene {
     // Back from a walk, the next walk's choices are off.
     clearNextWalkAfterWalk(this);
     this.action = { kind: "none" };
-    this.artWait = undefined;
-    this.entry = undefined;
-    this.planning = undefined;
-    this.events.once("shutdown", () => this.endPlanning());
+    this.pending = new Set();
+    this.launch = createWalkLaunch(this, { pending: this.pending, redraw: () => this.render() });
+    this.events.once("shutdown", this.launch.finishPlanning);
     this.exit = exitShown();
     this.focus = null;
     this.hold = undefined;
@@ -291,7 +274,6 @@ export class StartScene extends Scene {
     this.detailFocus = undefined;
     this.overlay = undefined;
     this.overlayPress = undefined;
-    this.pending = new Set();
     this.pops = new Map();
     this.press = undefined;
     this.pressedTarget = undefined;
@@ -426,9 +408,7 @@ export class StartScene extends Scene {
       this.nativeHome?.holdFocus();
       this.pending.forEach((timer) => timer.remove());
       this.pending.clear();
-      this.artWait = undefined;
-      this.endPlanning();
-      this.entry = undefined;
+      this.launch.cancel();
       const dipping = this.press?.held === false ? this.press : undefined;
       this.hold = undefined;
       this.overlayPress = undefined;
@@ -819,7 +799,7 @@ export class StartScene extends Scene {
         this.showMuted(toggleMuted(this));
         return;
       case "help":
-        this.afterArt("help", () => openHomePage(this, "help"));
+        this.launch.afterArt("help", () => openHomePage(this, "help"));
         return;
       case "logbook":
         // The Logbook opens on its first tab, Badges.
@@ -884,73 +864,14 @@ export class StartScene extends Scene {
       return;
     }
     if (!artReady(this)) {
-      this.afterArt("start", () => this.startWalk());
+      this.launch.afterArt("start", () => this.startWalk());
       return;
     }
     const pick: RunPick = {
       dogSlots: save.owned.dogSlots.length,
       loadout: { dogs, gear: this.loadout.gear, walker },
     };
-    const go = () => {
-      if (this.entry !== undefined) {
-        return;
-      }
-      const entry = {};
-      this.entry = entry;
-      startWakeLock();
-      this.artWait = { action: () => undefined, kind: "start" };
-      // Planning has no denominator, so its line travels; paint it before planning blocks.
-      this.planning = waitedLoad.begin();
-      this.planning.progress(undefined);
-      this.render();
-      onceSceneEvent(this, this.game.events, Core.Events.POST_RENDER, () => {
-        if (this.entry !== entry) {
-          return;
-        }
-        const timer = this.time.delayedCall(0, () => {
-          this.pending.delete(timer);
-          if (this.entry !== entry) {
-            return;
-          }
-          this.scene.start(SCENE_KEYS.run, runSceneData(nextRunStart(nextWalk(this)), pick));
-        });
-        this.pending.add(timer);
-      });
-    };
-    if (!startWalkOpensHelp(save)) {
-      go();
-      return;
-    }
-    // The listener is added only if help opens, so a dropped open leaves none behind.
-    if (openHelp(this, { region: "home", resume: SCENE_KEYS.start })) {
-      onceSceneEvent(this, this.game.events, HELP_CLOSED_EVENT, go);
-    }
-  }
-  // Runs action now if every asset has loaded, else once it has, in place of any press already
-  // waiting.
-  private endPlanning(): void {
-    this.planning?.finish();
-    this.planning = undefined;
-  }
-  private afterArt(kind: "help" | "start", action: () => void): void {
-    if (artReady(this)) {
-      action();
-      return;
-    }
-    const waiting = this.artWait !== undefined;
-    this.artWait = { action, kind };
-    if (kind === "start") {
-      waitForWalkArt();
-    }
-    this.render();
-    if (!waiting) {
-      whenArtReady(this, () => {
-        const wait = this.artWait;
-        this.artWait = undefined;
-        this.render();
-        wait?.action();
-      });
-    }
+    this.launch.begin(startWalkOpensHelp(save), pick);
   }
   override update(): void {
     const now = this.time.now;
@@ -995,7 +916,10 @@ export class StartScene extends Scene {
       shop.focusFallback?.setVisible(!down);
       shop.shopBoard?.place(reduced, now);
       shop.shopIdle?.update(
-        !reduced && this.overlay === undefined && this.artWait === undefined && this.sys.isActive(),
+        !reduced &&
+          this.overlay === undefined &&
+          this.launch.waiting() === undefined &&
+          this.sys.isActive(),
       );
       shop.container.setPosition(0, shop.iconButton === undefined ? dip("petShop") : 0);
     }
@@ -1036,7 +960,7 @@ export class StartScene extends Scene {
             : 0),
       }));
       const ready = this.startUnavailable(this.sections(this.save())) === undefined;
-      const waiting = this.artWait?.kind === "start";
+      const waiting = this.launch.waiting() === "start";
       const down = (dip("start") > 0 && ready) || waiting;
       view.start.place(scale, {
         down,
