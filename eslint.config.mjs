@@ -136,10 +136,12 @@ const IMPORT_TYPES = {
 
 // The bounded contexts: the folders of src/ each context's files may import, besides its own.
 // "folder/module.ts" allows one module of a folder: each is an import that a later move removes,
-// by moving the module into a context or the importer out of one. The boundaries above govern
-// src/testing/.
+// by moving the module into a context or the importer out of one. A context is a folder of src/ or
+// a group of BANDS nested in one, whose files then leave the folder's context. The boundaries above
+// govern src/testing/.
 const CONTEXTS = {
-  assets: ["data", "layout/depthScale.ts", "layout/projection.ts"],
+  assets: ["data"],
+  "assets/phaser": ["data", "layout/depthScale.ts", "layout/projection.ts"],
   content: ["data"],
   road: [
     "assets",
@@ -155,7 +157,9 @@ const CONTEXTS = {
     "rules/units.ts",
     "runner",
   ],
-  ui: ["assets", "data", "input/holdRule.ts", "layout/screen.ts"],
+  ui: ["assets", "data", "layout/screen.ts"],
+  "ui/dom": ["assets", "data", "input/holdRule.ts", "layout/screen.ts"],
+  "ui/phaser": ["assets", "data", "input/holdRule.ts", "layout/screen.ts"],
 };
 
 const SRC_FOLDERS = folders("src").filter((folder) => folder !== "testing");
@@ -167,10 +171,12 @@ function folders(path) {
 }
 
 // An import names a folder only by its path, so `./phaser/x` inside src/assets/ reads the same as
-// `../phaser/x` from elsewhere: a context's own subfolders are never forbidden to it.
+// `../phaser/x` from elsewhere: a context's own folder of src/ and its subfolders are never
+// forbidden to it.
 function contextBoundary(context) {
   const allowed = CONTEXTS[context];
-  const own = [context, ...folders(`src/${context}`)];
+  const top = context.split("/")[0];
+  const own = [top, ...folders(`src/${top}`)];
   const modules = allowed.filter((entry) => entry.includes("/"));
   const group = SRC_FOLDERS.filter(
     (folder) => !own.includes(folder) && !allowed.includes(folder),
@@ -212,6 +218,9 @@ function contextBoundary(context) {
           ? `src/${context}/ may import nothing from src/.`
           : `src/${context}/ may import only ${allowed.join(", ")} from src/.`,
     },
+    ignores: Object.keys(CONTEXTS)
+      .filter((other) => other.startsWith(`${context}/`))
+      .map((other) => `src/${other}/**/*.ts`),
   };
 }
 
@@ -245,7 +254,7 @@ function boundaryConfigs() {
           files: allOf([context?.files ?? SOURCE_FILES, ...exempt.map(({ except }) => except)]),
           ignores: [
             ...binding.flatMap(({ except }) => except),
-            ...(context === undefined ? contexts.flatMap(({ files }) => files) : []),
+            ...(context === undefined ? contexts.flatMap(({ files }) => files) : context.ignores),
           ],
           rules: {
             "no-restricted-imports": [
