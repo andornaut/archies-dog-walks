@@ -50,6 +50,21 @@ export interface HomeSelectionPicture {
   readonly scale: number;
   readonly moving: boolean;
 }
+// A price or goal plate placed from its text at x, its capitals at capTop and originX of its width
+// left of x.
+export interface TilePlate {
+  readonly capTop: number;
+  readonly kind: PlateKind;
+  readonly originX: number;
+  readonly text: string;
+  readonly x: number;
+}
+// The label strip across a tile's foot (rect) that carries the text in the plate's colours.
+export interface TileStrip {
+  readonly kind: PlateKind;
+  readonly rect: Rect;
+  readonly text: string;
+}
 export interface HomeSelectionView {
   readonly id: string;
   readonly label: string;
@@ -66,17 +81,8 @@ export interface HomeSelectionView {
   readonly name?:
     | { readonly capTop: number; readonly text: string; readonly x: number }
     | { readonly centreIn: Rect; readonly text: string };
-  // A price or goal plate placed from its text at x, its capitals at capTop and originX of its
-  // width left of x, or the label strip across the tile's foot that carries the text.
-  readonly plate?:
-    | {
-        readonly capTop: number;
-        readonly kind: PlateKind;
-        readonly originX: number;
-        readonly text: string;
-        readonly x: number;
-      }
-    | { readonly kind: PlateKind; readonly strip: Rect; readonly text: string };
+  readonly plate?: TilePlate;
+  readonly strip?: TileStrip;
   readonly badge?: {
     readonly kind: Badge;
     readonly x: number;
@@ -144,9 +150,9 @@ export function homeSelectionViews(
     const plate = plateText(tile);
     return plate === undefined ? {} : { plate: { ...plate, capTop, originX: 0, x } };
   };
-  const stripPlate = (tile: ItemTile, strip: Rect) => {
+  const labelStrip = (tile: ItemTile, rect: Rect) => {
     const plate = plateText(tile);
-    return plate === undefined ? {} : { plate: { ...plate, strip } };
+    return plate === undefined ? {} : { strip: { ...plate, rect } };
   };
   for (const cell of snapshot.walkers) {
     const { x, y } = cell.rect;
@@ -176,7 +182,7 @@ export function homeSelectionViews(
       ...make(cell, tile, box, badge),
       label: walker.name,
       pictures,
-      plate: { kind: "goal", strip: walkerStrip, text: walker.name },
+      strip: { kind: "goal", rect: walkerStrip, text: walker.name },
     });
   }
   for (const cell of snapshot.dogs) {
@@ -266,7 +272,7 @@ export function homeSelectionViews(
           y: iconY,
         },
       ],
-      ...stripPlate(tile, gearStrip),
+      ...labelStrip(tile, gearStrip),
     });
   }
   return result;

@@ -4,6 +4,7 @@ import type { PanelText } from "../ui/modal/types.ts";
 import { PALETTE } from "../ui/palette.ts";
 import { PLATE_LOOKS, type PlateKind } from "../ui/selection.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
+import type { TileStrip } from "./selectionView.ts";
 
 export interface PricePlateMeasure {
   readonly capHeight: number;
@@ -67,20 +68,16 @@ export function pricePlateView(
 }
 
 // A label strip across a tile's foot: a rule in the plate's edge colour along its top row, the
-// plate's face under it, and the label centred on its ink in the face (rect).
-export function plateStripView(
-  strip: Rect,
-  kind: PlateKind | "picked",
-  text: string,
-): PricePlateView {
-  const colours =
-    kind === "picked"
-      ? ({ edge: "plum", face: "amber", text: "plum" } as const)
-      : PLATE_LOOKS[kind];
-  const rect = { ...strip, height: strip.height - 1, y: strip.y + 1 };
+// plate's face under it, and the label centred on its ink in the face (rect). A picked tile's
+// strip wears the picked look.
+export function plateStripView(picked: boolean, strip: TileStrip): PricePlateView {
+  const colours = picked
+    ? ({ edge: "plum", face: "amber", text: "plum" } as const)
+    : PLATE_LOOKS[strip.kind];
+  const rect = { ...strip.rect, height: strip.rect.height - 1, y: strip.rect.y + 1 };
   return {
     fills: [
-      { colour: PALETTE[colours.edge], rect: { ...strip, height: 1 } },
+      { colour: PALETTE[colours.edge], rect: { ...strip.rect, height: 1 } },
       { colour: PALETTE[colours.face], rect },
     ],
     // The label's ink is centred on the strip's face (placeBackedText on rect).
@@ -92,7 +89,7 @@ export function plateStripView(
       font: "body",
       line: 0,
       scale: TEXT_SCALE,
-      text,
+      text: strip.text,
     },
     rect,
   };

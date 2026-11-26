@@ -14,7 +14,7 @@ import { itemTileLook } from "../../ui/interaction.ts";
 import { cssHex } from "../../ui/palette.ts";
 import { plainMarks } from "../../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
-import { plateStripView, pricePlateView } from "../pricePlateView.ts";
+import { plateStripView, type PricePlateView, pricePlateView } from "../pricePlateView.ts";
 import { homeSelectionColour, type HomeSelectionView } from "../selectionView.ts";
 import { createSelectionTile } from "./selectionTile.ts";
 interface SelectionArtSource extends DomArtSource {
@@ -98,8 +98,7 @@ export function createHomeSelection(
     parts.push((scale) => setBox(box, local(scale, rect)));
     return box;
   };
-  const nameStrip =
-    view.plate !== undefined && "strip" in view.plate && view.plate.text === view.label;
+  const nameStrip = view.strip !== undefined && view.strip.text === view.label;
   const pictureWell = fill(view.fill.rect, view.fill.colour);
   if (view.name === undefined && !nameStrip) {
     pictureWell.classList.add("adw-selection-focus-fill");
@@ -178,21 +177,19 @@ export function createHomeSelection(
       }
     });
   }
-  if (view.plate !== undefined) {
+  let plate: PricePlateView | undefined;
+  if (view.strip !== undefined) {
+    plate = plateStripView(view.tile.kind === "picked", view.strip);
+  } else if (view.plate !== undefined) {
     const measure = {
       capHeight: fontMetrics(body).capHeight,
       padding: platePadding,
       scale: TEXT_SCALE,
       width: (text: string) => advanceWidth(body, TEXT_SCALE, plainMarks(text)),
     };
-    const plate =
-      "strip" in view.plate
-        ? plateStripView(
-            view.plate.strip,
-            view.tile.kind === "picked" ? "picked" : view.plate.kind,
-            view.plate.text,
-          )
-        : pricePlateView(measure, view.plate, view.plate.kind, view.plate.text);
+    plate = pricePlateView(measure, view.plate, view.plate.kind, view.plate.text);
+  }
+  if (plate !== undefined) {
     for (const part of plate.fills) {
       const backing = fill(part.rect, part.colour);
       if (nameStrip && part.rect === plate.rect) {
