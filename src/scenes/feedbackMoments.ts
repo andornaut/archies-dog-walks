@@ -1,7 +1,6 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
-import type { GameObjects, Scene, Tweens } from "phaser";
+import type { Scene } from "phaser";
 
-import { playTag } from "../assets/phaser/index.ts";
 import type { DogId } from "../data/ids.ts";
 import { FACE_SIZE } from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/index.ts";
@@ -28,7 +27,6 @@ import {
   TOP_BAR_POINTS,
   TREAT_EVENT,
   type TreatCue,
-  trotOffX,
   walkPaused,
 } from "../hud/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
@@ -233,41 +231,4 @@ export class HudFeedback {
     this.hooks.popOwner(cue.dog, "happy", MOMENTS.treat.smileMs);
     this.hooks.floatLabels(MOMENTS.treat.smileMs, cue.labels);
   }
-}
-// A fired dog trots off the road by its nearer edge over ms, off the side of the screen.
-// Reduced motion fades it out where it stands. Returns the tween, so the walk can hold it.
-export function trotOffRoad(
-  scene: Scene,
-  trot: {
-    ms: number;
-    road: Rect;
-    still: boolean;
-  },
-  sprite: GameObjects.Sprite,
-  done: () => void,
-): Tweens.Tween {
-  const duration = trot.ms;
-  if (trot.still) {
-    return scene.tweens.add({
-      alpha: 0,
-      duration,
-      onComplete: () => {
-        sprite.setAlpha(1);
-        done();
-      },
-      targets: sprite,
-    });
-  }
-  const toX = trotOffX(trot.road, sprite.displayWidth / 2, sprite.x);
-  playTag(sprite, sprite.texture.key, "walk");
-  sprite.setFlipX(toX < sprite.x);
-  return scene.tweens.add({
-    duration,
-    onComplete: () => {
-      sprite.setFlipX(false);
-      done();
-    },
-    targets: sprite,
-    x: toX,
-  });
 }

@@ -1,4 +1,5 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
+import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene, Tweens } from "phaser";
 
 import { dogSpriteKey, SQUIRREL_ICON_KEY } from "../../assets/index.ts";
@@ -11,6 +12,7 @@ import {
 } from "../../assets/phaser/index.ts";
 import type { DogId } from "../../data/ids.ts";
 import { gameData } from "../../data/index.ts";
+import { trotOffX } from "../../hud/index.ts";
 import {
   distanceAtY,
   formationOrder,
@@ -26,10 +28,47 @@ import { laneMotionX, pullPose, type Pulls, type Walk } from "../../runner/index
 import { packDogs } from "../../state/index.ts";
 import { colourFromHex } from "../../ui/index.ts";
 import { playBarkWord } from "../comicWord.ts";
-import { trotOffRoad } from "../feedbackMoments.ts";
 import { type DogSignal, dogTop, iconArt, playPullFail, PullSignals } from "../pullSignals.ts";
 import { DEPTH, LANE_XS, LAYOUT, PROJECTION } from "./stage.ts";
 import { TipSparkle } from "./tipSparkle.ts";
+
+// A fired dog trots off the road by its nearer edge over ms, off the side of the screen.
+// Reduced motion fades it out where it stands. Returns the tween, so the walk can hold it.
+function trotOffRoad(
+  scene: Scene,
+  trot: {
+    ms: number;
+    road: Rect;
+    still: boolean;
+  },
+  sprite: GameObjects.Sprite,
+  done: () => void,
+): Tweens.Tween {
+  const duration = trot.ms;
+  if (trot.still) {
+    return scene.tweens.add({
+      alpha: 0,
+      duration,
+      onComplete: () => {
+        sprite.setAlpha(1);
+        done();
+      },
+      targets: sprite,
+    });
+  }
+  const toX = trotOffX(trot.road, sprite.displayWidth / 2, sprite.x);
+  playTag(sprite, sprite.texture.key, "walk");
+  sprite.setFlipX(toX < sprite.x);
+  return scene.tweens.add({
+    duration,
+    onComplete: () => {
+      sprite.setFlipX(false);
+      done();
+    },
+    targets: sprite,
+    x: toX,
+  });
+}
 
 // What the pack is drawn with each frame besides the walk.
 interface PackFrame {
