@@ -50,6 +50,8 @@ export const MENU_TEXT = {
   common: {
     // Every panel's close control's accessible name: screen readers announce it.
     close: "Close",
+    // The close control's name where another of the panel's buttons is also named close.
+    closeTitled: "Close {title}",
   },
   crash: {
     body: "The game stopped. Reload to play again.",

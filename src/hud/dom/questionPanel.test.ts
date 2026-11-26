@@ -1,3 +1,5 @@
+import { fillNames } from "@andornaut/game-kit/runtime/lines";
+import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { PENDING_ATTRIBUTE } from "@andornaut/game-kit/runtime/web/ui/dom/imageReady";
 import { describe, expect, it, vi } from "vitest";
 
@@ -11,7 +13,13 @@ import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import type { PanelMeasure } from "../../ui/modal/types.ts";
 import { modalCardView, panelButton } from "../../ui/modal/view.ts";
 import { inPill } from "../../ui/namePills.ts";
-import { PAUSE_MENU_ITEMS, pauseMenuItemLabel } from "../../ui/navigationMenu.ts";
+import {
+  type MenuContext,
+  menuItemLabel,
+  menuItems,
+  PAUSE_MENU_ITEMS,
+  pauseMenuItemLabel,
+} from "../../ui/navigationMenu.ts";
 import { questionPanelView } from "../questionPanelView.ts";
 import { showZoneCelebration } from "./celebration.ts";
 import { showDetailCard } from "./detailCard.ts";
@@ -44,7 +52,7 @@ function menu(context = menuContext(), customNumbers = false) {
   });
   const shown = showQuestionPanel(layer, {
     close,
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     numberKeys: true,
     ...(customNumbers
@@ -209,7 +217,7 @@ describe("an HTML modal card", () => {
     const words = gameData.homeText.update;
     showQuestionPanel(layer, {
       close: vi.fn(),
-      closeLabel: gameData.menuText.common.close,
+      closeLabel: gameData.menuText.common,
       fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
       numberKeys: false,
       presses: [update],
@@ -246,7 +254,7 @@ describe("an HTML detail card that takes no presses", () => {
     const line = `${inPill(0, "Keen eye")} Spots more`;
     showDetailCard(layer, {
       artUrl: (path) => `/art/${path}`,
-      closeLabel: gameData.menuText.common.close,
+      closeLabel: gameData.menuText.common,
       fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
       loadSheet: () => Promise.resolve(sheet),
       pillColours: () => ({ name: 0x112233, pill: 0x445566 }),
@@ -297,7 +305,7 @@ describe("an HTML panel's part controls", () => {
     const focused: (number | undefined)[] = [];
     const shown = showQuestionPanel(layer, {
       close: vi.fn(),
-      closeLabel: gameData.menuText.common.close,
+      closeLabel: gameData.menuText.common,
       fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
       numberKeys: false,
       onFocus: (index) => focused.push(index),
@@ -339,7 +347,7 @@ describe("an HTML zone celebration", () => {
     const button = panelButton(MEASURE, rect, true, "Onward!");
     showZoneCelebration(layer, {
       artUrl: (path) => `/art/${path}`,
-      closeLabel: gameData.menuText.common.close,
+      closeLabel: gameData.menuText.common,
       fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
       label: "Well walked! High Park",
       loadSheet: () => Promise.reject(new Error("no sheets")),
@@ -410,7 +418,7 @@ describe("an HTML zone celebration", () => {
       });
       showZoneCelebration(layer, {
         artUrl: (path) => `/art/${path}`,
-        closeLabel: gameData.menuText.common.close,
+        closeLabel: gameData.menuText.common,
         fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
         label: "New walker!",
         // Each icon's one frame on its sheet.
@@ -464,7 +472,7 @@ it("dismisses a native detail region only while its modal owns input", () => {
   const dismiss = vi.fn();
   const shown = showQuestionPanel(layer, {
     close: null,
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     dismiss,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     numberKeys: false,
@@ -496,7 +504,7 @@ it("keeps a base page with custom native controls interactive without a modal sc
   const button = doc.createElement("button");
   const shown = showQuestionPanel(layer, {
     close: null,
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     modal: false,
     numberKeys: false,
@@ -559,7 +567,7 @@ it("keeps a native panel inert until its part JSON readiness and image barrier s
   const onPaint = vi.fn();
   const shown = showQuestionPanel(layer, {
     close: vi.fn(),
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     numberKeys: false,
     onPaint,
@@ -598,7 +606,7 @@ it("routes an explicit footer to dismissal without changing semantic actions or 
   ]);
   const shown = showQuestionPanel(layer, {
     close,
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     numberKeys: true,
     presses: [buy],
@@ -636,7 +644,7 @@ it("keeps a footer-only overlay dismissible without introducing a corner close c
   const view = modalCardView(MEASURE, rect, gameData.menuText.menu.title, []);
   const shown = showQuestionPanel(layer, {
     close: null,
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     footerPress: close,
     numberKeys: false,
@@ -661,13 +669,73 @@ it("keeps a footer-only overlay dismissible without introducing a corner close c
   shown.destroy();
 });
 
+// Every modal with a corner X and another button named Close: the Menus' Close items and the
+// install steps' footer Close (the detail card, badge card and badge celebration have their own).
+// The X's name is the titled close filled with the modal's title; with no other Close it is Close.
+describe("a modal's corner X", () => {
+  const { close, closeTitled } = gameData.menuText.common;
+  const rect = { height: 240, width: 280, x: 40, y: 120 };
+  const contexts: readonly MenuContext[] = ["cheats", "end", "help", "home", "page", "settings"];
+  const menus = contexts.map((context) => ({
+    name: `the ${context} Menu`,
+    title: gameData.menuText.menu.title,
+    view: questionPanelView(MEASURE, SCREEN_LAYOUT.walkView, {
+      labels: menuItems(context).map((item) => menuItemLabel(gameData, item)),
+      note: [],
+      primary: "last",
+      sentenceLines: false,
+      showKeyNumbers: false,
+      title: gameData.menuText.menu.title,
+    }),
+  }));
+  const steps = keysOf(gameData.menuText.settings.installSteps).map((kind) => {
+    const { title } = gameData.menuText.settings.installSteps[kind];
+    return {
+      name: `the ${kind} install steps`,
+      title,
+      view: {
+        ...modalCardView(MEASURE, rect, title, []),
+        footer: dismissFooter(MEASURE, { label: close, primary: true }, rect),
+      },
+    };
+  });
+  const names = (view: Parameters<typeof showQuestionPanel>[1]["view"]) => {
+    const { element, layer } = menuContext();
+    showQuestionPanel(layer, {
+      close: vi.fn(),
+      closeLabel: gameData.menuText.common,
+      fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
+      numberKeys: false,
+      presses: view.buttons.map(() => vi.fn()),
+      toGame: (point) => point,
+      view,
+    });
+    const buttons = layerViews(element)[0]!
+      .all()
+      .filter((node) => node.tagName === "button");
+    return buttons.map((node) => node.getAttribute("aria-label"));
+  };
+
+  it.each([...menus, ...steps])("says which modal it closes beside a Close: $name", (modal) => {
+    const spoken = names(modal.view);
+    const x = fillNames(closeTitled, { title: modal.title });
+    expect(spoken.at(-1)).toBe(x);
+    expect(spoken.filter((name) => name === close)).toHaveLength(1);
+    expect(x).not.toBe(close);
+  });
+
+  it("is Close with no other Close, as on the pause menu", () => {
+    expect(menu().buttons.at(-1)?.getAttribute("aria-label")).toBe(close);
+  });
+});
+
 it("reads a detail card's title first, then its body, then its actions", () => {
   const { element, layer } = menuContext();
   const rect = { height: 240, width: 280, x: 40, y: 120 };
   const close = { label: gameData.menuText.common.close, primary: true };
   showDetailCard(layer, {
     artUrl: (path) => path,
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     dismiss: vi.fn(),
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     loadSheet: () => Promise.resolve({}),
@@ -701,7 +769,7 @@ it("uses a detail card's existing any-tap dismissal for its native X and footer"
   const card = modalCardView(MEASURE, rect, gameData.menuText.menu.title, []);
   const shared = {
     artUrl: (path: string) => path,
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     loadSheet: () => Promise.resolve({}),
     pillColours: () => undefined,
@@ -728,9 +796,10 @@ it("uses a detail card's existing any-tap dismissal for its native X and footer"
   const buttons = layerViews(element)[0]!
     .all()
     .filter((node) => node.tagName === "button");
+  // The footer keeps its Close; the corner X says which modal it closes.
   expect(buttons.map((node) => node.getAttribute("aria-label"))).toEqual([
     gameData.menuText.common.close,
-    gameData.menuText.common.close,
+    fillNames(gameData.menuText.common.closeTitled, { title: gameData.menuText.menu.title }),
   ]);
   for (const button of buttons) {
     button.fire("click", { detail: 0 });
@@ -769,7 +838,7 @@ it("keeps action identity while DOM order follows the button and footer position
   const middle = (upper!.rect.y + lower!.rect.y) / 2;
   const shown = showQuestionPanel(layer, {
     close: null,
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     footerPress: close,
     numberKeys: true,
@@ -824,7 +893,7 @@ it.each([
     const view = { ...modalCardView(MEASURE, panel, gameData.menuText.settings.title, []), frame };
     const shown = showQuestionPanel(layer, {
       close: vi.fn(),
-      closeLabel: gameData.menuText.common.close,
+      closeLabel: gameData.menuText.common,
       fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
       numberKeys: false,
       presses: [],
@@ -873,7 +942,7 @@ it("captures the exact admitted source control without relying on native focus o
   const sourceOrder = [2, 0, 1];
   const shown = showQuestionPanel(layer, {
     close: vi.fn(),
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     numberKeys: true,
     numberPresses: [press],

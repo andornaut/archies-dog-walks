@@ -5,6 +5,7 @@ import type { FieldTable } from "@andornaut/game-kit/runtime/lines";
 export const MENU_TEXT_FIELDS = {
   celebration: { titleMany: ["count"] },
   cheats: { add: ["cash"], applyDebuff: ["debuff"], grantUpgrade: ["upgrade"] },
+  common: { closeTitled: ["title"] },
   end: { firedYou: ["owner"] },
   help: { pageCount: ["n", "total"] },
   pause: { note: ["cash", "kept"], noteAll: ["cash"] },

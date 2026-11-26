@@ -43,7 +43,7 @@ export interface DomEndScreenInput extends Pick<
   "artUrl" | "fonts" | "loadSheet" | "pillColours"
 > {
   readonly badges: readonly BadgeView[];
-  readonly closeLabel: string;
+  readonly closeLabel: DomQuestionPanelInput["closeLabel"];
   readonly everyFrame: DomBadgeCardInput["everyFrame"];
   readonly gesture: NonNullable<DomQuestionPanelInput["gesture"]>;
   readonly home: () => void;

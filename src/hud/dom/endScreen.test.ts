@@ -84,7 +84,7 @@ function endScreen(
   const shown = showEndScreen(layer, {
     artUrl: (path) => path,
     badges,
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     display: display ?? undefined,
     everyFrame: () => () => undefined,
     fonts,

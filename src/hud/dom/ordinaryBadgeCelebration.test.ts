@@ -1,12 +1,13 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+import { fillNames } from "@andornaut/game-kit/runtime/lines";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { expect, it, vi } from "vitest";
 
 import { ownerFaceKey } from "../../assets/spriteKeys.ts";
 import { gameData } from "../../data/index.ts";
-import { earnedBadges } from "../../home/badgesView.ts";
+import { celebrationTitle, earnedBadges } from "../../home/badgesView.ts";
 import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, gameFont } from "../../testing/fontInk.ts";
@@ -34,7 +35,7 @@ it("renders the complete award as one native modal with badge and cheering-owner
     artUrl: (path) => path,
     badges,
     close,
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     everyFrame: () => stop,
     faces: [{ dog, rect: { height: 32, width: 32, x: 80, y: 290 } }],
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
@@ -58,7 +59,7 @@ it("renders the complete award as one native modal with badge and cheering-owner
       ),
       names: [],
       panel,
-      title: panelTitle(measure, panel, 190, gameData.menuText.common.close),
+      title: panelTitle(measure, panel, 190, celebrationTitle(gameData, 1)),
     },
   });
   await Promise.all([...shown.badges.parts, ...shown.faces].map((part) => part.ready));
@@ -71,10 +72,12 @@ it("renders the complete award as one native modal with badge and cheering-owner
   expect(
     element.all().some((node) => node.style.backgroundImage?.includes(ownerFaceKey(gameData, dog))),
   ).toBe(true);
+  // Its Close button and its corner X: the X's name is the titled close, filled with the title.
+  const { close: closeWord, closeTitled } = gameData.menuText.common;
   const buttons = element.all().filter((node) => node.tagName === "button");
   expect(buttons.map((node) => node.getAttribute("aria-label"))).toEqual([
-    gameData.menuText.common.close,
-    gameData.menuText.common.close,
+    closeWord,
+    fillNames(closeTitled, { title: celebrationTitle(gameData, 1) }),
   ]);
   buttons[0]?.fire("click");
   expect(close).toHaveBeenCalledOnce();

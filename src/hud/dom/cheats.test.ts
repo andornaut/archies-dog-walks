@@ -50,7 +50,7 @@ async function cheatsScreen(
     act,
     artUrl: (path) => path,
     close: vi.fn(),
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     loadSheet: async (path) => ownArtFrames(path),
     reducedMotion: () => true,

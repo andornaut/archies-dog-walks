@@ -48,7 +48,7 @@ async function mount(
     accepts,
     artUrl: (path) => path,
     choose,
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     data: gameData,
     entries: [
       ...view.options.map((option) => ({

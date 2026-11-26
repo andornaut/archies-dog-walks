@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 
+import { fillNames } from "@andornaut/game-kit/runtime/lines";
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { gameData } from "../../data/index.ts";
 import { badgeCardView } from "../../home/badgeCardView.ts";
@@ -29,7 +30,7 @@ const FRAMES = Object.values(CONFETTI_JSON.frames);
 const [EARNED] = badgeWall(gameData, [gameData.achievements[0]?.id ?? "roundTrip"]);
 
 // An earned badge's card, its confetti playing on a clock at now, or held still.
-async function card(still: boolean) {
+async function card(still: boolean, dismiss?: () => void) {
   if (EARNED === undefined) {
     throw new Error("No badge");
   }
@@ -38,7 +39,8 @@ async function card(still: boolean) {
   const clock = { now: 1000, steps: [] as (() => void)[] };
   showBadgeCard(layer, {
     artUrl: (path) => path,
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
+    ...(dismiss === undefined ? {} : { dismiss }),
     everyFrame: (step) => {
       clock.steps.push(step);
       return () => undefined;
@@ -93,6 +95,15 @@ describe("the HTML badge card", () => {
     expect(at(total)).toBeUndefined();
   });
 
+  it("names its corner X the titled close, apart from its footer Close", async () => {
+    const { dialog } = await card(true, vi.fn());
+    const { close, closeTitled } = gameData.menuText.common;
+    const names = (dialog?.all() ?? [])
+      .filter((node) => node.tagName === "button")
+      .map((node) => node.getAttribute("aria-label"));
+    expect(names).toEqual([close, fillNames(closeTitled, { title: EARNED!.name })]);
+  });
+
   it("holds the canvas's still frame under reduced motion", async () => {
     const { at } = await card(true);
     expect(at(0)).toBe(position(4));
@@ -112,7 +123,7 @@ it("renders a badge strip from scene-owned pop and burst callbacks without its o
     doc as unknown as Document,
     {
       artUrl: (path) => path,
-      closeLabel: gameData.menuText.common.close,
+      closeLabel: gameData.menuText.common,
       everyFrame: (callback) => {
         callbacks.add(callback);
         return () => {

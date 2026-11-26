@@ -1136,9 +1136,11 @@ export interface MenuText {
     readonly title: string;
     readonly unlockWalkers: string;
   };
-  // Words every panel shares: its close control's accessible name.
+  // Words every panel shares: its close control's accessible name, and the name with the panel's
+  // title where another of its buttons is also named close.
   readonly common: {
     readonly close: string;
+    readonly closeTitled: string;
   };
   // The crash screen, drawn in HTML over the page when the game stops on an error.
   readonly crash: {

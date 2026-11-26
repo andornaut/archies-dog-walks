@@ -42,7 +42,11 @@ import {
   type ChoiceEntry,
 } from "../choiceCardView.ts";
 import type { DomDetailCardInput } from "./detailCard.ts";
-import { type DomQuestionPanel, showQuestionPanel } from "./questionPanel.ts";
+import {
+  type DomQuestionPanel,
+  type DomQuestionPanelInput,
+  showQuestionPanel,
+} from "./questionPanel.ts";
 
 const ORIGIN = { x: 0, y: 0 } as const;
 interface Source extends Pick<DomDetailCardInput, "artUrl" | "loadSheet" | "pillColours"> {
@@ -266,7 +270,7 @@ export function showChoiceCards(
     // Whether the scene takes a choice or plays a refusal now, as choose checks.
     readonly accepts: () => boolean;
     readonly choose: (index: number) => void;
-    readonly closeLabel: string;
+    readonly closeLabel: DomQuestionPanelInput["closeLabel"];
     readonly data: GameData;
     readonly entries: readonly ChoiceEntry[];
     readonly gesture?: NativeGesture;

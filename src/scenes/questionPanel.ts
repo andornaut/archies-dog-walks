@@ -87,7 +87,7 @@ export function htmlPanelPlace(scene: Scene) {
 export function htmlPanelInput(place: NonNullable<ReturnType<typeof htmlPanelPlace>>) {
   const { layer } = place;
   return {
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     fonts: place.fonts,
     toGame: (client: Point) =>
       pageToGame(pageFrameTurn(), layer.element.getBoundingClientRect(), SCREEN_CONFIG, client),

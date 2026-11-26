@@ -70,7 +70,7 @@ function fixture(install = false, width = 360, dpr = 1) {
   const shown = showSettings(layer, {
     artUrl: (path) => path,
     close,
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     closeSteps: vi.fn(),
     fonts: { body: gameFont("font-body"), title: gameFont("font-title") },
     loadSheet: () =>

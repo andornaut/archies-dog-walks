@@ -1,9 +1,12 @@
+import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 
 import { BUTTON_SIZE } from "../../data/layout.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
+import type { GameData } from "../../data/types.ts";
+import { MENU_TEXT_FIELDS } from "../../home/menuText.ts";
 import { cardNumberForKey, isConfirmKey, menuKeyActs } from "../../input/keyBindings.ts";
 import { closeFace } from "../../ui/closeControl.ts";
 import { bindGameAction } from "../../ui/dom/actionBinding.ts";
@@ -46,6 +49,22 @@ import { bindPanelFeedback, createPanelButton } from "./panelButton.ts";
 // otherwise does nothing. Number keys press a question's buttons, Tab and Shift+Tab keep focus
 // among its buttons and close control, and Enter or Space presses the focused one.
 
+// The close control's accessible names: close, or closeTitled filled with the panel's title.
+export type CloseLabel = Pick<GameData["menuText"]["common"], "close" | "closeTitled">;
+
+// The close control's accessible name: close, or, where another of the panel's buttons is also
+// named close (a footer Close), closeTitled filled with the panel's title, so no two of the
+// dialog's controls share a name.
+export function closeName(
+  words: CloseLabel,
+  buttonLabels: readonly string[],
+  title: string,
+): string {
+  return buttonLabels.includes(words.close)
+    ? fillLine(MENU_TEXT_FIELDS.common, words, "closeTitled", { title })
+    : words.close;
+}
+
 export interface DomQuestionPanelInput {
   // Base screens opt out of modal ownership; pictures can remain modal without native buttons.
   readonly modal?: boolean;
@@ -55,10 +74,10 @@ export interface DomQuestionPanelInput {
   // The page's own controls drawn outside the panel, interactive with it.
   readonly companions?: readonly HTMLElement[];
   // What the close control does; null draws no close control, and a panel with no buttons then
-  // takes no presses: every press goes through to the canvas. Then its accessible name, and what
-  // each button does, in order.
+  // takes no presses: every press goes through to the canvas. Then its accessible names
+  // (closeName), and what each button does, in order.
   readonly close: (() => void) | null;
-  readonly closeLabel: string;
+  readonly closeLabel: CloseLabel;
   // A footer can dismiss a native overlay that intentionally has no corner close control.
   readonly footerPress?: () => void;
   // Gives the caller its exact source control after admission and before activation.
@@ -225,7 +244,8 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
   const title = doc.createElement("h2");
   title.className = "adw-lines adw-panel-title";
   title.id = `${id}-title`;
-  title.setAttribute("aria-label", input.label ?? view.title.map((line) => line.text).join(" "));
+  const titleName = input.label ?? view.title.map((line) => line.text).join(" ");
+  title.setAttribute("aria-label", titleName);
   for (const line of view.title) {
     text(title, ORIGIN, line).setAttribute("aria-hidden", "true");
   }
@@ -320,7 +340,15 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
         face: { className: "adw-close-face" },
         role: "navigation",
       },
-      content: { icon: glyph, kind: "icon", name: input.closeLabel },
+      content: {
+        icon: glyph,
+        kind: "icon",
+        name: closeName(
+          input.closeLabel,
+          actions.map(({ button }) => button.label),
+          titleName,
+        ),
+      },
       getAction: () => (accepts() ? { activate: press } : null),
     });
     const closeArt = closeFace(view.close);

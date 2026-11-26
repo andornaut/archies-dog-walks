@@ -120,7 +120,7 @@ function nativeFixture() {
   };
   const panel = showLogbook(layer, {
     artUrl: (path) => `/art/${path}`,
-    closeLabel: gameData.menuText.common.close,
+    closeLabel: gameData.menuText.common,
     everyFrame: (step) => {
       tick = step;
       return () => {
