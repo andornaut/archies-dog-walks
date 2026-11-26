@@ -95,6 +95,10 @@ After each of neighbourhoods 1 to 3, before the fork, a short celebration plays 
 - **Tip grabbed:** an amber coin sparkle twinkles once, briefly, just above the lead dog's head (above the walker's when no dog is shown), and is a tip's only sparkle; tips and cash treats grabbed together restart it rather than adding more. With reduced motion it doesn't play
 - **Treat grabbed:** the owner smiles and the heart change plays (see Heart changes). A treat that pays cash instead plays the tip's coin sparkle, as its only sparkle. The Lost wallet, neighbourhood pay and the Walk bonus keep their own animations and play no coin sparkle
 
+<a id="rule-for-message-strip-priority"></a>
+
 ### Rule for message strip priority
 
 Each line shows for at least about 1.5 seconds. Queued badge lines, hints and the firing line wait until shown. A regular waiting line drops after about 3 seconds. If the waiting list fills, the oldest regular line drops.
+
+Evidence: [implementation](../../../src/hud/messageStrip.ts), [tests](../../../src/hud/messageStrip.test.ts), and `adw-0070`.
