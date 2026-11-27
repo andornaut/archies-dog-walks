@@ -113,4 +113,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0261 | Freeze each Help picture on a fixed frame                             | [adw-0261.md](../work/adw-0261.md) |
 | adw-0262 | Show Settings and Cheats as full-screen pages                         | [adw-0262.md](../work/adw-0262.md) |
 | adw-0263 | Centre each switch row's state word under its switch                  | [adw-0263.md](../work/adw-0263.md) |
-| adw-0274 | Improve the readability of Archie’s interface                          | [adw-0274.md](../work/adw-0274.md) |
+| adw-0274 | Improve the readability of Archie’s interface                         | [adw-0274.md](../work/adw-0274.md) |
