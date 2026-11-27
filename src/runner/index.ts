@@ -4,14 +4,6 @@ export { canonicalJson } from "./canonicalJson.ts";
 export { type Box, type LanedBox, overlaps, type ScaledBox, sweptOverlapAt } from "./collision.ts";
 export { DART_VERGE_LANES, stopsOnVerge } from "./dartOutcomes.ts";
 export { bobOffset, itemBobs } from "./itemCues.ts";
-export {
-  advanceLaneControl,
-  type LaneControl,
-  laneControlIn,
-  pullLane,
-  steerLane,
-} from "./laneControl.ts";
-export { destinationLane, type LaneMotion, laneMotionX, stillInLane } from "./laneMotion.ts";
 export { hopShapes, SIDESTEPS } from "./moverHops.ts";
 export {
   cuedStep,
@@ -37,6 +29,35 @@ export {
 export { STEP_SHAPES } from "./moverSpecs.ts";
 export { itemHeight, obstacleHitBoxes } from "./obstacleGeometry.ts";
 export { moverOutcomes } from "./outcomes.ts";
+export { screenRoadGeometry } from "./screenGeometry.ts";
+export { nextShyChoiceAt, shyOutcomes } from "./shy.ts";
+export {
+  signatureAlive,
+  signatureComponentProgress,
+  signaturePlace,
+  signatureSweeps,
+} from "./signaturePaths.ts";
+export { auditSlotPartialPlan, auditSlotPlan } from "./slotAudit.ts";
+export { apportionSlotCounts, SLOT_ROLES, slotCountTotal } from "./slotConfig.ts";
+export { quietCoverage } from "./slotCoverage.ts";
+export { minimumSlotDelivery, SLOT_RUNTIME_DELIVERY_FLOOR } from "./slotDelivery.ts";
+export {
+  materialisePartialSlotPlan,
+  materialiseSlotPlan,
+  type SlotAssignment,
+} from "./slotPlan.ts";
+export { SLOT_LIMITS } from "./slotPlanner.ts";
+export type { AdmissionReport } from "./spawnAdmission.ts";
+export type { SpawnEvent, SpawnPlan } from "./spawning.ts";
+export { auditSpawnPlan, type SpawnAudit } from "./spawnValidation.ts";
+export {
+  advanceLaneControl,
+  type LaneControl,
+  laneControlIn,
+  pullLane,
+  steerLane,
+} from "./walk/laneControl.ts";
+export { destinationLane, type LaneMotion, laneMotionX, stillInLane } from "./walk/laneMotion.ts";
 export {
   contactWindow,
   NO_PULLS,
@@ -44,8 +65,7 @@ export {
   pullPose,
   type Pulls,
   type PullStep,
-} from "./pulls.ts";
-export { screenRoadGeometry } from "./screenGeometry.ts";
+} from "./walk/pulls.ts";
 export {
   awaitsZonePlan,
   chooseCard,
@@ -68,27 +88,7 @@ export {
   withZonePlan,
   ZonePlanningError,
   zoneStartPoint,
-} from "./session.ts";
-export { nextShyChoiceAt, shyOutcomes } from "./shy.ts";
-export {
-  signatureAlive,
-  signatureComponentProgress,
-  signaturePlace,
-  signatureSweeps,
-} from "./signaturePaths.ts";
-export { auditSlotPartialPlan, auditSlotPlan } from "./slotAudit.ts";
-export { apportionSlotCounts, SLOT_ROLES, slotCountTotal } from "./slotConfig.ts";
-export { quietCoverage } from "./slotCoverage.ts";
-export { minimumSlotDelivery, SLOT_RUNTIME_DELIVERY_FLOOR } from "./slotDelivery.ts";
-export {
-  materialisePartialSlotPlan,
-  materialiseSlotPlan,
-  type SlotAssignment,
-} from "./slotPlan.ts";
-export { SLOT_LIMITS } from "./slotPlanner.ts";
-export type { AdmissionReport } from "./spawnAdmission.ts";
-export type { SpawnEvent, SpawnPlan } from "./spawning.ts";
-export { auditSpawnPlan, type SpawnAudit } from "./spawnValidation.ts";
+} from "./walk/session.ts";
 export {
   type EncounterCard,
   type MinorBump,
@@ -98,7 +98,7 @@ export {
   type Walk,
   type WalkData,
   type WalkStep,
-} from "./walk.ts";
+} from "./walk/step.ts";
 export { type RoadGeometry, walkGeometry, walkProjection } from "./walkGeometry.ts";
 export {
   blocksLane,

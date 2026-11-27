@@ -1,9 +1,9 @@
-import type { GameData } from "../data/index.ts";
-import { hasLeftRoad, isWarning, laneAt, moverPlace, moverY } from "./movers.ts";
-import { obstacleHitBoxes } from "./obstacleGeometry.ts";
-import { signatureAlive } from "./signaturePaths.ts";
-import type { RoadGeometry } from "./walkGeometry.ts";
-import { isObstacle, isPickup, type WalkItem } from "./walkItems.ts";
+import type { GameData } from "../../data/index.ts";
+import { hasLeftRoad, isWarning, laneAt, moverPlace, moverY } from "../movers.ts";
+import { obstacleHitBoxes } from "../obstacleGeometry.ts";
+import { signatureAlive } from "../signaturePaths.ts";
+import type { RoadGeometry } from "../walkGeometry.ts";
+import { isObstacle, isPickup, type WalkItem } from "../walkItems.ts";
 
 export function signatureOnRoad(geometry: RoadGeometry, item: WalkItem): boolean {
   const { mover } = item;

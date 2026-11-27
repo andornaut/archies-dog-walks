@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { CardSource } from "../data/types.ts";
+import type { CardSource } from "../../data/types.ts";
 import { type HitStop, hitStopLength, startHitStop, tickHitStop } from "./hitStop.ts";
 
 const LENGTHS = { encounter: 1, minor: 0.6 };

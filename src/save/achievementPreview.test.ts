@@ -10,7 +10,7 @@ import type { AchievementCondition, AchievementId } from "../data/types.ts";
 import { countBump, countLandedBump } from "../rules/achievements.ts";
 import { newRun } from "../rules/newRun.ts";
 import { walkLength } from "../rules/route.ts";
-import { finishZone, headHome } from "../runner/walk.ts";
+import { finishZone, headHome } from "../runner/walk/step.ts";
 import type { RunState } from "../state/runState.ts";
 import { earningsGoal, packOf, runFactsFor } from "../testing/achievements.ts";
 import { newPlayerSave, testAwards } from "../testing/saves.ts";

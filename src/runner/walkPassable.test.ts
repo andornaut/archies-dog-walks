@@ -40,7 +40,7 @@ import { componentHitLength, itemHeight } from "./obstacleGeometry.ts";
 import { moverOutcomes } from "./outcomes.ts";
 import { signaturePlace } from "./signaturePaths.ts";
 import { apportionSlotCounts } from "./slotConfig.ts";
-import { startRoad, type Walk } from "./walk.ts";
+import { startRoad, type Walk } from "./walk/step.ts";
 import type { RoadGeometry } from "./walkGeometry.ts";
 import { blocksLane, footprintOf, movementOf, type WalkItemKind } from "./walkItems.ts";
 import { walkScrollSpeed } from "./walkMotion.ts";

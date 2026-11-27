@@ -1,13 +1,13 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 
-import type { DogId } from "../data/ids.ts";
-import type { GameData } from "../data/index.ts";
-import { type Box, hitDog, type LanedBox, type PackBoxes, sweptHitDog } from "./collision.ts";
-import { moverPlace, moverY } from "./movers.ts";
-import { obstacleHitBoxes } from "./obstacleGeometry.ts";
-import { signatureSweeps } from "./signaturePaths.ts";
-import type { RoadGeometry } from "./walkGeometry.ts";
-import type { WalkItem } from "./walkItems.ts";
+import type { DogId } from "../../data/ids.ts";
+import type { GameData } from "../../data/index.ts";
+import { type Box, hitDog, type LanedBox, type PackBoxes, sweptHitDog } from "../collision.ts";
+import { moverPlace, moverY } from "../movers.ts";
+import { obstacleHitBoxes } from "../obstacleGeometry.ts";
+import { signatureSweeps } from "../signaturePaths.ts";
+import type { RoadGeometry } from "../walkGeometry.ts";
+import type { WalkItem } from "../walkItems.ts";
 
 function blendPack(
   alpha: number,

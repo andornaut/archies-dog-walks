@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { ZonePlanningError } from "../runner/session.ts";
 import { SLOT_LIMITS } from "../runner/slotPlanner.ts";
 import type { SpawnAudit } from "../runner/spawnValidation.ts";
+import { ZonePlanningError } from "../runner/walk/session.ts";
 import type { WalkItemKind } from "../runner/walkItems.ts";
 import type { ZoneSlotDelivery } from "../runner/zonePlan.ts";
 import { replayZoneSlots, type ZoneSlotInput } from "../runner/zoneSlotInput.ts";

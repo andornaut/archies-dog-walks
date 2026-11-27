@@ -10,7 +10,7 @@ import { screenYAt } from "../layout/projection.ts";
 import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { cardRowIn } from "../presentation/cardLayout.ts";
 import { currentZoneId, forkPaths } from "../rules/route.ts";
-import { pullPose } from "../runner/pulls.ts";
+import { pullPose } from "../runner/walk/pulls.ts";
 import { walkProjection } from "../runner/walkGeometry.ts";
 import { packDogs } from "../state/pack.ts";
 import { cardHeader } from "../ui/cardRow.ts";

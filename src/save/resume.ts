@@ -35,7 +35,7 @@ import type { Cents, Hearts } from "../units.ts";
 import { type Checkpoint, MAX_RUN_DOGS, TALLY_IDS } from "./schema.ts";
 
 // A walk saved where it can resume: at its start, at a fork, or as a zone starts, its zone not
-// yet planned (src/runner/session.ts resumeSession). The session is as the walk left it, so the
+// yet planned (src/runner/walk/session.ts resumeSession). The session is as the walk left it, so the
 // resumed walk plays as the walk would have from there; seed and draws take the run's streams up
 // where they were (runStreams). Saved with the checkpoint, as text in its own versioned format
 // (RESUME_VERSION), so a resume point this game cannot read leaves the rest of the save as it is.

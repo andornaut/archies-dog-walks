@@ -1,7 +1,7 @@
 import { gameData } from "../data/index.ts";
 import { screenRoadGeometry } from "./screenGeometry.ts";
-import { planZoneFromSeed } from "./session.ts";
-import type { Walk } from "./walk.ts";
+import { planZoneFromSeed } from "./walk/session.ts";
+import type { Walk } from "./walk/step.ts";
 import type { ZonePlanAnswer, ZonePlanRequest } from "./zonePlans.ts";
 
 // Plans the walk's zones in a worker, so the page keeps painting and answering input while a

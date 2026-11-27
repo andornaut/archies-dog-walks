@@ -1,20 +1,20 @@
 import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
 
-import type { DogId, ObstacleEncounterId } from "../data/ids.ts";
-import type { GameData } from "../data/index.ts";
-import type { LaneDirection } from "../layout/index.ts";
-import { countTally, modifiedStat, read } from "../rules/index.ts";
-import { packDogs, type RunState } from "../state/index.ts";
-import type { RoadPoint } from "./collision.ts";
-import { componentHitBoxes } from "./componentHitBoxes.ts";
+import type { DogId, ObstacleEncounterId } from "../../data/ids.ts";
+import type { GameData } from "../../data/index.ts";
+import type { LaneDirection } from "../../layout/index.ts";
+import { countTally, modifiedStat, read } from "../../rules/index.ts";
+import { packDogs, type RunState } from "../../state/index.ts";
+import type { RoadPoint } from "../collision.ts";
+import { componentHitBoxes } from "../componentHitBoxes.ts";
+import { isWaiting, laneAt, moverPlace, moverY } from "../movers.ts";
+import { moverOutcomes } from "../outcomes.ts";
+import type { RoadGeometry } from "../walkGeometry.ts";
+import { blocksLane, isPullObstacle, type WalkItem } from "../walkItems.ts";
+import { laneMotionConfig, laneMoveSeconds, roadScrollSpeed } from "../walkMotion.ts";
 import { pullLane } from "./laneControl.ts";
 import { destinationLane } from "./laneMotion.ts";
-import { isWaiting, laneAt, moverPlace, moverY } from "./movers.ts";
-import { moverOutcomes } from "./outcomes.ts";
-import { packBoxes, type Walk } from "./walk.ts";
-import type { RoadGeometry } from "./walkGeometry.ts";
-import { blocksLane, isPullObstacle, type WalkItem } from "./walkItems.ts";
-import { laneMotionConfig, laneMoveSeconds, roadScrollSpeed } from "./walkMotion.ts";
+import { packBoxes, type Walk } from "./step.ts";
 
 // Every dog pulls toward encounters whose resolution is pull. One dog strains at a time, the
 // one nearest the target: pullTell seconds with its bubble, an arrow and a line to the

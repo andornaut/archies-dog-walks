@@ -5,7 +5,7 @@ import { gameData } from "../data/index.ts";
 import type { GearId, ZoneId } from "../data/types.ts";
 import { ownerMaxHearts } from "../rules/dogs.ts";
 import { firstZoneId } from "../rules/route.ts";
-import { startRoad } from "../runner/walk.ts";
+import { startRoad } from "../runner/walk/step.ts";
 import { zoneLength } from "../runner/walkMotion.ts";
 import { MAX_RUN_DOGS } from "../save/schema.ts";
 import { heartsByDog, testState } from "../testing/runState.ts";

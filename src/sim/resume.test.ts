@@ -17,8 +17,8 @@ import {
   startSession,
   stepSession,
   zoneStartPoint,
-} from "../runner/session.ts";
-import { startRoad } from "../runner/walk.ts";
+} from "../runner/walk/session.ts";
+import { startRoad } from "../runner/walk/step.ts";
 import { encodeResume, launchWalk, type ResumeWalk } from "../save/resume.ts";
 import { checkpointOf } from "../save/runSlices.ts";
 import type { PackDogs, RunState } from "../state/runState.ts";

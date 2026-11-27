@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 
-import { ZonePlanningError } from "../runner/session.ts";
+import { ZonePlanningError } from "../runner/walk/session.ts";
 import type { WalkItemKind } from "../runner/walkItems.ts";
 import { planZoneWithContext } from "../runner/zonePlan.ts";
 import * as slotInput from "../runner/zoneSlotInput.ts";

@@ -1,6 +1,6 @@
 import { clampIndex } from "@andornaut/game-kit/runtime/arrays";
 
-import type { LaneDirection } from "../layout/index.ts";
+import type { LaneDirection } from "../../layout/index.ts";
 import {
   destinationLane,
   type LaneMotion,

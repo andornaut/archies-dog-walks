@@ -10,7 +10,7 @@ import { isHerring } from "../runner/dartOutcomes.ts";
 import { drawMover } from "../runner/moverDraws.ts";
 import { moverPlace, moverTell } from "../runner/movers.ts";
 import { moverSpec } from "../runner/moverSpecs.ts";
-import { startRoad, stepWalk, type Walk } from "../runner/walk.ts";
+import { startRoad, stepWalk, type Walk } from "../runner/walk/step.ts";
 import { footprintOf } from "../runner/walkItems.ts";
 import { zoneLength } from "../runner/walkMotion.ts";
 import { plannerStreams } from "../testing/movers.ts";

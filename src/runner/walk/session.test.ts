@@ -4,24 +4,28 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { pixels } from "@andornaut/game-kit/runtime/units";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data/index.ts";
-import { LANE_COUNT } from "../data/screen.ts";
-import type { CardSource, WalkerId, ZoneId } from "../data/types.ts";
-import { firingTimeline } from "../hud/moments.ts";
-import type { LaneDirection } from "../layout/lanes.ts";
-import { cardFor, offerFork, openCard } from "../rules/choices.ts";
-import { newRun } from "../rules/newRun.ts";
-import { firstZoneId, walkLength } from "../rules/route.ts";
-import { read } from "../rules/units.ts";
-import { mapPack } from "../state/pack.ts";
-import type { PackDogs } from "../state/runState.ts";
-import { testState } from "../testing/runState.ts";
-import { clampHearts } from "../units.ts";
+import { gameData } from "../../data/index.ts";
+import { LANE_COUNT } from "../../data/screen.ts";
+import type { CardSource, WalkerId, ZoneId } from "../../data/types.ts";
+import { firingTimeline } from "../../hud/moments.ts";
+import type { LaneDirection } from "../../layout/lanes.ts";
+import { cardFor, offerFork, openCard } from "../../rules/choices.ts";
+import { newRun } from "../../rules/newRun.ts";
+import { firstZoneId, walkLength } from "../../rules/route.ts";
+import { read } from "../../rules/units.ts";
+import { mapPack } from "../../state/pack.ts";
+import type { PackDogs } from "../../state/runState.ts";
+import { testState } from "../../testing/runState.ts";
+import { clampHearts } from "../../units.ts";
+import { itemHeight } from "../obstacleGeometry.ts";
+import { screenRoadGeometry } from "../screenGeometry.ts";
+import type { WalkItem } from "../walkItems.ts";
+import { zoneLength } from "../walkMotion.ts";
+import type { ZonePlanObservation } from "../zonePlan.ts";
+import { replayZoneSlots } from "../zoneSlotInput.ts";
 import { laneControlIn } from "./laneControl.ts";
 import { stillInLane } from "./laneMotion.ts";
-import { itemHeight } from "./obstacleGeometry.ts";
 import { NO_PULLS, type Strain } from "./pulls.ts";
-import { screenRoadGeometry } from "./screenGeometry.ts";
 import {
   chooseCard,
   chooseShownCard,
@@ -38,11 +42,7 @@ import {
   stepSession,
   zoneStartPoint,
 } from "./session.ts";
-import { packBoxes, startRoad } from "./walk.ts";
-import type { WalkItem } from "./walkItems.ts";
-import { zoneLength } from "./walkMotion.ts";
-import type { ZonePlanObservation } from "./zonePlan.ts";
-import { replayZoneSlots } from "./zoneSlotInput.ts";
+import { packBoxes, startRoad } from "./step.ts";
 
 const SKUNK: CardSource = { affected: ["kilo"], encounter: "skunk", kind: "encounter" };
 const STOP: CardSource = { affected: ["kilo"], encounter: "thief", kind: "encounter" };

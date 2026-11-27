@@ -17,8 +17,8 @@ import {
   unplannedStart,
   withZonePlan,
   type ZonePlanning,
-} from "./session.ts";
-import { startRoad, type Walk } from "./walk.ts";
+} from "./walk/session.ts";
+import { startRoad, type Walk } from "./walk/step.ts";
 import { type ZonePlanner, zonePlanner, type ZonePlanPort } from "./zonePlanner.ts";
 import { answerZonePlan, type ZonePlanAnswer } from "./zonePlans.ts";
 

@@ -53,7 +53,7 @@ import { effectIconKey, type EffectItem, walkBarIconKey } from "../presentation/
 import { cardFor } from "../rules/choices.ts";
 import { hitLabel } from "../rules/encounters.ts";
 import { faceMood } from "../rules/treats.ts";
-import type { PullPose } from "../runner/pulls.ts";
+import type { PullPose } from "../runner/walk/pulls.ts";
 import { testState } from "../testing/runState.ts";
 import { clampHearts } from "../units.ts";
 import { FEEDBACK_ART } from "./feedbackArt.ts";

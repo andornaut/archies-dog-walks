@@ -1,6 +1,6 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 
-import { type LaneDirection, moveLane } from "../layout/index.ts";
+import { type LaneDirection, moveLane } from "../../layout/index.ts";
 
 // moveDuration is in seconds, the time one lane change takes.
 export interface LaneMotionConfig {

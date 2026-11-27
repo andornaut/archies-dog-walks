@@ -3,7 +3,7 @@ import { type Pixels, pixels } from "@andornaut/game-kit/runtime/units";
 import type { GameData } from "../data/index.ts";
 import { currentZone, packAgility, read, zoneScrollSpeed } from "../rules/index.ts";
 import type { RunState } from "../state/index.ts";
-import type { LaneMotionConfig } from "./laneMotion.ts";
+import type { LaneMotionConfig } from "./walk/laneMotion.ts";
 
 // The last lane move time, scroll speed and zone length worked out, with the data groups and run
 // fields they were worked out from. A walk asks for the same ones every step until its pack, zone,

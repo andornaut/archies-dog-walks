@@ -9,10 +9,10 @@ import { screenYAt } from "../layout/projection.ts";
 import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
 import { testState } from "../testing/runState.ts";
 import { hitDog, itemBox, pickupDog } from "./collision.ts";
-import { stillInLane } from "./laneMotion.ts";
 import { itemHeight, obstacleHitBox } from "./obstacleGeometry.ts";
 import { screenRoadGeometry } from "./screenGeometry.ts";
-import { packBoxes } from "./walk.ts";
+import { stillInLane } from "./walk/laneMotion.ts";
+import { packBoxes } from "./walk/step.ts";
 import { walkProjection } from "./walkGeometry.ts";
 import { isObstacle, type WalkItemKind } from "./walkItems.ts";
 

@@ -59,7 +59,7 @@ import { moverMovement, moverSpec } from "./moverSpecs.ts";
 import { itemHeight } from "./obstacleGeometry.ts";
 import { makeSlotJobs } from "./slotJobs.ts";
 import { blockingLength, rowSpacing } from "./spawning.ts";
-import { startRoad, stepWalk, type Walk } from "./walk.ts";
+import { startRoad, stepWalk, type Walk } from "./walk/step.ts";
 import { blocksLane, footprintOf, isPullObstacle, type WalkItem } from "./walkItems.ts";
 import { walkScrollSpeed } from "./walkMotion.ts";
 import { compileZoneSlotInput } from "./zoneSlotInput.ts";

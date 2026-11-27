@@ -19,8 +19,8 @@ import {
   laneControlIn,
   pullLane,
   steerLane,
-} from "../runner/laneControl.ts";
-import { destinationLane, stillInLane } from "../runner/laneMotion.ts";
+} from "../runner/walk/laneControl.ts";
+import { destinationLane, stillInLane } from "../runner/walk/laneMotion.ts";
 import type { GestureAction } from "./gestures.ts";
 import { holdRule } from "./hold.ts";
 import {

@@ -5,16 +5,16 @@ import { describe, expect, it } from "vitest";
 import { gameData } from "../../data/index.ts";
 import { LANE_COUNT } from "../../data/screen.ts";
 import { newRun } from "../../rules/newRun.ts";
-import type { LaneMotion } from "../../runner/laneMotion.ts";
 import { screenRoadGeometry } from "../../runner/screenGeometry.ts";
+import type { LaneMotion } from "../../runner/walk/laneMotion.ts";
 import {
   runStreams,
   type Session,
   type SessionInput,
   startSession,
   stepSession,
-} from "../../runner/session.ts";
-import { startRoad, type Walk } from "../../runner/walk.ts";
+} from "../../runner/walk/session.ts";
+import { startRoad, type Walk } from "../../runner/walk/step.ts";
 import type { WalkItem } from "../../runner/walkItems.ts";
 import { laneMoveSeconds } from "../../runner/walkMotion.ts";
 import { blendWalk, leadWalk, stepAlpha } from "./interpolate.ts";

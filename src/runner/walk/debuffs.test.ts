@@ -1,16 +1,16 @@
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data/index.ts";
-import { LANE_COUNT } from "../data/screen.ts";
-import type { DebuffId, DogId } from "../data/types.ts";
-import { ROAD_CAMERA, SCREEN_LAYOUT } from "../layout/screen.ts";
-import { applyEffects } from "../rules/effects.ts";
-import { read } from "../rules/units.ts";
-import type { ActiveDebuff, RunState } from "../state/runState.ts";
-import { testState } from "../testing/runState.ts";
-import { startRoad, stepWalk, type Walk } from "./walk.ts";
-import { walkGeometry, walkProjection } from "./walkGeometry.ts";
+import { gameData } from "../../data/index.ts";
+import { LANE_COUNT } from "../../data/screen.ts";
+import type { DebuffId, DogId } from "../../data/types.ts";
+import { ROAD_CAMERA, SCREEN_LAYOUT } from "../../layout/screen.ts";
+import { applyEffects } from "../../rules/effects.ts";
+import { read } from "../../rules/units.ts";
+import type { ActiveDebuff, RunState } from "../../state/runState.ts";
+import { testState } from "../../testing/runState.ts";
+import { walkGeometry, walkProjection } from "../walkGeometry.ts";
+import { startRoad, stepWalk, type Walk } from "./step.ts";
 
 const data = gameData;
 const { tuning } = data;

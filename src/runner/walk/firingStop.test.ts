@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { CardSource, DogId } from "../data/types.ts";
+import type { CardSource, DogId } from "../../data/types.ts";
 import { type FiringHold, holdForFiring } from "./firingStop.ts";
 import type { HitStop } from "./hitStop.ts";
 

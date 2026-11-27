@@ -4,7 +4,7 @@ import { signatureTrail } from "../testing/signature.ts";
 import { data, geometry, walkWith } from "../testing/walk.ts";
 import { hitDog } from "./collision.ts";
 import { obstacleHitBoxes } from "./obstacleGeometry.ts";
-import { packBoxes, stepWalk } from "./walk.ts";
+import { packBoxes, stepWalk } from "./walk/step.ts";
 import { roadScrollSpeed } from "./walkMotion.ts";
 
 describe("signature components", () => {

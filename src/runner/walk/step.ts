@@ -2,9 +2,9 @@ import { assertNever } from "@andornaut/game-kit/runtime/assertNever";
 import { chance, type Random } from "@andornaut/game-kit/runtime/random";
 import { pixels } from "@andornaut/game-kit/runtime/units";
 
-import type { DogId, EncounterId, GearId, MinorObstacleId } from "../data/ids.ts";
-import type { CardSource, GameData, MovementKind } from "../data/index.ts";
-import { formationOrder, type LaneDirection } from "../layout/index.ts";
+import type { DogId, EncounterId, GearId, MinorObstacleId } from "../../data/ids.ts";
+import type { CardSource, GameData, MovementKind } from "../../data/index.ts";
+import { formationOrder, type LaneDirection } from "../../layout/index.ts";
 import {
   affectedDogs,
   applyInstantEncounter,
@@ -41,9 +41,9 @@ import {
   tipValue,
   type TreatGrabbed,
   walkLength,
-} from "../rules/index.ts";
-import { packDogs, type RunState } from "../state/index.ts";
-import { addCents } from "../units.ts";
+} from "../../rules/index.ts";
+import { packDogs, type RunState } from "../../state/index.ts";
+import { addCents } from "../../units.ts";
 import {
   type Box,
   collideWithPack,
@@ -52,22 +52,17 @@ import {
   overlaps,
   pickupDog,
   tickInvulnerability,
-} from "./collision.ts";
+} from "../collision.ts";
+import { laneAt, moveMovers, type MoverItem, moverPlace, moverY } from "../movers.ts";
 import {
-  type HeldStep,
-  type HitStop,
-  hitStopLength,
-  startHitStop,
-  tickHitStop,
-} from "./hitStop.ts";
-import { advanceLaneControl, type LaneControl, laneControlIn, steerLane } from "./laneControl.ts";
-import { stillInLane } from "./laneMotion.ts";
-import { laneAt, moveMovers, type MoverItem, moverPlace, moverY } from "./movers.ts";
-import { componentHitLength, itemHeight, obstacleHitBox, walkItemBox } from "./obstacleGeometry.ts";
-import type { AdmissionReport } from "./spawnAdmission.ts";
-import { type PathRow, type SpawnEvent, takeDueSpawns } from "./spawning.ts";
-import { signatureContact } from "./walkContacts.ts";
-import type { RoadGeometry } from "./walkGeometry.ts";
+  componentHitLength,
+  itemHeight,
+  obstacleHitBox,
+  walkItemBox,
+} from "../obstacleGeometry.ts";
+import type { AdmissionReport } from "../spawnAdmission.ts";
+import { type PathRow, type SpawnEvent, takeDueSpawns } from "../spawning.ts";
+import type { RoadGeometry } from "../walkGeometry.ts";
 import {
   footprintOf,
   isGearDrop,
@@ -79,11 +74,21 @@ import {
   type WalkItem,
   type WalkItemKind,
   type WalkSpawn,
-} from "./walkItems.ts";
-import { laneMotionConfig, roadScrollSpeed, zoneLength } from "./walkMotion.ts";
-import { shyHopped, stalkersStepped } from "./walkMoverChoices.ts";
-import { packBoxes, sweptPackBoxes } from "./walkPackPlacement.ts";
-import { passedWalker, scrolledItems, signatureOnRoad } from "./walkRoadItems.ts";
+} from "../walkItems.ts";
+import { laneMotionConfig, roadScrollSpeed, zoneLength } from "../walkMotion.ts";
+import { passedWalker, scrolledItems, signatureOnRoad } from "./advanceRoadItems.ts";
+import { signatureContact } from "./contacts.ts";
+import {
+  type HeldStep,
+  type HitStop,
+  hitStopLength,
+  startHitStop,
+  tickHitStop,
+} from "./hitStop.ts";
+import { advanceLaneControl, type LaneControl, laneControlIn, steerLane } from "./laneControl.ts";
+import { stillInLane } from "./laneMotion.ts";
+import { shyHopped, stalkersStepped } from "./moverChoices.ts";
+import { packBoxes, sweptPackBoxes } from "./packPlacement.ts";
 
 export { packBoxes, sweptPackBoxes };
 

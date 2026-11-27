@@ -1,11 +1,11 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 
-import type { DogId } from "../data/ids.ts";
-import { formationOrder } from "../layout/index.ts";
-import { packDogs, type RunState } from "../state/index.ts";
-import type { Box, DogBox, PackBoxes, RoadPoint } from "./collision.ts";
+import type { DogId } from "../../data/ids.ts";
+import { formationOrder } from "../../layout/index.ts";
+import { packDogs, type RunState } from "../../state/index.ts";
+import type { Box, DogBox, PackBoxes, RoadPoint } from "../collision.ts";
+import type { RoadGeometry } from "../walkGeometry.ts";
 import { type LaneMotion, laneMotionX } from "./laneMotion.ts";
-import type { RoadGeometry } from "./walkGeometry.ts";
 
 // The pack's place across the road, in road pixels from its left edge: the walker's lane
 // centre, moving linearly between lanes.

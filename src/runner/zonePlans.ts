@@ -1,7 +1,7 @@
 import { gameData } from "../data/index.ts";
 import { screenRoadGeometry } from "./screenGeometry.ts";
-import { planZoneFromSeed } from "./session.ts";
-import type { Walk } from "./walk.ts";
+import { planZoneFromSeed } from "./walk/session.ts";
+import type { Walk } from "./walk/step.ts";
 
 // What the zone planner's worker (zonePlanWorker.ts) is asked and answers, kept apart from the
 // page's planner (zonePlanner.ts) and the browser adapter that starts the worker.

@@ -3,7 +3,7 @@ import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import type { Scene, Textures } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
-import type { WalkStep } from "../../runner/walk.ts";
+import type { WalkStep } from "../../runner/walk/step.ts";
 import type { WalkItem } from "../../runner/walkItems.ts";
 import { type SparkleTops, stepSparkles, TIP_SPARKLE, TipSparkle } from "./tipSparkle.ts";
 

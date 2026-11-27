@@ -13,7 +13,7 @@ import { createSlotFeasibility } from "./slotFeasibility.ts";
 import { makeSlotJobs } from "./slotJobs.ts";
 import { guaranteeCompatiblePath } from "./slotPath.ts";
 import { drawPath, PATH_HOLD_ROWS, pathReach, rowSpacing, zoneRows } from "./spawning.ts";
-import { startRoad } from "./walk.ts";
+import { startRoad } from "./walk/step.ts";
 import { compileZoneSlotInput, type ZoneSlotKind } from "./zoneSlotInput.ts";
 
 const captured = [

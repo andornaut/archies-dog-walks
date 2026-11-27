@@ -15,8 +15,8 @@ import {
   runStreams,
   startSession,
   unplannedStart,
-} from "../runner/session.ts";
-import { startRoad } from "../runner/walk.ts";
+} from "../runner/walk/session.ts";
+import { startRoad } from "../runner/walk/step.ts";
 import { footprintOf, type WalkItem } from "../runner/walkItems.ts";
 import type { RunState } from "../state/runState.ts";
 import { newPlayerSave, testContext } from "../testing/saves.ts";

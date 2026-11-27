@@ -5,14 +5,14 @@ import {
   nextChoiceAt,
   nextStepAt,
   takeStep,
-} from "./approach.ts";
-import type { RoadPoint } from "./collision.ts";
+} from "../approach.ts";
+import type { RoadPoint } from "../collision.ts";
+import { moverPlace } from "../movers.ts";
+import { awayHop, nextShyChoiceAt, shyChoices, type ShyPath, takeHop } from "../shy.ts";
+import type { RoadGeometry } from "../walkGeometry.ts";
+import type { WalkItem } from "../walkItems.ts";
 import type { LaneMotion } from "./laneMotion.ts";
-import { moverPlace } from "./movers.ts";
-import { awayHop, nextShyChoiceAt, shyChoices, type ShyPath, takeHop } from "./shy.ts";
-import type { RoadGeometry } from "./walkGeometry.ts";
-import type { WalkItem } from "./walkItems.ts";
-import { packCentre } from "./walkPackPlacement.ts";
+import { packCentre } from "./packPlacement.ts";
 
 // A mover's centre on the road at a place.
 function moverCentre(

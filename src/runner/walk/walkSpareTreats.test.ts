@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import type { GearId } from "../data/types.ts";
-import { treatGrabLine, treatLine } from "../hud/stripLines.ts";
-import { newRun } from "../rules/newRun.ts";
-import { spareTreatRoom } from "../rules/spareTreats.ts";
-import { read } from "../rules/units.ts";
-import type { PackDogs } from "../state/runState.ts";
-import { heartsByDog } from "../testing/runState.ts";
-import { atPack, data, step, tuning, walkWith, withHearts } from "../testing/walk.ts";
-import type { Walk } from "./walk.ts";
-import type { WalkItem } from "./walkItems.ts";
+import type { GearId } from "../../data/types.ts";
+import { treatGrabLine, treatLine } from "../../hud/stripLines.ts";
+import { newRun } from "../../rules/newRun.ts";
+import { spareTreatRoom } from "../../rules/spareTreats.ts";
+import { read } from "../../rules/units.ts";
+import type { PackDogs } from "../../state/runState.ts";
+import { heartsByDog } from "../../testing/runState.ts";
+import { atPack, data, step, tuning, walkWith, withHearts } from "../../testing/walk.ts";
+import type { WalkItem } from "../walkItems.ts";
+import type { Walk } from "./step.ts";
 
 // A walk of dogs with gear in the Pocket, holding held spare treats.
 function walkGeared(gear: GearId | null, held: number, dogs: PackDogs, items: WalkItem[]): Walk {
