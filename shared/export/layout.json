@@ -817,13 +817,6 @@
       76
     ],
     "textX": 34,
-    "inlineFace": {
-      "face": 20,
-      "gap": 4,
-      "textScale": 2,
-      "framed": 22,
-      "rise": 5
-    },
     "ownerLead": {
       "face": 32,
       "rise": 4,

@@ -7,14 +7,13 @@ import type { DogId } from "../data/ids.ts";
 import { gameData, LOW_CHIP, SCREEN_CONFIG } from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/index.ts";
 import {
-  inlineFaceBox,
   LOW_CHIP_FIT,
   lowChipPlace,
   lowHeartDogs,
   lowHeartsText,
   MOMENTS,
   newlyLow,
-  styledFaceRows,
+  styledNoticeRows,
 } from "../hud/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
 import type { RunState } from "../state/index.ts";
@@ -123,29 +122,27 @@ export class LowHeartsWarning {
     this.hooks.popOwner(dog, "worried", MOMENTS.lowCueMs);
     const painter = this.hooks.painter;
     const body = fontMetrics(painter.fonts.body);
-    const box = inlineFaceBox(body, LOW_CHIP_FIT.style.scale);
-    const rows = styledFaceRows(
+    const rows = styledNoticeRows(
       LOW_CHIP_FIT.style,
       (fit, text) => painter.width(fit.scale, text),
-      box,
       LOW_CHIP_FIT.room,
       lowHeartsText(gameData, dog),
     );
     const row = rows[0];
     const place = lowChipPlace(body, SCREEN_CONFIG.width, rect, {
-      ...(box !== undefined && row !== undefined && row.faces.length > 0 ? { face: box } : {}),
       scale: LOW_CHIP_FIT.style.scale,
       width: Math.ceil(row?.width ?? 0),
     });
     const view = painter.group(HUD_DEPTH.moment);
     view.panel(place.box);
-    view.faceRows(
-      { capsTop: place.text.y, x: place.text.x },
-      box,
-      LOW_CHIP_FIT.style.scale,
-      PALETTE.darkRed,
-      rows,
-    );
+    view.text({
+      capTop: place.text.y,
+      colour: PALETTE.darkRed,
+      font: "body",
+      lines: rows.map(({ text }) => text),
+      scale: LOW_CHIP_FIT.style.scale,
+      x: place.text.x,
+    });
     if (!this.run.reducedMotion()) {
       this.moments.tween(this.scene, {
         duration: MOMENTS.lowCueMs,

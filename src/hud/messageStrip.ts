@@ -7,15 +7,14 @@ import { type GameData, MESSAGE_STRIP, OWNER_LEAD } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { effectIconKey, type EffectItem, type NameMark } from "../presentation/index.ts";
 import { read } from "../rules/index.ts";
-import { type FaceBox, type FaceRow, faceRows, type FaceText } from "./faceText.ts";
+import { type NoticeRow, noticeRows, type NoticeText } from "./noticeText.ts";
 import { debuffBarRects } from "./walkHud.ts";
 
 // The message strip: what just happened, in a ui-panel across the top of the backdrop band's
 // flat sky, under the walk bar and clear of the cross street and the far road. It shows one
 // line, body text at 2x led by its 16x16 icon, or an owner's quip led by their portrait
 // (OWNER_LEAD), with all measured owner rows retained; icon-led text keeps MESSAGE_STRIP.rows.
-// An owner the text names has their
-// face inline before their name (faceText.ts); the panel is as tall as the rows it
+// The panel is as tall as the rows it
 // holds, and as the owner's lead. While debuff bars are up it moves under them, rows and all. A
 // line waits its turn, shows, and fades out at the end of its life; one that waits too long, or
 // the oldest such one when too many are waiting, is dropped unseen, but for a badge, a hint or
@@ -201,21 +200,20 @@ export function linePanels(
 // icon-led notices retain the existing MESSAGE_STRIP.rows cap.
 export function messageRows(
   width: (text: string) => number,
-  box: FaceBox | undefined,
   room: number,
   lead: "icon" | "owner",
-  line: FaceText,
-): FaceRow[] {
-  const rows = faceRows(width, box, room, line);
+  line: NoticeText,
+): NoticeRow[] {
+  const rows = noticeRows(width, room, line);
   return lead === "owner" ? rows : rows.slice(0, MESSAGE_STRIP.rows);
 }
 
-// icon: what leads the line, an icon or an owner's portrait. Each owner its text names
-// (marks) is drawn led by their face, except for the leading owner. names:
+// icon: what leads the line, an icon or an owner's portrait. Owners named in text stay in
+// one phrase with any immediately adjacent heart change. names:
 // effects' names the line sets apart in their colours, beyond the "Name:" leads every line's
 // names get (effectNameMarks), as a debuff's start line marks its lead. keepsWaiting: the line
 // waits its turn however long it takes, as a badge, a hint or a firing does.
-export interface MessageLine extends FaceText {
+export interface MessageLine extends NoticeText {
   readonly icon: MessageLead;
   readonly keepsWaiting?: true;
   readonly names?: readonly NameMark[];

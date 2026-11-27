@@ -1,8 +1,7 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
-import { type BitmapFont, fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { domArtPath, ownerCardFaceKey } from "../../assets/index.ts";
-import { gameData } from "../../data/index.ts";
+import { domArtPath } from "../../assets/index.ts";
 import {
   boundsAdvance,
   type DomArtSource,
@@ -31,7 +30,6 @@ import {
   lineInk,
   PALETTE,
 } from "../../ui/index.ts";
-import type { FaceBox, FaceRow } from "../index.ts";
 import { type HudArtDescriptor, prepareHudArt } from "./prepareHudArt.ts";
 export interface HudMomentState {
   x: number;
@@ -107,16 +105,6 @@ export interface HudMoment {
   ): void;
   ring(rect: Rect, colour: number, width: number): void;
   text(text: DomTextBlock): void;
-  faceRows(
-    at: {
-      capsTop: number;
-      x: number;
-    },
-    box: FaceBox | undefined,
-    scale: number,
-    colour: number,
-    rows: readonly FaceRow[],
-  ): void;
   dispose(): void;
 }
 export interface HudMomentPainter {
@@ -293,40 +281,6 @@ export function createHudMoments(
         element.remove();
       },
       element,
-      faceRows(at, box, scale, colour, rows) {
-        rows.forEach((row, i) => {
-          const top = at.capsTop + i * fontMetrics(fonts.body).lineHeight * scale;
-          row.texts.forEach((run) =>
-            api.text({
-              capTop: top,
-              colour,
-              font: "body",
-              lines: [run.text],
-              scale,
-              x: at.x + run.x,
-            }),
-          );
-          if (box === undefined) {
-            return;
-          }
-          row.faces.forEach((face) => {
-            const rect = {
-              height: box.framed,
-              width: box.framed,
-              x: at.x + face.x,
-              y: top - box.rise,
-            };
-            api.panel(rect, undefined, { border: PALETTE.ink, fill: PALETTE.tan });
-            api.art({
-              at: { x: rect.x + 1, y: rect.y + 1 },
-              clock: "now",
-              key: ownerCardFaceKey(gameData, face.dog),
-              loop: true,
-              tags: [face.mood, "neutral"],
-            });
-          });
-        });
-      },
       panel(rect, art, colours = { border: PALETTE.plum, fill: PALETTE.cream }) {
         if (art !== undefined && hasArt(art.key)) {
           if (art.kind === "image") {

@@ -48,8 +48,6 @@ export function projectHudMoments(
           views.forEach((view) => view.dispose());
         },
         element: primary.element,
-        faceRows: (at, box, scale, colour, rows) =>
-          views.forEach((view) => view.faceRows(at, box, scale, colour, rows)),
         panel: (rect, art, colours) => views.forEach((view) => view.panel(rect, art, colours)),
         ring: (rect, colour, width) => views.forEach((view) => view.ring(rect, colour, width)),
         state: primary.state,

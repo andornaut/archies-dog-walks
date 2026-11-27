@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from "vitest";
 import { ownerFaceKey } from "../assets/spriteKeys.ts";
 import { DEBUFF_BAR, gameData } from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/hudMoments.ts";
-import type { FaceRow } from "../hud/faceText.ts";
 import {
   MESSAGE_STRIP,
   messagePanel,
@@ -12,6 +11,7 @@ import {
   ownerLeadPanel,
   stripLeadSlot,
 } from "../hud/messageStrip.ts";
+import { fillNoticeText, ownerNameText } from "../hud/noticeText.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { FakeDocument } from "../testing/fakeDom.ts";
@@ -27,12 +27,10 @@ describe("owner-led native notices", () => {
     const texts: DomTextBlock[] = [];
     const art = vi.fn(() => ({ dispose: vi.fn(), ready: Promise.resolve([]) }));
     const panels: Rect[] = [];
-    const rows: FaceRow[][] = [];
     const group: HudMoment = {
       art,
       dispose: vi.fn(),
       element,
-      faceRows: (_at, _box, _scale, _colour, lines) => rows.push([...lines]),
       panel: (rect) => {
         panels.push(rect);
       },
@@ -61,9 +59,9 @@ describe("owner-led native notices", () => {
     strip.update(0, 1, 0);
     const metrics = fontFileMetrics("font-body");
     const lead = ownerLeadLayout(stripLeadSlot(metrics));
-    expect(rows[0]!.length).toBeGreaterThan(2);
-    expect(rows[0]!.flatMap((row) => row.texts.map((part) => part.text)).join(" ")).toBe(text);
-    expect(texts).toEqual([]);
+    const lines = texts.flatMap(({ lines }) => lines);
+    expect(lines.length).toBeGreaterThan(2);
+    expect(lines.join(" ")).toBe(text);
     expect(view.children[0]?.className).toBe("visually-hidden");
     expect(view.children[0]?.textContent).toBe(`${owner}: `);
     expect(art).toHaveBeenCalledWith({
@@ -74,14 +72,16 @@ describe("owner-led native notices", () => {
       projection: "layout",
       tags: ["happy", "neutral"],
     });
-    expect(panels[0]).toEqual(ownerLeadPanel(messagePanel(metrics, rows[0]!.length), lead));
+    expect(panels[0]).toEqual(ownerLeadPanel(messagePanel(metrics, lines.length), lead));
     expect(panels[0]!.y).toBe(
       MESSAGE_STRIP.gap + SCREEN_LAYOUT.topBar.y + SCREEN_LAYOUT.topBar.height,
     );
     strip.dispose();
 
     const iconStrip = new MessageStrip(painter);
-    iconStrip.say({ icon: "stinky", text });
+    const mentioned = ownerNameText(gameData, "sequoia");
+    const sentence = fillNoticeText("{owner} −1♥", { owner: mentioned });
+    iconStrip.say({ ...sentence, icon: "bump" });
     iconStrip.update(0, 1, 2);
     expect(art).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -89,6 +89,8 @@ describe("owner-led native notices", () => {
         projection: "layout",
       }),
     );
+    expect(art).toHaveBeenCalledTimes(2);
+    expect(texts.at(-1)?.lines).toEqual([sentence.text]);
     iconStrip.dispose();
   });
 });

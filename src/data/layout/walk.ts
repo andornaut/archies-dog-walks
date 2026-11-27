@@ -3,7 +3,6 @@ import {
   FACE_SIZE,
   ICON_LABEL_GAP,
   LABEL_ICON,
-  OWNER_CARD_FACE,
   UI_FUNCTION_ICON_SIZE,
 } from "./controls.ts";
 
@@ -140,16 +139,6 @@ export const OWNER_LEAD = {
   rise: 4,
 } as const;
 
-// An owner's face inline before their name in walk text.
-export const INLINE_FACE = {
-  // The face's side.
-  face: OWNER_CARD_FACE,
-  // The gap from the face's frame to the name.
-  gap: 4,
-  // The text scale the face shows beside.
-  textScale: 2,
-} as const;
-
 // The neighbourhood pill under the walk bar or the last debuff bar.
 export const ZONE_PILL_SIZES = {
   // The pill's top under the bar above it.
@@ -256,8 +245,6 @@ export const MOMENT_PARTS = {
 export const LOW_CHIP = {
   // The chip's left edge in from the card's left.
   dx: 2,
-  // The rows an inline face keeps inside the box's top and bottom.
-  faceInset: 2,
   // The box's bottom over the card's top.
   gap: 6,
   // The least columns between the box and the screen's sides.

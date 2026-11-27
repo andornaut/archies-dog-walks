@@ -13,7 +13,6 @@ import {
 import {
   DEBUFF_BAR,
   type GameData,
-  INLINE_FACE,
   LANE_COUNT,
   LOADING_WALKER_START,
   OWNER_LEAD,
@@ -46,7 +45,6 @@ import {
   debuffBarRects,
   DOG_CARD,
   hudLanes,
-  inlineFaceBox,
   type LeadSlot,
   messagePanel,
   messageStripLayout,
@@ -260,13 +258,9 @@ export function layoutExport(
     // The message strip under the walk bar: its panel at its tallest (two rows), the line's
     // icon, the text column and its room, and each row's capitals top; the same under one and
     // two debuff bars; and an owner's leading portrait (OWNER_LEAD),
-    // on the strip and under one and two bars, with the panels it grows a one-row line
-    // to. inlineFace: an owner's face inline before their name in walk text at
-    // 2x (INLINE_FACE): the frame's side, the gap from the frame to the name, and how far the
-    // frame rises above the row's capitals. At 1x the name shows alone.
+    // on the strip and under one and two bars, with the panels it grows a one-row line to.
     messageStrip: {
       ...messageStripLayout(body),
-      inlineFace: { ...INLINE_FACE, ...inlineFaceBox(body, INLINE_FACE.textScale) },
       ownerLead: {
         ...OWNER_LEAD,
         strip: ownerLead(stripLeadSlot(body), messagePanel(body, 1)),

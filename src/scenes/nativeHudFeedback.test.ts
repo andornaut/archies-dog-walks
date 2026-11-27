@@ -26,7 +26,6 @@ function painterFixture() {
       const view = {
         art: vi.fn(),
         dispose: vi.fn(),
-        faceRows: vi.fn(),
         panel: vi.fn(),
         state: { alpha: 1 },
         text: vi.fn(),

@@ -19,8 +19,8 @@ import { type FaceMood, faceMood } from "../rules/index.ts";
 import { type Pack, type PackSlot, slotIndexOf } from "../state/index.ts";
 import { TEXT_STYLE, TITLE_CAP_ROWS } from "../ui/index.ts";
 import type { Cents } from "../units.ts";
-import { type FaceBox, type FaceText, fillFaceText, ownerFaceText } from "./faceText.ts";
 import type { ChangeLabel } from "./hudView.ts";
+import { fillNoticeText, type NoticeText, ownerNameText } from "./noticeText.ts";
 import { DOG_CARD, OWNER_TAB, WALK_BAR } from "./walkHud.ts";
 
 // The in-run feedback moments RunScene hands the HUD on its events: an owner firing you, a
@@ -274,13 +274,12 @@ export function newlyLow(before: readonly DogId[], now: readonly DogId[]): DogId
 // The low-hearts chip over its card, then rising rise pixels: its line on one line on a cream
 // box gap over the card's top, from dx in from the card's left but kept margin inside the
 // screen. The text sits padX in from the box's sides, its capitals padTop under the box's top
-// and its lowest ink padBottom over the box's bottom, in the body font's rows. The owner's
-// inline face keeps faceInset rows inside the box's top and bottom, the box growing to hold it.
+// and its lowest ink padBottom over the box's bottom, in the body font's rows.
 export { LOW_CHIP };
 
-// The low-hearts chip's line, its owner's name led by their face, upset.
-export function lowHeartsText(data: Pick<GameData, "dogs" | "runText">, dog: DogId): FaceText {
-  return fillFaceText(data.runText.lowHearts, { owner: ownerFaceText(data, "upset", dog) });
+// The low-hearts chip's line, including the owner's full name.
+export function lowHeartsText(data: Pick<GameData, "dogs" | "runText">, dog: DogId): NoticeText {
+  return fillNoticeText(data.runText.lowHearts, { owner: ownerNameText(data, dog) });
 }
 
 // The line at 2x on one row, no wider than the screen less the chip's margin and padding each
@@ -290,20 +289,15 @@ export const LOW_CHIP_FIT = {
   style: TEXT_STYLE,
 } as const;
 
-// The chip's box and its text's capitals' top-left, for a line width wide at scale over slot,
-// with an inline face in face, if any.
+// The box and its capitals' top-left for a line measured at scale over the card slot.
 export function lowChipPlace(
   body: FontMetrics,
   screenWidth: number,
   slot: Pick<Rect, "x" | "y">,
-  text: { face?: FaceBox; scale: number; width: number },
+  text: { scale: number; width: number },
 ): { box: Rect; text: Point } {
-  const { dx, faceInset, gap, margin, padX } = LOW_CHIP;
-  const { face } = text;
+  const { dx, gap, margin, padBottom, padTop, padX } = LOW_CHIP;
   const ink = inkRowsFromCapTop(body) * text.scale;
-  const padTop = Math.max(LOW_CHIP.padTop, face === undefined ? 0 : face.rise + faceInset);
-  const under = face === undefined ? 0 : face.framed - face.rise + faceInset - ink;
-  const padBottom = Math.max(LOW_CHIP.padBottom, under);
   const width = text.width + 2 * padX;
   const height = padTop + ink + padBottom;
   const x = Math.max(margin, Math.min(slot.x + dx, screenWidth - margin - width));

@@ -7,7 +7,6 @@ import {
   achievementLabel,
   type Change,
   debuffFields,
-  type FaceMood,
   formatDollars,
   type HeartChange,
   heartsForgiven,
@@ -18,8 +17,8 @@ import {
   type TreatGrabbed,
 } from "../rules/index.ts";
 import type { ActiveDebuff, EffectSource, RunState } from "../state/index.ts";
-import { type FaceText, fillFaceText, ownerFaceText } from "./faceText.ts";
 import type { MessageIcon, MessageLine } from "./messageStrip.ts";
+import { fillNoticeText, type NoticeText, ownerNameText } from "./noticeText.ts";
 import { STRIP_LINE_FIELDS } from "./runText.ts";
 
 // The message strip's lines for what just happened on the road, from the walk's events.
@@ -37,31 +36,24 @@ export function stripLine<K extends StripKey>(
   return fillLine(STRIP_LINE_FIELDS, data.runText.strip, key, fields);
 }
 
-// The strip's lines that name an owner, each led inline by the owner's face in a mood: upset
-// on a heart loss, happy on a gain, neutral otherwise.
-export const STRIP_OWNER_MOODS = {
-  fired: "upset",
-  plainHit: "upset",
-  secondChance: "neutral",
-  spareTreatUsed: "happy",
-  treat: "happy",
-} as const satisfies Partial<Record<StripKey, FaceMood>>;
-
-type OwnerKey = keyof typeof STRIP_OWNER_MOODS;
+// Authored strip templates with an owner field kept together at wrap time.
+type OwnerKey = {
+  [Key in StripKey]: "owner" extends (typeof STRIP_LINE_FIELDS)[Key][number] ? Key : never;
+}[StripKey];
 type OwnerFields<K extends OwnerKey> = Exclude<(typeof STRIP_LINE_FIELDS)[K][number], "owner">;
 
-// The line at key, its {owner} the owner of dog's name led by their face.
+// The line at key with the owner's name kept together.
 function ownerLine<K extends OwnerKey>(
   data: StripData,
   key: K,
   dog: DogId,
   fields: Readonly<Record<OwnerFields<K>, string>>,
-): FaceText {
-  const owner = ownerFaceText(data, STRIP_OWNER_MOODS[key], dog);
+): NoticeText {
+  const owner = ownerNameText(data, dog);
   const all = { ...fields, owner } as Readonly<
-    Record<(typeof STRIP_LINE_FIELDS)[K][number], FaceText | string>
+    Record<(typeof STRIP_LINE_FIELDS)[K][number], NoticeText | string>
   >;
-  return fillFaceText(data.runText.strip[key], all);
+  return fillNoticeText(data.runText.strip[key], all);
 }
 
 // The lines for a plain obstacle that landed on dog: a dodge; or the hearts its owner lost, then

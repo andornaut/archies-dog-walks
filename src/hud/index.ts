@@ -34,15 +34,6 @@ export {
 } from "./choiceCardView.ts";
 export { explainDetail } from "./explain.ts";
 export {
-  type FaceBox,
-  type FaceRow,
-  type FaceText,
-  faceTextWithNamePills,
-  inlineFaceBox,
-  styledFaceRows,
-  withoutFace,
-} from "./faceText.ts";
-export {
   ABOVE_DOG_GAP,
   chipLeft,
   collisionHeartRow,
@@ -148,6 +139,7 @@ export {
   moneyFlightPath,
   stackOrders,
 } from "./moneyLabels.ts";
+export { type NoticeText, noticeTextWithNamePills, styledNoticeRows } from "./noticeText.ts";
 export {
   HOME_QUESTION_ANSWERS,
   NOTE_PLATE,

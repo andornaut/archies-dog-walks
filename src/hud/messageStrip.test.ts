@@ -14,7 +14,6 @@ import { everyStripLine } from "../testing/everyStripLine.ts";
 import { fontFileMetrics } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
-import { type FaceText, faceTextWithNamePills, inlineFaceBox } from "./faceText.ts";
 import {
   EMPTY_MESSAGE_STRIP,
   type LeadSlot,
@@ -38,6 +37,7 @@ import {
   stepMessageStrip,
   stripLeadSlot,
 } from "./messageStrip.ts";
+import { type NoticeText, noticeTextWithNamePills } from "./noticeText.ts";
 import { achievementLine, firedLine, pullLine } from "./stripLines.ts";
 import { debuffBarRects } from "./walkHud.ts";
 
@@ -287,20 +287,16 @@ describe("messageStripLayout under debuff bars", () => {
 
 // A line with its typographic marks made plain, as the font draws it; each mark is one
 // character either way, so its owners' names keep their places.
-const plain = (line: FaceText): FaceText => ({ ...line, text: plainMarks(line.text) });
+const plain = (line: NoticeText): NoticeText => ({ ...line, text: plainMarks(line.text) });
 const AT_2X = { scale: MESSAGE_STRIP.scale };
 const width2x = (run: string) => bodyRunWidth(AT_2X, run);
-const BOX_2X = defined(inlineFaceBox(BODY, MESSAGE_STRIP.scale));
-// A line wraps at 2x onto the strip's rows, each owner's face inline; every line the data says
-// fits them (ui/textRoles.test.ts).
+// A line wraps at 2x onto the strip's rows.
 describe("the strip's lines", () => {
   const { room } = messageStripLayout(BODY);
 
   it("leaves out text past the last row", () => {
     const many = Array.from({ length: 200 }, () => "Woof").join(" ");
-    expect(messageRows(width2x, BOX_2X, room, "icon", { text: many })).toHaveLength(
-      MESSAGE_STRIP.rows,
-    );
+    expect(messageRows(width2x, room, "icon", { text: many })).toHaveLength(MESSAGE_STRIP.rows);
   });
 });
 
@@ -370,90 +366,24 @@ describe("an owner's lead", () => {
   });
 });
 
-// The rows the strip's one row, with no bar up, gives an inline face over and under its frame.
-const STRIP_FACE_PAD = (() => {
-  const panel = messagePanel(BODY, 1);
-  const top = (messageStripLayout(BODY).rowTops[0] ?? 0) - BOX_2X.rise;
-  return { bottom: panel.y + panel.height - (top + BOX_2X.framed), top: top - panel.y };
-})();
-const BAR_COUNTS = [0, 1, 2] as const;
-
-// What a line shows under bars debuff bars, as the strip draws it: its panel, grown to its
-// owner's lead, and each face's frame.
-interface Shown {
-  faces: Rect[];
-  panel: Rect;
-}
-
-// A line with no lead, its rows wrapped at 2x on the strip.
-function shownLine(bars: number, said: FaceText): Shown {
-  const rows = messageRows(width2x, BOX_2X, messageStripLayout(BODY, bars).room, "icon", said);
-  const place = linePlace(BODY, bars, rows.length);
-  const faces = rows.flatMap((row, i) =>
-    row.faces.map(() => {
-      const y = place.capsTop + i * BODY.lineHeight * MESSAGE_STRIP.scale - BOX_2X.rise;
-      return { height: BOX_2X.framed, width: BOX_2X.framed, x: 0, y };
-    }),
-  );
-  return { faces, panel: place.panel };
-}
-
-// An owner's quip with its text wrapped beside the leading portrait.
-function shownQuip(bars: number, text: string): Shown {
-  const lead = ownerLeadLayout(stripLeadSlot(BODY, bars));
-  const rows = messageRows(width2x, BOX_2X, lead.room, "owner", { text });
-  const panel = ownerLeadPanel(linePlace(BODY, bars, rows.length).panel, lead);
-  return { faces: [lead.frame], panel };
-}
-
-// Each face kept at least the strip's rows inside its panel, over and under, and the panel in
-// the band.
-function cramped({ faces, panel }: Shown): boolean {
-  const bottom = panel.y + panel.height;
-  return (
-    !inside(panel, SCREEN_LAYOUT.backdrop) ||
-    faces.some(
-      (face) =>
-        face.y - panel.y < STRIP_FACE_PAD.top ||
-        bottom - (face.y + face.height) < STRIP_FACE_PAD.bottom,
-    )
-  );
-}
-
-// Every line that names an owner or a dog, and every owner's walk quip led by their face, under
-// no, one and two debuff bars: a face it shows, inline or leading, keeps the rows round it the
-// strip's one row gives.
-describe("a line's faces", () => {
-  const lines = everyStripLine().map((said) => plain(faceTextWithNamePills(gameData, said)));
-  const named = lines.filter(
-    ({ marks, text }) =>
-      (marks ?? []).length > 0 ||
-      Object.values(gameData.dogs).some(({ name }) => text.includes(name)),
-  );
-
-  it.each(BAR_COUNTS)(
-    "keeps the strip's rows round each inline face and owner's lead under %i bars",
-    (bars) => {
-      const shown = named.map((said) => [said.text, shownLine(bars, said)] as const);
-      expect(shown.some(([, { faces }]) => faces.length > 0)).toBe(true);
-      expect(shown.filter(([, line]) => cramped(line)).map(([text]) => text)).toEqual([]);
-      const misfits = OWNER_NAMES.flatMap(([dog, name]) =>
-        WALK_QUIP_MOMENTS.flatMap((moment) => gameData.quips[dog][moment])
-          .filter((said) => cramped(shownQuip(bars, plainMarks(said))))
-          .map((said) => `${name}: ${said}`),
-      );
-      expect(misfits).toEqual([]);
-    },
-  );
+it.each([0, 1, 2])("keeps each authored notice inside the backdrop under %i bars", (bars) => {
+  const { room } = messageStripLayout(BODY, bars);
+  const problems = everyStripLine().flatMap((said) => {
+    const shown = plain(noticeTextWithNamePills(gameData, said));
+    const rows = messageRows(width2x, room, "icon", shown);
+    const { panel } = linePlace(BODY, bars, rows.length);
+    return inside(panel, SCREEN_LAYOUT.backdrop) ? [] : [said.text];
+  });
+  expect(problems).toEqual([]);
 });
 
 it("preserves all owner-led rows while retaining the icon-only two-row cap", () => {
   const text = Array.from({ length: 6 }, () => "Woof").join(" ");
   const room = width2x("Woof Woof");
-  const owner = messageRows(width2x, BOX_2X, room, "owner", { text });
+  const owner = messageRows(width2x, room, "owner", { text });
   expect(owner).toHaveLength(3);
-  expect(owner.flatMap((row) => row.texts.map((part) => part.text)).join(" ")).toBe(text);
-  expect(messageRows(width2x, BOX_2X, room, "icon", { text })).toHaveLength(MESSAGE_STRIP.rows);
+  expect(owner.map(({ text }) => text).join(" ")).toBe(text);
+  expect(messageRows(width2x, room, "icon", { text })).toHaveLength(MESSAGE_STRIP.rows);
 });
 
 it("fits all authored owner-led quips at Body2 in the shared portrait layout", () => {
@@ -463,8 +393,8 @@ it("fits all authored owner-led quips at Body2 in the shared portrait layout", (
   expect(ownerLeadPanel(messagePanel(BODY, 1), lead).height).toBe(48);
   for (const [dog, name] of OWNER_NAMES) {
     for (const text of WALK_QUIP_MOMENTS.flatMap((moment) => gameData.quips[dog][moment])) {
-      const rows = messageRows(width2x, BOX_2X, lead.room, "owner", { text });
-      expect(rows.flatMap((row) => row.texts.map((part) => part.text)).join(" ")).toBe(text);
+      const rows = messageRows(width2x, lead.room, "owner", { text });
+      expect(rows.map(({ text }) => text).join(" ")).toBe(text);
       expect(
         rows.every((row) => row.width <= lead.room),
         `${name}: ${text}`,

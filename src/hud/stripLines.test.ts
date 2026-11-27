@@ -20,7 +20,6 @@ import {
   gearFoundLine,
   luckyLine,
   pullLine,
-  STRIP_OWNER_MOODS,
   treatLine,
 } from "./stripLines.ts";
 
@@ -153,9 +152,7 @@ describe("the strip's other lines", () => {
             marks: [
               {
                 at: strip.secondChance.indexOf("{owner}"),
-                dog: "kilo",
                 length: owner.length,
-                mood: STRIP_OWNER_MOODS.secondChance,
               },
             ],
             text: fillNames(strip.secondChance, { owner }),

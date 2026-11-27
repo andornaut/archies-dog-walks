@@ -46,12 +46,6 @@ import { optionMarks } from "../hud/buffMarks.ts";
 import { largeBodyText, smallCardText } from "../hud/cardText.ts";
 import { CELEBRATION_LAYOUT, GREETING_FIT, ZONE_EARNINGS_FIT } from "../hud/celebrationLayout.ts";
 import { choiceCharmStack } from "../hud/choiceCharms.ts";
-import {
-  type FaceText,
-  faceTextWithNamePills,
-  inlineFaceBox,
-  styledFaceRows,
-} from "../hud/faceText.ts";
 import { CHANGE_LABEL_STYLE, changeLabelRoom, hudLanes } from "../hud/hudLanes.ts";
 import {
   messageRows,
@@ -61,6 +55,7 @@ import {
 } from "../hud/messageStrip.ts";
 import { FIRED_LINE_FIT, LOW_CHIP_FIT, lowHeartsText } from "../hud/moments.ts";
 import { MONEY_LABEL } from "../hud/moneyLabels.ts";
+import { type NoticeText, noticeTextWithNamePills, styledNoticeRows } from "../hud/noticeText.ts";
 import {
   HOME_QUESTION_ANSWERS,
   NOTE_PLATE,
@@ -101,7 +96,7 @@ import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { PAUSE_MENU_ITEMS, pauseMenuItemLabel } from "../ui/navigationMenu.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
-import { MODAL_TITLE_SCALE, TEXT_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
+import { MODAL_TITLE_SCALE, TEXT_STYLE, textOnLines } from "../ui/textFit.ts";
 import { topSectionCurrency, topSectionCurrencyText, topSectionLayout } from "../ui/topSection.ts";
 import { cents } from "../units.ts";
 import { bodyRunWidth } from "./bodyFont.ts";
@@ -122,7 +117,6 @@ interface TextRoleCase {
 
 const BODY = fontFileMetrics("font-body");
 const TITLE = fontFileMetrics("font-title");
-const FACE_BOX = inlineFaceBox(BODY, TEXT_SCALE);
 
 type Font = "font-body" | "font-display" | "font-title";
 
@@ -144,24 +138,23 @@ function plainRole(
   });
 }
 
-// A walk line with owners' faces inline, its effects' names in their pills, at 2x on up to lines
-// rows within room, as the strip and the chips set it.
-function faceOverflow(lines: number, room: number, line: FaceText): string {
-  const pilled = faceTextWithNamePills(gameData, line);
+// A walk line with its owners' names kept together and its effects in their pills.
+function noticeOverflow(lines: number, room: number, line: NoticeText): string {
+  const pilled = noticeTextWithNamePills(gameData, line);
   const said = { ...pilled, text: plainMarks(pilled.text) };
-  const rows = styledFaceRows(textOnLines(lines), bodyRunWidth, FACE_BOX, room, said);
+  const rows = styledNoticeRows(textOnLines(lines), bodyRunWidth, room, said);
   return overflowOf(lines, room, rows.length, Math.max(0, ...rows.map((row) => row.width)));
 }
 
-function faceRole(
+function noticeRole(
   role: string,
   lines: number,
   room: number,
-  texts: readonly FaceText[],
+  texts: readonly NoticeText[],
 ): TextRoleCase[] {
   const unique = new Map(texts.map((line) => [line.text, line]));
   return [...unique.values()].map((line) => ({
-    overflow: faceOverflow(lines, room, line),
+    overflow: noticeOverflow(lines, room, line),
     role,
     text: line.text,
   }));
@@ -177,14 +170,8 @@ function ownerQuipRoles(): TextRoleCase[] {
       text,
     }));
     return quips.flatMap((quip) => {
-      const rows = messageRows(
-        (text) => bodyRunWidth(TEXT_STYLE, text),
-        FACE_BOX,
-        room,
-        "owner",
-        quip,
-      );
-      return faceRole("owner's quip on the strip", rows.length, room, [quip]).map((one) => ({
+      const rows = messageRows((text) => bodyRunWidth(TEXT_STYLE, text), room, "owner", quip);
+      return noticeRole("owner's quip on the strip", rows.length, room, [quip]).map((one) => ({
         ...one,
         text: `${name}: ${one.text}`,
       }));
@@ -672,9 +659,9 @@ export function textRoleCases(): TextRoleCase[] {
   const { settings } = gameData.menuText;
   return [
     ...cardTitleRoles(),
-    ...faceRole("strip", 2, messageStripLayout(BODY).room, strip),
+    ...noticeRole("strip", 2, messageStripLayout(BODY).room, strip),
     ...ownerQuipRoles(),
-    ...faceRole(
+    ...noticeRole(
       "low-hearts chip",
       1,
       LOW_CHIP_FIT.room,

@@ -6,9 +6,6 @@ import { gameData, MESSAGE_STRIP, SLICES } from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/index.ts";
 import {
   EMPTY_MESSAGE_STRIP,
-  type FaceText,
-  faceTextWithNamePills,
-  inlineFaceBox,
   isOwnerLead,
   lineAlpha,
   linePlace,
@@ -17,6 +14,8 @@ import {
   messageRows,
   type MessageStripState,
   messageTiming,
+  type NoticeText,
+  noticeTextWithNamePills,
   type OwnerLead,
   ownerLeadLayout,
   ownerLeadPanel,
@@ -24,7 +23,6 @@ import {
   sayLineAhead,
   stepMessageStrip,
   stripLeadSlot,
-  withoutFace,
 } from "../hud/index.ts";
 import type { NameMark } from "../presentation/index.ts";
 import { PALETTE } from "../ui/index.ts";
@@ -40,7 +38,7 @@ interface Drawn {
   view: HudMoment;
 }
 // A line as drawn, led by its icon's key or an owner's portrait. id names the line.
-interface StripLine extends FaceText {
+interface StripLine extends NoticeText {
   readonly id: number;
   readonly lead: OwnerLead | string;
   readonly names?: readonly NameMark[];
@@ -107,22 +105,16 @@ export class MessageStrip {
   }
 }
 // The line's lead and text, its rows at 2x on a panel as tall as they are, under bars debuff
-// bars. An owner's lead moves the text right, and grows a panel shorter than the lead. Each
-// owner the text names has their face inline before their name, except for the leading owner.
+// bars. An owner's leading portrait moves the text right and can grow the panel.
 function draw(painter: HudMomentPainter, depth: number, bars: number, line: StripLine): Drawn {
   const body = fontMetrics(painter.fonts.body);
   const owner = typeof line.lead === "string" ? undefined : line.lead;
   const slot = stripLeadSlot(body, bars);
   const lead = owner === undefined ? undefined : ownerLeadLayout(slot);
   const textX = lead?.textX ?? slot.textX;
-  const said = faceTextWithNamePills(gameData, {
-    ...withoutFace(owner?.dog, line),
-    ...(line.names === undefined ? {} : { names: line.names }),
-  });
-  const box = inlineFaceBox(body, MESSAGE_STRIP.scale);
+  const said = noticeTextWithNamePills(gameData, line);
   const rows = messageRows(
     (run) => painter.width(MESSAGE_STRIP.scale, run),
-    box,
     lead?.room ?? slot.room,
     owner === undefined ? "icon" : "owner",
     said,
@@ -157,6 +149,15 @@ function draw(painter: HudMomentPainter, depth: number, bars: number, line: Stri
       projection: "layout",
     });
   }
-  view.faceRows({ capsTop: place.capsTop, x: textX }, box, MESSAGE_STRIP.scale, PALETTE.plum, rows);
+  rows.forEach(({ text }, index) => {
+    view.text({
+      capTop: place.capsTop + index * body.lineHeight * MESSAGE_STRIP.scale,
+      colour: PALETTE.plum,
+      font: "body",
+      lines: [text],
+      scale: MESSAGE_STRIP.scale,
+      x: textX,
+    });
+  });
   return { bars, id: line.id, view };
 }

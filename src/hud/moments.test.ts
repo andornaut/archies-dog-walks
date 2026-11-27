@@ -1,7 +1,6 @@
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
-import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
@@ -18,7 +17,6 @@ import { PACK_PLACES } from "../testing/packPlaces.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents, clampHearts } from "../units.ts";
-import { inlineFaceBox, styledFaceRows } from "./faceText.ts";
 import { linePanels, messageRows, ownerLeadLayout, stripLeadSlot } from "./messageStrip.ts";
 import {
   arcControl,
@@ -48,6 +46,7 @@ import {
   payoutMs,
   trotOffX,
 } from "./moments.ts";
+import { styledNoticeRows } from "./noticeText.ts";
 import { ownerTabRect } from "./walkHud.ts";
 
 const walking = (dog: "lady" | "ginger" | "kilo", hearts: number) =>
@@ -344,44 +343,35 @@ describe("curvePoint", () => {
 const BODY = fontFileMetrics("font-body");
 const SLOTS = SCREEN_LAYOUT.dogSlots;
 const DOGS = keysOf(gameData.dogs);
-const boxAt = (style: TextFitStyle) => inlineFaceBox(BODY, style.scale);
 
-// Every owner's low-hearts line, over the first and last cards, by the screen's edges, fits on
-// one line led by the owner's face on a chip kept on screen and clear of the card's top: the
-// chip holds the body font's ink at the line's scale padTop and padBottom inside it, and the
-// face faceInset inside it.
+// Every low-hearts line keeps its full name and authored text within its on-screen chip.
 describe("the low-hearts chip", () => {
   const edgeSlots = [0, SLOTS.length - 1].map((i) => [i, defined(SLOTS[i])] as const);
   it.each(
     edgeSlots.flatMap(([i, slot]) =>
       DOGS.map((dog) => [i, gameData.dogs[dog].owner.name, dog, slot] as const),
     ),
-  )("over card %i keeps %s's line, led by their face, on screen", (_i, name, dog, slot) => {
+  )("over card %i keeps %s's line, on screen", (_i, name, dog, slot) => {
     const said = lowHeartsText(gameData, dog);
     const line = { ...said, text: plainMarks(said.text) };
-    const face = defined(boxAt(LOW_CHIP_FIT.style));
-    const rows = styledFaceRows(LOW_CHIP_FIT.style, bodyRunWidth, face, LOW_CHIP_FIT.room, line);
+    const rows = styledNoticeRows(LOW_CHIP_FIT.style, bodyRunWidth, LOW_CHIP_FIT.room, line);
     const [row] = rows;
     expect(rows).toHaveLength(1);
     expect(row?.width).toBeLessThanOrEqual(LOW_CHIP_FIT.room);
-    expect(row?.faces.map((face) => face.dog)).toEqual([dog]);
-    expect(row?.texts.some(({ text }) => text.startsWith(name))).toBe(true);
+    expect(row?.text.startsWith(name)).toBe(true);
+    expect(row?.text).toBe(line.text);
     const { scale } = LOW_CHIP_FIT.style;
     const width = Math.ceil(row?.width ?? 0);
     const { box, text: caps } = lowChipPlace(BODY, SCREEN_CONFIG.width, slot, {
-      face,
       scale,
       width,
     });
-    const frameTop = caps.y - face.rise;
     const inkBottom = caps.y + inkRowsFromCapTop(BODY) * scale;
     const bottom = box.y + box.height;
     expect(box.x).toBeGreaterThanOrEqual(LOW_CHIP.margin);
     expect(box.x + box.width).toBeLessThanOrEqual(SCREEN_CONFIG.width - LOW_CHIP.margin);
     expect(caps.y - box.y).toBeGreaterThanOrEqual(LOW_CHIP.padTop);
     expect(bottom - inkBottom).toBeGreaterThanOrEqual(LOW_CHIP.padBottom);
-    expect(frameTop - box.y).toBe(Math.max(LOW_CHIP.faceInset, LOW_CHIP.padTop - face.rise));
-    expect(bottom - (frameTop + face.framed)).toBeGreaterThanOrEqual(LOW_CHIP.faceInset);
     expect(bottom).toBe(slot.y - LOW_CHIP.gap);
   });
 });
@@ -396,13 +386,8 @@ describe("a fired line's bubble", () => {
   const ownerRows = Object.values(gameData.quips).flatMap(({ happier, upset }) =>
     [...happier, ...upset].map(
       (text) =>
-        messageRows(
-          (run) => bodyRunWidth({ scale: TEXT_SCALE }, run),
-          inlineFaceBox(BODY, TEXT_SCALE),
-          room,
-          "owner",
-          { text },
-        ).length,
+        messageRows((run) => bodyRunWidth({ scale: TEXT_SCALE }, run), room, "owner", { text })
+          .length,
     ),
   );
   const panels = bars.flatMap((count) => linePanels(BODY, ownerRows, count, topBar));

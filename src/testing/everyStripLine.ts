@@ -4,8 +4,8 @@ import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { minorObstacleNames } from "../content/obstacleLooks.ts";
 import { gameData } from "../data/index.ts";
 import { SIZE_STRIP_LINES } from "../hud/buffMarks.ts";
-import { type FaceText, fillFaceText, ownerFaceText } from "../hud/faceText.ts";
 import type { MessageLine } from "../hud/messageStrip.ts";
+import { fillNoticeText, type NoticeText, ownerNameText } from "../hud/noticeText.ts";
 import { STRIP_LINE_FIELDS } from "../hud/runText.ts";
 import { debuffLines } from "../hud/stripLines.ts";
 import { effectLine } from "../presentation/effectIcons.ts";
@@ -16,13 +16,13 @@ import { inkWidth } from "./fontInk.ts";
 // dog, owner and obstacle widths while keeping every line template.
 export function everyStripLine(
   mode: "all" | "representative" = "all",
-): (FaceText & Pick<MessageLine, "names">)[] {
+): (NoticeText & Pick<MessageLine, "names">)[] {
   const { strip } = gameData.runText;
-  const line = (key: keyof typeof STRIP_LINE_FIELDS, fields: Record<string, FaceText | string>) =>
-    fillFaceText(strip[key], fields);
+  const line = (key: keyof typeof STRIP_LINE_FIELDS, fields: Record<string, NoticeText | string>) =>
+    fillNoticeText(strip[key], fields);
   const dogs = keysOf(gameData.dogs).map((id) => ({
     dog: gameData.dogs[id].name,
-    owner: ownerFaceText(gameData, "neutral", id),
+    owner: ownerNameText(gameData, id),
   }));
   const obstacles = [
     ...new Set(
