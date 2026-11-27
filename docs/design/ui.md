@@ -136,7 +136,7 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0286 | Simplify the public homepage and remove Tuning and Gallery            | [adw-0286.md](../work/adw-0286.md) |
 | adw-0290 | Make forgiven choice outcomes readable                                | [adw-0290.md](../work/adw-0290.md) |
 | adw-0291 | Use a shared four-pixel gap in walk notices                           | [adw-0291.md](../work/adw-0291.md) |
-| adw-0292 | Centre choice-card outcomes                                            | [adw-0292.md](../work/adw-0292.md) |
+| adw-0292 | Centre choice-card outcomes                                           | [adw-0292.md](../work/adw-0292.md) |
 | adw-0293 | Match the approved Start picker cards                                 | [adw-0293.md](../work/adw-0293.md) |
 | adw-0294 | Confirm platform Back on Start                                        | [adw-0294.md](../work/adw-0294.md) |
 | adw-0295 | Keep the Pet Shop right-aligned in Firefox                            | [adw-0295.md](../work/adw-0295.md) |
