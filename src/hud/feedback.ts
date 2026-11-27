@@ -1,6 +1,6 @@
 import { type Point, type Rect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
 
-import { FLY_REACH_ICON_GAP } from "../data/index.ts";
+import { ICON_LABEL_GAP } from "../data/index.ts";
 import { type Cents, cents } from "../units.ts";
 import { REACH_ICON } from "./hudLanes.ts";
 
@@ -28,23 +28,22 @@ export const FLY_HEART = { frame: 32, inkLeft: 9 } as const;
 
 // The clear space between an above-dog notice and the opaque head.
 export const ABOVE_DOG_GAP = 4;
-const HEART_ROW_GAP = 2;
 
-// The ink union is centred over the head. Clamp the entire row, including transparent
-// sprite margins and the chips' padding, so the alignment within it stays fixed.
+// Centre the heart's ink and the chips' visible backing over the head. Clamp the whole
+// row, including the heart's transparent frame margins, to keep the group on screen.
 export function collisionHeartRow(
   bounds: Rect,
   head: Point,
   ink: Rect,
-  labels: readonly { height: number; padX: number; width: number }[],
+  labels: readonly { height: number; width: number }[],
 ): { chips: Rect[]; frame: Point } {
   let right = ink.width;
-  const chips = labels.map(({ height, padX, width }, index) => {
-    const x = right + HEART_ROW_GAP - (index === 0 ? padX : 0);
+  const chips = labels.map(({ height, width }) => {
+    const x = right + ICON_LABEL_GAP;
     right = x + width;
     return { height, width, x, y: Math.round((ink.height - height) / 2) };
   });
-  const visibleRight = right - (labels.at(-1)?.padX ?? 0);
+  const visibleRight = right;
   const frame = { x: -ink.x, y: -ink.y };
   const left = Math.min(frame.x, ...chips.map(({ x }) => x));
   right = Math.max(right, frame.x + FLY_HEART.frame);
@@ -95,12 +94,12 @@ export function chipLeft(screenWidth: number, centreX: number, width: number): n
 }
 
 // A reached treat's reach icon rides beside its small heart as it flies into the card: its
-// top-left for the heart's frame centred on heart, FLY_REACH_ICON_GAP columns left of the heart's
+// top-left for the heart's frame centred on heart, ICON_LABEL_GAP columns left of the heart's
 // ink and vertically centred on the frame.
 export function reachIconBeside(heart: Point): Point {
   const { size } = REACH_ICON;
   const inkLeft = heart.x - FLY_HEART.frame / 2 + FLY_HEART.inkLeft;
-  return { x: inkLeft - FLY_REACH_ICON_GAP - size, y: heart.y - size / 2 };
+  return { x: inkLeft - ICON_LABEL_GAP - size, y: heart.y - size / 2 };
 }
 
 // The heart pop's top-left: its centre column on the dog's, its bottom row 4px below the dog's
@@ -110,18 +109,16 @@ export function heartPopFrame(dogTop: Point): Point {
 }
 
 // A floating chip, or a buff's charm with its value's chip, over a dog whose heart pops in the
-// same walk step stacks over the pop: its bottom POP_STACK.gap rows over the pop's top opaque
+// same walk step stacks over the pop: its bottom ICON_LABEL_GAP rows over the pop's top opaque
 // row, inkTop rows into its frame, both centred on the dog. A pop the walk draws (clampTop
 // given) moves down when the stack would rise past clampTop, the walk view's top, keeping the
 // gap; the HUD's pops keep their place.
-const POP_STACK = { gap: 2 } as const;
-
 export function stackOverPop(
   pop: { frame: Point; inkTop: number },
   height: number,
   clampTop: number | null = null,
 ): { bottom: number; frame: Point } {
-  const bottom = pop.frame.y + pop.inkTop - POP_STACK.gap;
+  const bottom = pop.frame.y + pop.inkTop - ICON_LABEL_GAP;
   const down = clampTop === null ? 0 : Math.max(0, clampTop - (bottom - height));
   return { bottom: bottom + down, frame: { x: pop.frame.x, y: pop.frame.y + down } };
 }
@@ -133,12 +130,12 @@ export function heartNoticeLayout(
   pop: { chip: { height: number; width: number }; frame: Point; inkRight: number },
 ): { chip: Rect; frame: Point } {
   const { chip, frame, inkRight } = pop;
-  const width = Math.max(FLY_HEART.frame, inkRight + 4 + chip.width);
+  const width = Math.max(FLY_HEART.frame, inkRight + ICON_LABEL_GAP + chip.width);
   const x = Math.max(0, Math.min(bounds.screenWidth - width, frame.x));
   return {
     chip: {
       ...chip,
-      x: x + inkRight + 4,
+      x: x + inkRight + ICON_LABEL_GAP,
       y: Math.min(
         frame.y + Math.round((FLY_HEART.frame - chip.height) / 2),
         bounds.bottom - chip.height,

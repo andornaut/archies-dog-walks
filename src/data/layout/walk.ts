@@ -166,9 +166,6 @@ export const HUD_LANES = {
   reachIconGap: ICON_LABEL_GAP,
 } as const;
 
-// The columns between a reached treat's flying reach icon and its small heart's ink.
-export const FLY_REACH_ICON_GAP = 2;
-
 // A change label's chip: its least height and its text's padding.
 export const CHANGE_CHIP = { height: 20, padX: 2, padY: 3 } as const;
 

@@ -102,12 +102,13 @@ export function wholeForgivenRow(scene: Scene, head: Point): HeartPopPlace | und
     { x: 0, y: 0 },
     { lines: 1, scale: TEXT_SCALE, width },
   );
+  // The gain pop covers both phases' ink, so the caption can stay in place.
   const art = FEEDBACK_ART.heartGain.popInk;
   const { chips, frame } = collisionHeartRow(
     SCREEN_LAYOUT.walkView,
     head,
     { height: art.bottom - art.top, width: art.right - art.left, x: art.left, y: art.top },
-    [{ ...chip, padX: (chip.width - width) / 2 }],
+    [chip],
   );
   const caption = chips[0]!;
   return {

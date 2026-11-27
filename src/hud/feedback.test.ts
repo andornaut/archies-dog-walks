@@ -4,7 +4,7 @@ import { decodePng } from "@andornaut/art-kit/build/png";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { FLY_REACH_ICON_GAP } from "../data/layout.ts";
+import { ICON_LABEL_GAP } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { CHARM } from "../layout/buffLayout.ts";
 import { fontFileMetrics } from "../testing/fontInk.ts";
@@ -54,7 +54,7 @@ describe("heartNoticeLayout", () => {
         frame: heartPopFrame({ x, y: 400 }),
         inkRight: 31,
       });
-      expect(placed.chip.x - (placed.frame.x + 31)).toBe(4);
+      expect(placed.chip.x - (placed.frame.x + 31)).toBe(ICON_LABEL_GAP);
       expect(placed.frame.x).toBeGreaterThanOrEqual(0);
       expect(placed.chip.x + placed.chip.width).toBeLessThanOrEqual(bounds.screenWidth);
       expect(placed.frame.y).toBe(heartPopFrame({ x, y: 400 }).y);
@@ -72,15 +72,21 @@ it("clamps the whole collision row while keeping the Forgiven caption alongside 
   const bounds = { height: 400, width: 360, x: 0, y: 40 };
   const ink = { height: 26, width: 28, x: 2, y: 3 };
   const { chips, frame } = collisionHeartRow(bounds, { x: 360, y: 40 }, ink, [
-    { height: 18, padX: 4, width: 24 },
-    { height: 20, padX: 2, width: 88 },
+    { height: 18, width: 24 },
+    { height: 20, width: 88 },
   ]);
   const [number, forgiven] = chips;
   expect(frame.y).toBe(bounds.y);
-  expect(number!.x + 4).toBe(frame.x + ink.x + ink.width + 2);
-  expect(forgiven!.x).toBe(number!.x + number!.width + 2);
+  expect(number!.x - (frame.x + ink.x + ink.width)).toBe(ICON_LABEL_GAP);
+  expect(forgiven!.x - (number!.x + number!.width)).toBe(ICON_LABEL_GAP);
   expect(forgiven!.x + forgiven!.width).toBe(bounds.width);
   expect(number!.y + number!.height / 2).toBe(forgiven!.y + forgiven!.height / 2);
+
+  const head = { x: 180, y: 240 };
+  const centred = collisionHeartRow(bounds, head, ink, [{ height: 20, width: 88 }]);
+  const caption = centred.chips[0]!;
+  expect(centred.frame.x + ink.x + caption.x + caption.width).toBe(2 * head.x);
+  expect(caption.x - (centred.frame.x + ink.x + ink.width)).toBe(ICON_LABEL_GAP);
 });
 
 describe("the labels floated over a dog", () => {
@@ -197,7 +203,7 @@ describe("the small heart a reached treat flies", () => {
     const { size } = REACH_ICON;
     const icon = reachIconBeside(heart);
     const heartInkLeft = heart.x - FLY_HEART.frame / 2 + FLY_HEART.inkLeft;
-    expect(heartInkLeft - (icon.x + size)).toBe(FLY_REACH_ICON_GAP);
+    expect(heartInkLeft - (icon.x + size)).toBe(ICON_LABEL_GAP);
     expect(icon.y + size / 2).toBe(heart.y);
   });
 });
@@ -228,12 +234,12 @@ describe("a chip stacked over a dog's heart pop", () => {
     ["fx-heart-gain", "fx-heart-loss"].map((art) => ({ art, block, kind })),
   );
 
-  it.each(cases)("sets $kind's bottom 2 rows over $art's top opaque row", ({ art, block }) => {
+  it.each(cases)("keeps the shared gap above $art for $kind", ({ art, block }) => {
     const inkTop = popInkTop(art);
     const frame = heartPopFrame(DOG);
     const placed = stackOverPop({ frame, inkTop }, block, WALK_TOP);
     expect(placed.frame).toEqual(frame);
-    expect(frame.y + inkTop - placed.bottom).toBe(2);
+    expect(frame.y + inkTop - placed.bottom).toBe(ICON_LABEL_GAP);
     expect(placed.bottom - block).toBeGreaterThanOrEqual(WALK_TOP);
   });
 
@@ -245,7 +251,7 @@ describe("a chip stacked over a dog's heart pop", () => {
       const placed = stackOverPop({ frame, inkTop }, block, WALK_TOP);
       expect(placed.bottom - block).toBe(WALK_TOP);
       expect(placed.frame.x).toBe(frame.x);
-      expect(placed.frame.y + inkTop - placed.bottom).toBe(2);
+      expect(placed.frame.y + inkTop - placed.bottom).toBe(ICON_LABEL_GAP);
       expect(stackOverPop({ frame, inkTop }, block).frame).toEqual(frame);
     },
   );

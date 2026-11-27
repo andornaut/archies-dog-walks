@@ -247,12 +247,11 @@ export class HeartFeedback {
     if (label.collision !== undefined) {
       const { forgivenAtMs, head } = label.collision;
       const topEdge = SCREEN_LAYOUT.walkView.y;
-      const slots = [{ ...size, padX: CHIP_PAD }];
+      const slots = [size];
       if (forgivenAtMs !== undefined) {
         const ink = lineInk(this.hooks.painter.fonts.body, gameData.runText.forgiven, TEXT_SCALE);
         slots.push({
           height: Math.max(CHANGE_CHIP.height, ink.bottom - ink.top + 2 * CHANGE_CHIP.padY),
-          padX: CHANGE_CHIP.padX,
           width: ink.right - ink.left + 2 * CHANGE_CHIP.padX,
         });
       }
