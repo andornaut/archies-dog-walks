@@ -133,3 +133,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0282 | Apply selection colours immediately throughout the interface          | [adw-0282.md](../work/adw-0282.md) |
 | adw-0283 | Show gameplay and menu controls on the landing page                   | [adw-0283.md](../work/adw-0283.md) |
 | adw-0284 | Organize the homepage around a compact shared structure               | [adw-0284.md](../work/adw-0284.md) |
+| adw-0286 | Simplify the public homepage and remove Tuning and Gallery            | [adw-0286.md](../work/adw-0286.md) |

@@ -83,3 +83,4 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0273 | Complete keyboard navigation across the game                                 | [adw-0273.md](../work/adw-0273.md) |
 | adw-0278 | Reduce active-play frame-interval p99 by at least 10%                        | [adw-0278.md](../work/adw-0278.md) |
 | adw-0285 | Keep published update manifests tied to their source commit                  | [adw-0285.md](../work/adw-0285.md) |
+| adw-0287 | Standardize the project documentation navigation                             | [adw-0287.md](../work/adw-0287.md) |
