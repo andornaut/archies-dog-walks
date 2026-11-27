@@ -1,12 +1,7 @@
 // The security headers the build writes to dist/_headers, which Cloudflare serves with every
 // static asset. securityHeadersPlugin adds the hashes of each page's inline <script> and
 // <style> blocks to its rule's policy, so this module names only the sources a page loads.
-import type {
-  Directives,
-  HeaderList,
-  HtmlPage,
-  PageRule,
-} from "@andornaut/game-kit/build/securityHeaders";
+import type { Directives, HeaderList, PageRule } from "@andornaut/game-kit/build/securityHeaders";
 import { BUILD_POINTER_URL } from "@andornaut/game-kit/runtime/web/pwa/buildContract";
 
 // Where the build writes its content-hashed files, as a _headers path pattern.
@@ -107,19 +102,3 @@ export const PAGE_RULES: readonly PageRule[] = [
   { comment: "The home page.", directives: { ...GOOGLE_FONTS, ...WEBSITE_ANALYTICS }, path: "/" },
   { comment: "The game.", directives: {}, path: "/play/*" },
 ];
-
-const NAV_SCRIPT_PATTERN = /<script\b[^>]*\ssrc\s*=\s*["']?\/nav\.js["'\s>]/i;
-const NAV_STYLESHEET_PATTERN = /<link\b[^>]*\shref\s*=\s*["']?\/nav\.css["'\s>]/i;
-
-// Whether a page loads /nav.js without linking /nav.css. The script builds the site nav bar but
-// leaves its CSS to the page, since the CSP has no hash for a <style> a script injects.
-export function navWithoutStylesheet(html: string): boolean {
-  return NAV_SCRIPT_PATTERN.test(html) && !NAV_STYLESHEET_PATTERN.test(html);
-}
-
-// Why the build must fail for a page, or undefined when it need not.
-export function pageProblem({ fileName, html }: HtmlPage): string | undefined {
-  return navWithoutStylesheet(html)
-    ? `${fileName} loads /nav.js but does not link /nav.css, so its nav bar would be unstyled`
-    : undefined;
-}

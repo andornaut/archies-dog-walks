@@ -45,7 +45,7 @@ describe("scriptInlineStyles", () => {
     'el.setAttribute("aria-label", "style")',
     'el.setAttribute(name, "color: red")',
     '// document.createElement("style")',
-    'el.innerHTML = "<link rel=stylesheet href=/nav.css>"',
+    'el.innerHTML = "<link rel=stylesheet href=/controls.css>"',
   ])("allows %s", (code) => {
     expect(whatIn(code)).toEqual([]);
   });

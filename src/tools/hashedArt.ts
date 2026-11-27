@@ -23,8 +23,8 @@ import {
 // map is empty, so every file loads from its own path there.
 export const ART_FILES_MODULE = "virtual:art-files";
 
-// The build's ArtFileMap as JSON, under /art/, for the art gallery (public/art/index.html), which
-// no build step compiles: each art file's path under /art/ to its hashed file's URL (artFilesJson).
+// The build's ArtFileMap as JSON, under /art/, for art tooling: each art file's path
+// under /art/ to its hashed file's URL (artFilesJson).
 // The dev server serves it empty, since there every file loads at its own path.
 export const ART_FILES_JSON = "art-files.json";
 

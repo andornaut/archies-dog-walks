@@ -7,7 +7,6 @@ import {
   FILE_RULES,
   HASHED_ASSET_PATH,
   PAGE_RULES,
-  pageProblem,
 } from "../../headers/securityPolicy.ts";
 
 const HEADING =
@@ -17,12 +16,10 @@ const HEADING =
 // The kit's security headers plugin with the game's policy (securityPolicy.ts): writes
 // dist/_headers with the common headers on every path, the file rules (a year's caching for
 // hashed build output, a type for font descriptors) and a Content-Security-Policy per page rule.
-// Fails the build for a page that loads nav.js without nav.css, and for an unhashed file under
-// the hashed asset path.
+// Fails the build for an unhashed file under the hashed asset path.
 export function securityHeadersPlugin(): Plugin {
   return kit.securityHeadersPlugin({
     base: BASE_DIRECTIVES,
-    checkPage: pageProblem,
     fileRules: [COMMON_RULE, ...FILE_RULES],
     hashedAssetPath: HASHED_ASSET_PATH,
     heading: HEADING,

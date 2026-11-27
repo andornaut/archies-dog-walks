@@ -5,26 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { CACHE_POLICY } from "../pwa/cachePolicy.ts";
 import { hashedArtFileName } from "../tools/hashedArt.ts";
-import { BASE_DIRECTIVES, FILE_RULES, navWithoutStylesheet, PAGE_RULES } from "./securityPolicy.ts";
-
-describe("navWithoutStylesheet", () => {
-  const pages: [string, string, boolean][] = [
-    ["nav.js without nav.css", `<script src="/nav.js" defer></script>`, true],
-    [
-      "nav.js with nav.css",
-      `<link rel="stylesheet" href="/nav.css" />
-        <script src="/nav.js" defer></script>`,
-      false,
-    ],
-    ["no nav", `<script src="/main.js"></script>`, false],
-    ["a script whose name only ends in nav.js", `<script src="/sidenav.js"></script>`, false],
-  ];
-
-  it("flags only a page with nav.js and no nav.css", () => {
-    const wrong = pages.filter(([, html, expected]) => navWithoutStylesheet(html) !== expected);
-    expect(wrong.map(([name]) => name)).toEqual([]);
-  });
-});
+import { BASE_DIRECTIVES, FILE_RULES, PAGE_RULES } from "./securityPolicy.ts";
 
 describe("FILE_RULES", () => {
   // The headers the file rules set on a path, as Cloudflare applies them.
