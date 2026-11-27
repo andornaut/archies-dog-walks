@@ -16,9 +16,9 @@ import {
 import {
   cardNumberForKey,
   isConfirmKey,
-  isPauseKey,
   keyNumbersShown,
   menuKeyActs,
+  sceneKeyAllowed,
 } from "../input/index.ts";
 import type { DomQuestionPanel } from "../ui/dom/index.ts";
 import { displayBitmapFont } from "../ui/phaser/index.ts";
@@ -36,7 +36,7 @@ export interface ZoneCelebrationSceneData extends OverlayData {
   celebration: ZoneCelebration;
   // Called once the celebration has closed.
   onDone: () => void;
-  // Opens the pause menu over the celebration, which pauses it, as P and Escape do; the run
+  // Opens the pause menu over the celebration, which pauses it, as P does; the run
   // scene opens it on the phone's back button.
   openPause: () => void;
 }
@@ -74,12 +74,21 @@ export class ZoneCelebrationScene extends Scene {
       done: data.onDone,
     });
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      if (!nativeSceneAccepts(this) || !menuKeyActs(event.repeat, event.code)) {
+      if (!nativeSceneAccepts(this) || !sceneKeyAllowed(event)) {
         return;
       }
-      if (isPauseKey(event.code)) {
+      if (event.code === "Escape") {
+        event.preventDefault();
+        return;
+      }
+      if (!menuKeyActs(event.repeat, event.code)) {
+        return;
+      }
+      if (event.code === "KeyP") {
+        event.preventDefault();
         data.openPause();
       } else if (isConfirmKey(event.code) || cardNumberForKey(1, event.code) !== undefined) {
+        event.preventDefault();
         finish();
       }
     });
