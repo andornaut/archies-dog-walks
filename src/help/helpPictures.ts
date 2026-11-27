@@ -387,18 +387,18 @@ function owners(data: GameData): HelpPicture {
     dog: lead,
     kind: "hearts",
   };
-  const roadEnd = SCREEN.roadView.y + SCREEN.roadView.height;
-  const hudHeight = SCREEN_CONFIG.height - roadEnd;
+  const hudTop = itemAt(SCREEN.dogSlots, 0).y;
+  const hudHeight = SCREEN_CONFIG.height - hudTop;
   const road = roadStrip(HELP_PICTURE_HEIGHT - hudHeight);
   return {
     ...STILL,
     changes: [change],
     collisionLead: lead,
     hud: true,
-    // Trade three rows of road below the walker's feet for headroom, keeping the full HUD.
+    // Trade rows below the walker's feet and the gap above the cards for headroom.
     strips: [
       { ...road, screenY: road.screenY - cueMargin },
-      { height: hudHeight, screenY: roadEnd },
+      { height: hudHeight, screenY: hudTop },
     ],
     walk: walkIn(
       { ...started, pack, zoneDistance: pixels(zoneLength(data) * zoneFraction) },
