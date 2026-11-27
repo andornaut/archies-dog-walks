@@ -3,10 +3,10 @@ import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 
-import { DETAIL_WELL_KEY, ownerFaceKey } from "../assets/index.ts";
-import { BUTTON_SIZE, type GameData } from "../data/index.ts";
-import { MENU_TEXT } from "../data/menuText.ts";
-import { withNamePills } from "../presentation/index.ts";
+import { DETAIL_WELL_KEY, ownerFaceKey } from "../../assets/index.ts";
+import { BUTTON_SIZE, type GameData } from "../../data/index.ts";
+import { MENU_TEXT } from "../../data/menuText.ts";
+import { withNamePills } from "../../presentation/index.ts";
 import {
   barTitleRoom,
   cardTitleRow,
@@ -23,15 +23,15 @@ import {
   type QuestionPanelView,
   separatorBetween,
   TEXT_SCALE,
-} from "../ui/index.ts";
+} from "../../ui/index.ts";
+import { HOME_LAYOUT } from "../homeGeometry.ts";
 import { type DetailCard, type DetailPart, detailParts, type DetailPicture } from "./detail.ts";
 import {
   cardTextRooms,
   detailCardLayout,
   detailOwner,
   detailOwnerHeight,
-  HOME_LAYOUT,
-} from "./homeLayout.ts";
+} from "./detailCardLayout.ts";
 
 // A detail card view for native held-item and walk explanation panels.
 // Every rectangle and text origin is in logical game pixels.

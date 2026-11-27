@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { gameData } from "../data/index.ts";
-import type { Owned } from "../save/schema.ts";
-import { TEST_TUNING } from "../testing/tuning.ts";
-import { cents } from "../units.ts";
+import { gameData } from "../../data/index.ts";
+import type { Owned } from "../../save/schema.ts";
+import { TEST_TUNING } from "../../testing/tuning.ts";
+import { cents } from "../../units.ts";
 import { dogDetail, gearDetail } from "./detail.ts";
 
 const data = { ...gameData, tuning: TEST_TUNING };

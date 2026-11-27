@@ -25,7 +25,7 @@ export {
   dogDetail,
   gearDetail,
   walkerDetail,
-} from "./detail.ts";
+} from "./details/detail.ts";
 export {
   type DetailArt,
   type DetailArtSize,
@@ -33,7 +33,8 @@ export {
   detailCardView,
   type DetailMeasure,
   type DetailText,
-} from "./detailCardView.ts";
+} from "./details/detailCardView.ts";
+export { type GearPictureFallback, gearPictureFallback } from "./details/gearPictureView.ts";
 export { END_LAYOUT, QUIP_TEXT_ROOM } from "./endLayout.ts";
 export {
   type EndMeasure,
@@ -53,7 +54,6 @@ export {
   shakeOffset,
 } from "./feedback.ts";
 export { type Focus, moveFocus } from "./focus.ts";
-export { type GearPictureFallback, gearPictureFallback } from "./gearPictureView.ts";
 export {
   dogInfo,
   gearByPrice,

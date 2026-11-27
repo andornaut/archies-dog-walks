@@ -1,9 +1,9 @@
 import { fillLine } from "@andornaut/game-kit/runtime/lines";
 
-import { HOME_TEXT_FIELDS } from "../content/index.ts";
-import type { DogId, GearId, WalkerId } from "../data/ids.ts";
-import type { GameData } from "../data/index.ts";
-import { dollarText } from "../presentation/index.ts";
+import { HOME_TEXT_FIELDS } from "../../content/index.ts";
+import type { DogId, GearId, WalkerId } from "../../data/ids.ts";
+import type { GameData } from "../../data/index.ts";
+import { dollarText } from "../../presentation/index.ts";
 import {
   capitalize,
   dodgeInText,
@@ -12,11 +12,11 @@ import {
   SIZE_AGILITY,
   SIZE_NAMES,
   sizeHearts,
-} from "../rules/index.ts";
-import type { Owned } from "../save/index.ts";
-import type { Cents } from "../units.ts";
-import { type HomeLoadout, isAffordable, type Purchase, purchasePrice } from "./home.ts";
-import { walkerDetailLines, walkerLockedLine } from "./walkers.ts";
+} from "../../rules/index.ts";
+import type { Owned } from "../../save/index.ts";
+import type { Cents } from "../../units.ts";
+import { type HomeLoadout, isAffordable, type Purchase, purchasePrice } from "../home.ts";
+import { walkerDetailLines, walkerLockedLine } from "../walkers.ts";
 
 type DetailData = Pick<
   GameData,

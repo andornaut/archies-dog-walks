@@ -4,7 +4,7 @@ import { HOME_TEXT_FIELDS } from "../content/index.ts";
 import type { GameData } from "../data/index.ts";
 import { dollarText } from "../presentation/index.ts";
 import type { SaveDocument } from "../save/index.ts";
-import { type DetailCard, dogDetail, gearDetail } from "./detail.ts";
+import { type DetailCard, dogDetail, gearDetail } from "./details/detail.ts";
 import type { HomeLoadout, Purchase } from "./home.ts";
 import { type PendingPurchase, requestPurchase } from "./purchaseConfirm.ts";
 import { slotRows } from "./shop.ts";

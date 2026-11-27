@@ -41,7 +41,7 @@ import {
   dogDetail,
   gearDetail,
   walkerDetail,
-} from "./detail.ts";
+} from "./details/detail.ts";
 import { FEEDBACK } from "./feedback.ts";
 import { overlayRegion } from "./homeBar.ts";
 import {

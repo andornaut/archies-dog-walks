@@ -7,7 +7,7 @@ export {
   detailOwner,
   detailOwnerHeight,
   type DetailRow,
-} from "./detailCardLayout.ts";
+} from "./details/detailCardLayout.ts";
 export {
   HOME_BAR_BUTTONS,
   HOME_LAYOUT,

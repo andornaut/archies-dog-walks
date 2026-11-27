@@ -2,26 +2,26 @@ import { fillNames } from "@andornaut/game-kit/runtime/lines";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { describe, expect, it } from "vitest";
 
-import { homeLine } from "../content/homeText.ts";
-import { gameData } from "../data/index.ts";
-import type { DogId, Size, WalkerId } from "../data/types.ts";
-import { dollarText } from "../presentation/currency.ts";
-import { sizeHearts } from "../rules/dogs.ts";
+import { homeLine } from "../../content/homeText.ts";
+import { gameData } from "../../data/index.ts";
+import type { DogId, Size, WalkerId } from "../../data/types.ts";
+import { dollarText } from "../../presentation/currency.ts";
+import { sizeHearts } from "../../rules/dogs.ts";
 import {
   capitalize,
   dodgeInText,
   effectText,
   laneSpeedText,
   SIZE_NAMES,
-} from "../rules/effectText.ts";
-import { walkerGoal } from "../rules/walkers.ts";
-import type { Owned } from "../save/schema.ts";
-import { STARTER_DOGS } from "../testing/saves.ts";
-import { TEST_TUNING } from "../testing/tuning.ts";
-import { cents } from "../units.ts";
+} from "../../rules/effectText.ts";
+import { walkerGoal } from "../../rules/walkers.ts";
+import type { Owned } from "../../save/schema.ts";
+import { STARTER_DOGS } from "../../testing/saves.ts";
+import { TEST_TUNING } from "../../testing/tuning.ts";
+import { cents } from "../../units.ts";
+import { purchasePrice } from "../home.ts";
+import { walkerDetailLines } from "../walkers.ts";
 import { detailParts, dogDetail, gearDetail, walkerDetail } from "./detail.ts";
-import { purchasePrice } from "./home.ts";
-import { walkerDetailLines } from "./walkers.ts";
 
 const data = { ...gameData, tuning: TEST_TUNING };
 const dollars = (amount: number) => cents(amount * 100);

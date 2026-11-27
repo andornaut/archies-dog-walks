@@ -15,7 +15,7 @@ import {
   TEXT_SCALE,
 } from "../ui/index.ts";
 import { BADGE_STRIP, BADGE_TEXT_COLOURS, type BadgeView } from "./badgesView.ts";
-import type { DetailArt, DetailMeasure, DetailText } from "./detailCardView.ts";
+import type { DetailArt, DetailMeasure, DetailText } from "./details/detailCardView.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import type { PageFill } from "./shopPageView.ts";
 import { detailPanelHeight, detailTextTops, STATS_LAYOUT } from "./statsLayout.ts";

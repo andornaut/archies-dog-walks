@@ -16,7 +16,7 @@ import { modalCardView, panelTitle } from "../ui/modal/view.ts";
 import { navigationMenuWidth } from "../ui/navigationMenu.ts";
 import { MODAL_TITLE_SCALE } from "../ui/textFit.ts";
 import { BADGE_STRIP, celebrationTitle, stripUnderClose } from "./badgesView.ts";
-import { detailCardView, type DetailMeasure } from "./detailCardView.ts";
+import { detailCardView, type DetailMeasure } from "./details/detailCardView.ts";
 import { overlayRegion } from "./homeBar.ts";
 import { updateModalLayout } from "./homeLayout.ts";
 import { installStepsLayout } from "./settings.ts";

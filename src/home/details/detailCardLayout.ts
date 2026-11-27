@@ -1,10 +1,10 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { SCREEN_CONFIG } from "../data/index.ts";
-import { ownerPhotoRect } from "../presentation/index.ts";
-import { helpCapDy, MODAL, modalFamilyWidth, modalRect, TEXT_SCALE } from "../ui/index.ts";
-import { HOME_LAYOUT } from "./homeGeometry.ts";
+import { SCREEN_CONFIG } from "../../data/index.ts";
+import { ownerPhotoRect } from "../../presentation/index.ts";
+import { helpCapDy, MODAL, modalFamilyWidth, modalRect, TEXT_SCALE } from "../../ui/index.ts";
+import { HOME_LAYOUT } from "../homeGeometry.ts";
 
 // The owner's row on a dog's card, with its role on roleLines lines.
 interface OwnerRow {

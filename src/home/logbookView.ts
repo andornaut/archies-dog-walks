@@ -12,7 +12,12 @@ import {
   earnedText,
   wallCell,
 } from "./badgesView.ts";
-import type { DetailArt, DetailFramed, DetailMeasure, DetailText } from "./detailCardView.ts";
+import type {
+  DetailArt,
+  DetailFramed,
+  DetailMeasure,
+  DetailText,
+} from "./details/detailCardView.ts";
 import { type PageFill, type ShopPageView, shopPageView } from "./shopPageView.ts";
 import {
   badgesBottom,

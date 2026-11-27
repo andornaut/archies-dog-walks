@@ -28,7 +28,7 @@ import {
   dogDetail,
   gearDetail,
   walkerDetail,
-} from "./detail.ts";
+} from "./details/detail.ts";
 import { quipCapsTop, quipTextY } from "./endLayout.ts";
 import { CARD_TEXT_ROOM, detailCardLayout, detailOwner, type DetailRow } from "./homeLayout.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";

@@ -14,7 +14,7 @@ import type { PanelButton } from "../ui/modal/types.ts";
 import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
 import { badgeCardView } from "./badgeCardView.ts";
 import { badgeWall } from "./badgesView.ts";
-import { detailCardView, type DetailMeasure } from "./detailCardView.ts";
+import { detailCardView, type DetailMeasure } from "./details/detailCardView.ts";
 import { overlayRegion } from "./homeBar.ts";
 import { installStepsLayout, settingsLayout } from "./settings.ts";
 import { SETTING_ROWS, type SettingsMeasure, settingsView } from "./settingsView.ts";

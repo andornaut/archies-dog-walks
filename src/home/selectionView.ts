@@ -19,7 +19,7 @@ import {
   selectLook,
   TEXT_SCALE,
 } from "../ui/index.ts";
-import { type GearPictureFallback, gearPictureFallback } from "./gearPictureView.ts";
+import { type GearPictureFallback, gearPictureFallback } from "./details/gearPictureView.ts";
 import {
   type HomeLoadout,
   isAffordable,

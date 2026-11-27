@@ -20,7 +20,12 @@ import {
   textOnLines,
 } from "../ui/index.ts";
 import { celebrationTitle } from "./badgesView.ts";
-import type { DetailArt, DetailFramed, DetailMeasure, DetailText } from "./detailCardView.ts";
+import type {
+  DetailArt,
+  DetailFramed,
+  DetailMeasure,
+  DetailText,
+} from "./details/detailCardView.ts";
 import {
   END_LAYOUT,
   endBadgeRows,
