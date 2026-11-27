@@ -70,7 +70,7 @@ Choose one content rectangle for each page. Derive its outer margins, button edg
 | SHOP_LAYOUT.row.x | 8; width 330, ending at x = 338              | px             | Page inset: heading, tab span and row left edge                         | [shop layout](../src/home/shopLayout.ts)   |
 | STATS_LAYOUT.rows | Shop heading left; shop row right at x = 338 | derived bounds | Logbook label/value columns                                             | [stats layout](../src/home/statsLayout.ts) |
 | SHOP_LAYOUT.list  | Top 144; height 348; bottom 492              | y px           | Shared scrolling viewport, x = 0 to the track less 2                    | [shop layout](../src/home/shopLayout.ts)   |
-| page.back         | 136.5,500,87,48                              | x,y,w,h px     | Content-sized Back with the current label, 12px above the screen's foot | [pageBack](../src/ui/pageLayout.ts)        |
+| page.back         | y = 500, h = 48, centred and content-sized   | y,h px         | Content-sized Back with the current label, 12px above the screen's foot | [pageBack](../src/ui/pageLayout.ts)        |
 
 Shop, Logbook, Help, Settings and Cheats are frameless pages under the live top bar: each fills `(0,40,360,520)` edge to edge with no frame, border, margin or close control, and the content-sized Back (`page.back`) is its only leave. End's Back to title is a separate role: the results screen's main next step, a content-sized primary centred in Start walk's slot at y = 508, 48px high. Their content takes one 8px side inset, and a scrollbar's track sits at x = 344–351. Shop and Logbook share their page and list geometry. Use `shopListFrame` and `statsListFrame` for the content room. Settings and Cheats share the [settings page geometry](#settings-and-cheats-pages). Other full-screen pages retain their own bounds.
 
@@ -88,14 +88,14 @@ Pet shop rows, Logbook rows and the badge wall share one row pattern:
 
 [`HELP_LAYOUT`](../src/help/helpLayout.ts) is a frameless page `(0,40,360,520)` in dark brown under the live top bar, with an 8px side inset, separate from the ordinary modal families; its control rules are in [Controls](controls.md#sizing-and-spacing). The picture's chrome card `(8,48,344,234)` holds the well `(14,54,332,200)` round the full-size `(16,56,328,196)` picture, and the caption's capitals sit at y = 260, centred on the well. The amber 2× topic title is the page's title: its capitals sit at y = 307, centred across the screen on its visible ink, and every topic title fits the 344px content width on one line, which a test enforces. The body starts at the title's lowest ink plus the label/help gap and flows left-aligned at x = 8–337 (330px) in the body-only viewport `(0,325,360,108)`: six whole 18px-pitch lines, ending at least `MODAL.gap` above the pager row. Every current body fits whole; a longer one scrolls only that viewport, beside the track at x = 344–351.
 
-The pager is one 48px row at y = 444: Previous, the six page dots and Next, with 8 between the dots and each button, centred in the 328px face room (x = 16–344). The widest painted row is 324px. Each button is its label ink plus 2 × 16. The dots are 8×8, 4 apart (68 wide), centred down the row; their art is in the [style guide](style-guide.md#ui). The press areas extend 4px around their faces, leaving a 4px gap from the dots. On the last page, their outer edges reach x = 14 and x = 346. The row has no stacked fallback: a label that breaks the fit fails the layout test rather than clipping. With the current labels:
+The pager is one 48px row at y = 444: Previous, the six page dots and Next, with 8 between the dots and each button, centred in the 328px face room (x = 16–344). The widest painted row is 306px. Each button is its label ink plus 2 × 16. The dots are 8×8, 4 apart (68 wide), centred down the row; their art is in the [style guide](style-guide.md#ui). The press areas extend 4px around their faces, leaving a 4px gap from the dots. On the last page, their outer edges reach x = 23 and x = 337. The row has no stacked fallback: a label that breaks the fit fails the layout test rather than clipping. With the current labels:
 
 | Pages  | Previous          | Dots             | Next or completion action |
 | ------ | ----------------- | ---------------- | ------------------------- |
-| 1 to 5 | `(24,444,140,48)` | `(172,464,68,8)` | `(248,444,87,48)`         |
-| 6      | `(18,444,140,48)` | `(166,464,68,8)` | `(242,444,100,48)`        |
+| 1 to 5 | `(32,444,129,48)` | `(169,464,68,8)` | `(245,444,82,48)`         |
+| 6      | `(27,444,129,48)` | `(164,464,68,8)` | `(240,444,93,48)`         |
 
-Back is the content-sized primary `page.back`, `(136.5,500,87,48)`, centred below the pager.
+Back is the content-sized primary `page.back`, 48px high and centred below the pager at y = 500.
 
 ### Settings and Cheats pages
 
@@ -105,11 +105,11 @@ Settings and Cheats are frameless pages `(0,40,360,520)` on Game Kit's page fram
 - **Title:** the page title row `(16,64,328,15)`, a 3× heading with its ink centred at x = 180 and no X.
 - **Body viewport:** from 24 below the title's ink (y = 103) to 8 above the next fixed element: the version label on Settings, Back on Cheats. Only the body scrolls.
 - **Separators:** the shared 1px [rule](#spacing-tokens). Settings puts it between targets and leaves 8px after the rule before Install. Cheats keeps the standard 8px clearance on each side.
-- **Back:** `page.back`, `(136.5,500,87,48)`.
+- **Back:** `page.back`, content-sized and centred at y = 500 with a 48px height.
 
 **Settings.** Use a single column across x = 8–338. Settings uses a 24px glyph box at x = 14 and labels at x = 42, one box plus `ICON_LABEL_GAP` apart. Keep the left label and note stack and the right [switch and state stack](#switch-rows) centred independently. Fit Body 2× notes after reserving `ICON_LABEL_GAP` and the greatest of the switch width and the two state words’ ink widths. The Sound note fits on one line in a 51px row. Slider lanes run from x = 42 to x = 330, with the value aligned at x = 330. Leave 16 logical pixels above the leading glyph's first ink and below the bottom of the slider's knob. Install is its row's sole action, one [ink group](#icons-beside-labels) centred on the row. The version label is metadata above the dismissal footer: its ink centred at x = 180, its ink bottom at y = 492, 8 above Back's face, fixed.
 
-**Cheats.** Two columns 16 apart (`BUTTON_SIZE.gap`), each 157 wide, at x = 8–165 and x = 181–338, used in the neighbourhood grid and the Unlocks and Money columns when the labels fit. The Unlocks and Money headings start their ink on their columns' left edges. Measure labels at the ordinary 2.5× action scale. Wrap at spaces into balanced lines and grow past the 48px minimum when the ink needs more height. Stack only a paired row whose longest word exceeds its column's ink room. Centre those equal-width buttons with the standard 8px stacked gap. Invincible owners follows the [Cheats switch-row layout](#switch-rows). Reset save is its row’s sole action. The Reset save? confirmation is an ordinary [modal](#modals) over the page. See [Cheats layout](../src/cheats/cheatsView.ts) and [scroll placement](../src/hud/dom/cheats.ts).
+**Cheats.** Two columns 16 apart (`BUTTON_SIZE.gap`), each 157 wide, at x = 8–165 and x = 181–338, used in the neighbourhood grid and the Unlocks and Money columns when the labels fit. The Unlocks and Money headings start their ink on their columns' left edges. Measure labels at the ordinary 2.25× action scale. Wrap at spaces into balanced lines and grow past the 48px minimum when the ink needs more height. Stack only a paired row whose longest word exceeds its column's ink room. Centre those equal-width buttons with the standard 8px stacked gap. Invincible owners follows the [Cheats switch-row layout](#switch-rows). Reset save is its row’s sole action. The Reset save? confirmation is an ordinary [modal](#modals) over the page. See [Cheats layout](../src/cheats/cheatsView.ts) and [scroll placement](../src/hud/dom/cheats.ts).
 
 ## Groups/columns
 
@@ -171,7 +171,7 @@ The Settings and Cheats state word keeps its own [switch-row](#switch-rows) plac
 
 | Family                                 | Backing                                                        | Capitals                                            | Above / below            |
 | -------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------- | ------------------------ |
-| Ordinary action buttons                | Whole painted face, 48px minimum                               | Centre the visible ink block at 2.5×                | Equal measured clearance |
+| Ordinary action buttons                | Whole painted face, 48px minimum                               | Centre the visible ink block at 2.25×               | Equal measured clearance |
 | Start walk (3× capitals)               | Whole 48px painted face                                        | y + 16.5 for 15px capitals                          | 16.5 / 16.5              |
 | Page tabs                              | 28-row face with a 4-row lip                                   | y + 7                                               | 5 / 6                    |
 | Dog card Empty                         | Inside the dashed outline: card rows 1 to 68, columns 2 to 117 | y + 32                                              | 31 / 32                  |
@@ -217,15 +217,11 @@ Large contains 296px of body room and Medium 232px after 16px padding on both si
 
 Detail cards place the portrait on the left and the left-aligned description on its right, with compact dog identity in the same right column. Keep equal outer insets and measure the text room from the right column's actual origin to the inside edge of the right inset. Wrap full-size text at the measured limit. Use the existing Medium and Large families to fit the complete card. Keep the owner block, status and footer below both columns in that order.
 
-Use dedicated `MODAL_TITLE_SCALE = 3` for ordinary modal headings and the Shop, Logbook, Settings and Cheats page titles. Measure actual glyph ink with [titleRole](../src/ui/modal/titleRole.ts), keeping 24px above and below it. Capital ink is 15px and its header 63px; punctuation can increase both. Wrap at a 36px pitch and grow header/body/panel height from actual ink. Body stays at 2×. Ordinary action labels use 2.5×. End-results badge-strip headings retain their 2× section role. Modal controls, dismissal guards and safe keyboard choices remain defined in [Controls](controls.md#sizing-and-spacing). Width measurements must include every present group and action, not only the title.
+Use dedicated `MODAL_TITLE_SCALE = 3` for ordinary modal headings and the Shop, Logbook, Settings and Cheats page titles. Measure actual glyph ink with [titleRole](../src/ui/modal/titleRole.ts), keeping 24px above and below it. Capital ink is 15px and its header 63px; punctuation can increase both. Wrap at a 36px pitch and grow header/body/panel height from actual ink. Body stays at 2×. Ordinary action labels use 2.25×. End-results badge-strip headings retain their 2× section role. Modal controls, dismissal guards and safe keyboard choices remain defined in [Controls](controls.md#sizing-and-spacing). Width measurements must include every present group and action, not only the title.
 
 ### Switch rows
 
-Both pages use a 32×16 switch. The whole row is the target, with a 48px minimum.
-
-**Settings.** Centre the left label and note stack, including the leading icon, independently of the right switch and state stack. Measure the taller stack with 4px of padding above and below. The state's visible ink sits 4 logical pixels below the switch. Centre the state's visible ink under the painted switch. Align the right edge of their visible union to x = 330, the same line as the slider values. Their projected centres agree within half an art pixel after rounding.
-
-**Cheats.** The leading icon or label starts 6px from the row's left. Inset the switch 15px from the right edge and 9px below the row's top. Centre the state word's visible ink under the switch with an 8px gap. Label capitals start 12px below the row's top.
+Settings and Cheats share a 32×16 switch with a 48px minimum row target. Centre the left label and any note stack independently of the right switch and state stack. Place the state's visible ink 4 logical pixels below the painted switch and centre it under the switch. Align the right edge of the two elements' visible union to x = 330, the same line as the Settings slider values. Their projected centres agree within half an art pixel after rounding. Settings measures switch rows with 4px of padding above and below the taller stack. The Cheats switch row starts its label 6px from the left edge.
 
 ## HUD/overlays
 
