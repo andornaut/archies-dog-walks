@@ -1,13 +1,25 @@
 # Archie documentation
 
-| Start here                            | What it covers                                            |
-| ------------------------------------- | --------------------------------------------------------- |
-| [Gameplay](design/gameplay/README.md) | Current rules, player copy, tuning and playtesting        |
-| [Design areas](design/README.md)      | Area ownership, topic guides and work indexes             |
-| [Work items](work/README.md)          | Approved scope, decisions, delivery and index conventions |
-| [Art](../art/README.md)               | Visual rules, assets and generation                       |
-| [Source](../src/README.md)            | Architecture, saves, data and tools                       |
-| [Planner](planner-work.md)            | Spawn planner contract and qualification                  |
+This directory describes the game's design, development and approved work. Start with a topic below; use the work records for scope and delivery evidence.
 
-The [gameplay rules pilot](audits/gameplay-rules-pilot.md) records the base revision and verification
-for the message strip priority rule.
+## Contents
+
+| Directory or guide            | Purpose                                                                                           |
+| ----------------------------- | ------------------------------------------------------------------------------------------------- |
+| [Audits](audits/)             | Scoped verification records, including the [gameplay rules pilot](audits/gameplay-rules-pilot.md) |
+| [Delivery](delivery.md)       | The scheduled gate, CI, deployment and build identity                                             |
+| [Design](design/README.md)    | Current rules, topic guides, area ownership and work indexes                                      |
+| [Development](development.md) | Local commands, checks, dependencies and source layout                                            |
+| [Planner](planner-work.md)    | Spawn planner contract and qualification                                                          |
+| [Work](work/README.md)        | Requests, approval, decisions, outcomes and index conventions                                     |
+
+## Related guides
+
+- [Art](../art/README.md): visual rules, assets and generation.
+- [Cross-game policies](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md): shared product, development and delivery rules.
+- [Gameplay](design/gameplay/README.md): rules, player copy, tuning and playtesting.
+- [Source](../src/README.md): architecture, saves, data and private development tools.
+
+## Navigation
+
+[Project](../README.md) · [Design](design/README.md) · [Work](work/README.md)

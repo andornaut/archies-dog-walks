@@ -5,79 +5,19 @@
 
 Archie's Dog Walks is a cozy pixel-art lane runner where you walk a pack of dogs through the neighbourhood, and every bump in the road counts: a plain bump costs an owner's heart, and a card obstacle turns into a choice. Built with [Phaser](https://phaser.io/) and TypeScript, and served as static files from [Cloudflare Workers](https://developers.cloudflare.com/workers/static-assets/).
 
-The deployment target is <https://archie.tristamittermayer.com/play/>, with Tuning at [`/tuning/`](https://archie.tristamittermayer.com/tuning/) and the art gallery at [`/art/`](https://archie.tristamittermayer.com/art/). The custom domain is configured in [`wrangler.jsonc`](wrangler.jsonc).
+Play at <https://archie.tristamittermayer.com/play/>. The custom domain is configured in [`wrangler.jsonc`](wrangler.jsonc).
 
-## Docs
+## Documentation
 
-[Archie's documentation](docs/README.md) links the game design, work records, art and implementation guides.
-[Cross-game policies](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md) define shared product, development and delivery rules.
+[Project documentation](docs/README.md) links the design, work records, art and implementation guides.
 
 ## Developing
 
-The project gate is `make check`. Make uses the shared launcher in `tests/container/run`, the pinned image recipe in `tests/container/Dockerfile`, and the project commands in `tests/container/check`.
-
-| Command                                              | Does                                                                                                   |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `make build`                                         | Export data, build `dist/`, verify deterministic art, then replace the ignored host `dist/` output     |
-| `make check`                                         | Run lint, test and build in isolated snapshots, without exporting generated files                      |
-| `make exec COMMAND='npm run format'`                 | Run an explicit writable checkout command; its marker blocks snapshot checks until execution is closed |
-| `make lint`                                          | TypeScript, ShellCheck, Prettier, ESLint and Markdownlint                                              |
-| `make test`                                          | Run the game tests with two workers by default                                                         |
-| `make test TEST_ARGS='src/home/modalLayout.test.ts'` | Run a focused selection                                                                                |
-
-The launcher admits each image build and check only below host load 20. It accounts for four CPUs and bounded memory, fingerprints the source snapshot, and rejects a result if source changes. `BUILD_OUTPUTS` and `TEST_OUTPUTS` declare ignored generated paths to export; aggregate `make check` exports none. `COMMAND` is an explicit command, not a source file or test selector.
-
-Native npm aliases call the project recipes directly in the current environment. This preserves use inside an existing delivery container and forwards `npm test -- <arguments>` unchanged. `npm run check` runs the whole chain (lint with TypeScript, the tests, and the build with the art check), `npm run typecheck` runs TypeScript alone, `npm run lint` runs ShellCheck 0.11.0 (on `PATH`; both check images supply it) and the three linters, and `npm run build` exports data before Vite. Make adds TypeScript to its lint category and deterministic art validation to its build category. The package has no host `prebuild` lifecycle hook.
-
-Development and art utilities retain their npm commands:
-
-| Command                                     | Does                                                                       |
-| ------------------------------------------- | -------------------------------------------------------------------------- |
-| `npm run art:depth-preview -- <key> [zone]` | Draw road sprites into `out/depth-preview/<key>/`                          |
-| `npm run art:manifest -- --check`           | Check the art manifest                                                     |
-| `npm run art:unused`                        | List unused art keys                                                       |
-| `npm run check:art`                         | Run the art tests                                                          |
-| `npm run dev`                               | Start the Vite dev server                                                  |
-| `npm run export:data -- --check`            | Check generated data exports                                               |
-| `npm run format`                            | Apply Prettier and ESLint fixes                                            |
-| `npm run planner:acceptance -- <out-dir>`   | Run the approved planner acceptance batch ([src/README.md](src/README.md)) |
-| `npm run preview`                           | Build, then serve through Wrangler                                         |
-| `npm run simulate -- --help`                | Describe simulator options                                                 |
-| `npm run test:game-kit`                     | Run the game-owned game-kit consumer checks                                |
-
-The site's pages are in `pages/`, each at its URL's path (`pages/play/index.html` is `/play/`), and Vite bundles the TypeScript they load. `public/` is copied into the build unchanged (the nav bar, the icons and the art gallery, `public/art/index.html`), except the art exports, which the build writes content-hashed under `/assets/art/` and copies under `/art/` only where a site page names them. `shared/` holds the files art's tools and the game both read. The game imports shared helpers through `@andornaut/game-kit/runtime/...`, build tooling through `@andornaut/game-kit/build/...` and test helpers through `@andornaut/game-kit/test/...`, installed from the [game-kit release](https://github.com/andornaut/game-kit/releases) pinned in `package.json`. The installed package records its source revision in `SOURCE_COMMIT`.
-
-Art build tools are TypeScript modules in `art/tools/`, which Node runs directly on the [art-kit release](https://github.com/andornaut/art-kit/releases) pinned in `package.json`, for example
-`node art/tools/glyphs.ts build`.
-
-WORKAROUND: Parent-scoped development overrides pin Markdownlint `0.42.1` for [re2js security fixes](https://github.com/advisories/GHSA-gg6h-894w-4m9c), [KaTeX](https://github.com/advisories/GHSA-238p-pmpm-9mq7) `0.19.1` and [minimatch](https://github.com/advisories/GHSA-g3hv-75wg-m249) `11.0.3`. ESLint loads the cycle and extensions rules and the resolver through exported plugin subpaths because the full plugin imports an unused rule requiring the removed minimatch `makeRe` API ([eslint-plugin-import-x#569](https://github.com/un-ts/eslint-plugin-import-x/issues/569)). Keep cycle detection and required import extensions enabled. Remove each override when its parent range supports the patched version; restore the full plugin import when it supports minimatch 11.
-
-CI runs `make lint`, `make test` and `make build`, plus the AI attributions scan. A Changes job classifies each push: when every changed path is under `docs/`, only Lint and the attributions scan run and Test reports as skipped. Anything it cannot classify runs every job. The build reads only `pages/` and `public/`, and deployment uploads only `dist/`, so `docs/` is never served.
+Run `npm run dev` for local development and `make check` for the isolated project gate. See [development commands and tooling](docs/development.md).
 
 ## Deploying
 
-- [Cloudflare dashboard](https://dash.cloudflare.com/?to=/:account/workers/services/view/archies-dog-walks)
-
-Delivery runs on the [delivery-kit](https://github.com/andornaut/delivery-kit) release pinned in `package.json`, configured by [`delivery-kit.json`](delivery-kit.json). Its runner departs hourly at :10, Toronto time. While the one-minute host load is at or above `resources.loadLimit`, it re-checks the load every minute and departs once it falls below, for up to 15 minutes; after that it skips the slot and keeps `main` for the next one. A departure gates the local `main` HEAD in an isolated container of the gate image (`npm ci`, then the `lint`, `test` and `build` categories of `tests/container/check`, which Make also runs: type checking and lint, tests, and the build with the art check, capped at four CPUs and two test workers), pushes that exact commit to `main` as a fast-forward with the regular account's Git authentication, and watches the commit's required GitHub CI checks. There is no queue or batch: a `main` with nothing new does not depart. The runner's state is kept by game-coordinator, outside this repository.
-
-The gate image is the `toolchain` stage of `tests/container/Dockerfile`: the digest-pinned Node base at the version in `.nvmrc`, ShellCheck 0.11.0, SoX and ffmpeg at exact versions from a pinned Debian snapshot (so the sound builds reproduce byte for byte), and the non-root user 19001. It holds no project files, since the gate runs its own `npm ci`, so a dependency change never needs a new gate image. The `local-check` stage, which Make builds on demand, adds the locked dependencies at `/opt/check/node_modules`; `delivery-kit.json` never names it. A Node version change updates `.nvmrc` and the base digest together; the image build fails when they disagree. After a change to the `toolchain` stage, rebuild the gate image on the delivery host from the repository root:
-
-```sh
-node_version=$(sed 's/^v//' .nvmrc)
-mkdir -p out
-tests/container/admit build-image
-docker build --resource cpu-period=100000 --resource cpu-quota=400000 --resource memory=4g \
-  --build-arg NODE_VERSION="${node_version}" \
-  --target toolchain --tag "archie-check:node${node_version}-sox-ffmpeg" \
-  --file tests/container/Dockerfile tests/container \
-  --iidfile out/gate-image.id
-```
-
-`gate.image` in `delivery-kit.json` pins the gate image by its local image ID, so a retagged or pruned image cannot change what the gate runs. A rebuild from the same build cache reproduces the ID; a rebuild without it can produce a different one. When `out/gate-image.id` differs from the pin, check the new image and change the pin in a commit of its own. Keep the image tagged so a prune does not remove it. The runner loads `delivery-kit.json` once at startup, so a new pin takes effect only after an idle runner restart.
-
-When CI passes, the runner deploys the gated `dist/` through the Wrangler locked in that commit and existing account login, without rebuilding. The gate sets `WORKERS_CI_COMMIT_SHA` for the build label. A push whose every changed path matches `deploy.skipPattern` (Markdown, `art/` and `gameplay/`) skips deployment; exported assets under `public/art/` deploy. A red gate leaves `main` unpushed and that commit is never gated again; red CI is fixed forward with a new commit. A failed deployment keeps its gated build for a later departure. Cloudflare Workers Builds is disconnected, so the runner is the only deploy path, and nothing is pushed or deployed manually. The target account and Worker are pinned in `wrangler.jsonc`.
-
-Cloudflare serves `dist/` byte for byte, and `/.game-kit/build.json` with `Cache-Control: no-store` (`dist/_headers`). The game's files ship as gzip-compressed group archives (`/.game-kit/group-<sha256>.bin`, with decoded copies at `/.game-kit/archive-<sha256>-0.bin` for installed builds on game-kit 0.72.0 or earlier); the Worker (`src/pwa/originWorker.ts`) answers only requests no file matches, serving the game files kept only in the archives at their own URLs. The game's page installs the complete build from its archives before a first play and stages each new version in the background, fetching only the archives that changed, checks them against the SHA-256 and size in the pointer and the build's manifest (`/.game-kit/manifest-<version>.json`), and offers a version only once every file is stored. Any host-side rewrite of those bytes (HTML injection, analytics beacons, email obfuscation, image recompression) fails every install, so keep such Cloudflare features off for the domain.
+The existing delivery-kit runner gates and deploys checked source. See [delivery and deployment](docs/delivery.md).
 
 ## Licence
 

@@ -1,5 +1,7 @@
 # Work items
 
+This directory records requested scope and its outcome, separate from the current rules in [Design](../design/README.md).
+
 Each user request is one file, `docs/work/<id>.md`, approved or not. It records scope and milestones; live
 progress (claims, blocks, receipts and acceptance) stays in the work protocol state root. The
 [design index](../design/README.md) links each logical area. The [rules index](index/rules.md)
@@ -34,3 +36,7 @@ decided or delivered, and why, in a line or two each.
 - Docs-only changes run only the attribution and lint checks.
 - The game never serves or deploys `docs/`: the build reads `pages/` and `public/`, and
   deployment uploads only `dist/`.
+
+## Navigation
+
+[Documentation](../README.md) · [Design areas](../design/README.md) · [Rules index](index/rules.md) · [Project](../../README.md)
