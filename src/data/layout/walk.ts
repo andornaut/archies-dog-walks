@@ -1,10 +1,5 @@
 import { MAX_PACK_DOGS } from "../../packCapacity.ts";
-import {
-  FACE_SIZE,
-  ICON_LABEL_GAP,
-  LABEL_ICON,
-  UI_FUNCTION_ICON_SIZE,
-} from "./controls.ts";
+import { FACE_SIZE, ICON_LABEL_GAP, LABEL_ICON, UI_FUNCTION_ICON_SIZE } from "./controls.ts";
 
 // Walk HUD
 
