@@ -47,11 +47,16 @@ export function mountRoadBanner(
     centreX: 0,
     colour: font === "display" ? PALETTE.yellow : PALETTE.plum,
     font,
+    projection: "layout",
     scale,
     text,
   });
   const lines = [
-    { bitmap: view.title, face: HEADING_FACE, line: line("title", view.heading, 1) },
+    {
+      bitmap: view.title,
+      face: HEADING_FACE,
+      line: line("title", view.heading, HEADING_FACE.scale),
+    },
     {
       bitmap: view.nameFont.bitmap,
       face: NAME_FACE,

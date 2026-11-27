@@ -1,15 +1,17 @@
 import { EventEmitter } from "node:events";
 
+import { inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
-import type { Scene } from "phaser";
+import type { GameObjects, Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
 import { debuffIconKey } from "../../assets/iconKeys.ts";
-import { gameData } from "../../data/index.ts";
+import { gameData, ZONE_BANNER } from "../../data/index.ts";
 import { SCREEN_CONFIG } from "../../data/screen.ts";
 import type { ZoneId } from "../../data/types.ts";
 import { zoneBannerHeading } from "../../hud/zoneCelebration.ts";
 import type { RunState } from "../../state/runState.ts";
+import { gameFont } from "../../testing/fontInk.ts";
 import { liveSwitchRuns } from "../../testing/liveSwitch.ts";
 import { fadeAway } from "../uiKit.ts";
 import { popUpArt, showDebuffPopup, ZoneBanner } from "./roadBanners.ts";
@@ -22,17 +24,17 @@ vi.mock("phaser", () => ({
 
 vi.mock("../uiKit.ts", () => ({ fadeAway: vi.fn() }));
 
-// The banner's texts draw as the stub's bitmap texts, and with no bitmap font it mounts no DOM.
+// Use the authored font metrics and the stub's bitmap text draw calls.
 vi.mock("../../ui/phaser/pixelText.ts", () => ({
   addPixelText: (scene: Scene, x: number, y: number, text: string) =>
     scene.add.bitmapText(x, y, "title", text),
-  pixelBitmapFont: () => undefined,
+  pixelBitmapFont: () => gameFont("font-title"),
 }));
 vi.mock("../../ui/phaser/displayText.ts", () => ({
   addDisplayText: (scene: Scene, x: number, y: number, text: string) =>
     scene.add.bitmapText(x, y, "display", text),
-  displayBitmapFont: () => undefined,
-  hasDisplayFont: () => false,
+  displayBitmapFont: () => gameFont("font-display"),
+  hasDisplayFont: () => true,
 }));
 
 class Image extends EventEmitter {
@@ -140,6 +142,28 @@ describe("zone banner", () => {
       textures: { exists: () => true },
       tweens: { chain: vi.fn() },
     }) as unknown as Scene;
+
+  it("enlarges the entry heading and keeps the widest authored name inside the banner face", () => {
+    const font = gameFont("font-display");
+    const width = (name: string) => inkWidth(font, 1, name.toUpperCase());
+    const widest = gameData.world.zones.reduce((best, zone) =>
+      width(zone.name) > width(best.name) ? zone : best,
+    );
+    const scene = bannerScene();
+    const banner = new ZoneBanner(scene);
+    const run = liveSwitchRuns(["highPark"], widest.id, "cabbagetown").switched;
+    banner.show(run, true);
+    const container = scene.children.list.find(
+      (object): object is GameObjects.Container => object.type === "Container",
+    )!;
+    const [heading, name] = container.list.filter(
+      (object): object is GameObjects.BitmapText => object.type === "BitmapText",
+    );
+    expect(heading?.scaleX).toBe(ZONE_BANNER.headingFace.scale);
+    expect(name?.scaleX).toBeGreaterThan(1);
+    const inkWidthAtScale = (width(widest.name) + 2) * name!.scaleX;
+    expect(inkWidthAtScale).toBeLessThanOrEqual(ZONE_BANNER.nameFace.inkRoom);
+  });
 
   // A live switch keeps the walk's slot, so the banner names the chosen neighbourhood there, then
   // the next zone's, and a resumed walk's banner names the chosen one again.

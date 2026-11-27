@@ -1,4 +1,5 @@
 import { type Point, type Rect, rectAboveIn, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
+import { type BitmapFont, laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { Core, type GameObjects, type Scene, Scenes } from "phaser";
 
 import { domArtUrl } from "../../assets/files/index.ts";
@@ -9,7 +10,7 @@ import { zoneBannerHeading } from "../../hud/index.ts";
 import { currentZone } from "../../rules/index.ts";
 import type { RunState } from "../../state/index.ts";
 import { loadSheet, mountRoadBanner, uiLayer } from "../../ui/dom/index.ts";
-import { PALETTE } from "../../ui/index.ts";
+import { centredInkOffsets, PALETTE, plainMarks, TITLE_CAP_ROWS } from "../../ui/index.ts";
 import {
   addDisplayText,
   addPixelText,
@@ -26,8 +27,64 @@ import { DEPTH, LAYOUT } from "./stage.ts";
 const POPUP = { fadeMs: 1800, lift: 4, rise: 16 };
 const GEAR_POPUP_SCALE = 2;
 const BANNER = { holdMs: 1800, key: "ui-zone-banner", slideMs: 300 };
-const { plate: PLATE } = ZONE_BANNER;
+const { headingFace: HEADING, nameFace: NAME, plate: PLATE } = ZONE_BANNER;
 const ART_SOURCE = { artUrl: domArtUrl, loadSheet };
+
+type BannerFont = "display" | "title";
+
+// Display letters centre on their outline, which casts a two-pixel shadow to the right and down.
+const DISPLAY_SHADOW = 2;
+
+function bannerInk(
+  bitmap: BitmapFont | undefined,
+  font: BannerFont,
+  text: string,
+): Rect | undefined {
+  if (bitmap === undefined) {
+    return undefined;
+  }
+  const ink = laidGlyphs(bitmap, 1, plainMarks(text).toUpperCase()).flatMap(({ char, ink }) => {
+    const glyph = bitmap.glyphs.get(char);
+    return ink === null || glyph === undefined ? [] : [{ ...ink, glyph }];
+  });
+  if (ink.length === 0) {
+    return undefined;
+  }
+  const x = Math.min(...ink.map(({ left }) => left));
+  const y = Math.min(...ink.map(({ glyph }) => glyph.yOffset));
+  const shadow = font === "display" ? DISPLAY_SHADOW : 0;
+  return {
+    height: Math.max(...ink.map(({ glyph }) => glyph.yOffset + glyph.height)) - y - shadow,
+    width: Math.max(...ink.map(({ right }) => right)) - x - shadow,
+    x,
+    y,
+  };
+}
+
+function addBannerLine(
+  scene: Scene,
+  face: { height: number; y: number },
+  font: BannerFont,
+  scale: number,
+  ink: Rect | undefined,
+  text: string,
+): GameObjects.BitmapText {
+  const draw = font === "display" ? addDisplayText : addPixelText;
+  const capY = face.y + Math.floor((face.height - TITLE_CAP_ROWS * scale) / 2);
+  const label = draw(scene, PLATE.width / 2, capY, text, {
+    colour: PALETTE.plum,
+    font: "title",
+    originX: 0.5,
+    scale,
+  });
+  if (ink !== undefined) {
+    const [offset] = centredInkOffsets({ ...face, width: PLATE.width, x: 0 }, [
+      { height: ink.height * scale, width: ink.width * scale, x: ink.x * scale, y: ink.y * scale },
+    ]);
+    label.setOrigin(0).setScale(scale).setPosition(offset!.x, offset!.y);
+  }
+  return label;
+}
 
 // How long the zone banner shows, from sliding in to leaving.
 export function zoneBannerMs(still: boolean): number {
@@ -184,26 +241,37 @@ export class ZoneBanner {
       banner.add(g);
     }
     const heading = zoneBannerHeading(gameData, run);
+    const title = pixelBitmapFont(scene, "title");
+    const display = hasDisplayFont(scene, zone.name) ? displayBitmapFont(scene) : undefined;
+    const bitmap = display ?? title;
+    const font = display === undefined ? "title" : "display";
+    const ink = bannerInk(bitmap, font, zone.name);
+    const shadow = display === undefined ? 0 : DISPLAY_SHADOW;
+    const baseScale = display === undefined ? 2 : 1;
+    const preferredScale = display === undefined ? NAME.titleScale : NAME.displayScale;
+    // With the ink body centred, leave room for the shadow to extend past its right edge.
+    const scale =
+      ink === undefined
+        ? baseScale
+        : Math.max(baseScale, Math.min(preferredScale, NAME.inkRoom / (ink.width + 2 * shadow)));
     banner.add(
-      addPixelText(scene, PLATE.width / 2, 11, heading, {
-        colour: PALETTE.plum,
-        font: "title",
-        originX: 0.5,
-      }),
+      addBannerLine(
+        scene,
+        HEADING,
+        "title",
+        HEADING.scale,
+        bannerInk(title, "title", heading),
+        heading,
+      ),
     );
-    banner.add(
-      addDisplayText(scene, PLATE.width / 2, 27, zone.name, {
-        colour: PALETTE.plum,
-        font: "title",
-        originX: 0.5,
-        scale: 2,
-      }),
-    );
+    banner.add(addBannerLine(scene, NAME, font, scale, ink, zone.name));
     this.banner = banner;
     if (!still) {
       banner.x = x - road.width;
     }
-    this.mountDom(banner, heading, zone.name);
+    if (title !== undefined && bitmap !== undefined) {
+      this.mountDom(banner, heading, zone.name, title, { bitmap, font, scale });
+    }
     scene.tweens.chain({
       onComplete: () => banner.destroy(),
       targets: banner,
@@ -218,22 +286,22 @@ export class ZoneBanner {
     });
   }
 
-  private mountDom(banner: GameObjects.Container, heading: string, name: string): void {
+  private mountDom(
+    banner: GameObjects.Container,
+    heading: string,
+    name: string,
+    title: BitmapFont,
+    nameFont: { bitmap: BitmapFont; font: BannerFont; scale: number },
+  ): void {
     const { scene } = this;
     const layer = uiLayer();
-    const title = pixelBitmapFont(scene, "title");
-    if (layer === undefined || title === undefined) {
+    if (layer === undefined) {
       return;
     }
-    const display = hasDisplayFont(scene, name) ? displayBitmapFont(scene) : undefined;
     const view = mountRoadBanner(layer, ART_SOURCE, {
       heading,
       name,
-      nameFont: {
-        bitmap: display ?? title,
-        font: display === undefined ? "title" : "display",
-        scale: display === undefined ? 2 : 1,
-      },
+      nameFont,
       pose: () => banner,
       shown: (ready) => banner.setVisible(!ready),
       title,

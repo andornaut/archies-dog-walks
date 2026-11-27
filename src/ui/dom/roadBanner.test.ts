@@ -1,5 +1,6 @@
 import { expect, it, vi } from "vitest";
 
+import { ZONE_BANNER } from "../../data/index.ts";
 import { FakeDocument, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { domScale } from "../domScale.ts";
@@ -17,7 +18,11 @@ const SOURCE = {
 
 it("keeps canvas fallback until decoding, follows the existing pose and announces a zone once", async () => {
   const doc = new FakeDocument();
-  const { element, layer } = fakeLayer(doc, domScale(2, { height: 560, width: 360, x: 0, y: 0 }));
+  const deviceRatio = 1.6;
+  const { element, layer } = fakeLayer(
+    doc,
+    domScale(deviceRatio, { height: 560, width: 360, x: 0, y: 0 }),
+  );
   const modal = doc.createElement("section");
   element.append(modal);
   let settle!: (decoded: boolean) => void;
@@ -32,8 +37,12 @@ it("keeps canvas fallback until decoding, follows the existing pose and announce
   const shown = vi.fn();
   const view = mountRoadBanner(layer, SOURCE, {
     heading: "Toronto, neighbourhood 1",
-    name: "The Beach",
-    nameFont: { bitmap: gameFont("font-title"), font: "title", scale: 2 },
+    name: "High Park",
+    nameFont: {
+      bitmap: gameFont("font-display"),
+      font: "display",
+      scale: ZONE_BANNER.nameFace.displayScale,
+    },
     pose: () => pose,
     shown,
     title: gameFont("font-title"),
@@ -53,15 +62,21 @@ it("keeps canvas fallback until decoding, follows the existing pose and announce
   expect(root.children[0]!.style.backgroundImage).toBe('url("/banner.png")');
   cover.close();
   expect(root.children[0]!.style.backgroundImage).toBe('url("/banner.png")');
-  expect(status.textContent).toBe("Toronto, neighbourhood 1. The Beach");
+  expect(status.textContent).toBe("Toronto, neighbourhood 1. High Park");
+  const fontSize = (scale: number) => 8 * deviceRatio * scale;
+  expect(Number.parseFloat(root.children[1]!.style.fontSize ?? "")).toBeCloseTo(
+    fontSize(ZONE_BANNER.headingFace.scale),
+  );
+  expect(Number.parseFloat(root.children[2]!.style.fontSize ?? "")).toBeCloseTo(
+    fontSize(ZONE_BANNER.nameFace.displayScale),
+  );
   pose.x = 50;
   pose.alpha = 0.5;
   view.update();
-  expect(root.children[0]!.style).toMatchObject({
-    backgroundPosition: "-8px -16px",
-    backgroundSize: "600px 200px",
-    left: "100px",
-  });
+  expect(root.children[0]!.style.left).toBe("80px");
+  const [backgroundX, backgroundY] = root.children[0]!.style.backgroundPosition!.split(" ");
+  expect(Number.parseFloat(backgroundX!)).toBeCloseTo(-4 * deviceRatio, 1);
+  expect(Number.parseFloat(backgroundY!)).toBeCloseTo(-8 * deviceRatio, 1);
   expect(root.style.opacity).toBe("0.5");
   const coverAgain = layer.input.open();
   expect(status.attributes.get("aria-hidden")).toBe("true");

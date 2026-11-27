@@ -162,8 +162,9 @@ export const ZONE_PILL_SIZES = {
 // top's rows under the road's top, and the rows of its face above and below the dotted rule across
 // it, on which the heading's and the name's ink are each centred.
 export const ZONE_BANNER = {
-  headingFace: { height: 19, y: 2 },
-  nameFace: { height: 23, y: 22 },
+  headingFace: { height: 19, scale: 1.5, y: 2 },
+  // Reserve four pixels at each edge of the 224px name face for chrome and ink alignment.
+  nameFace: { displayScale: 1.35, height: 23, inkRoom: 216, titleScale: 2.5, y: 22 },
   plate: { height: 48, width: 248 },
   y: 70,
 } as const;
