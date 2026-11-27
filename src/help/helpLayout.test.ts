@@ -128,5 +128,5 @@ it("keeps Back centred beneath the pager, the stacked gap under its row", () => 
   expect(footer.height).toBeGreaterThanOrEqual(MIN_PRESS);
   expect(footer.y - (pager.y + pager.height)).toBe(BUTTON_SIZE.stackGap);
   expect(footer.y + footer.height).toBeLessThanOrEqual(screen.height);
-  expect([pager.x, pager.x + pager.width]).toEqual([32, 328]);
+  expect([pager.x, pager.x + pager.width]).toEqual([MODAL.margin, screen.width - MODAL.margin]);
 });
