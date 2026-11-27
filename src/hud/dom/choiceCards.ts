@@ -355,6 +355,7 @@ export function showChoiceCards(
   const doc = layer.element.ownerDocument;
   const rects = cardRowIn(SCREEN_LAYOUT.walkView, MAX_CARD_OPTIONS, input.entries.length);
   const header = cardHeader(input.keyed, rects);
+  const centre = SCREEN_CONFIG.width / 2;
   const parts: DomPart[] = [];
   const headerParts: HTMLElement[] = [];
   const label = (
@@ -392,7 +393,6 @@ export function showChoiceCards(
       ready: band.ready,
     });
     headerParts.push(band.element);
-    const centre = SCREEN_CONFIG.width / 2;
     const display = input.fonts.display;
     if (input.view.source.kind === "fork" && display !== undefined) {
       const line = {
