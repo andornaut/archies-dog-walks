@@ -84,9 +84,14 @@ const REFUSING_BUTTON =
 const REFUSING_ROW =
   ".adw-row:not(.adw-standard-button)[data-refusal-red]" +
   ":is(*,:focus-visible,[data-ui-pressed]:not([role=slider]))";
-const REFUSING_CHOICE_GROUP =
-  ".adw-choice-group[data-refusal-red]:is(*, :has(.adw-choice-option:focus-visible))";
-const REFUSING_CHOICE = `${REFUSING_CHOICE_GROUP} .adw-choice-press-band`;
+const CHOICE_OUTLINES = [
+  ".adw-choice-group .adw-choice-option:focus-visible",
+  ".adw-choice-pressed .adw-choice-option",
+  ".adw-choice-held-outline",
+] as const;
+const REFUSING_CHOICE_GROUP = ".adw-choice-group[data-refusal-red]";
+const REFUSING_CHOICE = `${REFUSING_CHOICE_GROUP} .adw-choice-refusal-band`;
+const REFUSING_CHOICE_LABEL = `${REFUSING_CHOICE_GROUP} :is(.adw-choice-refusal-label, .adw-choice-refusal-label *)`;
 // A refusal's red phase on a Start picker tile and a Pet shop row, focused or pressed alike.
 const TILE_STATES =
   ":is(*, :focus-visible, .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused])";
@@ -171,37 +176,6 @@ function rule(sheet: string, selector: string): string {
 
 describe("control state cues", () => {
   it.each([
-    [
-      "the choice option's native focus",
-      "choice",
-      ".adw-choice-option:focus-visible",
-      "outline:none",
-    ],
-    [
-      "a focused choice card's band",
-      "choice",
-      ".adw-choice-group:has(.adw-choice-option:focus-visible) .adw-choice-press-band",
-      "background:var(--ui-colour-button-focus-face)",
-    ],
-    [
-      "an enabled pressed choice card's band",
-      "choice",
-      '.adw-choice-pressed:has(.adw-choice-option:not([aria-disabled="true"])) .adw-choice-press-band',
-      "background:var(--ui-colour-button-pressed-face)",
-    ],
-    [
-      "a choice card's focus and press in forced colours",
-      "choiceForced",
-      ".adw-choice-group",
-      "--ui-colour-button-focus-face:Highlight;--ui-colour-button-focus-text:HighlightText;" +
-        "--ui-colour-button-pressed-face:Highlight;--ui-colour-button-pressed-text:HighlightText",
-    ],
-    [
-      "a pressed choice label in forced colours",
-      "choiceForced",
-      '.adw-choice-pressed:has(.adw-choice-option:not([aria-disabled="true"])) .adw-choice-press-label *',
-      "color:var(--ui-colour-button-pressed-text)!important",
-    ],
     [
       "a focused or pressed Logbook row's content",
       "logbook",
@@ -294,7 +268,7 @@ describe("control state cues", () => {
     [
       "a refusing choice card's label in forced colours",
       "choiceForced",
-      `${REFUSING_CHOICE_GROUP} .adw-choice-press-label *`,
+      REFUSING_CHOICE_LABEL,
       "forced-color-adjust:none;color:ButtonFace!important",
     ],
     [
@@ -591,7 +565,6 @@ describe("control state cues", () => {
       [".adw-selection-face", ".adw-selection-focus-fill", ".adw-selection-focus-fill)"],
     ],
     ["slot sign", "tile", ".adw-slot-sign", false, "background-color", [".adw-slot-sign-focus"]],
-    ["choice card", "choice", ".adw-choice-", true, "background", [".adw-choice-press-band"]],
     [
       "top-bar button",
       "top",
@@ -679,13 +652,6 @@ describe("control state cues", () => {
       "background-color:",
     ],
     ["row's label", "uiNormal", `${REFUSING_ROW} .adw-text`, ".adw-text", ";color:"],
-    [
-      "choice card's band",
-      "choiceNormal",
-      REFUSING_CHOICE,
-      ".adw-choice-press-band",
-      "background:",
-    ],
     ["standard button's forced face", "game", REFUSING_BUTTON, "", "--adw-button-fill:"],
     [
       "row's forced face",
@@ -695,20 +661,6 @@ describe("control state cues", () => {
       "background-color:",
     ],
     ["row's forced label", "ui", `${REFUSING_ROW} .adw-text`, ".adw-text", ";color:"],
-    [
-      "choice card's forced band",
-      "choice",
-      REFUSING_CHOICE,
-      ".adw-choice-press-band",
-      "background:",
-    ],
-    [
-      "choice card's forced label",
-      "choice",
-      `${REFUSING_CHOICE_GROUP} .adw-choice-press-label *`,
-      ".adw-choice-press-label*",
-      ";color:",
-    ],
     [
       "picker tile's name area",
       "tile",
@@ -765,6 +717,36 @@ describe("control state cues", () => {
     },
   );
 
+  it.each(CHOICE_OUTLINES)(
+    "gives %s a flush cyan outline and a Highlight forced-colour outline",
+    (selector) => {
+      expect(rule(CUE_SHEETS.choiceNormal, selector)).toBe(
+        "outline:var(--adw-slice-2)solidvar(--adw-cyan);outline-offset:0;",
+      );
+      expect(rule(CUE_SHEETS.choiceForced, selector)).toBe(
+        "forced-color-adjust:none;outline-color:Highlight;",
+      );
+    },
+  );
+
+  it("keeps the choice refusal band independent of focus, press and held outlines", () => {
+    expect(rule(CUE_SHEETS.choiceNormal, ".adw-choice-refusal-band")).toBe("display:none;");
+    for (const sheet of [CUE_SHEETS.choiceNormal, CUE_SHEETS.choiceForced]) {
+      const outlines = rules(sheet).filter(({ body }) => /(?:^|;)outline(?:-color)?:/.test(body));
+      expect(outlines.map(({ selector }) => selector)).toEqual(CHOICE_OUTLINES.map(squeeze));
+      expect(rule(sheet, REFUSING_CHOICE)).not.toMatch(/outline|--ui-colour-button/);
+      expect(rule(sheet, REFUSING_CHOICE_LABEL)).not.toMatch(/outline|--ui-colour-button/);
+    }
+    const normal = rules(SHEETS.choice).find(
+      ({ selector }) => selector === squeeze(REFUSING_CHOICE),
+    )!;
+    const override = rules(SHEETS.choice).findLast(
+      ({ selector }) => selector === squeeze(REFUSING_CHOICE),
+    )!;
+    expect(override.index).toBeGreaterThan(normal.index!);
+    expect(override.body).toContain("background:ButtonText");
+  });
+
   it("outranks Kit's focused artwork opacity with the top-bar glyph slot", () => {
     expect(squeeze(KIT_CONTROLS)).toContain(`${squeeze(KIT_FOCUSED_ARTWORK)}{`);
     expect(specificity(KIT_FOCUSED_ARTWORK)).toEqual([0, 4, 1]);
@@ -773,7 +755,7 @@ describe("control state cues", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("draws no focus ring, outline or ring-shaped shadow on a control", () => {
+  it("limits control outlines to choice cards and editable fields without focus rings", () => {
     const rings = Object.entries(SHEETS).flatMap(([name, sheet]) =>
       [...sheet.matchAll(/([^{}]*:focus-visible[^{}]*)\{([^}]*)\}/g)]
         .filter(([, , body]) =>
@@ -786,9 +768,10 @@ describe("control state cues", () => {
         .filter(([, , body]) => !/content:none/.test(body!))
         .map(([, selector]) => `${name}: ${selector}`),
     );
-    // Only the editable fields' inset bands remain, on native text editing: the seed field and
-    // the gallery's zoom and filter.
+    // Choice cards retain their flush outline; editable fields retain native editing cues.
     expect([...rings, ...afterRings]).toEqual([
+      "choice: .adw-choice-group.adw-choice-option:focus-visible," +
+        ".adw-choice-pressed.adw-choice-option,.adw-choice-held-outline",
       "focus: .adw-rowinput:focus-visible",
       'gallery: .toolbar:is(select,input[type="search"]):focus-visible',
     ]);
