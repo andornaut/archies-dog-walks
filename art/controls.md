@@ -280,7 +280,7 @@ The native DOM crash screen follows the shared game palette and button chrome, w
 
 Retry is the primary action: a green face with the ink `action.primary.text` label, the same visible label colour as Start walk. Its width follows the visible label and 16 logical px of padding per side, with a 48 logical px height. The [loading treatment](../src/ui/dom/loadingFailureStyle.ts) fits those dimensions through the caller's scale unit and keeps the label at 20.25 CSS px. Do not add a DPR multiplier or a 48 CSS px height floor. Panel height can vary with the action height. Update the same presenter with `setPresentation` on fit changes, preserving its button and received-state/input guards. Verify very short fits without shrinking text or claiming universal coverage. The existing received-state controller owns the single physical-viewport-top 3 CSS px loading strip; failure preserves its received-state visibility, and recovered idle state hides it. Do not add a second gauge. Boot, loading and Retry views expose no mute control; normal game, Menu and crash views retain their existing mute behaviour.
 
-The [art gallery](../public/art/index.html) uses the site's `.app-button` for its filters, animation tags, copy buttons and action-styled jump links, each sized to its label, with no gallery button skin of its own. Selected filters and tags keep a yellow face, amber lip and tick, with no inset ring. Palette samples and chosen viewing grounds keep their actual colours. DOM styles preserve native button/link semantics and responsive layout; they do not substitute canvas event handlers.
+DOM styles preserve native button/link semantics and responsive layout; they do not substitute canvas event handlers.
 
 ## Review checklist
 
