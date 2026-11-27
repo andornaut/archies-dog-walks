@@ -4,6 +4,7 @@ import type { HomeText } from "./types.ts";
 // the names each line may use. {slot} is a slot number in dogSlotName, and the slot's name
 // ("Dog slot 2") in slotBought.
 export const HOME_TEXT = {
+  backExit: { cancel: "Cancel", exit: "Exit" },
   bubble: {
     afterFiring: "Rough walk. They'll come around.",
     afterWalk: "Nice walk! Who's next?",

@@ -1,12 +1,35 @@
 import { EventEmitter } from "node:events";
 
-import { expect, it, vi } from "vitest";
+import { beforeEach, expect, it, vi } from "vitest";
 
 import { gameData } from "../data/index.ts";
+import { canLeaveFromBack, leaveFromBack } from "../pwa/index.ts";
+import { exitGame } from "./homeBarPress.ts";
+import { closeOverlay } from "./overlay.ts";
 import { PauseScene, type PauseSceneData } from "./PauseScene.ts";
 import type { QuestionPanel } from "./questionPanel.ts";
 import { QuitScene } from "./QuitScene.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
+
+vi.mock("../pwa/index.ts", async (original) => ({
+  ...(await original<typeof import("../pwa/index.ts")>()),
+  canLeaveFromBack: vi.fn(() => true),
+  leaveFromBack: vi.fn(async () => false),
+}));
+vi.mock("./homeBarPress.ts", async (original) => ({
+  ...(await original<typeof import("./homeBarPress.ts")>()),
+  exitGame: vi.fn(),
+}));
+vi.mock("./overlay.ts", async (original) => ({
+  ...(await original<typeof import("./overlay.ts")>()),
+  closeOverlay: vi.fn(),
+}));
+beforeEach(() => {
+  vi.mocked(canLeaveFromBack).mockReturnValue(true);
+  vi.mocked(leaveFromBack).mockReset().mockResolvedValue(false);
+  vi.mocked(closeOverlay).mockClear();
+  vi.mocked(exitGame).mockClear();
+});
 
 const questionPanel = vi.fn<(scene: unknown, area: unknown, question: QuestionPanel) => undefined>(
   () => undefined,
@@ -76,4 +99,67 @@ it("keeps Quit's safe answer and corner cancel without a duplicate labelled Clos
     gameData.homeText.quit.quit,
   ]);
   expect(question.close).toBe(question.entries[0]!.press);
+  question.entries[1]!.press();
+  expect(exitGame).toHaveBeenCalledOnce();
+  expect(leaveFromBack).not.toHaveBeenCalled();
 });
+
+it.each([false, true])(
+  "keeps platform Exit availability from Kit (%s) and Cancel independent",
+  (available) => {
+    questionPanel.mockClear();
+    vi.mocked(canLeaveFromBack).mockReturnValue(available);
+    const mount = (
+      QuitScene.prototype as unknown as {
+        mount(data: { platformBack: boolean; resume: string }): boolean;
+      }
+    ).mount;
+    mount.call({}, { platformBack: true, resume: SCENE_KEYS.start });
+    const question = questionPanel.mock.calls[0]![2];
+    expect(question.title).toBe(gameData.homeText.quit.title);
+    expect(question.entries.map((e) => e.label)).toEqual([
+      gameData.homeText.backExit.cancel,
+      gameData.homeText.backExit.exit,
+    ]);
+    expect(question.entries[1]!.available).toBe(available);
+    expect(question.entries[0]!.available).toBeUndefined();
+    if (!available) {
+      question.entries[1]!.press();
+      expect(leaveFromBack).not.toHaveBeenCalled();
+      expect(closeOverlay).not.toHaveBeenCalled();
+    }
+    question.entries[0]!.press();
+    expect(closeOverlay).toHaveBeenCalledOnce();
+    expect(exitGame).not.toHaveBeenCalled();
+  },
+);
+
+it.each(["false", "reject", "true"])(
+  "delegates admitted platform leave %s without explicit Quit or repeat",
+  async (outcome) => {
+    questionPanel.mockClear();
+    let settle!: () => void;
+    vi.mocked(leaveFromBack).mockImplementation(
+      () =>
+        new Promise<boolean>((resolve, reject) => {
+          settle = () =>
+            outcome === "reject" ? reject(Error("No departure")) : resolve(outcome === "true");
+        }),
+    );
+    const mount = (
+      QuitScene.prototype as unknown as {
+        mount(data: { platformBack: boolean; resume: string }): boolean;
+      }
+    ).mount;
+    mount.call({}, { platformBack: true, resume: SCENE_KEYS.start });
+    const exit = questionPanel.mock.calls[0]![2].entries[1]!.press;
+    exit();
+    exit();
+    expect(closeOverlay).toHaveBeenCalledOnce();
+    expect(leaveFromBack).toHaveBeenCalledOnce();
+    expect(exitGame).not.toHaveBeenCalled();
+    settle();
+    await vi.waitFor(() => expect(leaveFromBack).toHaveBeenCalledOnce());
+    expect(exitGame).not.toHaveBeenCalled();
+  },
+);

@@ -2,12 +2,19 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 import type { StorageState } from "../save/profile.ts";
 
-const { appCannotClose, guardBackNavigation, requireNewer, runsInAppWindow } = vi.hoisted(() => ({
-  appCannotClose: vi.fn(() => true),
-  guardBackNavigation: vi.fn(),
-  requireNewer: vi.fn(),
-  runsInAppWindow: vi.fn(() => false),
-}));
+const { appCannotClose, createBackNavigationGuard, guard, requireNewer, runsInAppWindow } =
+  vi.hoisted(() => ({
+    appCannotClose: vi.fn(() => true),
+    createBackNavigationGuard: vi.fn(),
+    guard: {
+      canLeave: vi.fn(() => true),
+      dispose: vi.fn(),
+      leave: vi.fn(async () => false),
+      setEnabled: vi.fn(),
+    },
+    requireNewer: vi.fn(),
+    runsInAppWindow: vi.fn(() => false),
+  }));
 
 vi.mock("./launch.ts", () => ({ requireNewer }));
 vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/installFlow", () => ({
@@ -21,7 +28,7 @@ vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/wakeLock", () => ({
 }));
 vi.mock("@andornaut/game-kit/runtime/web/pwa/dom/backNavigation", () => ({
   browserCloseWatcher: () => undefined,
-  guardBackNavigation,
+  createBackNavigationGuard,
 }));
 vi.mock("@andornaut/game-kit/runtime/web/pwa/appWindow", () => ({
   appCannotClose,
@@ -44,7 +51,6 @@ let phone: typeof import("./index.ts");
 beforeAll(() => {
   vi.stubGlobal("document", { createElement: () => ({ canPlayType: () => "" }) });
   vi.stubGlobal("screen", {});
-  vi.stubGlobal("window", { dispatchEvent: () => true });
 });
 
 afterAll(() => {
@@ -54,7 +60,12 @@ afterAll(() => {
 beforeEach(async () => {
   vi.resetModules();
   appCannotClose.mockReturnValue(true);
-  guardBackNavigation.mockClear();
+  createBackNavigationGuard.mockReset().mockReturnValue(guard);
+  Object.values(guard).forEach((mock) => mock.mockClear());
+  guard.canLeave.mockReturnValue(true);
+  guard.leave.mockResolvedValue(false);
+  vi.stubGlobal("window", new EventTarget());
+  vi.stubGlobal("history", { length: 1, state: null });
   runsInAppWindow.mockReturnValue(false);
   requireNewer.mockClear();
   phone = await import("./index.ts");
@@ -71,32 +82,51 @@ describe("setupPhoneApp", () => {
     async (_, inApp, cannotClose, shown) => {
       runsInAppWindow.mockReturnValue(inApp);
       appCannotClose.mockReturnValue(cannotClose);
-      // Offering to leave guards back, which reads the session history.
-      vi.stubGlobal("history", { length: 1, state: null });
+      createBackNavigationGuard.mockClear();
       vi.resetModules();
       phone = await import("./index.ts");
       phone.setupPhoneApp();
       expect(phone.exitShown()).toBe(shown);
-      if (cannotClose) {
-        expect(guardBackNavigation).not.toHaveBeenCalled();
-      } else {
-        expect(guardBackNavigation).toHaveBeenCalledExactlyOnceWith(
-          {
-            createCloseWatcher: undefined,
-            history,
-            onBack: expect.any(Function),
-            stateKey: "archiesDogWalksBackGuard",
-            timer: window,
-          },
-          window,
-        );
-        const dispatch = vi.spyOn(window, "dispatchEvent");
-        guardBackNavigation.mock.calls[0]![0].onBack();
-        expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ type: "back-pressed" }));
-        dispatch.mockRestore();
-      }
+      expect(createBackNavigationGuard).toHaveBeenCalledExactlyOnceWith(
+        {
+          createCloseWatcher: undefined,
+          history,
+          onBack: expect.any(Function),
+          stateKey: "archiesDogWalksBackGuard",
+          timer: window,
+        },
+        window,
+      );
+      expect(guard.setEnabled).toHaveBeenLastCalledWith(true);
+      const dispatch = vi.spyOn(window, "dispatchEvent");
+      createBackNavigationGuard.mock.calls[0]![0].onBack();
+      expect(dispatch).toHaveBeenCalledWith(expect.objectContaining({ type: "back-pressed" }));
+      dispatch.mockRestore();
     },
   );
+});
+
+it("retains one document guard through repeated setup and BFCache restoration", () => {
+  phone.setupPhoneApp();
+  expect(createBackNavigationGuard).toHaveBeenCalledOnce();
+  const pageEvent = (type: string, persisted: boolean) =>
+    Object.assign(new Event(type), { persisted });
+  window.dispatchEvent(pageEvent("pagehide", true));
+  expect(guard.dispose).not.toHaveBeenCalled();
+  window.dispatchEvent(pageEvent("pageshow", true));
+  expect(guard.setEnabled).toHaveBeenLastCalledWith(true);
+  expect(createBackNavigationGuard).toHaveBeenCalledOnce();
+  window.dispatchEvent(pageEvent("pagehide", false));
+  expect(guard.dispose).toHaveBeenCalledOnce();
+});
+
+it("delegates platform departure to Kit without disabling the scope or adding a fallback", async () => {
+  guard.canLeave.mockReturnValue(false);
+  expect(phone.canLeaveFromBack()).toBe(false);
+  guard.leave.mockResolvedValue(false);
+  expect(await phone.leaveFromBack()).toBe(false);
+  expect(guard.leave).toHaveBeenCalledOnce();
+  expect(guard.setEnabled).not.toHaveBeenCalledWith(false);
 });
 
 describe("noteSaveStorage", () => {

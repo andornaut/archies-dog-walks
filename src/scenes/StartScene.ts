@@ -97,7 +97,6 @@ import {
   onSceneEvent,
   onWindowEvent,
   openOverlay,
-  type OverlayData,
 } from "./overlay.ts";
 import { afterMsUnderOverlay } from "./overlayClock.ts";
 import {
@@ -116,6 +115,7 @@ import {
   keepPanel,
   type KeptPanel,
 } from "./questionPanel.ts";
+import type { QuitSceneData } from "./QuitScene.ts";
 import type { RunPick } from "./run/runStart.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 import { SETTINGS_CLOSED_EVENT } from "./SettingsScene.ts";
@@ -311,14 +311,13 @@ export class StartScene extends Scene {
       },
       () => this.closeOverlay(),
     );
-    // Back closes an open detail card, as Escape does, and with none asks Quit? where Exit is
-    // offered.
+    // Platform Back closes one detail, or asks to leave even where explicit Quit is hidden.
     onBackPressed(this, () => {
-      const action = homeBackAction(this.exit, this.overlay !== undefined);
+      const action = homeBackAction(true, this.overlay !== undefined);
       if (action === "closeDetail") {
         this.closeOverlay();
       } else if (action === "askQuit") {
-        const data: OverlayData = { resume: SCENE_KEYS.start };
+        const data: QuitSceneData = { platformBack: true, resume: SCENE_KEYS.start };
         openOverlay(this, SCENE_KEYS.quit, data);
       }
     });

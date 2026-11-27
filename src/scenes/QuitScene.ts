@@ -4,6 +4,7 @@ import { gameData } from "../data/index.ts";
 import { HOME_LAYOUT, overlayRegion } from "../home/index.ts";
 import { QUIT_QUESTION_ANSWERS } from "../hud/index.ts";
 import { isPauseKey, menuKeyActs, screenArea } from "../input/index.ts";
+import { canLeaveFromBack, leaveFromBack } from "../pwa/index.ts";
 import { clearOnHomePageOpening, exitGame } from "./homeBarPress.ts";
 import { mountNativeOverlay } from "./nativeOverlayReady.ts";
 import { closeOverlay, listenDismiss, nativeSceneAccepts, type OverlayData } from "./overlay.ts";
@@ -11,33 +12,54 @@ import { addHtmlQuestionPanel, type QuestionPanel } from "./questionPanel.ts";
 import { addRampDim } from "./rampDim.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";
 
-// Quit? over the dimmed home screen, which back asks with nothing open, laid out as the Home
-// question: Keep playing closes it, as back, Escape, P and a tap outside do; Quit leaves the game
-// as the top bar's Exit does (exitGame). The top bar stays dimmed and inactive under it.
+// The Start confirmation shares its existing native cancellation and focus restoration.
+// Explicit Quit keeps its original controls; platform Back uses Cancel/Exit and the Kit guard.
+export interface QuitSceneData extends OverlayData {
+  readonly platformBack?: boolean;
+}
+
 export class QuitScene extends Scene {
   constructor() {
     super(SCENE_KEYS.quit);
   }
 
-  create(data: OverlayData): void {
+  create(data: QuitSceneData): void {
     mountNativeOverlay(this, () => this.mount(data));
   }
 
-  private mount({ resume }: OverlayData): boolean {
+  private mount({ platformBack = false, resume }: QuitSceneData): boolean {
     const area = overlayRegion("home");
     const words = gameData.homeText.quit;
     const keepPlaying = () => closeOverlay(resume, this);
+    let leaving = false;
     // Closed first, so a page kept for back-forward caching comes back to the bare home screen.
     const quit = () => {
+      if (!platformBack) {
+        keepPlaying();
+        exitGame();
+        return;
+      }
+      if (leaving || !canLeaveFromBack()) {
+        return;
+      }
+      leaving = true;
       keepPlaying();
-      exitGame();
+      // Kit retains the enabled scope after a failed departure. Start is already restored.
+      void leaveFromBack()
+        .catch(() => false)
+        .finally(() => {
+          leaving = false;
+        });
     };
     const question: QuestionPanel = {
       avoid: { ...HOME_LAYOUT.gate, width: area.width, x: area.x },
       backgroundCancel: keepPlaying,
       close: keepPlaying,
       entries: QUIT_QUESTION_ANSWERS.map((answer) => ({
-        label: words[answer],
+        ...(platformBack && answer === "quit" ? { available: canLeaveFromBack() } : {}),
+        label: platformBack
+          ? gameData.homeText.backExit[answer === "quit" ? "exit" : "cancel"]
+          : words[answer],
         press: answer === "quit" ? quit : keepPlaying,
       })),
       note: [],

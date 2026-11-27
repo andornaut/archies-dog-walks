@@ -20,6 +20,7 @@ export interface HelpPage {
 // The home screen's text. A {name} in a line is filled by code, and each line may use only
 // the names src/home/homeText.ts lists for it.
 export interface HomeText {
+  readonly backExit: { readonly cancel: string; readonly exit: string };
   // The walker's speech bubble, by what happened last. Picking a dog shows its owner's
   // parting quip instead.
   readonly bubble: {
@@ -124,8 +125,7 @@ export interface HomeText {
     readonly note: string;
     readonly title: string;
   };
-  // What back asks on the home screen with nothing open, with its two answers: keepPlaying
-  // closes the question, and quit leaves the game.
+  // Explicit Quit uses these answers; platform Back reuses the title with backExit answers.
   readonly quit: {
     readonly keepPlaying: string;
     readonly quit: string;

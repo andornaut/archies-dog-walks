@@ -3,11 +3,12 @@
 // storage and the launch's update state (src/pwa/launch.ts). setupPhoneApp runs once from
 // main.ts; the scenes listen for PHONE_EVENTS on window and call the functions below.
 import type { FrameTurn } from "@andornaut/game-kit/runtime/view/pagePoint";
-import { appCannotClose, canExitApp } from "@andornaut/game-kit/runtime/web/pwa/appWindow";
+import { canExitApp } from "@andornaut/game-kit/runtime/web/pwa/appWindow";
 import { backCloseWatcher } from "@andornaut/game-kit/runtime/web/pwa/backNavigation";
 import {
+  type BackNavigationGuard,
   browserCloseWatcher,
-  guardBackNavigation,
+  createBackNavigationGuard,
 } from "@andornaut/game-kit/runtime/web/pwa/dom/backNavigation";
 import {
   type InstallFlow,
@@ -56,15 +57,14 @@ export {
   offersInstall,
 } from "@andornaut/game-kit/runtime/web/pwa/installState";
 
-// Whether back is guarded (leaveOffered) and whether Exit closes the app (exitCloses), read once
-// at load.
-let leaveOffered = false;
+// Explicit Exit is offered only where it closes the installed window.
+let backGuard: BackNavigationGuard | undefined;
 let exitCloses = false;
 let installFlow: InstallFlow | undefined;
 let installNudge: InstallNudge | undefined;
 let screenWakeLock: ScreenWakeLock | undefined;
 
-// The history state key of the entry that keeps back on the game (the kit's guardBackNavigation).
+// The history state key of the entry that keeps back on the game (the kit's createBackNavigationGuard).
 const BACK_GUARD_STATE_KEY = "archiesDogWalksBackGuard";
 
 // Sets up the phone app, once the launch has decided to play this build.
@@ -85,14 +85,11 @@ export function setupPhoneApp(): void {
   // Where the browser allows it, the installed app holds the screen in portrait instead.
   pageFrameWatch();
   lockGameOrientation("portrait", screen);
-  // Read before the guard pushes any entry. An installed app that cannot close its window keeps
-  // its own back, so the game never asks Quit? there.
+  // Compute explicit Exit eligibility before the shared platform guard can own a marker.
   const closeWatcher = backCloseWatcher(navigator.userAgent, browserCloseWatcher());
-  leaveOffered = !appCannotClose(closeWatcher, window);
   exitCloses = canExitApp(closeWatcher, window);
-  if (leaveOffered) {
-    // Each back the guard keeps opens the pause menu or Quit?, as the scenes decide.
-    guardBackNavigation(
+  if (backGuard === undefined) {
+    const guard = createBackNavigationGuard(
       {
         createCloseWatcher: closeWatcher,
         history,
@@ -102,7 +99,19 @@ export function setupPhoneApp(): void {
       },
       window,
     );
+    backGuard = guard;
+    window.addEventListener("pagehide", (event) => {
+      if (!event.persisted) {
+        guard.dispose();
+      }
+    });
+    window.addEventListener("pageshow", (event) => {
+      if (event.persisted) {
+        guard.setEnabled(true);
+      }
+    });
   }
+  backGuard.setEnabled(true);
   const wakeLock = "wakeLock" in navigator ? navigator.wakeLock : undefined;
   screenWakeLock = createScreenWakeLock(window, document, wakeLock);
   // Held whenever the game is visible until the scenes take over with stopWakeLock and
@@ -110,7 +119,16 @@ export function setupPhoneApp(): void {
   screenWakeLock.start();
 }
 
-// Whether the game offers to leave (the home top bar's Exit, Q and back's Quit?), as read at load:
+// Platform confirmation delegates departure eligibility and execution to the shared guard.
+export function canLeaveFromBack(): boolean {
+  return backGuard?.canLeave() ?? false;
+}
+
+export function leaveFromBack(): Promise<boolean> {
+  return backGuard?.leave() ?? Promise.resolve(false);
+}
+
+// Whether explicit Quit is offered by the home top bar or Q, as read at load:
 // only in an installed app whose window a script can close, which leaving closes (the kit's
 // canExitApp). A browser tab never offers it, since leaving there would navigate away rather than
 // close, and neither does an installed app that cannot close (an app whose platform never closes,

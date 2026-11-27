@@ -39,6 +39,7 @@ import { trackNativeSceneInput } from "./overlay.ts";
 
 // A button on the panel: its label and what a press, a tap or its number key, does.
 export interface PanelEntry {
+  readonly available?: boolean;
   // Supplies the exact admitted source control before its action opens a modal.
   readonly onInvoke?: (control: HTMLElement) => void;
   readonly label: string;
@@ -65,7 +66,7 @@ export interface QuestionPanel {
 
 // The panel's view, centred in area and measured on scene's fonts.
 export function questionView(scene: Scene, area: Rect, question: QuestionPanel): QuestionPanelView {
-  return questionPanelView(canvasPanelMeasure(scene), area, {
+  const view = questionPanelView(canvasPanelMeasure(scene), area, {
     avoid: question.avoid,
     labels: question.entries.map(({ label }) => label),
     note: question.note,
@@ -75,6 +76,13 @@ export function questionView(scene: Scene, area: Rect, question: QuestionPanel):
     ...(question.showKeyNumbers === undefined ? {} : { showKeyNumbers: question.showKeyNumbers }),
     title: question.title,
   });
+  return {
+    ...view,
+    buttons: view.buttons.map((button, index) => {
+      const available = question.entries[button.actionIndex ?? index]?.available;
+      return available === undefined ? button : { ...button, available };
+    }),
+  };
 }
 
 // Native views mount only when the shared layer and the scene's bitmap font metrics are ready.
