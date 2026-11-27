@@ -12,7 +12,7 @@ The game's pixel art, effects and sound, drawn by script.
 ## Scope
 
 - `art/`: the generators in `art/tools/`, the source fonts in `art/fonts/` and these docs.
-- `public/art/`: the exported sprites, images, fonts and sounds, `manifest.extra.json` and the `/art/` gallery. Mocks for decisions are shown in the chat, not committed. `manifest.json` beside them is derived from the files and committed (`npm run art:manifest`); the game build rewrites it before packing the atlases.
+- [`public/art/`](../public/art/): the exported sprites, images, fonts and sounds, and `manifest.extra.json`. Mocks for decisions are shown in the chat, not committed. `manifest.json` beside them is derived from the files and committed (`npm run art:manifest`); the game build rewrites it before packing the atlases.
 - Also drawn here: the site's icons, `public/og-image.png` and the art on the home page.
 
 ## Method
@@ -83,6 +83,6 @@ Builds and previews run in the check image, the delivery gate image `archie-chec
 ### Consistency checks
 
 - Every export uses only the 64-colour house palette (plus the neutral greys in disabled and locked UI and seven picker-only colours, as the style guide's palette section says), with alpha 0 or 255, at the frame size in `inventory.md`. The home page's canvas grabs, `public/art/site/home-road.png` and `home-start.png`, are exempt from the palette, since the game's canvas blends translucent layers and has UI colours of its own; they must still be 360×560 and opaque.
-- Check proportion, outline and contrast on every zone's road colour in the script's `preview` and the `/art/` gallery, and road objects in a projected 360×560 view (`npm run art:depth-preview -- <key> [zone]`).
+- Check proportion, outline and contrast on every zone's road colour in the script's `preview` or exported-sprite contact sheets (`node art/tools/contact_sheet.ts OUT.png KEY...`), and road objects in a projected 360×560 view (`npm run art:depth-preview -- <key> [zone]`).
 - Run `npm run check:art` and `npm run art:manifest -- --check` before committing.
 - `npm run art:unused` lists the manifest keys that no source file, game data, shared table or page names. It matches names, not calls, so it misses a key that only an id-keyed family would build: check `fx-hit-`, `sfx-hit-` and `card-` keys against the encounters' ids and options.
