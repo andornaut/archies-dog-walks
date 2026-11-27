@@ -119,7 +119,7 @@ export {
   type PlateKind,
   selectLook,
 } from "./selection.ts";
-export { SEPARATOR_BAND, separatorBetween } from "./separator.ts";
+export { SEPARATOR, SEPARATOR_BAND, separatorBetween } from "./separator.ts";
 export { startupLoad, startupProgress } from "./startupProgress.ts";
 export {
   ACTION_LABEL_SCALE,

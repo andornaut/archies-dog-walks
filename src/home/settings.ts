@@ -28,8 +28,8 @@ import {
   modalFamilyWidth,
   modalRect,
   ROWS_PAGE_LAYOUT,
+  SEPARATOR,
   SEPARATOR_BAND,
-  separatorBetween,
   TEXT_SCALE,
   TEXT_STYLE,
   textOnLines,
@@ -97,6 +97,8 @@ export type SettingsRowShape =
 interface SettingsRowLayout {
   // The switch's or the button's face, or null on a slider row.
   control: Rect | null;
+  // The label's first capitals' row, centred with its note on a switch row.
+  labelY: number;
   // The note's first line's capitals' top, or null on a slider row.
   noteY: number | null;
   rect: Rect;
@@ -111,7 +113,7 @@ export interface SettingsLayout {
   rowsContentHeight: number;
   // Only rows and separators scroll inside this absolute logical rectangle, the page's body.
   rowsViewport: Rect;
-  // The separator over every row after the first, across the rows' width (separatorBetween).
+  // The separator over every row after the first, across the rows' width.
   separators: Rect[];
   track: SliderTrack & { dy: number; height: number };
 }
@@ -126,7 +128,7 @@ export interface SettingsFonts {
 // its title-font label's capitals, ICON_LABEL_GAP before the label's first ink column
 // (iconBesideLabel). A switch or button row has its note under them in body text,
 // LABEL_HELP_GAP clear rows under the label font's lowest ink (helpCapDy), from the icon's
-// column, wrapped onto up to note.lines lines, and inkFoot rows under the note's lowest ink.
+// column, wrapped onto up to note.lines lines.
 // A switch sits at the upper right with its state word below, centred on it. The Install button is its row's
 // sole action, centred in the row. Sliders place the percentage on the label line and the track
 // below it, from the labels' column to the row's right inset. A row spans the page's rows'
@@ -137,7 +139,6 @@ export const SETTINGS_ROW = {
   // Between a note's room and the control beside it.
   controlGap: ROW.controlGap,
   icon: ROW.icon,
-  inkFoot: ROW.inkFoot,
   label: { dx: ROW.icon.dx + LABEL_ICON + ICON_LABEL_GAP, dy: ROW.label.dy },
   note: ROW.note,
   pad: ROW.pad,
@@ -170,12 +171,10 @@ export function noteRoomForControl(controlWidth: number): number {
 // A note: at 2x, wrapped onto up to note.lines lines.
 export const SETTINGS_NOTE_STYLE = textOnLines(SETTINGS_ROW.note.lines);
 
-// The note's first line's capitals' top, from the row's top, under its title-font label.
-function noteDy(title: FontMetrics): number {
-  return SETTINGS_ROW.label.dy + helpCapDy(title, TEXT_SCALE);
-}
-
+// Cheats keeps the shared standard gap. Settings follows the compact form stack.
 export const SWITCH_STATE_GAP = BUTTON_SIZE.stackGap;
+export const SETTINGS_SWITCH_GAP = 4;
+const SETTINGS_SWITCH_PAD = 4;
 
 // The x a switch's state word's ink centres on, by the row's switchState rule.
 const STATE_CENTRES: Record<
@@ -211,12 +210,21 @@ export const SWITCH_ROWS: Omit<FormRowLayout, "height"> = {
   },
 };
 
-// Settings' rows: each row's 16x16 icon icon.dx in from its left and icon.dy down, on its label's
-// capitals (iconBesideLabel).
-export const SETTINGS_FORM_ROWS: Omit<FormRowLayout, "height"> = {
-  ...SWITCH_ROWS,
-  icon: { offset: SETTINGS_ROW.icon.dy, size: LABEL_ICON, slot: LABEL_ICON },
-};
+// Settings centres the value stack in each row, with just the separator between targets.
+export function settingsFormRows(title: FontMetrics, height: number): FormRowLayout {
+  return {
+    ...SWITCH_ROWS,
+    align: "center",
+    gap: SEPARATOR.height,
+    height,
+    icon: { size: LABEL_ICON, slot: LABEL_ICON },
+    value: {
+      ...SWITCH_ROWS.value,
+      gap: SETTINGS_SWITCH_GAP,
+      height: switchStackHeight(title),
+    },
+  };
+}
 
 // A volume row's kit slider: slider.height tall, its lane from the labels' column to the row's
 // right inset, the track track.dy down.
@@ -236,33 +244,37 @@ export const SETTINGS_BUILD_LABEL = {
   style: TEXT_STYLE,
 } as const;
 
-// The note's lowest ink, from the row's top.
-function noteInkBottom(fonts: SettingsFonts, noteLines: number): number {
-  return noteDy(fonts.title) + inkRowsOfLines(fonts.body, noteLines) * TEXT_SCALE;
+// The height of the switch and state together, in the row's trailing column.
+function switchStackHeight(title: FontMetrics): number {
+  return SETTINGS_ROW.switch.height + SETTINGS_SWITCH_GAP + title.capHeight * TEXT_SCALE;
 }
 
-function switchStateInkBottom(fonts: Pick<SettingsFonts, "title">): number {
-  return (
-    SETTINGS_ROW.icon.dy +
-    SETTINGS_ROW.switch.height +
-    SWITCH_STATE_GAP +
-    fonts.title.capHeight * TEXT_SCALE
-  );
+function labelStack(fonts: SettingsFonts, noteLines: number) {
+  const capHeight = fonts.title.capHeight * TEXT_SCALE;
+  const iconRise = Math.floor((LABEL_ICON - capHeight) / 2);
+  const labelToNote = helpCapDy(fonts.title, TEXT_SCALE);
+  const height =
+    noteLines === 0
+      ? Math.max(LABEL_ICON, capHeight)
+      : iconRise + labelToNote + inkRowsOfLines(fonts.body, noteLines) * TEXT_SCALE;
+  return { height, iconRise, labelToNote };
 }
 
 function rowHeight(fonts: SettingsFonts, shape: SettingsRowShape): number {
   if (shape.kind === "slider") {
     return SETTINGS_ROW.slider.height;
   }
-  const noteBottom =
-    shape.noteLines === 0 ? 0 : noteInkBottom(fonts, shape.noteLines) + SETTINGS_ROW.inkFoot;
-  const stateBottom = shape.kind === "switch" ? switchStateInkBottom(fonts) : 0;
-  return Math.max(MIN_PRESS, noteBottom, stateBottom);
+  if (shape.kind === "button") {
+    return SETTINGS_ROW.button.height;
+  }
+  const content = Math.max(
+    labelStack(fonts, shape.noteLines).height,
+    switchStackHeight(fonts.title),
+  );
+  return Math.max(MIN_PRESS, content + 2 * SETTINGS_SWITCH_PAD);
 }
 
-// Switches align with the row's upper icon edge, switchInset in from its right. The Install button, the
-// row's sole action, centres in the row.
-function rowControl(row: Rect, shape: SettingsRowShape): Rect | null {
+function rowControl(title: FontMetrics, row: Rect, shape: SettingsRowShape): Rect | null {
   if (shape.kind === "slider") {
     return null;
   }
@@ -270,24 +282,29 @@ function rowControl(row: Rect, shape: SettingsRowShape): Rect | null {
     ...SETTINGS_ROW[shape.kind],
     width: shape.controlWidth ?? SETTINGS_ROW[shape.kind].width,
   };
-  const top =
-    shape.kind === "switch" ? SETTINGS_ROW.icon.dy : Math.floor((row.height - size.height) / 2);
+  const stackHeight = shape.kind === "switch" ? switchStackHeight(title) : size.height;
   return {
     ...size,
     x:
       shape.kind === "switch"
         ? row.x + row.width - SETTINGS_ROW.switchInset - size.width
         : row.x + (row.width - size.width) / 2,
-    y: row.y + top,
+    y: row.y + Math.floor((row.height - stackHeight) / 2),
   };
 }
 
 // A switch row with no note: its press height, from the switch to the state word under it.
 export function switchRowHeight(title: FontMetrics): number {
-  return Math.max(MIN_PRESS, switchStateInkBottom({ title }));
+  return Math.max(
+    MIN_PRESS,
+    SETTINGS_ROW.icon.dy +
+      SETTINGS_ROW.switch.height +
+      SWITCH_STATE_GAP +
+      title.capHeight * TEXT_SCALE,
+  );
 }
 
-// The rows down the page's body, from its top, a separator between each pair (separatorBetween),
+// The rows down the page's body, from its top, a separator between each pair,
 // and the version label fixed under the body. The body is no taller than the room over the label;
 // rows past it scroll.
 export function settingsLayout(
@@ -302,14 +319,22 @@ export function settingsLayout(
   const separators: Rect[] = [];
   const rows = shapes.map((shape, i) => {
     const rect = { height: rowHeight(fonts, shape), width: column.width, x: column.x, y: rowY };
-    const { line, next } = separatorBetween(rect, rect.y + rect.height);
+    const bottom = rect.y + rect.height;
     if (i < shapes.length - 1) {
-      separators.push(line);
+      separators.push({ height: SEPARATOR.height, width: rect.width, x: rect.x, y: bottom });
     }
-    rowY = next;
+    rowY = bottom + SEPARATOR.height;
+    const notes = shape.kind === "switch" ? shape.noteLines : 0;
+    const stack = labelStack(fonts, notes);
+    const labelY =
+      rect.y +
+      (shape.kind === "switch"
+        ? Math.floor((rect.height - stack.height) / 2) + stack.iconRise
+        : SETTINGS_ROW.label.dy);
     return {
-      control: rowControl(rect, shape),
-      noteY: shape.kind === "slider" || shape.noteLines === 0 ? null : rect.y + noteDy(fonts.title),
+      control: rowControl(fonts.title, rect, shape),
+      labelY,
+      noteY: notes === 0 ? null : labelY + stack.labelToNote,
       rect,
     };
   });

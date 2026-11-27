@@ -21,9 +21,10 @@ import { overlayRegion } from "./homeBar.ts";
 import {
   installStepsLayout,
   SETTINGS_ROW,
+  SETTINGS_SWITCH_GAP,
+  settingsFormRows,
   settingsInstallWidth,
   settingsLayout,
-  SWITCH_ROWS,
   switchStateCentre,
 } from "./settings.ts";
 import {
@@ -81,12 +82,13 @@ const view = (state: Partial<SettingsState>) =>
     { ...STATE, ...state },
   );
 
-// A switch row's switch as its kit list places it (SWITCH_ROWS), in game pixels.
+// A switch row's switch as its kit list places it (settingsFormRows), in game pixels.
 const switchOf = (rect: Rect) =>
-  formRowsGeometry(
-    { ...SWITCH_ROWS, height: rect.height },
-    { origin: rect, rows: [{ switch: true }], width: rect.width },
-  ).rows[0]!.switch!;
+  formRowsGeometry(settingsFormRows(MEASURE.title, rect.height), {
+    origin: rect,
+    rows: [{ switch: true }],
+    width: rect.width,
+  }).rows[0]!.switch!;
 
 describe("settingsView", () => {
   it("leaves by the page's Back under its page title, on a cream page", () => {
@@ -149,7 +151,7 @@ describe("settingsView", () => {
       for (const row of current.rows.filter(({ kind }) => kind === "switch")) {
         const art = switchOf(row.rect);
         const state = row.texts.at(-1)!;
-        expect(state.capTop - art.y - SETTINGS_CARD.row.switch.height).toBeGreaterThan(0);
+        expect(state.capTop - art.y - SETTINGS_CARD.row.switch.height).toBe(SETTINGS_SWITCH_GAP);
         expect(state).toMatchObject({
           anchor: "inkCentre",
           x: art.x + SETTINGS_CARD.row.switch.width / 2,
@@ -158,13 +160,21 @@ describe("settingsView", () => {
     }
   });
 
-  it("places each switch switchInset in from its row's right, icon.dy down", () => {
-    const { icon, switch: art, switchInset } = SETTINGS_CARD.row;
+  it("keeps each centred switch stack on the common value column", () => {
+    const { switch: art, switchInset } = SETTINGS_CARD.row;
     for (const row of view({}).rows.filter(({ kind }) => kind === "switch")) {
       expect(switchOf(row.rect)).toEqual({
         ...art,
         x: row.rect.x + row.rect.width - switchInset - art.width,
-        y: row.rect.y + icon.dy,
+        y:
+          row.rect.y +
+          Math.floor(
+            (row.rect.height -
+              art.height -
+              SETTINGS_SWITCH_GAP -
+              MEASURE.title.capHeight * TEXT_SCALE) /
+              2,
+          ),
       });
     }
   });
@@ -218,8 +228,7 @@ describe("settingsView", () => {
       });
       expect(fps.texts[0]!.x - fps.icon!.x).toBe(LABEL_ICON + ICON_LABEL_GAP);
       expect(fps.texts[0]!.x - fps.rect.x).toBe(SETTINGS_ROW.label.dx);
-      expect(fps.texts[0]!.capTop - fps.rect.y).toBe(SETTINGS_ROW.label.dy);
-      expect(sound.texts[0]!.capTop - sound.rect.y).toBe(SETTINGS_ROW.label.dy);
+      expect(fps.icon!.y - fps.rect.y).toBe(Math.floor((fps.rect.height - LABEL_ICON) / 2));
       expect(fps.texts[0]!.x).toBe(sound.texts[0]!.x);
       expect(fps.texts.at(-1)!.x).toBe(sound.texts.at(-1)!.x);
     },

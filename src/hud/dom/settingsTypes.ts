@@ -1,3 +1,5 @@
+import type { PlacedFormRow } from "@andornaut/game-kit/runtime/ui/formRow";
+
 import type { SettingsTarget, SettingsView, VolumeKey } from "../../home/index.ts";
 import type { DomArtSource, DomQuestionPanel, DomQuestionPanelInput } from "../../ui/dom/index.ts";
 import type { DomScale } from "../../ui/index.ts";
@@ -40,7 +42,7 @@ export interface DomSettings extends Pick<
 export interface RowPart {
   readonly destroy: () => void;
   readonly element: HTMLElement;
-  readonly place: (scale: DomScale) => void;
+  readonly place: (scale: DomScale, placed: PlacedFormRow) => void;
   readonly ready: Promise<readonly string[]>;
   readonly refuse: (reducedMotion: boolean) => void;
 }

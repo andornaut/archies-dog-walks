@@ -20,7 +20,6 @@ import {
 import { inside } from "../testing/rects.ts";
 import { SETTINGS_EXPORT_ROWS } from "../tools/layoutExport.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
-import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeFace } from "../ui/closeControl.ts";
 import { iconBesideLabel } from "../ui/iconLabel.ts";
 import { modalTitleLayout } from "../ui/modal/layout.ts";
@@ -38,6 +37,7 @@ import {
   SETTINGS_BUILD_LABEL,
   SETTINGS_NOTE_STYLE,
   SETTINGS_ROW,
+  SETTINGS_SWITCH_GAP,
   settingsInstallWidth,
   settingsLayout,
   type SettingsRowShape,
@@ -157,9 +157,7 @@ function rowParts(i: number): [string, Rect][] {
     return placed.control === null ? [] : [["control", placed.control]];
   }
   const { icon, label } = SETTINGS_ROW;
-  const inline = row.kind === "switch" && row.note === undefined;
-  const labelTop =
-    rect.y + (inline ? Math.floor((rect.height - titleFont.capHeight * 2) / 2) : label.dy);
+  const labelTop = placed.labelY;
   const parts: [string, Rect][] = [
     ["label", labelInk("font-title", row.label, rect.x + label.dx, labelTop)],
     ["icon", { height: 16, width: 16, x: rect.x + icon.dx, y: labelTop - (label.dy - icon.dy) }],
@@ -184,7 +182,7 @@ function rowParts(i: number): [string, Rect][] {
   const control = placed.control ?? rect;
   // Each state word, its ink centred on the switch (switchStateCentre).
   const states = (row.kind === "switch" ? row.states : []).map((word): [string, Rect] => {
-    const ink = labelInk("font-title", word, 0, control.y + control.height + BUTTON_SIZE.stackGap);
+    const ink = labelInk("font-title", word, 0, control.y + control.height + SETTINGS_SWITCH_GAP);
     return [`state ${word}`, { ...ink, x: switchStateCentre(control) - ink.width / 2 }];
   });
   // A note line's rows run from its capitals to the font's lowest ink, descenders included.
@@ -230,11 +228,7 @@ describe("the Settings page", () => {
   it.each<[string, readonly number[], readonly number[]]>([
     ["the rows' column", [rows[0]!.rect.x, rows[0]!.rect.x + rows[0]!.rect.width], [8, 338]],
     ["the body's top", [layout.rowsViewport.y], [103]],
-    [
-      "a switch's columns and top",
-      [switchFace.x, switchFace.x + switchFace.width, switchFace.y - firstSwitch.rect.y],
-      [291, 323, 9],
-    ],
+    ["a switch's columns", [switchFace.x, switchFace.x + switchFace.width], [291, 323]],
     ["a slider's track", [layout.track.x, layout.track.x + layout.track.width], [34, 330]],
     ["Install's centre", [install.x + install.width / 2], [173]],
     ["the version label's lowest ink", [layout.buildLabelY + bodyFont.capHeight * 2], [492]],
@@ -250,13 +244,23 @@ describe("the Settings page", () => {
     ),
   )("sets the %s row's %s state centred under its switch", (_, word, i) => {
     const parts = new Map(rowParts(i));
+    const left = [...parts]
+      .filter(([name]) => name === "icon" || name === "label" || name.startsWith("note"))
+      .map(([, box]) => box);
     const control = parts.get("control")!;
     const state = parts.get(`state ${word}`)!;
     expect(state.x + state.width / 2).toBe(control.x + control.width / 2);
     expect(control.x + control.width).toBe(
       rows[i]!.rect.x + SETTINGS_ROW.width - SETTINGS_ROW.switchInset,
     );
-    expect(state.y).toBeGreaterThan(control.y + control.height);
+    expect(state.y - control.y - control.height).toBe(SETTINGS_SWITCH_GAP);
+    const row = rows[i]!.rect;
+    const leftTop = Math.min(...left.map((part) => part.y));
+    const leftBottom = Math.max(...left.map((part) => part.y + part.height));
+    expect(Math.abs(leftTop - row.y - (row.y + row.height - leftBottom))).toBeLessThanOrEqual(1);
+    expect(
+      Math.abs(control.y - row.y - (row.y + row.height - state.y - state.height)),
+    ).toBeLessThanOrEqual(1);
     expect(inside(state, rows[i]!.rect)).toBe(true);
     for (const [name, ink] of parts) {
       if (name === "label" || name.startsWith("note")) {
@@ -269,7 +273,7 @@ describe("the Settings page", () => {
   });
 
   // The first row starts at the body's top; each later row sits under the one separator, the
-  // stacked gap clear of it on both sides, across the rows' full width.
+  // separator line across the rows' full width with no idle gutter.
   it("starts rows at the body's top or under the separator after the row before", () => {
     expect(rows[0]!.rect.y).toBe(ROWS_PAGE_LAYOUT.bodyTop);
     expect(rows[0]!.rect.x).toBe(rows.at(-1)!.rect.x);
@@ -282,9 +286,9 @@ describe("the Settings page", () => {
         height: SEPARATOR.height,
         width: rect.width,
         x: rect.x,
-        y: above.y + above.height + SEPARATOR.clear,
+        y: above.y + above.height,
       });
-      expect(rect.y - line.y - line.height).toBe(SEPARATOR.clear);
+      expect(rect.y).toBe(line.y + line.height);
     });
   });
 

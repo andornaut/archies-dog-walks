@@ -141,8 +141,6 @@ export const SETTINGS_CARD = {
     controlGap: 10,
     // The icon's top-left.
     icon: { dx: SETTINGS_ROW_INSET, dy: 9 },
-    // The rows under the note's lowest ink.
-    inkFoot: 14,
     // The label's capitals' top.
     label: { dy: 12 },
     // The note's left edge and most lines.

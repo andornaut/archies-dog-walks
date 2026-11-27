@@ -21,15 +21,16 @@ export function placeFormRows(
   origin: Point,
   list: FormRowsView,
   at: { readonly rect: Rect; readonly rows: readonly PlacedFormRowEntry[] },
-): void {
+) {
   const project = { x: (x: number) => gridX(scale, x), y: (y: number) => gridY(scale, y) };
   const { rect, rows } = at;
-  list.place(
+  const geometry = list.place(
     { artPixel: artPixel(scale), origin: { x: rect.x, y: rect.y }, project, width: rect.width },
     rows,
   );
   list.element.style.left = `${project.x(rect.x) - project.x(origin.x)}px`;
   list.element.style.top = `${project.y(rect.y) - project.y(origin.y)}px`;
+  return geometry;
 }
 
 // Sets each custom property on element to its sheet frame by tag, once cut: the cuts' URLs, none

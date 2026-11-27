@@ -32,8 +32,8 @@ import {
   SETTINGS_BUILD_LABEL,
   SETTINGS_NOTE_STYLE,
   SETTINGS_ROW,
+  SETTINGS_SWITCH_GAP,
   type SettingsLayout,
-  SWITCH_STATE_GAP,
   switchStateCentre,
   type VolumeKey,
   volumePercent,
@@ -260,7 +260,7 @@ function controlRow(
   row: ControlRow,
   state: SettingsState,
 ): SettingsRowView {
-  const { control, noteY, rect } = layout;
+  const { control, labelY, noteY, rect } = layout;
   if (row.kind === "button" && control !== null) {
     // The icon's ink, ICON_LABEL_GAP and the label's ink are one group centred on the face, a
     // half pixel rounding right, the icon on the label's capitals.
@@ -296,11 +296,9 @@ function controlRow(
   const on = switchOn(row.key, state.settings);
   const look = selectLook("normal");
   const pressed = state.pressed?.kind === "switch" && state.pressed.key === row.key;
-  const { x, y } = rect;
+  const { x } = rect;
   const room = noteRoomForControl(control?.width ?? SETTINGS_ROW[row.kind].width);
   const description = row.note === undefined ? "" : words[row.note];
-  // Every switch row's capitals sit LABEL.dy down, with or without a note.
-  const labelTop = y + LABEL.dy;
   const view: SettingsRowView = {
     description,
     face: PALETTE[look.face],
@@ -313,7 +311,7 @@ function controlRow(
             tag: "idle",
             ...iconBesideLabel({
               capHeight: measure.title.capHeight * TEXT_SCALE,
-              capTop: labelTop,
+              capTop: labelY,
               inkLeft: x + LABEL.dx,
             }),
           },
@@ -326,7 +324,7 @@ function controlRow(
     texts: [
       {
         anchor: "ink",
-        capTop: labelTop,
+        capTop: labelY,
         colour: PALETTE[look.text],
         font: "title",
         lines: [words[row.label]],
@@ -360,7 +358,7 @@ function controlRow(
       {
         // Its ink centred on the switch (switchStateCentre).
         anchor: "inkCentre",
-        capTop: control.y + control.height + SWITCH_STATE_GAP,
+        capTop: control.y + control.height + SETTINGS_SWITCH_GAP,
         colour: PALETTE[look.text],
         font: "title",
         lines: [word],

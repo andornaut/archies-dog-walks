@@ -4,12 +4,18 @@ import { expect, it, vi } from "vitest";
 import { BUILD_LABEL } from "../../buildLabel.ts";
 import { gameData } from "../../data/index.ts";
 import { overlayRegion } from "../../home/homeBar.ts";
-import { installStepsLayout, settingsLayout } from "../../home/settings.ts";
+import {
+  installStepsLayout,
+  SETTINGS_ROW,
+  SETTINGS_SWITCH_GAP,
+  settingsLayout,
+} from "../../home/settings.ts";
 import { type SettingsMeasure, settingsRows, settingsView } from "../../home/settingsView.ts";
 import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { DEFAULT_SETTINGS } from "../../save/settings.ts";
 import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
 import { fontFileMetrics, fontInk, gameFont } from "../../testing/fontInk.ts";
+import { capRows, shownText, WEB_FONT_EM } from "../../ui/dom/pixelLine.ts";
 import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
 import { artPixel, domScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
@@ -295,6 +301,42 @@ it("keeps the page's chrome fixed while revealing whole focused rows in its nati
   expect(footer.style.top).toBe(footerTop);
   shown.update(small, 0);
   expect((viewport as unknown as HTMLElement).scrollTop).toBe(0);
+  shown.destroy();
+});
+
+it.each([
+  [575, 1],
+  [390, 2.625],
+])("anchors state ink to the painted switch at width %i and DPR %f", (width, dpr) => {
+  const { element, scale, shown, view } = fixture(false, width, dpr);
+  const switches = element.all().filter((part) => part.getAttribute("role") === "switch");
+  const views = view().rows.filter(({ kind }) => kind === "switch");
+  const pixels = (part: FakeElement, name: string) =>
+    Number.parseFloat(part.style.getPropertyValue(name));
+  expect(switches).toHaveLength(views.length);
+  switches.forEach((row, i) => {
+    // These are the dimensions, end margin and stack top consumed by the projected switch CSS.
+    const { rect, switch: toggle } = views[i]!;
+    const word = shownText("title", toggle!.word);
+    const block = row.children.find(
+      (part) => part.classList.contains("adw-lines") && part.children[0]?.textContent === word,
+    )!;
+    const span = block.children[0]!;
+    const switchRight =
+      gridX(scale, rect.x + rect.width - SETTINGS_ROW.pad) -
+      gridX(scale, rect.x) -
+      pixels(row, "--ui-form-switch-end");
+    const switchCentre = switchRight - pixels(row, "--ui-switch-width") / 2;
+    const switchBottom = pixels(row, "--ui-form-value-offset") + pixels(row, "--ui-switch-height");
+    const fontPixel = Number.parseFloat(span.style.fontSize!) / WEB_FONT_EM;
+    const ink = fontInk("font-title", { scale: 1 }, word);
+    const inkCentre =
+      Number.parseFloat(span.style.left!) + ((ink.left + ink.right) * fontPixel) / 2;
+    const capTop =
+      Number.parseFloat(span.style.top!) + capRows(gameFont("font-title"), "title") * fontPixel;
+    expect(Math.abs(inkCentre - switchCentre)).toBeLessThanOrEqual(artPixel(scale) / 2);
+    expect(capTop - switchBottom).toBe(SETTINGS_SWITCH_GAP * artPixel(scale));
+  });
   shown.destroy();
 });
 

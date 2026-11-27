@@ -1,10 +1,12 @@
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import type { PlacedFormRow } from "@andornaut/game-kit/runtime/ui/formRow";
 import { createSlider } from "@andornaut/game-kit/runtime/web/ui/dom/slider";
 
 import { gameData } from "../../data/index.ts";
 import {
   FEEDBACK,
   SETTINGS_SLIDER,
+  SETTINGS_SWITCH_GAP,
   type SettingsRowView,
   type SettingsTarget,
   type SettingsText,
@@ -21,7 +23,14 @@ import {
   textBlock,
   type UiLayer,
 } from "../../ui/dom/index.ts";
-import { cssHex, type DomScale } from "../../ui/index.ts";
+import {
+  artPixel,
+  cssHex,
+  type DomScale,
+  exactDeviceX,
+  exactDeviceY,
+  gridY,
+} from "../../ui/index.ts";
 import { hideKitText, installPart } from "./settingsInstall.ts";
 import type { DomSettingsInput, RowPart } from "./settingsTypes.ts";
 
@@ -52,10 +61,29 @@ function rowArt(doc: Document, input: DomSettingsInput, first: SettingsRowView) 
   return {
     face,
     icon,
-    place(scale: DomScale, row: SettingsRowView) {
+    place(scale: DomScale, row: SettingsRowView, placed: PlacedFormRow) {
       face.style.backgroundColor = row.face === undefined ? "" : cssHex(row.face);
+      if (icon !== undefined && row.icon !== undefined && placed.icon !== undefined) {
+        // The leading glyph follows the label's capitals, independently of the trailing stack.
+        icon.element.style.position = "relative";
+        icon.element.style.top = `${gridY(scale, row.icon.y) - placed.icon.y}px`;
+      }
       row.texts.forEach((text, i) => {
-        texts[i]?.update(text);
+        const face = placed.switch;
+        let anchored = text;
+        if (text.anchor === "inkCentre" && face !== undefined) {
+          // The switch is painted at a whole art-pixel size; its far edge does not follow the
+          // fractional layout projection. Feed its actual anchor back to the ink placer.
+          const deviceUnit = scale.unit * scale.dpr;
+          const centre = face.x + face.width / 2;
+          const cap = face.y + face.height + SETTINGS_SWITCH_GAP * artPixel(scale);
+          anchored = {
+            ...text,
+            capTop: text.capTop + (cap - exactDeviceY(scale, text.capTop)) / deviceUnit,
+            x: text.x + (centre - exactDeviceX(scale, text.x)) / deviceUnit,
+          };
+        }
+        texts[i]?.update(anchored);
         texts[i]?.place(scale, row.rect);
       });
     },
@@ -121,10 +149,10 @@ function switchPart(
       control.dispose();
     },
     element,
-    place(scale: DomScale) {
+    place(scale: DomScale, placed: PlacedFormRow) {
       const row = view();
       element.toggleAttribute("data-ui-pressed", row.pressed);
-      art.place(scale, row);
+      art.place(scale, row, placed);
       control.refresh();
     },
     ready: art.icon?.ready ?? Promise.resolve([]),
@@ -189,8 +217,8 @@ function sliderPart(
       slider.dispose();
     },
     element,
-    place(scale: DomScale) {
-      art.place(scale, view());
+    place(scale: DomScale, placed: PlacedFormRow) {
+      art.place(scale, view(), placed);
       slider.refresh();
     },
     ready: art.icon?.ready ?? Promise.resolve([]),

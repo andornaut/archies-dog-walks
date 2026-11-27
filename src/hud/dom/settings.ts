@@ -1,9 +1,10 @@
 import "@andornaut/game-kit/runtime/web/ui/dom/slider.css";
 
+import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { createFormRows } from "@andornaut/game-kit/runtime/web/ui/dom/formRow";
 
 import { type DomPage, showPage } from "../../home/dom/index.ts";
-import { SETTINGS_FORM_ROWS } from "../../home/index.ts";
+import { settingsFormRows } from "../../home/index.ts";
 import {
   addTapBurst,
   createContentSeparator,
@@ -66,7 +67,7 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
   // slider's.
   const rowList = createFormRows(
     doc,
-    { ...SETTINGS_FORM_ROWS, height: current.rows[0]!.rect.height },
+    settingsFormRows(fontMetrics(input.fonts.title), current.rows[0]!.rect.height),
     { className: "adw-framed adw-form-rows" },
   );
   rowList.element.append(...rows.map((row) => row.element));
@@ -102,16 +103,14 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
         gridY(scale, current.rowsViewport.y)
       }px`;
       content.style.width = "100%";
-      placeFormRows(scale, current.rowsViewport, rowList, {
+      const { placed } = placeFormRows(scale, current.rowsViewport, rowList, {
         rect: current.rows[0]!.rect,
         rows: current.rows.map((row, i) => ({
           element: rows[i]!.element,
           ...(row.kind === "slider" ? {} : { height: row.rect.height }),
         })),
       });
-      for (const row of rows) {
-        row.place(scale);
-      }
+      rows.forEach((row, index) => row.place(scale, placed.rows[index]!));
       separators.forEach((element, index) => {
         const rect = current.separators[index];
         if (rect !== undefined) {
