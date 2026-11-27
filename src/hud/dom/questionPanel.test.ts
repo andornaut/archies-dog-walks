@@ -1039,3 +1039,19 @@ it("uses the top modal's X action once for a letterbox backdrop tap", async () =
   expect(pointer.stopPropagation).toHaveBeenCalledOnce();
   lower.shown.destroy();
 });
+
+it("routes Escape to the actual visible X and removes its document listener on disposal", () => {
+  const { buttons, doc, shown } = menu();
+  const click = vi.fn();
+  Object.assign(buttons.at(-1)!, { click });
+  const escape = () => ({
+    code: "Escape",
+    preventDefault: vi.fn(),
+    stopImmediatePropagation: vi.fn(),
+  });
+  doc.fire("keydown", escape());
+  expect(click).toHaveBeenCalledOnce();
+  shown.destroy();
+  doc.fire("keydown", escape());
+  expect(click).toHaveBeenCalledOnce();
+});

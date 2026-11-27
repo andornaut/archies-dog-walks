@@ -194,6 +194,7 @@ it("admits revealed and painted views, makes covered dialogs inert and restores 
   );
   expect(view.accepts()).toBe(false);
   expect(gate.accepts()).toBe(false);
+  expect(view.ownsKeyboard()).toBe(true);
   await reveal.revealed;
   expect(view.accepts()).toBe(false);
   paint?.();
@@ -202,6 +203,7 @@ it("admits revealed and painted views, makes covered dialogs inert and restores 
   root.fire("pointerdown", held);
   expect(press.canvasAllowed()).toBe(false);
   const overlay = gate.open();
+  expect(view.ownsKeyboard()).toBe(false);
   expect(press.canvasAllowed()).toBe(true);
   expect(root.inert).toBe(true);
   expect(root.getAttribute("aria-hidden")).toBe("true");
@@ -211,6 +213,7 @@ it("admits revealed and painted views, makes covered dialogs inert and restores 
   expect(root.getAttribute("aria-hidden")).toBeNull();
   view.setEnabled(false);
   expect(view.accepts()).toBe(false);
+  expect(view.ownsKeyboard()).toBe(true);
   view.setEnabled(true);
   expect(view.accepts()).toBe(true);
   view.setShown(false);

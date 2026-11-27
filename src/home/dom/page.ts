@@ -243,7 +243,15 @@ export function showPage(layer: UiLayer, input: DomPageInput): DomPage {
     const at = focusables().indexOf(event.target as HTMLElement);
     input.onFocus?.(at === -1 ? undefined : at);
   });
-  bindDialogKeys({ accepts: admits, focusables }, dialog);
+  const stopKeys = bindDialogKeys(
+    {
+      accepts: admits,
+      dismissControl: () => back.element,
+      focusables,
+      ownsKeyboard: () => (input.active?.() ?? true) && lifecycle.ownsKeyboard(),
+    },
+    dialog,
+  );
 
   // The frame on the art-pixel grid, then each part from the frame's own units.
   let placedScale: DomScale | undefined;
@@ -330,6 +338,7 @@ export function showPage(layer: UiLayer, input: DomPageInput): DomPage {
     burst: (at) => addTapBurst(layer, at),
     capture: () => lifecycle.capture(),
     destroy: () => {
+      stopKeys();
       stopUnderlay();
       scrollbar.dispose();
       tabs.forEach((tab) => tab.dispose());

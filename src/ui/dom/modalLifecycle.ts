@@ -289,6 +289,7 @@ export function revealPaint(
 
 export interface ModalLifecycle {
   accepts(): boolean;
+  ownsKeyboard(): boolean;
   capture(): () => boolean;
   destroy(): void;
   setEnabled(enabled: boolean): void;
@@ -398,11 +399,9 @@ export function mountModalLifecycle(
   let revision = 0;
   let scope: ModalInputScope | undefined = modal ? layer.input.open() : undefined;
   const eligible = () => alive && shown && !inert;
-  const accepts = () =>
-    eligible() &&
-    enabled &&
-    paint.painted() &&
-    (modal ? scope?.accepts() === true : layer.input.accepts());
+  const ownsKeyboard = () =>
+    eligible() && (modal ? scope?.accepts() === true : layer.input.accepts());
+  const accepts = () => ownsKeyboard() && enabled && paint.painted();
   const blur = () => {
     if (element.contains(doc.activeElement)) {
       (doc.activeElement as HTMLElement).blur();
@@ -554,6 +553,7 @@ export function mountModalLifecycle(
         focusTarget(previous);
       }
     },
+    ownsKeyboard,
     setEnabled: (next) => {
       if (enabled !== next) {
         enabled = next;

@@ -329,7 +329,19 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     const at = focusables().indexOf(event.target as HTMLElement);
     input.onFocus?.(at === -1 ? undefined : at);
   });
-  bindDialogKeys({ accepts, focusables }, dialog);
+  const stopKeys = bindDialogKeys(
+    {
+      accepts,
+      ...(input.directionKeys === false ? { directionKeys: false as const } : {}),
+      dismissControl: () =>
+        close !== undefined && !close.hidden && close.closest?.("[hidden]") == null
+          ? close
+          : input.backControl,
+      focusables,
+      ownsKeyboard: () => lifecycle.ownsKeyboard(),
+    },
+    dialog,
+  );
   if (input.dismiss !== undefined) {
     const dismiss = input.dismiss;
     bindGameAction(
@@ -434,6 +446,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     burst: (at) => addTapBurst(layer, at),
     capture: () => lifecycle.capture(),
     destroy() {
+      stopKeys();
       disposeButtons.forEach((dispose) => dispose());
       setRampDimmed(dialog, false);
       lifecycle.destroy();

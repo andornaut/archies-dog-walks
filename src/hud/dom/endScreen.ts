@@ -419,6 +419,7 @@ export function showEndScreen(layer: UiLayer, input: DomEndScreenInput): DomEndS
   let scrolling = false;
   let nativeButtonPress: Rect | undefined;
   const panel = showQuestionPanel(layer, {
+    backControl: backToTitle.element,
     close: null,
     closeLabel: input.closeLabel,
     fonts: input.fonts,

@@ -14,6 +14,8 @@ export interface DomQuestionPanelInput {
   // Outside dismissal when there is no interactive X. An interactive X always supplies the
   // backdrop's action too. Required choices without either callback consume the tap.
   readonly backgroundCancel?: () => void;
+  // A base results surface can supply its existing visible Back control.
+  readonly backControl?: HTMLElement;
   // The page's own controls drawn outside the panel, interactive with it.
   readonly companions?: readonly HTMLElement[];
   // What the close control does; null draws no close control, and a panel with no buttons then
@@ -27,6 +29,8 @@ export interface DomQuestionPanelInput {
   readonly onInvoke?: (index: number, control: HTMLElement) => void;
   // The id of the part that describes the panel, if any.
   readonly describedBy?: string;
+  // A composed surface can own its own directional focus path.
+  readonly directionKeys?: false;
   // Told the index (focusControl's) of the control focus moves to, or undefined for the dialog.
   readonly onFocus?: (index: number | undefined) => void;
   // The dialog's name where the canvas draws its title (view.title empty), as over a

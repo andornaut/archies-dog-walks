@@ -50,9 +50,15 @@ function burstHost(layer: UiLayer, scale: DomScale): HTMLElement {
 // Shift+Tab move the focus among the visible focusables in order, round from the last to the
 // first, and from the dialog itself enter at the first or the last.
 export function bindDialogKeys(
-  input: { readonly accepts: () => boolean; readonly focusables: () => readonly HTMLElement[] },
+  input: {
+    readonly accepts: () => boolean;
+    readonly directionKeys?: false;
+    readonly dismissControl?: () => HTMLElement | undefined;
+    readonly focusables: () => readonly HTMLElement[];
+    readonly ownsKeyboard?: () => boolean;
+  },
   dialog: HTMLElement,
-): void {
+): () => void {
   const doc = dialog.ownerDocument;
   const { accepts, focusables } = input;
   const visible = () =>
@@ -62,6 +68,33 @@ export function bindDialogKeys(
         control.closest?.("[hidden]") == null &&
         (control.tagName.toLowerCase() !== "button" || control.tabIndex >= 0),
     );
+  // The existing input scope owns Escape even before its first paint, but cannot act yet.
+  const escape = (event: KeyboardEvent) => {
+    if (
+      event.code !== "Escape" ||
+      !sceneKeyAllowed(event) ||
+      !(input.ownsKeyboard?.() ?? accepts())
+    ) {
+      return;
+    }
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if (!accepts() || event.repeat) {
+      return;
+    }
+    const control = input.dismissControl?.();
+    if (
+      control?.isConnected &&
+      !control.hidden &&
+      control.closest?.("[hidden]") == null &&
+      control.tabIndex >= 0 &&
+      !(control as HTMLButtonElement).disabled &&
+      control.getAttribute("aria-disabled") !== "true"
+    ) {
+      control.click();
+    }
+  };
+  doc.addEventListener("keydown", escape, true);
   // Directional focus is admitted before a slider can take its vertical arrows.
   dialog.addEventListener(
     "keydown",
@@ -70,7 +103,7 @@ export function bindDialogKeys(
         return;
       }
       const direction = focusDirectionForKey(event.code);
-      if (direction === undefined) {
+      if (direction === undefined || input.directionKeys === false) {
         return;
       }
       const target = event.target as HTMLElement | null;
@@ -136,6 +169,7 @@ export function bindDialogKeys(
     event.preventDefault();
     (controls[next] ?? dialog).focus();
   });
+  return () => doc.removeEventListener("keydown", escape, true);
 }
 
 // The art URLs every element in root draws as a background image, so its reveal waits for them.

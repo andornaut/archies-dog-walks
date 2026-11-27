@@ -3,14 +3,25 @@ import { expect, it, vi } from "vitest";
 import { FakeDocument } from "../../testing/fakeDom.ts";
 import { bindDialogKeys } from "./nativeSurfaceEffects.ts";
 
-function fixture() {
+function fixture(
+  options: {
+    directionKeys?: false;
+    dismissControl?: () => HTMLElement | undefined;
+    ownsKeyboard?: () => boolean;
+  } = {},
+) {
   const doc = new FakeDocument();
   const dialog = doc.createElement("div");
   const controls = Array.from({ length: 3 }, () => doc.createElement("button"));
   dialog.append(...controls);
+  doc.body.append(dialog);
   const active = { accepts: true };
-  bindDialogKeys(
-    { accepts: () => active.accepts, focusables: () => controls as unknown as HTMLElement[] },
+  const dispose = bindDialogKeys(
+    {
+      ...options,
+      accepts: () => active.accepts,
+      focusables: () => controls as unknown as HTMLElement[],
+    },
     dialog as unknown as HTMLElement,
   );
   const key = (code: string, extra = {}) => {
@@ -25,10 +36,13 @@ function fixture() {
       target: doc.activeElement ?? dialog,
       ...extra,
     };
-    dialog.fire("keydown", event);
+    doc.fire("keydown", event);
+    if (!event.defaultPrevented) {
+      dialog.fire("keydown", event);
+    }
     return event;
   };
-  return { active, controls, dialog, doc, key };
+  return { active, controls, dialog, dispose, doc, key };
 }
 
 it("uses every direction family to reach native actions and footer once", () => {
@@ -75,4 +89,98 @@ it("keeps slider horizontal aliases for the value owner while vertical arrows le
   expect(doc.activeElement).toBe(controls[0]);
   key("ArrowDown");
   expect(doc.activeElement).toBe(controls[1]);
+});
+
+it("lets a composed surface own directions while preserving native confirmation and Tab", () => {
+  const { controls, doc, key } = fixture({ directionKeys: false });
+  expect(key("ArrowDown").defaultPrevented).toBe(false);
+  expect(doc.activeElement).not.toBe(controls[0]);
+  key("Tab");
+  expect(doc.activeElement).toBe(controls[0]);
+  expect(key("KeyS").defaultPrevented).toBe(false);
+  expect(key("Enter").defaultPrevented).toBe(false);
+  expect(key("Enter", { repeat: true }).defaultPrevented).toBe(true);
+});
+
+it("dismisses the explicit visible control once on Escape and contains repeats or no-X surfaces", () => {
+  let dismissal: HTMLElement | undefined;
+  const { controls, key } = fixture({ dismissControl: () => dismissal });
+  const click = vi.fn();
+  Object.assign(controls[2]!, { click });
+  dismissal = controls[2] as unknown as HTMLElement;
+  expect(key("Escape").defaultPrevented).toBe(true);
+  expect(click).toHaveBeenCalledOnce();
+  key("Escape", { repeat: true });
+  expect(click).toHaveBeenCalledOnce();
+  controls[2]!.hidden = true;
+  expect(key("Escape").defaultPrevented).toBe(true);
+  expect(click).toHaveBeenCalledOnce();
+  dismissal = undefined;
+  expect(key("Escape").defaultPrevented).toBe(true);
+  expect(click).toHaveBeenCalledOnce();
+});
+
+it("contains Escape while pending, throughout teardown and on repeat without reaching a lower surface", () => {
+  const doc = new FakeDocument();
+  const top = doc.createElement("div");
+  const lower = doc.createElement("div");
+  const x = doc.createElement("button");
+  const back = doc.createElement("button");
+  top.append(x);
+  lower.append(back);
+  doc.body.append(top, lower);
+  const state = { lowerPainted: false, owner: "top", painted: false };
+  const close = vi.fn(() => {
+    state.owner = "lower";
+  });
+  const dismiss = vi.fn();
+  Object.assign(x, { click: close });
+  Object.assign(back, { click: dismiss });
+  const stopTop = bindDialogKeys(
+    {
+      accepts: () => state.owner === "top" && state.painted,
+      dismissControl: () => x as unknown as HTMLElement,
+      focusables: () => [],
+      ownsKeyboard: () => state.owner === "top",
+    },
+    top as unknown as HTMLElement,
+  );
+  const stopLower = bindDialogKeys(
+    {
+      accepts: () => state.owner === "lower" && state.lowerPainted,
+      dismissControl: () => back as unknown as HTMLElement,
+      focusables: () => [],
+      ownsKeyboard: () => state.owner === "lower",
+    },
+    lower as unknown as HTMLElement,
+  );
+  const escape = (repeat = false) => {
+    const event = {
+      code: "Escape",
+      defaultPrevented: false,
+      preventDefault() {
+        this.defaultPrevented = true;
+      },
+      repeat,
+      stopImmediatePropagation: vi.fn(),
+    };
+    doc.fire("keydown", event);
+    expect(event.defaultPrevented).toBe(true);
+  };
+  escape();
+  expect(close).not.toHaveBeenCalled();
+  state.painted = true;
+  escape();
+  expect(close).toHaveBeenCalledOnce();
+  expect(dismiss).not.toHaveBeenCalled();
+  escape(true);
+  expect(dismiss).not.toHaveBeenCalled();
+  state.lowerPainted = true;
+  escape(true);
+  expect(dismiss).not.toHaveBeenCalled();
+  escape();
+  expect(dismiss).toHaveBeenCalledOnce();
+  stopTop();
+  stopLower();
+  expect(doc.listeners.get("keydown")).toHaveLength(0);
 });
