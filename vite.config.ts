@@ -43,7 +43,7 @@ export default gameViteConfig<typeof ConfigModules>({
   // the build links it as a file the CSP's style-src 'self' allows.
   // originWorkerPlugin builds the Worker that serves the archive-only files at their URLs to a
   // page with no installed build (src/pwa/originWorker.ts).
-  plugins: (modules, repoPath) => {
+  plugins: (modules, repoPath, metadata) => {
     const atlas = modules.atlasPlugin();
     return [
       atlas,
@@ -56,6 +56,7 @@ export default gameViteConfig<typeof ConfigModules>({
       modules.hashedIconsPlugin({ icons: modules.HASHED_ICONS }),
       modules.webManifestPlugin(),
       modules.precachePlugin({
+        buildId: metadata.buildId,
         getArtFiles: atlas.api.artFiles,
         pageHtmlFile: "play/index.html",
         serviceWorkerSource: repoPath("src/pwa/serviceWorker.ts"),

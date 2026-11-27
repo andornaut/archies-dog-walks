@@ -7,6 +7,7 @@ import { gameOnlyFiles, updateGroup } from "./assetGroups.ts";
 import { artHashedFiles, bootFiles } from "./precacheArt.ts";
 
 interface PrecachePluginOptions {
+  readonly buildId?: string | undefined;
   // The game's art files, as atlasPlugin hashed them for this build.
   getArtFiles: () => ArtFileMap;
   // The game page's file name in the build output, which is its path under Vite's root, e.g.
@@ -24,6 +25,7 @@ interface PrecachePluginOptions {
 // game's Worker (src/pwa/originWorker.ts) serves them at their URLs to a visitor who has not
 // installed. The first plugin reads the final bundle just before the kit's, which then prunes it.
 export function precachePlugin({
+  buildId,
   getArtFiles,
   pageHtmlFile,
   serviceWorkerSource,
@@ -43,6 +45,7 @@ export function precachePlugin({
     },
     kitPrecachePlugin({
       boot: bootFiles,
+      buildId,
       groupedFirstInstall: {
         archiveOnly: (url) => {
           if (gameOnly === undefined) {
