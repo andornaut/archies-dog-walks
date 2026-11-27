@@ -130,6 +130,7 @@ export const HELP_SCENES = {
     zone: "cabbagetown",
   },
   owners: {
+    cueMargin: 3,
     dogs: ["kilo", "archie", "ginger"],
     fired: "ginger",
     lane: 1,
@@ -368,7 +369,7 @@ function cards(data: GameData): HelpPicture {
 }
 
 function owners(data: GameData): HelpPicture {
-  const { dogs, fired, lane, lost, zoneFraction } = HELP_SCENES.owners;
+  const { cueMargin, dogs, fired, lane, lost, zoneFraction } = HELP_SCENES.owners;
   const started = startRun(data, dogs);
   const lead = started.pack[0].dog;
   const before = heartsOf(started, lead) ?? 0;
@@ -386,12 +387,19 @@ function owners(data: GameData): HelpPicture {
     dog: lead,
     kind: "hearts",
   };
+  const roadEnd = SCREEN.roadView.y + SCREEN.roadView.height;
+  const hudHeight = SCREEN_CONFIG.height - roadEnd;
+  const road = roadStrip(HELP_PICTURE_HEIGHT - hudHeight);
   return {
     ...STILL,
     changes: [change],
     collisionLead: lead,
     hud: true,
-    strips: [{ height: HELP_PICTURE_HEIGHT, screenY: SCREEN_CONFIG.height - HELP_PICTURE_HEIGHT }],
+    // Trade three rows of road below the walker's feet for headroom, keeping the full HUD.
+    strips: [
+      { ...road, screenY: road.screenY - cueMargin },
+      { height: hudHeight, screenY: roadEnd },
+    ],
     walk: walkIn(
       { ...started, pack, zoneDistance: pixels(zoneLength(data) * zoneFraction) },
       lane,
