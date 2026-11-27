@@ -13,6 +13,7 @@ export {
   isPauseKey,
   laneDirectionForKey,
   menuKeyActs,
+  sceneKeyAllowed,
   walkKeyAction,
 } from "./keyBindings.ts";
 export { keyNumbersShown, noteKeyPress, withKeyNumber } from "./keyNumbers.ts";

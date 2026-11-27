@@ -11,6 +11,7 @@ import {
   isPauseKey,
   laneDirectionForKey,
   menuKeyActs,
+  sceneKeyAllowed,
   walkKeyAction,
 } from "./keyBindings.ts";
 
@@ -132,9 +133,56 @@ describe("menuKeyActs", () => {
 });
 
 describe("focusDirectionForKey", () => {
-  it("reads the arrow keys only", () => {
+  it("ignores unrelated physical keys", () => {
     expect(focusDirectionForKey("ArrowUp")).toBe("up");
     expect(focusDirectionForKey("ArrowLeft")).toBe("left");
-    expect(focusDirectionForKey("KeyA")).toBeUndefined();
+    expect(focusDirectionForKey("KeyE")).toBeUndefined();
+  });
+});
+
+describe("UI direction aliases and event ownership", () => {
+  it.each([
+    ["up", ["ArrowUp", "KeyW", "KeyK"]],
+    ["down", ["ArrowDown", "KeyS", "KeyJ"]],
+    ["left", ["ArrowLeft", "KeyA", "KeyH"]],
+    ["right", ["ArrowRight", "KeyD", "KeyL"]],
+  ] as const)("navigates %s with each physical alias", (direction, codes) => {
+    for (const code of codes) {
+      expect(focusDirectionForKey(code)).toBe(direction);
+      expect(menuKeyActs(true, code)).toBe(true);
+      expect(sceneKeyAllowed({ code, shiftKey: true })).toBe(true);
+    }
+  });
+  it("yields to claimed, composition, shortcut and editing events", () => {
+    for (const event of [
+      { defaultPrevented: true },
+      { isComposing: true },
+      { keyCode: 229 },
+      { altKey: true },
+      { ctrlKey: true },
+      { metaKey: true },
+      { target: { tagName: "TEXTAREA" } },
+      { target: { tagName: "SELECT" } },
+      { target: { tagName: "INPUT", type: "text" } },
+      { target: { isContentEditable: true } },
+      { target: { closest: () => ({}) } },
+    ]) {
+      expect(sceneKeyAllowed({ code: "KeyW", ...event })).toBe(false);
+    }
+  });
+  it("leaves native button confirms and slider adjustment to their controls", () => {
+    const button = { tagName: "BUTTON" };
+    for (const code of ["Enter", "Space", "NumpadEnter"]) {
+      expect(sceneKeyAllowed({ code, target: button })).toBe(false);
+    }
+    expect(sceneKeyAllowed({ code: "ArrowDown", target: button })).toBe(true);
+    const slider = { getAttribute: () => "slider", tagName: "DIV" };
+    for (const code of ["ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"]) {
+      expect(sceneKeyAllowed({ code, target: slider })).toBe(false);
+    }
+    for (const code of ["ArrowUp", "ArrowDown", "KeyW", "KeyS", "KeyA", "KeyD"]) {
+      expect(sceneKeyAllowed({ code, target: slider })).toBe(true);
+    }
+    expect(sceneKeyAllowed({ code: "Escape", target: button })).toBe(true);
   });
 });

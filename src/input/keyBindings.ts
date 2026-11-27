@@ -8,9 +8,17 @@ const KEY_DIRECTIONS: Readonly<Record<string, FocusDirection>> = {
   ArrowLeft: "left",
   ArrowRight: "right",
   ArrowUp: "up",
+  KeyA: "left",
+  KeyD: "right",
+  KeyH: "left",
+  KeyJ: "down",
+  KeyK: "up",
+  KeyL: "right",
+  KeyS: "down",
+  KeyW: "up",
 };
 
-// Read from KeyboardEvent.code, which names the arrows as KeyboardEvent.key does.
+// Arrow, WASD and HJKL directions, read from the physical KeyboardEvent.code.
 export function focusDirectionForKey(code: string): FocusDirection | undefined {
   return KEY_DIRECTIONS[code];
 }
@@ -79,4 +87,68 @@ export function isHelpKey(shiftKey: boolean, code: string): boolean {
 // cannot press a button on this one.
 export function menuKeyActs(repeat: boolean, code: string): boolean {
   return !repeat || focusDirectionForKey(code) !== undefined;
+}
+
+// Scene routes yield to an earlier owner, composition, shortcuts and native editing controls.
+// Button confirmation belongs to the native control; its directions can still move UI focus.
+export function sceneKeyAllowed(event: {
+  readonly code: string;
+  readonly defaultPrevented?: boolean;
+  readonly isComposing?: boolean;
+  readonly keyCode?: number;
+  readonly altKey?: boolean;
+  readonly ctrlKey?: boolean;
+  readonly metaKey?: boolean;
+  readonly shiftKey?: boolean;
+  readonly target?: unknown;
+}): boolean {
+  if (
+    event.defaultPrevented ||
+    event.isComposing ||
+    event.keyCode === 229 ||
+    event.altKey ||
+    event.ctrlKey ||
+    event.metaKey
+  ) {
+    return false;
+  }
+  const target = event.target as
+    | {
+        readonly tagName?: string;
+        readonly type?: string;
+        readonly isContentEditable?: boolean;
+        closest?(selector: string): unknown;
+        getAttribute?(name: string): string | null;
+      }
+    | null
+    | undefined;
+  if (
+    target?.isContentEditable ||
+    target?.closest?.('[contenteditable]:not([contenteditable="false"])')
+  ) {
+    return false;
+  }
+  const tag = target?.tagName?.toUpperCase();
+  if (tag === "TEXTAREA" || tag === "SELECT") {
+    return false;
+  }
+  const slider =
+    (tag === "INPUT" && target?.type === "range") || target?.getAttribute?.("role") === "slider";
+  if (
+    slider &&
+    ["ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"].includes(event.code)
+  ) {
+    return false;
+  }
+  if (
+    tag === "INPUT" &&
+    !slider &&
+    !["button", "checkbox", "radio", "reset", "submit"].includes(target?.type ?? "text")
+  ) {
+    return false;
+  }
+  return !(
+    isConfirmKey(event.code) &&
+    (tag === "BUTTON" || target?.closest?.("button") || (tag === "INPUT" && !slider))
+  );
 }
