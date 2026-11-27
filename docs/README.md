@@ -1,6 +1,6 @@
 # Archie documentation
 
-This directory describes the game's design, development and approved work. Start with a topic below; use the work records for scope and delivery evidence.
+This directory describes the game's design, development and approved work. The topic guides explain how the game works. The work records contain scope and delivery evidence.
 
 ## Contents
 
@@ -15,10 +15,10 @@ This directory describes the game's design, development and approved work. Start
 
 ## Related guides
 
-- [Art](../art/README.md): visual rules, assets and generation.
-- [Cross-game policies](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md): shared product, development and delivery rules.
-- [Gameplay](design/gameplay/README.md): rules, player copy, tuning and playtesting.
-- [Source](../src/README.md): architecture, saves, data and private development tools.
+- [Art](../art/README.md) covers visual rules, assets and generation.
+- [Cross-game policies](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md) covers shared product, development and delivery rules.
+- [Gameplay](design/gameplay/README.md) covers rules, player copy, tuning and playtesting.
+- [Source](../src/README.md) covers architecture, saves, data and private development tools.
 
 ## Navigation
 

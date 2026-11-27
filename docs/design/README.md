@@ -13,6 +13,8 @@ area's owner writes its summary and work-file bodies. Only `main` integrates ind
 | [tuning](tuning.md)   | Gameplay | Targets, tuning, playtesting and undecided ideas                                         | [gameplay](gameplay/README.md), [ideas](gameplay/ideas.md)                                   |
 | [ui](ui.md)           | Tech     | The HTML interface, modals, layout, fonts and Phaser art loading                         | [src](../../src/README.md), [controls](../../art/controls.md), [layout](../../art/layout.md) |
 
+The [gameplay subdirectory](gameplay/README.md) holds the rules, player copy, tuning and playtesting guides.
+
 ## Navigation
 
 [Documentation](../README.md) · [Gameplay topics](gameplay/README.md) · [Work items](../work/README.md) · [Project](../../README.md)
