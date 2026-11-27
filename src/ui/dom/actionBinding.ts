@@ -10,6 +10,7 @@ import {
   holdRule,
   isConfirmKey,
   isForegroundConfirmKey,
+  nativeButtonKeyAllowed,
   sceneKeyAllowed,
   TILE_SLOP_PX,
 } from "../../input/index.ts";
@@ -51,10 +52,11 @@ function bindActionAlternates(
   element: HTMLElement,
 ): () => void {
   const keydown = (event: KeyboardEvent) => {
+    const native = isConfirmKey(event.code);
     if (
       !isForegroundConfirmKey(event.code) ||
-      isConfirmKey(event.code) ||
-      !sceneKeyAllowed(event) ||
+      (native && !event.repeat) ||
+      !nativeButtonKeyAllowed(event) ||
       element.ownerDocument.activeElement !== element ||
       !accepts()
     ) {
@@ -62,7 +64,7 @@ function bindActionAlternates(
     }
     event.preventDefault();
     event.stopPropagation();
-    if (!event.repeat) {
+    if (!native && !event.repeat) {
       element.click();
     }
   };

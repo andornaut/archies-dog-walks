@@ -96,7 +96,7 @@ export function menuKeyActs(repeat: boolean, code: string): boolean {
 
 // Scene routes yield to an earlier owner, composition, shortcuts and native editing controls.
 // Button confirmation belongs to the native control; its directions can still move UI focus.
-export function sceneKeyAllowed(event: {
+type SceneKeyEvent = {
   readonly code: string;
   readonly defaultPrevented?: boolean;
   readonly isComposing?: boolean;
@@ -106,7 +106,17 @@ export function sceneKeyAllowed(event: {
   readonly metaKey?: boolean;
   readonly shiftKey?: boolean;
   readonly target?: unknown;
-}): boolean {
+};
+
+export function sceneKeyAllowed(event: SceneKeyEvent): boolean {
+  return keyAllowed(false, event);
+}
+
+export function nativeButtonKeyAllowed(event: SceneKeyEvent): boolean {
+  return keyAllowed(true, event);
+}
+
+function keyAllowed(allowNativeConfirm: boolean, event: SceneKeyEvent): boolean {
   if (
     event.defaultPrevented ||
     event.isComposing ||
@@ -153,6 +163,7 @@ export function sceneKeyAllowed(event: {
     return false;
   }
   return !(
+    !allowNativeConfirm &&
     isConfirmKey(event.code) &&
     (tag === "BUTTON" || target?.closest?.("button") || (tag === "INPUT" && !slider))
   );

@@ -14,6 +14,7 @@ export {
   isPauseKey,
   laneDirectionForKey,
   menuKeyActs,
+  nativeButtonKeyAllowed,
   sceneKeyAllowed,
   walkKeyAction,
 } from "./keyBindings.ts";

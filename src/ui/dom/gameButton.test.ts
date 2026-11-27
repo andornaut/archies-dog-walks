@@ -122,6 +122,9 @@ it("uses the focused button's action once for a foreground key without intercept
   current.button.focus();
   send("Enter");
   expect(preventDefault).not.toHaveBeenCalled();
+  send("Enter", true);
+  expect(preventDefault).toHaveBeenCalledOnce();
+  expect(current.activate).not.toHaveBeenCalled();
   send("KeyE");
   send("KeyE", true);
   expect(current.activate).toHaveBeenCalledOnce();
