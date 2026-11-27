@@ -17,9 +17,15 @@ activation. Recovery buttons use the same action for a tap, key activation or ho
 Copy keeps the crash screen open and Reload restarts it. A pressed choice highlights its title
 band. Required choices retain their existing gesture and dismissal rules.
 
-Settings descriptions wrap at words in the available row width, using the wider of the two
-switch state labels to reserve space for the control stack. The top bar centres visible effect
-wells on the screen when they fit. A full six-well row centres in its reserved region.
+Settings and Cheats use one switch row layout. The state label sits below the switch on the
+same centre. Descriptions wrap at words in the available row width, using the wider of the two
+state labels to reserve space for the control stack. Ordinary action labels share a fixed
+2.25× title-font role. The top bar centres visible effect wells on the screen when they fit.
+A full six-well row centres in its reserved region.
+
+Selectable controls apply the cyan fill directly, without a colour transition or movement.
+A press uses the same fill as selection. Input admission, focus and refusal retain their
+own roles.
 
 Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../src/README.md#assets), [Phone](../../src/README.md#phone).
 
@@ -123,3 +129,5 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0277 | Remove the repeated owner name from extra-heart details               | [adw-0277.md](../work/adw-0277.md) |
 | adw-0279 | Wrap Settings help to the available row width                         | [adw-0279.md](../work/adw-0279.md) |
 | adw-0280 | Centre visible effects in the top bar                                 | [adw-0280.md](../work/adw-0280.md) |
+| adw-0281 | Align Cheats switches and refine action labels                        | [adw-0281.md](../work/adw-0281.md) |
+| adw-0282 | Apply selection colours immediately throughout the interface          | [adw-0282.md](../work/adw-0282.md) |
