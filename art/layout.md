@@ -47,6 +47,19 @@ Use 4/8/16 for the ordinary row/group/panel spacing roles, and the button gaps f
 
 The [button gaps](controls.md#sizing-and-spacing) define which buttons are small, give the tile-grid rule and list the named exemptions. Omit absent groups and their gaps. Keep the full font role; wrap text or grow its measured container rather than reducing its scale. Detailed ink gaps remain in [Controls](controls.md#labels-and-icons).
 
+### Portrait, item picture and icon sizes
+
+Use these logical sizes for the artwork box. Use portrait and icon assets authored for the target size where available. The 64px detail role also supports the existing pixel-exact 2× item pictures.
+
+| Role                              | Logical size | Use                                                                                    | Existing source                                                                                                               |
+| --------------------------------- | ------------ | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Standard portrait or item picture | 32×32        | Character portraits and catalogue item pictures on pickers, list rows and the walk HUD | [`FACE_SIZE` and `GEAR_ICON`](../src/data/layout/controls.ts)                                                                 |
+| Detail portrait or item picture   | 64×64        | Main subject in a detail view                                                          | [Dog and walker portrait assets](../src/assets/spriteKeys.ts) and [purchase art](../src/scenes/itemArt.ts)                    |
+| Compact functional icon           | 16×16        | Navigation glyphs, label icons and notice icons                                        | [`BUTTON_SIZE.icon.glyph` and `LABEL_ICON`](../src/data/layout/controls.ts)                                                   |
+| Standard functional icon          | 24×24        | Walk HUD effects, walker perks and card effect or gear indicators                      | [`WALK_BAR_PARTS.effects.iconSize`](../src/data/layout/walk.ts) and [native effect icons](../src/presentation/effectIcons.ts) |
+
+Measure wells, frames and hit targets independently. Road sprites, world effects and scene illustrations keep their authored dimensions. The 30px walker picker portrait and 20px inline owner face are pending migrations. Check the name strip's clearance for the walker and the measured line height and wrapping for the inline face before changing them.
+
 ## Page bounds/alignment
 
 Choose one content rectangle for each page. Derive its outer margins, button edges and statistics label/value columns from that rectangle and its inset. Reserve scrollbar and close-control space before deriving those columns. The scrollbar's room is always reserved: rows, notes and values end at x = 338, 6 short of the track at x = 344–351, on every page whether or not a scrollbar shows, so switching tabs or a list starting to scroll never reflows a row. Section headings on the Pet shop and Logbook pages start their ink at x = 8, the rows' left edge, on every tab; their notes stay right-aligned to the rows' right edge. Do not independently offset a button or statistic to make it appear aligned.
