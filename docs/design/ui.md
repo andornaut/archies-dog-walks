@@ -115,3 +115,5 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0263 | Centre each switch row's state word under its switch                  | [adw-0263.md](../work/adw-0263.md) |
 | adw-0274 | Improve the readability of Archie’s interface                         | [adw-0274.md](../work/adw-0274.md) |
 | adw-0275 | Keep item selections steady on activation                             | [adw-0275.md](../work/adw-0275.md) |
+| adw-0276 | Align collision feedback over the lead dog                            | [adw-0276.md](../work/adw-0276.md) |
+| adw-0277 | Remove the repeated owner name from extra-heart details               | [adw-0277.md](../work/adw-0277.md) |
