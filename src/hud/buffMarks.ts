@@ -164,8 +164,7 @@ function cardCharms(
 // What a card shows of the buffs on an option, or on the Skip a buff offers (option
 // undefined): the lit charms under the card; the plaque, FREE on a cost a buff waived or on the
 // Skip (null leaves the plaque as the option has it); and a loss the walker's perk forgives, the
-// hearts it leaves each dog, with the perk's name under them, in place of the effect text where
-// that text says only the forgiving.
+// hearts it costs each dog and the perk that forgives it, when that is the option's only effect.
 export interface OptionMarks {
   readonly charms: readonly CardCharm[];
   readonly forgiven: { readonly name: string; readonly rows: readonly string[] } | null;
@@ -195,29 +194,24 @@ export function optionMarks(
   return { charms, forgiven: forgivenMarks(data, option), plaque };
 }
 
-// The losses an option's text says the walker's perk forgives, when that is all it says.
+// For a pure heart loss with forgiveness, keep every dog's cost, including unprotected dogs.
 function forgivenMarks(
   data: Pick<GameData, "dogs" | "runText" | "shopGear" | "upgrades" | "walkerPerks" | "walkers">,
   option: OptionView,
 ): OptionMarks["forgiven"] {
-  const forgiven = option.modified.flatMap((value) =>
-    value.subject.kind === "hearts" && value.after > value.before
-      ? [{ dog: value.subject.dog, value }]
-      : [],
-  );
-  const said = forgiven.map(({ dog, value }) =>
-    fillNames(data.runText.card.heartForgiven, {
-      dog: data.dogs[dog].name,
-      hearts: String(-value.before),
-    }),
-  );
-  if (forgiven.length === 0 || said.join(", ") !== option.text) {
+  if (option.forgivenHearts === undefined) {
     return null;
   }
-  const items = uniqueItems(forgiven.flatMap(({ value }) => charmsOf(data, value)));
+  const items = uniqueItems(
+    option.modified.flatMap((value) =>
+      value.subject.kind === "hearts" && value.after > value.before ? charmsOf(data, value) : [],
+    ),
+  );
   return {
     name: items.map((item) => effectName(data, item)).join(", "),
-    rows: forgiven.map(({ dog, value }) => `${heartsText(value.after)} ${data.dogs[dog].name}`),
+    rows: option.forgivenHearts.map(
+      ({ amount, dog }) => `${heartsText(amount)} ${data.dogs[dog].name}`,
+    ),
   };
 }
 

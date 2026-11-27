@@ -195,8 +195,10 @@ export type CharmEffect = "debuffSeconds" | "forgivenHearts" | "freeCards" | "sk
 // firedBy names an owner who fires you, and card.fires flags an option that would fire owners.
 export interface RunText {
   readonly card: {
-    // Under the item's name on a card option's charm, in the title font.
-    readonly charmEffect: { readonly [E in CharmEffect]: string };
+    // Under the item's name on a card option's charm, or null for its name alone.
+    readonly charmEffect: {
+      readonly [E in CharmEffect]: E extends "forgivenHearts" ? string | null : string;
+    };
     readonly fires: string;
     readonly forkSubtitle: string;
     readonly forkTitle: string;

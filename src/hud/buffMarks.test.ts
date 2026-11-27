@@ -91,7 +91,10 @@ describe("optionMarks", () => {
         plaque: null,
       },
       name: "a loss the walker's perk forgives, as the hearts left alone",
-      view: option([forgiven], fillNames(card.heartForgiven, { dog: kilo, hearts: "1" })),
+      view: {
+        ...option([forgiven], fillNames(card.heartForgiven, { dog: kilo, hearts: "1" })),
+        forgivenHearts: [{ amount: 0, dog: "kilo" }] as const,
+      },
     },
     {
       expected: { charms: [charm(caseyPerk, "forgivenHearts")], forgiven: null, plaque: null },

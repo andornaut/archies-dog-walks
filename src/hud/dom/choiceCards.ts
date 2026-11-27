@@ -428,8 +428,11 @@ export function showChoiceCards(
     const name = [
       surface.label,
       ...surface.texts.flatMap(({ lines }) => lines),
+      surface.attribution,
       ...(surface.plaque?.lines ?? []),
-    ].join(". ");
+    ]
+      .filter((line) => line !== null)
+      .join(". ");
     const refusal: ButtonRefusal = {
       reducedMotion: input.reducedMotion,
       refuse: (reducedMotion) => playRefusal(reducedMotion, group),

@@ -16,6 +16,7 @@ import {
   amountText,
   causeName,
   type Change,
+  changeAmount,
   firedByText,
   heartsForgiven,
   isNamedCause,
@@ -63,6 +64,8 @@ export interface OptionView {
   readonly cost: Cents;
   // The dogs whose owners would fire you, as breakdown shows them.
   readonly fires: readonly DogId[];
+  // Per-dog changes for a heart-only loss with actual forgiveness.
+  readonly forgivenHearts?: readonly { readonly amount: number; readonly dog: DogId }[];
   // The option's position in the source's data; pass it to chooseOption.
   readonly index: number;
   readonly label: string;
@@ -271,6 +274,9 @@ export function effectCard(
         debuffLasting(data.tuning, data.debuffs[debuff].seconds, state).secondsLeft,
     };
     const cost = moneyCost(data, state, option.effects);
+    const effect = option.effects[0];
+    const heartOnly = option.effects.length === 1 && effect?.kind === "hearts" && effect.amount < 0;
+    const forgiven = heartOnly && preview.heartChanges.some((change) => heartsForgiven(change) > 0);
     return {
       art: option.art,
       availability:
@@ -278,6 +284,12 @@ export function effectCard(
       breakdown: breakdownOf(data, preview),
       cost,
       fires: preview.fired,
+      ...(forgiven && {
+        forgivenHearts: preview.heartChanges.map((change) => ({
+          amount: changeAmount(change),
+          dog: change.dog,
+        })),
+      }),
       index,
       label: option.name,
       modified: preview.modified,

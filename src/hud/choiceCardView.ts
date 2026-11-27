@@ -42,6 +42,7 @@ interface ChoiceCardLabel {
   readonly lines: readonly string[];
 }
 export interface ChoiceCardSurface {
+  readonly attribution: string | null;
   readonly charms: readonly ChoiceCharmPlate[];
   readonly frame: { readonly key: string; readonly tag: string; readonly large: boolean };
   readonly grey: boolean;
@@ -87,6 +88,19 @@ export function choiceCardSurface(
   const ink = (role: "body" | "title") => (style: TextFitStyle, line: string) =>
     choiceCardInk(fonts, role, style, line);
   const marks = optionMarks(data, view, entry.option);
+  const forgiven = marks.forgiven;
+  const attribution =
+    forgiven !== null &&
+    marks.charms.some(({ effect, name }) => effect === null && name === forgiven.name)
+      ? forgiven.name
+      : null;
+  const forgivenText =
+    forgiven === null
+      ? undefined
+      : [
+          ...forgiven.rows,
+          ...(attribution === null && forgiven.name !== "" ? [forgiven.name] : []),
+        ].join("\n");
   const charms = choiceCharmStack(fonts, large ? CARD.large.width : place.width, marks.charms);
   const texts: DetailText[] = [];
   const label = entry.option?.label ?? data.runText.card.skip;
@@ -104,15 +118,15 @@ export function choiceCardSurface(
   const bodyBox = largeBodyBox(metrics, warning?.lines.length ?? 0);
   const bodyStyle = largeBodyStyle(metrics.body, bodyBox.height, place, charms.height);
   const body = large
-    ? fittingText(bodyStyle, ink("body"), CARD.large.body.width, largeBodyText(data, entry.option))
+    ? fittingText(
+        bodyStyle,
+        ink("body"),
+        CARD.large.body.width,
+        forgivenText ?? largeBodyText(data, entry.option),
+      )
     : null;
   const contentHeight =
-    bodyBox.top +
-    inkRowsOfLines(
-      metrics.body,
-      marks.forgiven === null ? (body?.lines.length ?? 0) : marks.forgiven.rows.length + 1,
-    ) *
-      bodyStyle.scale;
+    bodyBox.top + inkRowsOfLines(metrics.body, body?.lines.length ?? 0) * bodyStyle.scale;
   const rect = large ? largeCardRect(place, largeCardHeight(contentHeight), charms.height) : place;
   const shift = rect.height - CARD.large.height;
   const add = (
@@ -151,22 +165,17 @@ export function choiceCardSurface(
     if (warning !== null) {
       add("title", warning.lines, x, top, warning.style.scale, PALETTE.darkRed, "left");
     }
-    if (marks.forgiven === null) {
-      add("body", body?.lines ?? [], x, top + bodyBox.top, bodyStyle.scale, PALETTE.plum, "left");
-    } else {
-      add("body", marks.forgiven.rows, x, top + bodyBox.top, TEXT_SCALE, PALETTE.forest, "left");
-      add(
-        "body",
-        [marks.forgiven.name],
-        x,
-        top + bodyBox.top + marks.forgiven.rows.length * metrics.body.lineHeight * TEXT_SCALE,
-        TEXT_SCALE,
-        PALETTE.plum,
-        "left",
-      );
-    }
+    add(
+      "body",
+      body?.lines ?? [],
+      x,
+      top + bodyBox.top,
+      bodyStyle.scale,
+      forgiven === null ? PALETTE.plum : PALETTE.forest,
+      "left",
+    );
   } else {
-    const shown = smallCardText(data, metrics.body, ink("body"), entry.option);
+    const shown = smallCardText(data, metrics.body, ink("body"), entry.option, forgivenText);
     const x = rect.x + CARD.effect.x + CARD.effect.width / 2;
     if (shown.warning !== null) {
       add(
@@ -178,19 +187,14 @@ export function choiceCardSurface(
         grey ? bodyColour : PALETTE.darkRed,
       );
     }
-    if (marks.forgiven === null) {
-      add("body", shown.effect.lines, x, rect.y + shown.box.y, shown.effect.style.scale);
-    } else {
-      add("body", marks.forgiven.rows, x, rect.y + shown.box.y, 1, PALETTE.forest);
-      add(
-        "body",
-        [marks.forgiven.name],
-        x,
-        rect.y + shown.box.y + marks.forgiven.rows.length * metrics.body.lineHeight,
-        1,
-        PALETTE.plum,
-      );
-    }
+    add(
+      "body",
+      shown.effect.lines,
+      x,
+      rect.y + shown.box.y,
+      shown.effect.style.scale,
+      forgiven === null || grey ? bodyColour : PALETTE.forest,
+    );
   }
   const scale = large ? 2 : 1;
   const marker =
@@ -243,6 +247,7 @@ export function choiceCardSurface(
     };
   }
   return {
+    attribution,
     charms: charms.place(rect),
     frame: {
       key: large ? "card-frame-large" : "card-frame",

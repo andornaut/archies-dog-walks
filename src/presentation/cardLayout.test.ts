@@ -166,7 +166,7 @@ describe("a card's charms", () => {
           .filter(({ font }) => font === "title")
           .map(({ text }) => text)
           .join(" "),
-      ).toBe(charm.effect.toUpperCase());
+      ).toBe(charm.effect?.toUpperCase() ?? "");
       for (const [index, label] of labels.entries()) {
         expect(inside(label.face, rect)).toBe(true);
         if (index > 0) {

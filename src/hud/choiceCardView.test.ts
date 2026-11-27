@@ -4,12 +4,12 @@ import { expect, it } from "vitest";
 import { gameData } from "../data/index.ts";
 import { helpPicture } from "../help/helpPictures.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
-import { CARD_LAYOUT, cardRowIn } from "../presentation/cardLayout.ts";
+import { CARD_LAYOUT, cardEffectArea, cardRowIn } from "../presentation/cardLayout.ts";
 import { cardFor } from "../rules/cardViews.ts";
 import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
-import { gameFont } from "../testing/fontInk.ts";
+import { fontInkRows, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
-import { testState } from "../testing/runState.ts";
+import { activeModifier, testState } from "../testing/runState.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { choiceCardSurface } from "./choiceCardView.ts";
 
@@ -68,4 +68,56 @@ it("keeps the complete seven-row held loss and firing warning inside the walk vi
   expect(Math.max(...changeRows.map(({ bottom }) => bottom))).toBeLessThan(
     surface.rect.y + surface.rect.height,
   );
+});
+
+it("fits every dog's forgiven or charged outcome at Body 2 with one title-only attribution", () => {
+  const perk = gameData.walkers.casey.perk;
+  const effect = gameData.walkerPerks[perk].effects[0]!;
+  if (effect.kind !== "modifier") {
+    throw new Error("Expected Casey's heart forgiveness modifier");
+  }
+  const name = gameData.walkerPerks[perk].name;
+  const dogs = ["archie", "ginger", "sequoia"] as const;
+  const run = testState(
+    { archie: 1, ginger: 1, sequoia: 1 },
+    { modifiers: [activeModifier({ kind: "walker", walker: "casey" }, effect)] },
+  );
+  const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
+  const walk = SCREEN_LAYOUT.walkView;
+  const style = { scale: 2 };
+  for (const affected of [[dogs[2]], dogs] as const) {
+    const view = cardFor(gameData, run, { affected, encounter: "skunk", kind: "encounter" });
+    const option = view.options.find(({ forgivenHearts }) => forgivenHearts !== undefined)!;
+    const entry = { choice: option.index, enabled: true, option };
+    const place = cardRowIn(walk, MAX_CARD_OPTIONS, view.options.length)[0]!;
+    const compactArea = cardEffectArea(fontMetrics(fonts.body), option.fires.length > 0);
+    for (const area of [place, walk]) {
+      const held = area === walk;
+      const surface = choiceCardSurface(gameData, fonts, view, entry, area, held);
+      const outcome = surface.texts.find(({ font, scale }) => font === "body" && scale === 2)!;
+      const lines = affected.map(
+        (dog, index) => `${index === 0 ? "0" : "−1"}♥ ${gameData.dogs[dog].name}`,
+      );
+      expect(outcome.lines).toEqual(lines);
+      expect(surface.attribution).toBe(name);
+      expect(surface.charms).toHaveLength(1);
+      const plate = surface.charms[0]!;
+      expect(plate.charm).toMatchObject({ effect: null, item: { kind: "perk", perk }, name });
+      expect(plate.labels.every(({ font }) => font === "body")).toBe(true);
+      expect(plate.labels.map(({ text }) => text).join(" ")).toBe(name);
+      expect(inside(plate.rect, walk)).toBe(true);
+      expect(surface.marker !== undefined).toBe(affected.length > 1);
+      const room = held ? CARD_LAYOUT.large.body.width : compactArea.width;
+      const bottom = held
+        ? surface.rect.y + surface.rect.height - CARD_LAYOUT.large.bodyGap
+        : place.y + compactArea.y + compactArea.height;
+      for (const [index, line] of outcome.lines.entries()) {
+        expect(inkWidth("font-body", style, plainMarks(line))).toBeLessThanOrEqual(room);
+        const capTop = outcome.capTop + index * fonts.body.lineHeight * style.scale;
+        expect(
+          capTop + fontInkRows("font-body", style, plainMarks(line)).bottom,
+        ).toBeLessThanOrEqual(bottom);
+      }
+    }
+  }
 });

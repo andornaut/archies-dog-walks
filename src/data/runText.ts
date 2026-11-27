@@ -6,7 +6,7 @@ export const RUN_TEXT = {
   card: {
     charmEffect: {
       debuffSeconds: "Half time",
-      forgivenHearts: "Safe",
+      forgivenHearts: null,
       freeCards: "Free",
       skipOption: "Free skip",
     },

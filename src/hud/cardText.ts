@@ -84,6 +84,7 @@ export function smallCardText(
   body: FontMetrics,
   inkWidth: (style: TextFitStyle, line: string) => number,
   option?: OptionView,
+  text = smallEffectText(data, option),
 ): { box: ReturnType<typeof cardEffectBox>; effect: FittedText; warning: FittedText | null } {
   const room = CARD_LAYOUT.effect.width;
   const fits = (fitted: FittedText) => fitsRoom(inkWidth, room, fitted);
@@ -95,7 +96,6 @@ export function smallCardText(
   const warnings = said !== null && fits(said) ? [said, null] : [null];
   const path = option?.path !== undefined;
   const firing = fires.length > 0;
-  const text = smallEffectText(data, option);
   for (const warning of warnings) {
     const box = cardEffectBox(body, {
       fireLines: warning?.lines.length ?? 0,
