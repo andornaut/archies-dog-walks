@@ -43,7 +43,7 @@ Use 4/8/16 for the ordinary row/group/panel spacing roles, and the button gaps f
 | PAGE.trackGap                     | 6                                 | px         | Page rows and body lines to the scrollbar track                        | [layout data](../src/data/layout.ts)                                                    |
 | separator                         | 1px line, 8 clear above and below | px         | Standard content separator, full content width                         | [separator](../src/ui/separator.ts)                                                     |
 
-**Separators.** The standard separator, including the Cheats dividers and the detail card, is a 1px rule with 8 clear rows above and below, a 17-row band. Settings uses the same 1px rule directly between adjacent row targets. Both Settings and Cheats draw their rules across x = 8–338. A section break that must read stronger needs its own named pattern, not a second spacing. Its colour is in the [style guide](style-guide.md#ui).
+**Separators.** The standard separator, including the Cheats dividers and the detail card, is a 1px rule with 8 clear rows above and below, a 17-row band. Settings uses the same 1px rule between adjacent row targets. The optional Install row starts 8px below its preceding rule. Both Settings and Cheats draw their rules across x = 8–338. A section break that must read stronger needs its own named pattern, not a second spacing. Its colour is in the [style guide](style-guide.md#ui).
 
 The [button gaps](controls.md#sizing-and-spacing) define which buttons are small, give the tile-grid rule and list the named exemptions. Omit absent groups and their gaps. Keep the full font role; wrap text or grow its measured container rather than reducing its scale. Detailed ink gaps remain in [Controls](controls.md#labels-and-icons).
 
@@ -104,10 +104,10 @@ Settings and Cheats are frameless pages `(0,40,360,520)` on Game Kit's page fram
 - **Content rectangle:** x = 8–338 (330 wide), with the [scrollbar room](#page-boundsalignment) always reserved and the track at x = 344–351.
 - **Title:** the page title row `(16,64,328,15)`, a 3× heading with its ink centred at x = 180 and no X.
 - **Body viewport:** from 24 below the title's ink (y = 103) to 8 above the next fixed element: the version label on Settings, Back on Cheats. Only the body scrolls.
-- **Separators:** the shared 1px [rule](#spacing-tokens). Settings places it directly between row targets. Cheats keeps the standard 8px clearance on each side.
+- **Separators:** the shared 1px [rule](#spacing-tokens). Settings puts it between targets and leaves 8px after the rule before Install. Cheats keeps the standard 8px clearance on each side.
 - **Back:** `page.back`, `(136.5,500,87,48)`.
 
-**Settings.** Use a single column across x = 8–338. On switch rows the icon starts at x = 14 and the label at x = 34, one 16px icon cell plus `ICON_LABEL_GAP` apart. Keep the left label and note stack and the right [switch and state stack](#switch-rows) centred independently. Slider tracks still run from the label column to the right inset, with values right-aligned to x = 330. Install is its row's sole action, one [ink group](#icons-beside-labels) centred on the row. The version label is metadata above the dismissal footer: its ink centred at x = 180, its ink bottom at y = 492, 8 above Back's face, fixed.
+**Settings.** Use a single column across x = 8–338. Settings uses a 24px glyph box at x = 14 and labels at x = 42, one box plus `ICON_LABEL_GAP` apart. Keep the left label and note stack and the right [switch and state stack](#switch-rows) centred independently. Slider lanes run from x = 42 to x = 330, with the value aligned at x = 330. Leave 16 logical pixels above the leading glyph's first ink and below the bottom of the slider's knob. Install is its row's sole action, one [ink group](#icons-beside-labels) centred on the row. The version label is metadata above the dismissal footer: its ink centred at x = 180, its ink bottom at y = 492, 8 above Back's face, fixed.
 
 **Cheats.** Two columns 16 apart (`BUTTON_SIZE.gap`), each 157 wide, at x = 8–165 and x = 181–338, used in the neighbourhood grid and the Unlocks and Money columns when the labels fit. The Unlocks and Money headings start their ink on their columns' left edges. Measure labels at the ordinary 2.5× action scale. Wrap at spaces into balanced lines and grow past the 48px minimum when the ink needs more height. Stack only a paired row whose longest word exceeds its column's ink room. Centre those equal-width buttons with the standard 8px stacked gap. Invincible owners follows the [Cheats switch-row layout](#switch-rows). Reset save is its row’s sole action. The Reset save? confirmation is an ordinary [modal](#modals) over the page. See [Cheats layout](../src/cheats/cheatsView.ts) and [scroll placement](../src/hud/dom/cheats.ts).
 
@@ -154,10 +154,10 @@ HUD effect geometry follows the [walk-bar exception](controls.md#sizing-and-spac
 
 ### Icons beside labels
 
-- **Gap:** a 16px icon beside its label leaves `ICON_LABEL_GAP` (4) from its 16px art cell to the label's first ink column: Settings rows (whose labels share one column, x = 34), the message strip, the new-walker info line, the iOS install steps, the Settings Install button and the reach chip.
+- **Gap:** a 16px icon beside its label leaves `ICON_LABEL_GAP` (4) from its art cell to the label's first ink column. The message strip, new-walker info line, iOS install steps and reach chip use this gap. Settings form rows use the same gap with their 24px glyph boxes.
 - **Vertical:** the icon centres on its label's capitals, with equal rows above and below them; an odd remainder puts the extra row below. Inside a backed chip or plate, such as the reach chip, the icon and label instead form one ink group centred on the backing's flat fill by the [backed-label rule](#backed-labels), keeping at least one clear row against the frame.
 - **Icon beside an icon:** the reach icon that flies beside a treat's small heart keeps its own 2px gap; `ICON_LABEL_GAP` applies only to an icon beside a label.
-- **Install:** the Settings Install button places its icon box, `ICON_LABEL_GAP` and label as one ink group (the icon contributes its cell from ink column 2, its ink filling columns 2 to 13) and centres the union of the icon and label ink on its face. The button is its row's sole action, centred in the row; its width and position follow the build.
+- **Install:** crop the icon to its 12×16 visible ink, then use true layout projection to match the label's actual ink height. Leave 8 logical pixels from the icon's visible right edge to the label's visible left edge and centre the whole ink group on the button face. Install is its row's sole action. [Install projection](../src/hud/dom/settingsInstall.ts)
 
 ### Backed labels
 
@@ -221,11 +221,11 @@ Use dedicated `MODAL_TITLE_SCALE = 3` for ordinary modal headings and the Shop, 
 
 ### Switch rows
 
-Both pages inset the 32×16 switch 15px from the right edge. The whole row is the target, with a 48px minimum.
+Both pages use a 32×16 switch. The whole row is the target, with a 48px minimum.
 
-**Settings.** Centre the left label and note stack, including the leading icon, independently of the right switch and state stack. Measure the taller stack with 4px of padding above and below. The state's visible ink sits 4 logical pixels below the switch. Project the text against the painted switch so their horizontal centres agree within half an art pixel after rounding.
+**Settings.** Centre the left label and note stack, including the leading icon, independently of the right switch and state stack. Measure the taller stack with 4px of padding above and below. The state's visible ink sits 4 logical pixels below the switch. Centre the state's visible ink under the painted switch. Align the right edge of their visible union to x = 330, the same line as the slider values. Their projected centres agree within half an art pixel after rounding.
 
-**Cheats.** The leading icon or label starts 6px from the row's left. Keep the switch 9px below the row's top. Centre the state word's visible ink under the switch with an 8px gap. Label capitals start 12px below the row's top.
+**Cheats.** The leading icon or label starts 6px from the row's left. Inset the switch 15px from the right edge and 9px below the row's top. Centre the state word's visible ink under the switch with an 8px gap. Label capitals start 12px below the row's top.
 
 ## HUD/overlays
 
