@@ -1,5 +1,5 @@
 // The planner acceptance verdict: pure checks over each plan's independently gathered evidence.
-// The criteria follow the planner contract in docs/planner-work.md and the gameplay acceptance
+// The criteria follow the planner contract in docs/design/planner-work.md and the gameplay acceptance
 // rule.
 
 import { minimumSlotDelivery } from "../../runner/index.ts";

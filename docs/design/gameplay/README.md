@@ -17,9 +17,9 @@ Archie's Dog Walks is a phone-first pixel-art game playable in a web browser and
 
 [Ideas](ideas.md) collects undecided and cut proposals. [Cheats](cheats.md) covers cheats and save tools. [Layout](../../../art/layout.md) owns interface measurements.
 
-The shared [game policies](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md) govern cross-game behaviour.
+The shared [game policies](https://github.com/andornaut/game-coordinator/blob/main/docs/design/game-policies.md) govern cross-game behaviour.
 
-Docs state the current rule only; git keeps the history. [`ideas.md`](ideas.md) follows the shared [Ideas policy](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md#ideas).
+Docs state the current rule only; git keeps the history. [`ideas.md`](ideas.md) follows the shared [Ideas policy](https://github.com/andornaut/game-coordinator/blob/main/docs/design/game-policies.md#ideas).
 
 ## Scope
 

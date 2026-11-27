@@ -1,6 +1,6 @@
 # Ideas
 
-Archie's undecided and cut ideas follow the shared [Ideas policy](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md#ideas).
+Archie's undecided and cut ideas follow the shared [Ideas policy](https://github.com/andornaut/game-coordinator/blob/main/docs/design/game-policies.md#ideas).
 
 Format: `- [status] **Idea**: short description · notes`. Statuses: **floated** (said, not discussed), **exploring** (being discussed), **cut** (decided against, kept with the reason so it isn't argued again).
 

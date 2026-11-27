@@ -1,7 +1,7 @@
 # Planner
 
 Gameplay owns planner acceptance against the spawn planner contract and qualification in
-[planner work](../planner-work.md).
+[planner work](planner-work.md).
 
 ## Work items
 

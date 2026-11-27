@@ -13,11 +13,11 @@ Play at <https://archie.tristamittermayer.com/play/>. The custom domain is confi
 
 ## Developing
 
-Run `npm run dev` for local development and `make check` for the isolated project gate. See [development commands and tooling](docs/development.md).
+Run `npm run dev` for local development and `make check` for the isolated project gate. See [development commands and tooling](docs/guides/development.md).
 
 ## Deploying
 
-The existing delivery-kit runner gates and deploys checked source. See [delivery and deployment](docs/delivery.md).
+The existing delivery-kit runner gates and deploys checked source. See [delivery and deployment](docs/reference/delivery.md).
 
 ## Licence
 

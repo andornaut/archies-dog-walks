@@ -1,6 +1,6 @@
 # Cheats
 
-Browser tabs and installed apps offer one **Cheats** entry in the applicable Menu or Pause. The shared [Saves and cheats policy](https://github.com/andornaut/game-coordinator/blob/main/docs/game-policies.md#saves-and-cheats) governs availability and save guards.
+Browser tabs and installed apps offer one **Cheats** entry in the applicable Menu or Pause. The shared [Saves and cheats policy](https://github.com/andornaut/game-coordinator/blob/main/docs/design/game-policies.md#saves-and-cheats) governs availability and save guards.
 
 ## Saving
 

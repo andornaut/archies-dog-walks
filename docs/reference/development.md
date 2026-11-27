@@ -1,6 +1,6 @@
 # Development
 
-Build, check and run the project from the repository root. Paths and commands below are relative to that root.
+Command, check and source-layout reference. Paths and commands below are relative to the repository root; use the [development guide](../guides/development.md) for the walkthrough.
 
 The project gate is `make check`. Make uses the shared launcher in `tests/container/run`, the pinned image recipe in `tests/container/Dockerfile`, and the project commands in `tests/container/check`.
 
@@ -19,21 +19,21 @@ Native npm aliases call the project recipes directly in the current environment.
 
 Development and art utilities retain their npm commands:
 
-| Command                                     | Does                                                                         |
-| ------------------------------------------- | ---------------------------------------------------------------------------- |
-| `npm run art:depth-preview -- <key> [zone]` | Draw road sprites into `out/depth-preview/<key>/`                            |
-| `npm run art:manifest -- --check`           | Check the art manifest                                                       |
-| `npm run art:unused`                        | List unused art keys                                                         |
-| `npm run check:art`                         | Run the art tests                                                            |
-| `npm run dev`                               | Start the Vite dev server                                                    |
-| `npm run export:data -- --check`            | Check generated data exports                                                 |
-| `npm run format`                            | Apply Prettier and ESLint fixes                                              |
-| `npm run planner:acceptance -- <out-dir>`   | Run the approved planner acceptance batch ([source guide](../src/README.md)) |
-| `npm run preview`                           | Build, then serve through Wrangler                                           |
-| `npm run simulate -- --help`                | Describe simulator options                                                   |
-| `npm run test:game-kit`                     | Run the game-owned game-kit consumer checks                                  |
+| Command                                     | Does                                                                            |
+| ------------------------------------------- | ------------------------------------------------------------------------------- |
+| `npm run art:depth-preview -- <key> [zone]` | Draw road sprites into `out/depth-preview/<key>/`                               |
+| `npm run art:manifest -- --check`           | Check the art manifest                                                          |
+| `npm run art:unused`                        | List unused art keys                                                            |
+| `npm run check:art`                         | Run the art tests                                                               |
+| `npm run dev`                               | Start the Vite dev server                                                       |
+| `npm run export:data -- --check`            | Check generated data exports                                                    |
+| `npm run format`                            | Apply Prettier and ESLint fixes                                                 |
+| `npm run planner:acceptance -- <out-dir>`   | Run the approved planner acceptance batch ([source guide](../../src/README.md)) |
+| `npm run preview`                           | Build, then serve through Wrangler                                              |
+| `npm run simulate -- --help`                | Describe simulator options                                                      |
+| `npm run test:game-kit`                     | Run the game-owned game-kit consumer checks                                     |
 
-Vite bundles the entry pages in `pages/` and the TypeScript they load. The build copies the site's static files from `public/`, except the art exports, which it writes content-hashed under `/assets/art/` and copies under `/art/` only where a site page names them. Game values and local tuning are documented in the [game data guide](../src/README.md#game-data). `shared/` holds the files art's tools and the game both read. The game imports shared helpers through `@andornaut/game-kit/runtime/...`, build tooling through `@andornaut/game-kit/build/...` and test helpers through `@andornaut/game-kit/test/...`, installed from the [game-kit release](https://github.com/andornaut/game-kit/releases) pinned in `package.json`. The installed package records its source revision in `SOURCE_COMMIT`.
+Vite bundles the entry pages in `pages/` and the TypeScript they load. The build copies the site's static files from `public/`, except the art exports, which it writes content-hashed under `/assets/art/` and copies under `/art/` only where a site page names them. Game values and local tuning are documented in the [game data guide](../../src/README.md#game-data). `shared/` holds the files art's tools and the game both read. The game imports shared helpers through `@andornaut/game-kit/runtime/...`, build tooling through `@andornaut/game-kit/build/...` and test helpers through `@andornaut/game-kit/test/...`, installed from the [game-kit release](https://github.com/andornaut/game-kit/releases) pinned in `package.json`. The installed package records its source revision in `SOURCE_COMMIT`.
 
 Art build tools are TypeScript modules in `art/tools/`, which Node runs directly on the [art-kit release](https://github.com/andornaut/art-kit/releases) pinned in `package.json`, for example
 `node art/tools/glyphs.ts build`.
@@ -44,4 +44,4 @@ CI runs `make lint`, `make test` and `make build`, plus the AI attributions scan
 
 ## Navigation
 
-[Documentation](README.md) · [Delivery](delivery.md) · [Source architecture](../src/README.md) · [Project](../README.md)
+[Documentation](../README.md) · [Delivery](delivery.md) · [Source architecture](../../src/README.md) · [Project](../../README.md)

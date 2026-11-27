@@ -30,4 +30,4 @@ Some walks should fail: the road stays calm, so losing comes from bumps and choi
 
 The version 1 design is complete. Tuning continues against the targets above.
 
-Runtime generation targets 100% delivery: planner acceptance requires every plan complete within 75% of the per-attempt search allowance. The [planner contract](../../planner-work.md#contract) holds the release floor and the omission rules.
+Runtime generation targets 100% delivery: planner acceptance requires every plan complete within 75% of the per-attempt search allowance. The [planner contract](../planner-work.md#contract) holds the release floor and the omission rules.
