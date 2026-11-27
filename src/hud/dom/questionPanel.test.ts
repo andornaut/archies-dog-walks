@@ -530,6 +530,7 @@ it("keeps a base page with custom native controls interactive without a modal sc
     repeat: false,
     stopPropagation: vi.fn(),
     target: button,
+    type: "keydown",
   };
   layerViews(element)[0]?.fire("keydown", key);
   expect(key.stopPropagation).toHaveBeenCalledOnce();
