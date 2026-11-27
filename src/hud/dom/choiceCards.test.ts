@@ -274,9 +274,12 @@ it("starts on the first displayed option, cycles focus, and leaves confirmation 
   shown.destroy();
 });
 
-it("keeps help pictures inert when a directional key is sent to their dialog", async () => {
+it("shows only the inert choices in a Help illustration", async () => {
   const { choose, dialog, doc, element, options, shown } = await mount("zones", { picture: true });
   expect(options.every((option) => option.tagName === "span")).toBe(true);
+  expect(element.all().some((node) => node.style.backgroundImage?.includes("ui-strip-well"))).toBe(
+    false,
+  );
   const active = doc.activeElement;
   dialog.fire("keydown", { code: "ArrowLeft", target: dialog });
   expect(doc.activeElement).toBe(active);

@@ -357,19 +357,6 @@ export function showChoiceCards(
   const header = cardHeader(input.keyed, rects);
   const parts: DomPart[] = [];
   const headerParts: HTMLElement[] = [];
-  const band = imageNineSlice(
-    doc,
-    input,
-    "ui-strip-well",
-    input.imageSize("ui-strip-well"),
-    SLICES["ui-strip-well"],
-  );
-  parts.push({
-    element: band.element,
-    place: (scale) => band.place(scale, ORIGIN, header.band),
-    ready: band.ready,
-  });
-  headerParts.push(band.element);
   const label = (
     text: string,
     x: number,
@@ -390,26 +377,42 @@ export function showChoiceCards(
     parts.push(part);
     headerParts.push(part.element);
   };
-  const centre = SCREEN_CONFIG.width / 2;
-  const display = input.fonts.display;
-  if (input.view.source.kind === "fork" && display !== undefined) {
-    const line = {
-      capTop: header.titleTop,
-      centre: "advance",
-      centreX: centre,
-      colour: PALETTE.white,
-      font: "display",
-      scale: 1,
-      text: input.view.title,
-    } as const;
-    const element = createTextLine(doc, line);
-    parts.push({ element, place: (scale) => placeText(display, scale, ORIGIN, element, line) });
-    headerParts.push(element);
-  } else {
-    label(input.view.title, centre + 1, header.titleTop + 1, TEXT_SCALE, PALETTE.ink, "title");
-    label(input.view.title, centre, header.titleTop, TEXT_SCALE, PALETTE.white, "title");
+  // Help pictures show the options alone, with their own caption outside the illustration.
+  if (!input.picture) {
+    const band = imageNineSlice(
+      doc,
+      input,
+      "ui-strip-well",
+      input.imageSize("ui-strip-well"),
+      SLICES["ui-strip-well"],
+    );
+    parts.push({
+      element: band.element,
+      place: (scale) => band.place(scale, ORIGIN, header.band),
+      ready: band.ready,
+    });
+    headerParts.push(band.element);
+    const centre = SCREEN_CONFIG.width / 2;
+    const display = input.fonts.display;
+    if (input.view.source.kind === "fork" && display !== undefined) {
+      const line = {
+        capTop: header.titleTop,
+        centre: "advance",
+        centreX: centre,
+        colour: PALETTE.white,
+        font: "display",
+        scale: 1,
+        text: input.view.title,
+      } as const;
+      const element = createTextLine(doc, line);
+      parts.push({ element, place: (scale) => placeText(display, scale, ORIGIN, element, line) });
+      headerParts.push(element);
+    } else {
+      label(input.view.title, centre + 1, header.titleTop + 1, TEXT_SCALE, PALETTE.ink, "title");
+      label(input.view.title, centre, header.titleTop, TEXT_SCALE, PALETTE.white, "title");
+    }
+    label(input.subtitle, centre, header.subtitleTop, 1, PALETTE.white);
   }
-  label(input.subtitle, centre, header.subtitleTop, 1, PALETTE.white);
   // One refusal plays at a time across the options, on the option's group: it shakes the card and
   // its red phases fill the label band dark red under a white label.
   const playRefusal = (reducedMotion: boolean, group: HTMLElement) => {
@@ -468,7 +471,7 @@ export function showChoiceCards(
         rendered.all.flatMap((part) => (part.ready === undefined ? [] : [part.ready])),
       ).then((urls) => urls.flat()),
     });
-    if (input.keyed) {
+    if (input.keyed && !input.picture) {
       label(
         String(index + 1),
         surface.rect.x + surface.rect.width / 2,
