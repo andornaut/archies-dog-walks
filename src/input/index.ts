@@ -8,6 +8,7 @@ export {
   focusDirectionForKey,
   isConfirmKey,
   isExitKey,
+  isForegroundConfirmKey,
   isHelpKey,
   isMuteKey,
   isPauseKey,

@@ -77,6 +77,11 @@ export function isConfirmKey(code: string): boolean {
   return code === "Enter" || code === "NumpadEnter" || code === "Space";
 }
 
+// Foreground actions also accept E/F; these are aliases, not browser-native confirmation keys.
+export function isForegroundConfirmKey(code: string): boolean {
+  return isConfirmKey(code) || code === "KeyE" || code === "KeyF";
+}
+
 // ? (Shift and the / key) opens help from the home screen.
 export function isHelpKey(shiftKey: boolean, code: string): boolean {
   return shiftKey && code === "Slash";

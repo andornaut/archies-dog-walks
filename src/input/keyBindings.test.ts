@@ -6,6 +6,7 @@ import {
   focusDirectionForKey,
   isConfirmKey,
   isExitKey,
+  isForegroundConfirmKey,
   isHelpKey,
   isMuteKey,
   isPauseKey,
@@ -185,4 +186,12 @@ describe("UI direction aliases and event ownership", () => {
     }
     expect(sceneKeyAllowed({ code: "Escape", target: button })).toBe(true);
   });
+});
+
+it("keeps foreground aliases distinct from native confirmation", () => {
+  for (const code of ["KeyE", "KeyF"]) {
+    expect(isForegroundConfirmKey(code)).toBe(true);
+    expect(isConfirmKey(code)).toBe(false);
+    expect(menuKeyActs(true, code)).toBe(false);
+  }
 });
