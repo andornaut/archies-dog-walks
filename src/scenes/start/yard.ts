@@ -162,10 +162,13 @@ export function drawStartShop(
   { focus, root }: { readonly focus: () => boolean; readonly root: GameObjects.Container },
   save: SaveDocument,
 ): YardShop {
+  const clip = scene.add.container(0, 0);
+  root.add(clip);
+  maskToRect(scene, HERO_MASK_KEY, HERO_CROP, clip);
+  // The fallback artwork dips independently of the fixed hero crop.
   const container = scene.add.container(0, 0);
-  root.add(container);
+  clip.add(container);
   const view: YardShop = { container };
-  maskToRect(scene, HERO_MASK_KEY, HERO_CROP, view.container);
   const focused = focus();
   const faces = addPressFaces(scene, SHOP_ART.petShop, PET_SHOP);
   if (faces !== undefined) {

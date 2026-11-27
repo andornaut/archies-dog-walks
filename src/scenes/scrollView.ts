@@ -25,8 +25,15 @@ export function maskToRect(
     return;
   }
   list.enableFilters();
-  // Filter autofocus copies camera size and zoom but retains its independent origin.
-  const camera = scene.cameras.main;
-  list.filterCamera?.setOrigin(camera.originX, camera.originY);
+  const camera = list.filterCamera;
+  if (camera === null) {
+    return;
+  }
+  // Context focus assumes a zero viewport origin when compositing. Capture on the authored
+  // logical grid and let the parent camera place the result, including its letterbox offset.
+  list.setFiltersAutoFocus(false);
+  list.setFiltersFocusContext(false);
+  list.setFilterSize(SCREEN_CONFIG.width, SCREEN_CONFIG.height);
+  camera.setOrigin(0, 0);
   list.filters?.internal.addMask(key);
 }
