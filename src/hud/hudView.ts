@@ -11,6 +11,8 @@ import { amountText, type Change, changeAmount, type MoneyChange } from "../rule
 // by reach, such as Long reach's, which its chip shows at its left (reachChipPlace).
 export interface ChangeLabel {
   amount: number;
+  // A collision uses the formation's lead snapshot on the road and the affected dog on landing.
+  collision?: { readonly delayMs: number; readonly forgivenAtMs?: number; readonly head: Point };
   gain: boolean;
   reachIcon?: string;
   target:

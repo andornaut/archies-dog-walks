@@ -14,6 +14,7 @@ import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents } from "../units.ts";
 import {
   chipLeft,
+  collisionHeartRow,
   FEEDBACK,
   FLY_HEART,
   heartNoticeLayout,
@@ -65,6 +66,21 @@ describe("heartNoticeLayout", () => {
     });
     expect(low.chip.y + low.chip.height, "the chip above its card lane").toBe(bounds.bottom);
   });
+});
+
+it("clamps the whole collision row while keeping the Forgiven caption alongside the loss", () => {
+  const bounds = { height: 400, width: 360, x: 0, y: 40 };
+  const ink = { height: 26, width: 28, x: 2, y: 3 };
+  const { chips, frame } = collisionHeartRow(bounds, { x: 360, y: 40 }, ink, [
+    { height: 18, padX: 4, width: 24 },
+    { height: 20, padX: 2, width: 88 },
+  ]);
+  const [number, forgiven] = chips;
+  expect(frame.y).toBe(bounds.y);
+  expect(number!.x + 4).toBe(frame.x + ink.x + ink.width + 2);
+  expect(forgiven!.x).toBe(number!.x + number!.width + 2);
+  expect(forgiven!.x + forgiven!.width).toBe(bounds.width);
+  expect(number!.y + number!.height / 2).toBe(forgiven!.y + forgiven!.height / 2);
 });
 
 describe("the labels floated over a dog", () => {

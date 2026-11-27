@@ -5,14 +5,16 @@ import type { GameObjects, Scene } from "phaser";
 import { playTagOnce } from "../assets/phaser/index.ts";
 import { gameData, SCREEN_CONFIG } from "../data/index.ts";
 import {
+  ABOVE_DOG_GAP,
   changeChipAt,
   chipLeft,
+  collisionHeartRow,
   FEEDBACK,
   FLY_HEART,
   type LabelAnchor,
   stackOverPop,
 } from "../hud/index.ts";
-import { COMIC_WORDS } from "../layout/index.ts";
+import { COMIC_WORDS, SCREEN_LAYOUT } from "../layout/index.ts";
 import { lineInk, PALETTE, TEXT_SCALE } from "../ui/index.ts";
 import {
   addPixelText,
@@ -24,6 +26,8 @@ import {
   placePixelText,
 } from "../ui/phaser/index.ts";
 import { letterEffect } from "./comicWord.ts";
+import { FEEDBACK_ART } from "./feedbackArt.ts";
+import { dogTop } from "./pullSignals.ts";
 import { fadeAway } from "./uiKit.ts";
 
 // A sidestep puff, 48x48, laid on the dog's frame and lettered with the dodge word.
@@ -47,8 +51,7 @@ export function playDodge(scene: Scene, moment: PackMoment, dog: GameObjects.Spr
     letterEffect(sprite, place, frames, gameData.runText.comicWords.dodge);
     return;
   }
-  const top = dog.getTopCenter();
-  const anchor = { centreX: top.x, lineBottom: top.y - 2 };
+  const anchor = headLabel(scene, dogTop(dog));
   floatLabel(scene, moment, anchor, gameData.runText.dodge, PALETTE.plum, FEEDBACK.dodge);
 }
 
@@ -63,8 +66,11 @@ export function playForgiven(
   const { pop, top } = dog;
   const anchor =
     pop === null
-      ? { centreX: top.x, lineBottom: top.y - 2 }
-      : { centreX: pop.frame.x + FLY_HEART.frame / 2, lineBottom: stackOverPop(pop, 0).bottom };
+      ? headLabel(scene, top)
+      : (pop.forgiven ?? {
+          centreX: pop.frame.x + FLY_HEART.frame / 2,
+          lineBottom: stackOverPop(pop, 0).bottom,
+        });
   const { forgiven } = FEEDBACK;
   floatLabel(scene, moment, anchor, gameData.runText.forgiven, PALETTE.forest, forgiven);
 }
@@ -72,7 +78,43 @@ export function playForgiven(
 // A heart pop's 32x32 frame's top-left, and its top opaque row in it.
 export interface HeartPopPlace {
   readonly frame: Point;
+  readonly forgiven?: LabelAnchor;
   readonly inkTop: number;
+}
+
+function headLabel(scene: Scene, top: Point): LabelAnchor {
+  return {
+    centreX: top.x,
+    lineBottom: Math.max(SCREEN_LAYOUT.walkView.y + floatChipHeight(scene), top.y - ABOVE_DOG_GAP),
+  };
+}
+
+// A wholly forgiven collision has the heart and caption, with no signed loss.
+export function wholeForgivenRow(scene: Scene, head: Point): HeartPopPlace | undefined {
+  const font = pixelBitmapFont(scene, "body");
+  if (font === undefined) {
+    return undefined;
+  }
+  const ink = lineInk(font, gameData.runText.forgiven, TEXT_SCALE);
+  const width = ink.right - ink.left;
+  const { chip } = changeChipAt(
+    pixelFontMetrics(scene, "body"),
+    { x: 0, y: 0 },
+    { lines: 1, scale: TEXT_SCALE, width },
+  );
+  const art = FEEDBACK_ART.heartGain.popInk;
+  const { chips, frame } = collisionHeartRow(
+    SCREEN_LAYOUT.walkView,
+    head,
+    { height: art.bottom - art.top, width: art.right - art.left, x: art.left, y: art.top },
+    [{ ...chip, padX: (chip.width - width) / 2 }],
+  );
+  const caption = chips[0]!;
+  return {
+    forgiven: { centreX: caption.x + caption.width / 2, lineBottom: caption.y + caption.height },
+    frame,
+    inkTop: art.top,
+  };
 }
 
 // The height of a floating label's chip, its text on one line.

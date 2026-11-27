@@ -17,7 +17,7 @@ import { PALETTE, pixelLinePoints } from "../../ui/index.ts";
 import { fillRect } from "../../ui/phaser/index.ts";
 import { floatValue, popCharm } from "../buffCharm.ts";
 import { FEEDBACK_ART } from "../feedbackArt.ts";
-import { floatChipHeight, type HeartPopPlace } from "../packFeedback.ts";
+import { floatChipHeight, type HeartPopPlace, wholeForgivenRow } from "../packFeedback.ts";
 import { dogTop } from "../pullSignals.ts";
 import type { ItemViews } from "./itemViews.ts";
 import type { PackView } from "./packView.ts";
@@ -32,6 +32,7 @@ interface BuffMomentDeps {
 
 interface BuffAnchors {
   heartPops: Map<DogId, HeartPopPlace>;
+  head?: Point | undefined;
   point: Point | undefined;
 }
 
@@ -83,7 +84,7 @@ export function popBuffs(
     if (pop.forgiven === null) {
       show();
     } else {
-      forgivenHeart(scene, deps, anchors.heartPops, pop.forgiven);
+      forgivenHeart(scene, deps, anchors, pop.forgiven);
       scene.time.delayedCall(shownAtMs, show);
     }
   }
@@ -156,17 +157,20 @@ function reachLine(
 function forgivenHeart(
   scene: Scene,
   deps: BuffMomentDeps,
-  heartPops: Map<DogId, HeartPopPlace>,
+  anchors: BuffAnchors,
   forgiven: NonNullable<BuffPop["forgiven"]>,
 ): void {
-  const top = deps.pack.dogPoint(forgiven.dog);
+  const top = (forgiven.whole ? anchors.head : undefined) ?? deps.pack.dogPoint(forgiven.dog);
   if (top === undefined) {
     return;
   }
   const inkTop = popInkTop(scene);
   const height = floatChipHeight(scene);
-  const { frame } = stackOverPop({ frame: heartPopFrame(top), inkTop }, height, LAYOUT.walkView.y);
-  heartPops.set(forgiven.dog, { frame, inkTop });
+  const row =
+    anchors.head !== undefined && forgiven.whole ? wholeForgivenRow(scene, top) : undefined;
+  const { frame } =
+    row ?? stackOverPop({ frame: heartPopFrame(top), inkTop }, height, LAYOUT.walkView.y);
+  anchors.heartPops.set(forgiven.dog, row ?? { frame, inkTop });
   const half = FLY_HEART.frame / 2;
   const centre = { x: frame.x + half, y: frame.y + half };
   const pop = (art: { key: string; pop: string }) =>

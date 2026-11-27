@@ -63,9 +63,10 @@ function fixture(still = false, hasFrames = true) {
     still: () => still,
     tabTop: 500,
   });
-  const play = (amount: number, x = 180, delayMs = 0) => {
+  const play = (amount: number, x = 180, delayMs = 0, collision?: ChangeLabel["collision"]) => {
     const label: ChangeLabel = {
       amount,
+      ...(collision === undefined ? {} : { collision }),
       gain: amount > 0,
       target: { cell: 4, dog: "archie", kind: "dog" },
       text: "unused heart glyph ♥",
@@ -111,6 +112,24 @@ describe("native heart numeric notice", () => {
     expect(chip.x - (heart.x - 16 + 31)).toBe(4);
     expect(chip.x + chip.width).toBe(360);
     expect(heart.x - 16).toBeLessThan(heartPopFrame({ x: 360, y: 400 }).x);
+  });
+  it("centres a collision row on the lead snapshot and retains the affected dog's landing", () => {
+    const { landed, nodes, play } = fixture(true);
+    play(-1, 88, 0, { delayMs: 0, head: { x: 180, y: 370 } });
+    const chip = nodes[0]?.labels[0]?.backing;
+    const heart = nodes[1]!.view.state;
+    const artLeft = heart.x - 16 + 2;
+    const artRight = heart.x - 16 + 30;
+    const inkRight = chip!.x + chip!.width - 4;
+    expect((artLeft + inkRight) / 2).toBe(180);
+    expect(chip!.x + 4 - artRight).toBe(2);
+    expect(chip!.y + chip!.height / 2).toBe(heart.y - 16 + (3 + 29) / 2);
+    expect(heart.y - 16 + 29).toBe(366);
+    nodes[1]?.art[0]?.onComplete?.();
+    expect(landed).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ target: { cell: 4, dog: "archie", kind: "dog" } }),
+      { height: 12, width: 100, x: 130, y: 510 },
+    );
   });
   it("retains stagger, pause and reduced-motion landing cleanup", async () => {
     const { feedback, flashCard, landed, nodes, play, timers } = fixture(true);

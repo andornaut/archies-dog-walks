@@ -16,10 +16,12 @@ import {
   bumpLines,
   cashLostLabel,
   cashLostMs,
+  type ChangeLabel,
   changeLabels,
   debuffChanges,
   debuffLines,
   endScreenDelayMs,
+  FEEDBACK,
   firedLine,
   FIRING_EVENT,
   type FiringCue,
@@ -138,6 +140,13 @@ interface RunMomentsDeps {
   still: () => boolean;
 }
 
+interface ChangeFeedback {
+  collision?: (forgivenAtMs: number | undefined) => NonNullable<ChangeLabel["collision"]>;
+  collisionHead?: Point;
+  forgivenAtMs?: number;
+  reachIcon?: string | undefined;
+}
+
 // What the walk's events look and sound like: sounds, bursts, hit moments, labels, quips,
 // hints and badge lines, and the HUD's feedback moments they cue. It keeps the money and
 // heart changes the run banks, and what the end screen waits for.
@@ -188,35 +197,58 @@ export class RunMoments {
   addChanges(
     from: Point,
     changes: readonly Change[],
-    forgivenAtMs = 0,
-    reachIcon: string | undefined = undefined,
+    { collision, collisionHead, forgivenAtMs = 0, reachIcon }: ChangeFeedback = {},
   ): void {
     this.changes.push(...changes);
-    const labels = reachedLabels(reachIcon, changeLabels(from, changes));
+    const labels = reachedLabels(
+      reachIcon,
+      changes.flatMap((change) => {
+        const [label] = changeLabels(from, [change]);
+        if (label === undefined) {
+          return [];
+        }
+        if (collision !== undefined && change.kind === "hearts" && label.amount < 0) {
+          label.collision = collision(heartsForgiven(change) > 0 ? forgivenAtMs : undefined);
+        }
+        return [label];
+      }),
+    );
     if (labels.length > 0) {
       this.scene.events.emit(CHANGE_LABELS_EVENT, labels);
     }
     forgivenLines(gameData, changes).forEach((line) => this.say(line));
     for (const change of changes) {
       if (change.kind === "hearts" && heartsForgiven(change) > 0) {
-        this.forgiven(change, forgivenAtMs);
+        this.forgiven(
+          change,
+          forgivenAtMs,
+          collision !== undefined && change.after < change.before,
+          collisionHead,
+        );
       }
     }
   }
 
-  private forgiven(change: HeartChange, atMs: number): void {
+  private forgiven(
+    change: HeartChange,
+    atMs: number,
+    besideLoss: boolean,
+    head: Point | undefined,
+  ): void {
     const pop = this.heartPops.get(change.dog);
     const label = () => {
-      const top = this.deps.pack.dogPoint(change.dog);
+      const top = head ?? this.deps.pack.dogPoint(change.dog);
       if (top !== undefined) {
         const moment = { depth: DEPTH.fx, still: this.deps.still() };
         playForgiven(this.scene, moment, { pop: pop ?? null, top });
       }
     };
-    if (atMs > 0) {
-      this.scene.time.delayedCall(atMs, label);
-    } else {
-      label();
+    if (!besideLoss) {
+      if (atMs > 0) {
+        this.scene.time.delayedCall(atMs, label);
+      } else {
+        label();
+      }
     }
     if (change.after > 0) {
       const cue: ForgivenCue = { dog: change.dog, hearts: change.after };
@@ -260,9 +292,33 @@ export class RunMoments {
   // around the pack at pack.
   walked(before: RunState, pack: Point, step: WalkStep): void {
     this.pack = pack;
+    const lead = packDogs(before)[0];
+    const head = lead === undefined ? undefined : this.deps.pack.dogPoint(lead);
+    // A wholly forgiven impact already has its own heart and caption. Leave that slot clear
+    // before showing losses from other dogs in the same collision step.
+    const whole = (change: Change | null) =>
+      change?.kind === "hearts" && change.after === change.before && heartsForgiven(change) > 0;
+    const whollyForgiven =
+      step.bumps.some(({ change, dodged }) => !dodged && whole(change)) ||
+      step.contacts.some(({ outcome }) => outcome.heartChanges.some(whole));
+    let nextHeartMs = whollyForgiven ? BUFF_POP.fadeAtMs + FEEDBACK.forgiven.ms : 0;
+    const collision: ChangeFeedback =
+      head === undefined
+        ? {}
+        : {
+            collision: (forgivenAtMs) => {
+              const delayMs = nextHeartMs;
+              nextHeartMs += Math.max(
+                FEEDBACK.heart.staggerMs,
+                forgivenAtMs === undefined ? 0 : forgivenAtMs + FEEDBACK.forgiven.ms,
+              );
+              return { delayMs, head, ...(forgivenAtMs === undefined ? {} : { forgivenAtMs }) };
+            },
+            collisionHead: head,
+          };
     this.heartPops = this.hudHeartPops(step);
     const marks = roadMarks(gameData, stepValues(step));
-    markRoad(this.scene, this.deps, { heartPops: this.heartPops, point: this.pack }, marks);
+    markRoad(this.scene, this.deps, { head, heartPops: this.heartPops, point: this.pack }, marks);
     const reached = reachIcons(marks.reaches);
     this.deps.items.strike(step);
     const sound = soundboardOf(this.scene);
@@ -280,7 +336,7 @@ export class RunMoments {
     // A tip's label pops by the cash, wherever its pickup (changeLabels), with the reaching
     // buff's icon when grabbed by reach.
     for (const { change, item } of step.tips) {
-      this.addChanges(overPack(pack), [change], 0, reached.get(item.id));
+      this.addChanges(overPack(pack), [change], { reachIcon: reached.get(item.id) });
     }
     // A tip, or a treat that pays cash, twinkles over the lead dog, its only sparkle; everything
     // else grabbed sparkles over the pack.
@@ -306,7 +362,7 @@ export class RunMoments {
         continue;
       }
       if (cash !== null) {
-        this.addChanges(overPack(pack), [cash], 0, reached.get(item.id));
+        this.addChanges(overPack(pack), [cash], { reachIcon: reached.get(item.id) });
       }
       if (change !== null) {
         this.changes.push(change);
@@ -332,7 +388,7 @@ export class RunMoments {
       this.addChanges(
         overPack(pack),
         [bump.change, bump.cash].flatMap((change) => (change === null ? [] : [change])),
-        BUFF_POP.fadeAtMs,
+        { ...collision, forgivenAtMs: BUFF_POP.fadeAtMs },
       );
       this.hint({ kind: "minorBump" });
     }
@@ -362,7 +418,7 @@ export class RunMoments {
       }
     }
     for (const { outcome } of step.contacts) {
-      this.addChanges(overPack(pack), outcomeChanges(outcome));
+      this.addChanges(overPack(pack), outcomeChanges(outcome), collision);
       this.afterOutcome(outcome);
     }
     stepHintTriggers(step).forEach((trigger) => this.hint(trigger));
@@ -383,8 +439,8 @@ export class RunMoments {
         }),
       ),
     );
-    const lead = packDogs(step.walk.run)[0];
-    const leadTop = lead === undefined ? undefined : this.deps.pack.dogPoint(lead);
+    const currentLead = packDogs(step.walk.run)[0];
+    const leadTop = currentLead === undefined ? undefined : this.deps.pack.dogPoint(currentLead);
     for (const cue of debuffCues) {
       if (leadTop !== undefined) {
         showDebuffPopup(this.scene, leadTop, cue.debuff);

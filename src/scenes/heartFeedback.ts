@@ -2,12 +2,13 @@ import { insetRect, type Point, type Rect, ringRects } from "@andornaut/game-kit
 import type { Scene, Tweens } from "phaser";
 
 import type { DogId } from "../data/ids.ts";
-import { SCREEN_CONFIG } from "../data/index.ts";
+import { CHANGE_CHIP, gameData, SCREEN_CONFIG } from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/index.ts";
 import {
   arcControl,
   cardHearts,
   type ChangeLabel,
+  collisionHeartRow,
   FEEDBACK,
   FLY_HEART,
   heartNoticeLayout,
@@ -17,6 +18,7 @@ import {
   REACH_ICON,
   reachIconBeside,
 } from "../hud/index.ts";
+import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { slotIndexOf } from "../state/index.ts";
 import { lineInk, PALETTE, plainMarks, TEXT_SCALE } from "../ui/index.ts";
 import { arcFlight } from "./arcFlight.ts";
@@ -117,12 +119,18 @@ export class HeartFeedback {
   private show(pop: HeartPop): void {
     const loss = pop.label.amount < 0;
     const art = loss ? FEEDBACK_ART.heartLoss : FEEDBACK_ART.heartGain;
-    if (!this.hooks.painter.hasArt(art.key)) {
+    const hasArt = this.hooks.painter.hasArt(art.key);
+    if (!hasArt && pop.label.collision?.forgivenAtMs === undefined) {
       this.land(loss, pop);
       return;
     }
     const { to } = pop;
-    const number = this.addNumber(pop.label, heartPopFrame(pop.dogTop), art.popInk.right);
+    const number = this.addNumber(pop.label, heartPopFrame(pop.dogTop), art.popInk);
+    if (!hasArt) {
+      number.chip.dispose();
+      this.land(loss, pop);
+      return;
+    }
     const { frame } = number;
     const half = FLY_HEART.frame / 2;
     const centre = { x: frame.x + half, y: frame.y + half };
@@ -191,6 +199,7 @@ export class HeartFeedback {
         );
       },
       origin: { x: 0.5, y: 0.5 },
+      ...(pop.label.collision === undefined ? {} : { projection: "layout" }),
       tags: [art.pop],
     });
     const missing = () => {
@@ -214,7 +223,7 @@ export class HeartFeedback {
   private addNumber(
     label: ChangeLabel,
     frame: Point,
-    inkRight: number,
+    artInk: { bottom: number; left: number; right: number; top: number },
   ): {
     chip: HudMoment;
     frame: Point;
@@ -230,10 +239,45 @@ export class HeartFeedback {
       height: Math.ceil(bottom - top) + 2 * CHIP_PAD,
       width: Math.ceil(right - left) + 2 * CHIP_PAD,
     };
-    const placed = heartNoticeLayout(
-      { bottom: this.hooks.tabTop - 1, screenWidth: SCREEN_CONFIG.width },
-      { chip: size, frame, inkRight },
+    const bottomEdge = this.hooks.tabTop - 1;
+    let placed = heartNoticeLayout(
+      { bottom: bottomEdge, screenWidth: SCREEN_CONFIG.width },
+      { chip: size, frame, inkRight: artInk.right },
     );
+    if (label.collision !== undefined) {
+      const { forgivenAtMs, head } = label.collision;
+      const topEdge = SCREEN_LAYOUT.walkView.y;
+      const slots = [{ ...size, padX: CHIP_PAD }];
+      if (forgivenAtMs !== undefined) {
+        const ink = lineInk(this.hooks.painter.fonts.body, gameData.runText.forgiven, TEXT_SCALE);
+        slots.push({
+          height: Math.max(CHANGE_CHIP.height, ink.bottom - ink.top + 2 * CHANGE_CHIP.padY),
+          padX: CHANGE_CHIP.padX,
+          width: ink.right - ink.left + 2 * CHANGE_CHIP.padX,
+        });
+      }
+      const { chips, frame } = collisionHeartRow(
+        { height: bottomEdge - topEdge, width: SCREEN_CONFIG.width, x: 0, y: topEdge },
+        head,
+        {
+          height: artInk.bottom - artInk.top,
+          width: artInk.right - artInk.left,
+          x: artInk.left,
+          y: artInk.top,
+        },
+        slots,
+      );
+      placed = { chip: chips[0]!, frame };
+      if (forgivenAtMs !== undefined) {
+        const rect = chips[1]!;
+        const show = () => this.showForgiven(rect);
+        if (forgivenAtMs === 0) {
+          show();
+        } else {
+          this.group.after(this.scene, forgivenAtMs, show);
+        }
+      }
+    }
     const chip = this.hooks.painter.group(HUD_DEPTH.heart);
     chip.panel(placed.chip);
     chip.text({
@@ -247,6 +291,31 @@ export class HeartFeedback {
       x: placed.chip.x + CHIP_PAD,
     });
     return { chip, frame: placed.frame, rect: placed.chip };
+  }
+  private showForgiven(rect: Rect): void {
+    if (heartPopBlocked(this.hooks.clearOf(), [rect])) {
+      return;
+    }
+    const caption = this.hooks.painter.group(HUD_DEPTH.heart);
+    caption.panel(rect);
+    caption.text({
+      backing: rect,
+      capTop: rect.y,
+      colour: PALETTE.forest,
+      font: "body",
+      lines: [gameData.runText.forgiven],
+      scale: TEXT_SCALE,
+      x: rect.x,
+    });
+    const { holdMs, ms, rise } = FEEDBACK.forgiven;
+    this.group.tween(this.scene, {
+      alpha: 0,
+      delay: holdMs,
+      duration: ms - holdMs,
+      onComplete: () => caption.dispose(),
+      targets: caption.state,
+      y: this.hooks.still() ? 0 : -rise,
+    });
   }
   private land(loss: boolean, pop: HeartPop): void {
     this.hooks.landed(pop.label, pop.lane);
@@ -283,7 +352,7 @@ export function heartPops(
     const over = { x: lane.x + Math.round(lane.width / 2), y: view.y - OVER_CARD };
     return [
       {
-        delayMs: before * FEEDBACK.heart.staggerMs,
+        delayMs: label.collision?.delayMs ?? before * FEEDBACK.heart.staggerMs,
         dogTop: hud.run.dogPoint(dog) ?? over,
         label,
         lane,

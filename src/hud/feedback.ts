@@ -26,6 +26,44 @@ export const FEEDBACK = {
 // which the fly tag's small heart is drawn centred, inking from column inkLeft.
 export const FLY_HEART = { frame: 32, inkLeft: 9 } as const;
 
+// The clear space between an above-dog notice and the opaque head.
+export const ABOVE_DOG_GAP = 4;
+const HEART_ROW_GAP = 2;
+
+// The ink union is centred over the head. Clamp the entire row, including transparent
+// sprite margins and the chips' padding, so the alignment within it stays fixed.
+export function collisionHeartRow(
+  bounds: Rect,
+  head: Point,
+  ink: Rect,
+  labels: readonly { height: number; padX: number; width: number }[],
+): { chips: Rect[]; frame: Point } {
+  let right = ink.width;
+  const chips = labels.map(({ height, padX, width }, index) => {
+    const x = right + HEART_ROW_GAP - (index === 0 ? padX : 0);
+    right = x + width;
+    return { height, width, x, y: Math.round((ink.height - height) / 2) };
+  });
+  const visibleRight = right - (labels.at(-1)?.padX ?? 0);
+  const frame = { x: -ink.x, y: -ink.y };
+  const left = Math.min(frame.x, ...chips.map(({ x }) => x));
+  right = Math.max(right, frame.x + FLY_HEART.frame);
+  const top = Math.min(frame.y, ...chips.map(({ y }) => y));
+  const bottom = Math.max(frame.y + FLY_HEART.frame, ...chips.map(({ height, y }) => y + height));
+  const x = Math.max(
+    bounds.x - left,
+    Math.min(bounds.x + bounds.width - right, Math.round(head.x - visibleRight / 2)),
+  );
+  const y = Math.max(
+    bounds.y - top,
+    Math.min(bounds.y + bounds.height - bottom, Math.round(head.y - ABOVE_DOG_GAP - ink.height)),
+  );
+  return {
+    chips: chips.map((chip) => ({ ...chip, x: chip.x + x, y: chip.y + y })),
+    frame: { x: frame.x + x, y: frame.y + y },
+  };
+}
+
 // What a heart pop covers on its way: its FLY_HEART.frame square frame, its number's chip, and the
 // box its heart flies through to land at to, its card's label band's top centre (the arc peaks
 // peak pixels above the frame's centre).

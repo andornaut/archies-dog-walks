@@ -66,13 +66,21 @@ function paintOrder(list: readonly Part[]): Part[] {
 
 const STILL = { depth: 2500, still: true };
 const TOP = { x: 100, y: 300 };
-const dog = { getTopCenter: () => TOP } as unknown as GameObjects.Sprite;
-
 describe("a floating label over the road", () => {
   it.each([
     {
       name: "the dodge label",
-      play: (scene: Scene) => playDodge(scene, STILL, dog),
+      play: (scene: Scene) =>
+        playDodge(scene, STILL, {
+          ...TOP,
+          displayOriginX: 24,
+          displayOriginY: 0,
+          frame: { realWidth: 48 },
+          scaleX: 1,
+          scaleY: 1,
+          scene: { textures: { exists: () => false } },
+          texture: { key: "test-dog" },
+        } as unknown as GameObjects.Sprite),
       text: gameData.runText.dodge,
     },
     {

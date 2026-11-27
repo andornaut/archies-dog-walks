@@ -43,7 +43,9 @@ export {
   withoutFace,
 } from "./faceText.ts";
 export {
+  ABOVE_DOG_GAP,
   chipLeft,
+  collisionHeartRow,
   FEEDBACK,
   FLY_HEART,
   heartNoticeLayout,
