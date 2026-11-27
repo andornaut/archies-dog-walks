@@ -46,7 +46,7 @@ export interface DomTextLine {
   readonly capTop: number;
   // "left": centreX is where a left-aligned label starts, as addPixelText places one: its pen in
   // the body font, its ink in the title font.
-  readonly centre: "advance" | "ink" | "left";
+  readonly centre: "advance" | "ink" | "inkWithPills" | "left";
   readonly centreX: number;
   readonly colour: number;
   readonly font: keyof typeof WEB_FONTS;
@@ -88,6 +88,24 @@ function textPixel(scale: DomScale, line: DomTextLine): number {
     : fontPixel(scale, line.scale);
 }
 
+// The outer ink columns from the pen's start, optionally including the name pills' backing.
+function horizontalInk(bitmap: BitmapFont, text: string, includePillBacking: boolean) {
+  const glyphs = laidGlyphs(bitmap, 1, text);
+  if (includePillBacking) {
+    return inkWithPills(
+      1,
+      glyphs.map((glyph) => ({ ...glyph, line: 0 })),
+    );
+  }
+  const spans = glyphs.flatMap(({ ink }) => ink ?? []);
+  return spans.length === 0
+    ? null
+    : {
+        left: Math.min(...spans.map(({ left }) => left)),
+        right: Math.max(...spans.map(({ right }) => right)),
+      };
+}
+
 // Where line's element goes and its font size, in whole device pixels from its container's
 // corner at origin game pixels: one font pixel is fontPixel device pixels, the ink's (or the
 // advance's) middle within half an art pixel of centreX, and the capitals' top on the row nearest
@@ -105,13 +123,9 @@ export function textPlace(
 } {
   const pixel = textPixel(scale, line);
   const text = shownText(line.font, line.text);
-  // Include a name pill's backing in the visible bounds from the pen's start.
   const ink =
-    line.centre === "ink"
-      ? inkWithPills(
-          1,
-          laidGlyphs(bitmap, 1, text).map((glyph) => ({ ...glyph, line: 0 })),
-        )
+    line.centre === "ink" || line.centre === "inkWithPills"
+      ? horizontalInk(bitmap, text, line.centre === "inkWithPills")
       : null;
   const first = ink?.left ?? 0;
   const last =
@@ -421,11 +435,12 @@ export function spokenText(line: string): string {
 // (ink, as a left-aligned title label's does), or its widest line's advance ending there (right,
 // as a right-aligned label's does), or its widest line's ink ending there (inkRight, as a label
 // the canvas moves there, placeInkRight), or each line's advance centred on x (centre, as a label
-// with originX 0.5 there), or each line's visible ink centred on x (inkCentre). Its first line's
-// capitals start at capTop (game pixels), its lines a
+// with originX 0.5 there), or each line's glyph ink (inkCentre) or glyph ink and pill backing
+// (inkCentreWithPills) centred on x. Its first line's capitals start at capTop (game pixels), its lines a
 // font line apart, each effect's name set in a pill.
 export interface DomTextBlock {
-  readonly anchor?: "centre" | "ink" | "inkCentre" | "inkRight" | "pen" | "right";
+  readonly anchor?:
+    "centre" | "ink" | "inkCentre" | "inkCentreWithPills" | "inkRight" | "pen" | "right";
   readonly backing?: Rect;
   // Each line's character indices where a run of another colour starts.
   readonly breaks?: readonly ReadonlySet<number>[];
@@ -555,14 +570,14 @@ export function blockPlace(
         )
       : deviceX(scale, block.x) + penOffset(bitmap, block) * pixel;
   const lineLeft = (shown: string) =>
-    block.anchor === "inkCentre"
+    block.anchor === "inkCentre" || block.anchor === "inkCentreWithPills"
       ? textPlace(
           bitmap,
           scale,
           { x: 0, y: 0 },
           {
             capTop: block.capTop,
-            centre: "ink",
+            centre: block.anchor === "inkCentreWithPills" ? "inkWithPills" : "ink",
             centreX: block.x,
             colour: block.colour,
             font: block.font,

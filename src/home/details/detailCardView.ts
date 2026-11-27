@@ -99,11 +99,12 @@ export interface DetailFramed {
 // title font its ink) starting at x, as addPixelText places a label, or each line centred on x
 // (centre, as a label with originX 0.5 there), or one line's advance ending at x (right, as a
 // label with originX 1 there), or one line's ink ending at x (inkRight, as placeInkRight moves a
-// label there), its first line's capitals at capTop, its lines a font line apart,
+// label there), or each line's ink including its pills centred on x (inkCentreWithPills). Its
+// first line's capitals are at capTop, its lines a font line apart,
 // each effect's name a line leads with in its pill. A one-line text may be runs in colours of
 // their own (spans), their texts the line's, run together.
 export interface DetailText {
-  readonly align?: "centre" | "inkCentre" | "inkRight" | "left" | "right";
+  readonly align?: "centre" | "inkCentre" | "inkCentreWithPills" | "inkRight" | "left" | "right";
   // A standalone label's own backing, rather than a card containing several separate parts.
   readonly backing?: Rect;
   readonly capTop: number;

@@ -138,7 +138,7 @@ export function choiceCardSurface(
     colour: number = bodyColour,
   ) =>
     texts.push({
-      align: "inkCentre",
+      align: "inkCentreWithPills",
       capTop,
       colour,
       font,

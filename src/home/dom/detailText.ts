@@ -28,12 +28,7 @@ export function textPart(
       ...rest,
       // A left-aligned label starts its pen at x in the body font and its ink in the title font,
       // as addPixelText places it.
-      anchor:
-        align === "centre" || align === "inkCentre" || align === "inkRight" || align === "right"
-          ? align
-          : font === "title"
-            ? "ink"
-            : "pen",
+      anchor: align === undefined || align === "left" ? (font === "title" ? "ink" : "pen") : align,
       font,
       scale: text.scale ?? TEXT_SCALE,
     },

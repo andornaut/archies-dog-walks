@@ -20,11 +20,11 @@ function expectCentredOutcomes(surface: ChoiceCardSurface): void {
   const fit = domScale(1, { height: 1280, width: 575, x: 0, y: 0 });
   const centre = exactDeviceX(fit, surface.rect.x + surface.rect.width / 2);
   for (const { align, capTop, colour, font = "body", lines, scale = 2, x } of surface.texts) {
-    expect(align).toBe("inkCentre");
+    expect(align).toBe("inkCentreWithPills");
     const bitmap = gameFont(`font-${font}`);
     for (const line of lines) {
       const rendered = blockPlace(bitmap, fit, {
-        anchor: "inkCentre",
+        anchor: "inkCentreWithPills",
         capTop,
         colour,
         font,
