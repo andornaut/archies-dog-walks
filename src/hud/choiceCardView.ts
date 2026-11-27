@@ -129,23 +129,22 @@ export function choiceCardSurface(
     bodyBox.top + inkRowsOfLines(metrics.body, body?.lines.length ?? 0) * bodyStyle.scale;
   const rect = large ? largeCardRect(place, largeCardHeight(contentHeight), charms.height) : place;
   const shift = rect.height - CARD.large.height;
+  const centreX = rect.x + rect.width / 2;
   const add = (
     font: "body" | "title",
     lines: readonly string[],
-    x: number,
     capTop: number,
     scale: number,
     colour: number = bodyColour,
-    align: "centre" | "left" = "centre",
   ) =>
     texts.push({
-      align,
+      align: "inkCentre",
       capTop,
       colour,
       font,
       lines,
       scale,
-      x,
+      x: centreX,
     });
   const band = large ? CARD.large.band : CARD.band;
   const title: ChoiceCardLabel = {
@@ -160,28 +159,23 @@ export function choiceCardSurface(
       .lines,
   };
   if (large) {
-    const x = rect.x + CARD.large.body.x;
     const top = rect.y + CARD.large.body.y;
     if (warning !== null) {
-      add("title", warning.lines, x, top, warning.style.scale, PALETTE.darkRed, "left");
+      add("title", warning.lines, top, warning.style.scale, PALETTE.darkRed);
     }
     add(
       "body",
       body?.lines ?? [],
-      x,
       top + bodyBox.top,
       bodyStyle.scale,
       forgiven === null ? PALETTE.plum : PALETTE.forest,
-      "left",
     );
   } else {
     const shown = smallCardText(data, metrics.body, ink("body"), entry.option, forgivenText);
-    const x = rect.x + CARD.effect.x + CARD.effect.width / 2;
     if (shown.warning !== null) {
       add(
         "body",
         shown.warning.lines,
-        x,
         rect.y + shown.box.warningY,
         shown.warning.style.scale,
         grey ? bodyColour : PALETTE.darkRed,
@@ -190,7 +184,6 @@ export function choiceCardSurface(
     add(
       "body",
       shown.effect.lines,
-      x,
       rect.y + shown.box.y,
       shown.effect.style.scale,
       forgiven === null || grey ? bodyColour : PALETTE.forest,

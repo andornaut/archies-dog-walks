@@ -22,6 +22,7 @@ import {
   gridRect,
   gridX,
   gridY,
+  inkWithPills,
   laidPills,
   PALETTE,
   PILL_CLOSE,
@@ -104,14 +105,19 @@ export function textPlace(
 } {
   const pixel = textPixel(scale, line);
   const text = shownText(line.font, line.text);
-  const inked = laidGlyphs(bitmap, 1, text).flatMap(({ ink }) => (ink === null ? [] : [ink]));
-  // The first and last columns the line inks, in font pixels from the pen's start, or the pen's
-  // start and its last advance.
-  const ink = line.centre === "ink" && inked.length > 0;
-  const first = ink ? Math.min(...inked.map(({ left }) => left)) : 0;
-  const last = ink
-    ? Math.max(...inked.map(({ right }) => right)) - (line.font === "display" ? DISPLAY_DROP : 0)
-    : advanceWidth(bitmap, 1, text);
+  // Include a name pill's backing in the visible bounds from the pen's start.
+  const ink =
+    line.centre === "ink"
+      ? inkWithPills(
+          1,
+          laidGlyphs(bitmap, 1, text).map((glyph) => ({ ...glyph, line: 0 })),
+        )
+      : null;
+  const first = ink?.left ?? 0;
+  const last =
+    ink === null
+      ? advanceWidth(bitmap, 1, text)
+      : ink.right - (line.font === "display" ? DISPLAY_DROP : 0);
   const bearing = line.font === "title" ? leftBearing((char) => bitmap.glyphs.get(char), text) : 0;
   // A centred line's ink or advance starts on the art pixel nearest where its middle on centreX
   // puts it, a half rounded up, as the canvas rounds a centred label's start to whole pixels.

@@ -1,4 +1,4 @@
-import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { fontMetrics, laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
@@ -10,8 +10,62 @@ import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
 import { fontInkRows, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
 import { activeModifier, testState } from "../testing/runState.ts";
+import { blockPlace } from "../ui/dom/pixelLine.ts";
+import { artPixel, domScale, exactDeviceX, fontPixel } from "../ui/domScale.ts";
+import { hasPill } from "../ui/namePills.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
-import { choiceCardSurface } from "./choiceCardView.ts";
+import { type ChoiceCardSurface, choiceCardSurface } from "./choiceCardView.ts";
+
+function expectCentredOutcomes(surface: ChoiceCardSurface): void {
+  const fit = domScale(1, { height: 1280, width: 575, x: 0, y: 0 });
+  const centre = exactDeviceX(fit, surface.rect.x + surface.rect.width / 2);
+  for (const { align, capTop, colour, font = "body", lines, scale = 2, x } of surface.texts) {
+    expect(align).toBe("inkCentre");
+    const bitmap = gameFont(`font-${font}`);
+    for (const line of lines) {
+      const rendered = blockPlace(bitmap, fit, {
+        anchor: "inkCentre",
+        capTop,
+        colour,
+        font,
+        lines: [line],
+        scale,
+        x,
+      });
+      const pixel = fontPixel(fit, scale);
+      const spans = [
+        ...rendered.runs.flatMap((run) =>
+          laidGlyphs(bitmap, pixel, run.text).flatMap(({ ink }) =>
+            ink === null ? [] : [{ left: run.left + ink.left, right: run.left + ink.right }],
+          ),
+        ),
+        ...rendered.pills.map(({ box }) => ({ left: box.left, right: box.left + box.width })),
+      ];
+      const left = Math.min(...spans.map((span) => span.left));
+      const right = Math.max(...spans.map((span) => span.right));
+      expect(Math.abs((left + right) / 2 - centre), line).toBeLessThanOrEqual(artPixel(fit) / 2);
+    }
+  }
+}
+
+it("centres each ordinary outcome line, including the inline debuff pill", () => {
+  const view = helpPicture(gameData, "cards").card!;
+  const option = view.options.find(({ text }) => text.includes(gameData.debuffs.stinky.name))!;
+  const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
+  const entry = { choice: option.index, enabled: true, option };
+  const walk = SCREEN_LAYOUT.walkView;
+  const place = cardRowIn(walk, MAX_CARD_OPTIONS, view.options.length)[1]!;
+  for (const [area, held] of [
+    [place, false],
+    [walk, true],
+  ] as const) {
+    const surface = choiceCardSurface(gameData, fonts, view, entry, area, held);
+    const lines = surface.texts.flatMap((text) => text.lines);
+    expect(lines.length).toBeGreaterThan(1);
+    expect(lines.some(hasPill)).toBe(true);
+    expectCentredOutcomes(surface);
+  }
+});
 
 it("projects disabled cards without changing choices and retains the full-size held view", () => {
   const view = helpPicture(gameData, "cards").card!;
@@ -40,6 +94,7 @@ it("keeps the complete seven-row held loss and firing warning inside the walk vi
   const walk = SCREEN_LAYOUT.walkView;
   const entry = { choice: option.index, enabled: true, option };
   const surface = choiceCardSurface(gameData, fonts, view, entry, walk, true);
+  expectCentredOutcomes(surface);
   const warning = surface.texts.find(({ font }) => font === "title")!;
   const body = surface.texts.find(({ font }) => font === "body")!;
   expect(surface.charms).toEqual([]);
@@ -94,6 +149,7 @@ it("fits every dog's forgiven or charged outcome at Body 2 with one title-only a
     for (const area of [place, walk]) {
       const held = area === walk;
       const surface = choiceCardSurface(gameData, fonts, view, entry, area, held);
+      expectCentredOutcomes(surface);
       const outcome = surface.texts.find(({ font, scale }) => font === "body" && scale === 2)!;
       const lines = affected.map(
         (dog, index) => `${index === 0 ? "0" : "−1"}♥ ${gameData.dogs[dog].name}`,
