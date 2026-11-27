@@ -134,4 +134,5 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0283 | Show gameplay and menu controls on the landing page                   | [adw-0283.md](../work/adw-0283.md) |
 | adw-0284 | Organize the homepage around a compact shared structure               | [adw-0284.md](../work/adw-0284.md) |
 | adw-0286 | Simplify the public homepage and remove Tuning and Gallery            | [adw-0286.md](../work/adw-0286.md) |
+| adw-0290 | Make forgiven choice outcomes readable                                | [adw-0290.md](../work/adw-0290.md) |
 | adw-0291 | Use a shared four-pixel gap in walk notices                           | [adw-0291.md](../work/adw-0291.md) |
