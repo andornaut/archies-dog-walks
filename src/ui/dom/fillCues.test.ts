@@ -12,8 +12,6 @@ const KIT_CONTROLS = readFileSync(
   "utf8",
 );
 const squeeze = (text: string) => text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, "");
-// A page's own stylesheet, its <style> block.
-const pageStyle = (path: string) => /<style>([\s\S]*?)<\/style>/u.exec(css(path))?.[1] ?? "";
 const KIT_CRASH = readFileSync(
   createRequire(import.meta.url).resolve("@andornaut/game-kit/runtime/web/crash/dom/crash.css"),
   "utf8",
@@ -23,12 +21,9 @@ const SHEETS = {
   controls: squeeze(css("../../../public/controls.css")),
   crash: squeeze(css("../../crash/crash.css")),
   focus: squeeze(css("./focusStyle.css")),
-  gallery: squeeze(pageStyle("../../../public/art/index.html")),
   game: squeeze(css("./gameButton.css")),
-  home: squeeze(pageStyle("../../../pages/index.html")),
   logbook: squeeze(css("../../hud/dom/logbook.css")),
   mute: squeeze(css("./muteControl.css")),
-  nav: squeeze(css("../../../public/nav.css")),
   tile: squeeze(css("../../home/dom/selectionTile.css")),
   top: squeeze(css("./nativeTopSection.css")),
   ui: squeeze(UI_STYLE),
@@ -523,24 +518,6 @@ describe("control state cues", () => {
       ".crash .crash-button:active:not(:disabled)",
       "padding-top:var(--button-press);padding-bottom:var(--button-press);box-shadow:none",
     ],
-    [
-      "a focused nav link's press",
-      "nav",
-      ".art-nav a:focus-visible",
-      "background:var(--palette-cyan)",
-    ],
-    [
-      "a focused homepage footer link with ink text",
-      "home",
-      ".site-footer a:focus-visible",
-      "background:var(--palette-cyan);color:var(--palette-ink)",
-    ],
-    [
-      "a focused gallery ground swatch's press",
-      "gallery",
-      ".toolbar .gr:has(input:focus-visible)",
-      "background:var(--palette-cyan)",
-    ],
   ] as const)("shows %s as a fill", (_what, sheet, selector, declaration) => {
     expect(rule(CUE_SHEETS[sheet], selector)).toContain(squeeze(declaration));
   });
@@ -789,7 +766,6 @@ describe("control state cues", () => {
       "choice: .adw-choice-group.adw-choice-option:focus-visible," +
         ".adw-choice-pressed.adw-choice-option,.adw-choice-held-outline",
       "focus: .adw-rowinput:focus-visible",
-      'gallery: .toolbar:is(select,input[type="search"]):focus-visible',
     ]);
   });
 

@@ -1,6 +1,3 @@
-import { readFileSync } from "node:fs";
-import { runInNewContext } from "node:vm";
-
 import { describe, expect, it } from "vitest";
 
 import { type AtlasManifest, packAtlasManifest, unpackAtlasManifest } from "./atlasManifest.ts";
@@ -50,22 +47,4 @@ describe("packed metadata validation", () => {
       unpackAtlasManifest({ pages: atlas.pages, textures: [["dog", page, [frame]]] }),
     ).toThrow();
   });
-});
-
-it("lets the actual static gallery project the same frames and tags without a second metadata request", () => {
-  const html = readFileSync("public/art/index.html", "utf8");
-  const start = html.indexOf("  if (manifest.atlas) {");
-  const end = html.indexOf("  const sheets =", start);
-  expect(start).toBeGreaterThan(0);
-  const context = {
-    $: () => {
-      throw new Error("unexpected gallery metadata failure");
-    },
-    atlasPages: [],
-    manifest: { atlas: packAtlasManifest(atlas) },
-    textures: new Map(),
-  };
-  runInNewContext(html.slice(start, end), context);
-  expect({ pages: context.atlasPages, textures: [...context.textures.values()] }).toEqual(atlas);
-  expect(html).not.toContain('getJSON(url("atlas-manifest.json"))');
 });

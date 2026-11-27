@@ -30,7 +30,7 @@ import {
   type DomArtKeys,
   hashGameArt,
 } from "./hashedArt.ts";
-import { type SiteArt, siteHtml, siteNavigation } from "./siteArt.ts";
+import { type SiteArt, siteHtml } from "./siteArt.ts";
 
 // Vite's prefix for a module id that names no file.
 const RESOLVED_ART_FILES_MODULE = `\0${ART_FILES_MODULE}`;
@@ -191,19 +191,6 @@ export function atlasPlugin(): Plugin & { api: AtlasPluginApi } {
             response.end(source);
           })
           .catch(next);
-      });
-    },
-    async generateBundle() {
-      if (siteArt === undefined) {
-        return;
-      }
-      this.emitFile({
-        fileName: "nav.css",
-        source: siteNavigation(
-          siteArt,
-          await readFile(`${this.environment.config.publicDir}/nav.css`, "utf8"),
-        ),
-        type: "asset",
       });
     },
     load(id) {

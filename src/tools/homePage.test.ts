@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 
 import { PNG } from "pngjs";
 import { describe, expect, it } from "vitest";
@@ -10,7 +10,7 @@ const HOME_PAGE = new URL("../../pages/index.html", import.meta.url);
 const SKY_BACKDROP = new URL("../../public/art/images/backdrop-yonge-street.png", import.meta.url);
 
 describe("the game homepage", () => {
-  it("keeps the themed hero, compact About, Controls and footer in reading order", async () => {
+  it("keeps the themed hero, compact About and Controls in reading order", async () => {
     const html = await readFile(HOME_PAGE, "utf8");
     const main = /<main>([\s\S]*?)<\/main>/u.exec(html)?.[1] ?? "";
     expect(main).toMatch(/<header class="hero">/u);
@@ -22,10 +22,10 @@ describe("the game homepage", () => {
     expect([...about.matchAll(/<li>/gu)]).toHaveLength(3);
     expect(main).toContain(`Walk a pack of dogs through ${gameData.world.name}.`);
     expect(main).toContain("/art/images/logo.png");
-    expect(html.indexOf("<footer")).toBeGreaterThan(html.indexOf("</main>"));
+    expect(html).not.toMatch(/<(?:footer|nav)\b/u);
   });
 
-  it("keeps Play, the conditional Install control, metadata and existing site links", async () => {
+  it("keeps Play before conditional Install, preserves metadata and has no site navigation", async () => {
     const html = await readFile(HOME_PAGE, "utf8");
     expect(html).toContain("<title>Archie's Dog Walks</title>");
     for (const property of ["og:description", "og:image", "og:title", "og:type", "og:url"]) {
@@ -47,13 +47,23 @@ describe("the game homepage", () => {
     expect(actions).toMatch(/<button[^>]*id="install"[^>]*hidden/u);
     expect(actions).toMatch(/<a[^>]*class="play [^"]*"[^>]*href="\/play\/"/u);
     expect(html).toContain('src="/src/homePage/main.ts"');
-    expect(html).toContain('src="/nav.js"');
-    const footer = /<footer[^>]*>([\s\S]*?)<\/footer>/u.exec(html)?.[1] ?? "";
-    expect([...footer.matchAll(/href="([^"]+)"/gu)].map(([, href]) => href)).toEqual([
-      "/art/",
-      "https://github.com/andornaut/archies-dog-walks",
-      "/tuning/",
-    ]);
+    expect(actions.indexOf('class="play ')).toBeLessThan(actions.indexOf('id="install"'));
+    expect(html).toContain('<link rel="stylesheet" href="/controls.css" />');
+    expect(html).not.toContain("/nav.js");
+    expect(html).not.toContain("/nav.css");
+    expect(html).not.toMatch(/href="\/(?:art|tuning)\//u);
+  });
+
+  it("removes retired public pages while preserving game artwork", async () => {
+    await Promise.all(
+      ["../../pages/tuning/index.html", "../../public/art/index.html"].map((path) =>
+        expect(access(new URL(path, import.meta.url))).rejects.toThrow(),
+      ),
+    );
+    await expect(access(SKY_BACKDROP)).resolves.toBeUndefined();
+    await expect(
+      access(new URL("../../public/art/manifest.json", import.meta.url)),
+    ).resolves.toBeUndefined();
   });
 
   it("exposes gameplay and menu controls as semantic Action and Input tables", async () => {

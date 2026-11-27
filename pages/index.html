@@ -41,11 +41,10 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Silkscreen&family=Atkinson+Hyperlegible:wght@400;700&display=swap"
     />
-    <link rel="stylesheet" href="/nav.css" />
-    <script src="/nav.js" defer></script>
+    <link rel="stylesheet" href="/controls.css" />
     <script type="module" src="/src/homePage/main.ts"></script>
     <style>
-      /* One themed reading column: hero and actions, About, Controls, then site links. */
+      /* One themed reading column: hero and actions, About, then Controls. */
       :root {
         --f-display: "Silkscreen", ui-monospace, monospace;
         --f-body: "Atkinson Hyperlegible", system-ui, sans-serif;
@@ -67,8 +66,7 @@
         image-rendering: pixelated;
         image-rendering: crisp-edges;
       }
-      main,
-      .site-footer {
+      main {
         width: min(720px, calc(100% - 32px));
         margin-inline: auto;
       }
@@ -197,24 +195,6 @@
         margin: 0;
         padding: 12px 14px 14px 32px;
       }
-      .site-footer {
-        padding-block: 24px 32px;
-      }
-      .site-footer nav {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 16px;
-      }
-      .site-footer a {
-        padding-block: 12px;
-        color: var(--palette-cream);
-      }
-      .site-footer a:focus-visible {
-        outline: none;
-        background: var(--palette-cyan);
-        color: var(--palette-ink);
-      }
       @media (min-width: 760px) {
         .hero {
           grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -291,6 +271,11 @@
             minutes.
           </p>
           <div class="actions">
+            <a
+              class="play app-button app-button--display app-button--primary app-button--wide"
+              href="/play/"
+              >Play</a
+            >
             <button
               class="install app-button app-button--display app-button--wide"
               id="install"
@@ -299,11 +284,6 @@
             >
               Install
             </button>
-            <a
-              class="play app-button app-button--display app-button--primary app-button--wide"
-              href="/play/"
-              >Play</a
-            >
           </div>
         </div>
       </header>
@@ -407,13 +387,6 @@
         </div>
       </section>
     </main>
-    <footer class="site-footer">
-      <nav aria-label="More about Archie">
-        <a href="/art/">Gallery</a>
-        <a href="https://github.com/andornaut/archies-dog-walks">GitHub</a>
-        <a href="/tuning/">Tuning</a>
-      </nav>
-    </footer>
 
     <dialog class="steps card-panel" id="install-steps" aria-labelledby="install-steps-other">
       <div class="steps-body">

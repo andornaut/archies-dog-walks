@@ -21,7 +21,7 @@ export const BUILD_MANIFEST_PATH = "/.game-kit/manifest-*";
 export const COMMON_RULE = {
   comment:
     "Every response. The game requests fullscreen and a screen wake lock; the clipboard (Cheats " +
-    "page, art gallery) keeps its default of self.",
+    "page) keeps its default of self.",
   headers: [
     ["X-Content-Type-Options", "nosniff"],
     ["Referrer-Policy", "strict-origin-when-cross-origin"],
@@ -45,7 +45,7 @@ export const FILE_RULES = [
   },
   {
     comment:
-      "Bitmap font descriptors, which are XML: the game's hashed copies and the art gallery's. " +
+      "Bitmap font descriptors, which are XML: the game's hashed copies. " +
       "Cloudflare types files by extension and serves an unknown one untyped, which it does " +
       "not compress.",
     headers: [["Content-Type", "text/xml; charset=utf-8"]] satisfies HeaderList,
@@ -106,14 +106,6 @@ const GOOGLE_FONTS: Directives = {
 export const PAGE_RULES: readonly PageRule[] = [
   { comment: "The home page.", directives: { ...GOOGLE_FONTS, ...WEBSITE_ANALYTICS }, path: "/" },
   { comment: "The game.", directives: {}, path: "/play/*" },
-  { comment: "Tuning.", directives: WEBSITE_ANALYTICS, path: "/tuning/*" },
-  {
-    comment:
-      "The art gallery. style-src-attr: the gallery's ground swatches and palette " +
-      "chips carry style attributes.",
-    directives: { ...GOOGLE_FONTS, ...WEBSITE_ANALYTICS, "style-src-attr": ["'unsafe-inline'"] },
-    path: "/art/*",
-  },
 ];
 
 const NAV_SCRIPT_PATTERN = /<script\b[^>]*\ssrc\s*=\s*["']?\/nav\.js["'\s>]/i;

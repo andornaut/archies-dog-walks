@@ -1,6 +1,6 @@
 import { beforeEach, expect, it } from "vitest";
 
-import { type SiteArt, siteHtml, siteNavigation } from "./siteArt.ts";
+import { type SiteArt, siteHtml } from "./siteArt.ts";
 
 const art: SiteArt = (key) => ({
   json: {
@@ -49,7 +49,7 @@ it("retains decorative portrait dimensions and the labelled group's accessibilit
   expect(built).not.toContain("<style");
 });
 
-it("projects owner moods and the selected navigation tick from the same packed pixels", () => {
+it("projects owner moods from the same packed pixels", () => {
   const html =
     '<head><style>.mood span {background: url("/art/sprites/face-owner-kilo.png")' +
     " no-repeat 0 0 / 320px 64px;} .m-neutral span {background-position:-64px 0;}" +
@@ -59,9 +59,6 @@ it("projects owner moods and the selected navigation tick from the same packed p
     expect(stylesheet).toContain(`no-repeat ${position}`);
   }
   expect(built).not.toContain("/art/sprites/");
-  expect(
-    siteNavigation(art, 'background: url("/art/sprites/ui-check.png") -48px 0 / 64px 16px;'),
-  ).toBe('background:url("/assets/art/dom/sheet-123.webp") no-repeat -21px -26px / 256px 128px;');
 });
 
 it("projects the minified HTML styles Vite passes to post transforms", () => {

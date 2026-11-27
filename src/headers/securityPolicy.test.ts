@@ -73,18 +73,15 @@ describe("FILE_RULES", () => {
 
 describe("PAGE_RULES", () => {
   it("covers each of the site's pages with exactly one rule", () => {
-    const files = ["index.html", "play/index.html", "tuning/index.html", "art/index.html"];
+    const files = ["index.html", "play/index.html"];
     const pages = new Map(
-      [...files, "art/notes/example.html"].map((file) => [
-        servedPath(file),
-        { scriptHashes: [], styleHashes: [] },
-      ]),
+      files.map((file) => [servedPath(file), { scriptHashes: [], styleHashes: [] }]),
     );
     expect(() => pageRules({}, PAGE_RULES, pages)).not.toThrow();
   });
 
   it("permits website analytics while keeping playable connections same-origin", () => {
-    const paths = ["/", "/play/", "/tuning/", "/art/"];
+    const paths = ["/", "/play/"];
     const pages = new Map(paths.map((path) => [path, { scriptHashes: [], styleHashes: [] }]));
     const rules = pageRules(BASE_DIRECTIVES, PAGE_RULES, pages);
     for (const path of paths) {
@@ -109,23 +106,20 @@ describe("PAGE_RULES", () => {
 
   // inlineStyleCheckPlugin's premise: on each built page, a style element or attribute that a
   // script adds is blocked, so the build must ship none.
-  it.each(["/", "/play/", "/tuning/"])(
-    "lets %s load styles from files and hashes alone",
-    (path) => {
-      const pages = new Map([[path, { scriptHashes: [], styleHashes: ["'sha256-AAAA'"] }]]);
-      const rule = pageRules(BASE_DIRECTIVES, PAGE_RULES, pages).find((each) =>
-        pathMatches(each.path, path),
-      );
-      const policy = rule?.headers.find(([name]) => name === "Content-Security-Policy")?.[1] ?? "";
-      const style = policy
-        .split(";")
-        .map((directive) => directive.trim().split(" "))
-        .filter(([name]) => name?.startsWith("style-src"));
-      expect(style.map(([name]) => name)).toEqual(["style-src"]);
-      expect(style[0]?.slice(1).filter((source) => !source.startsWith("https://"))).toEqual([
-        "'self'",
-        "'sha256-AAAA'",
-      ]);
-    },
-  );
+  it.each(["/", "/play/"])("lets %s load styles from files and hashes alone", (path) => {
+    const pages = new Map([[path, { scriptHashes: [], styleHashes: ["'sha256-AAAA'"] }]]);
+    const rule = pageRules(BASE_DIRECTIVES, PAGE_RULES, pages).find((each) =>
+      pathMatches(each.path, path),
+    );
+    const policy = rule?.headers.find(([name]) => name === "Content-Security-Policy")?.[1] ?? "";
+    const style = policy
+      .split(";")
+      .map((directive) => directive.trim().split(" "))
+      .filter(([name]) => name?.startsWith("style-src"));
+    expect(style.map(([name]) => name)).toEqual(["style-src"]);
+    expect(style[0]?.slice(1).filter((source) => !source.startsWith("https://"))).toEqual([
+      "'self'",
+      "'sha256-AAAA'",
+    ]);
+  });
 });

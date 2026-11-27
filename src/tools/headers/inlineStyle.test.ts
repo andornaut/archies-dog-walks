@@ -140,9 +140,7 @@ describe("inlineStyleCheckPlugin", () => {
   });
 });
 
-// The sources' own uses, found before a build: the game's and tools' code, the site's shared
-// script and the built pages' markup. The art gallery's pages, whose policy allows style
-// attributes, are not among them.
+// The sources' own uses, found before a build: the game's and tools' code and the built pages.
 describe("the sources", () => {
   const files = (dir: string, ending: string) =>
     readdirSync(join(REPO, dir), { recursive: true, withFileTypes: true })
@@ -150,10 +148,7 @@ describe("the sources", () => {
       .map((entry) => relative(REPO, join(entry.parentPath, entry.name)));
 
   it("add no inline style the CSP blocks", () => {
-    const scripts = [
-      ...files("src", ".ts").filter((path) => !path.endsWith(".test.ts")),
-      "public/nav.js",
-    ];
+    const scripts = files("src", ".ts").filter((path) => !path.endsWith(".test.ts"));
     const found = [
       ...scripts.flatMap((path) =>
         scriptInlineStyles(path, readFileSync(join(REPO, path), "utf8")),

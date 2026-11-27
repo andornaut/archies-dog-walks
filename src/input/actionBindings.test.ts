@@ -12,8 +12,7 @@ it("routes game click handlers through the action binding while preserving captu
     .filter(
       (entry) => entry.isFile() && entry.name.endsWith(".ts") && !entry.name.endsWith(".test.ts"),
     )
-    .map((entry) => join(entry.parentPath, entry.name).replaceAll("\\", "/"))
-    .filter((path) => !path.startsWith("src/dataPage/"));
+    .map((entry) => join(entry.parentPath, entry.name).replaceAll("\\", "/"));
   for (const path of files) {
     const file = ts.createSourceFile(
       path,

@@ -55,13 +55,6 @@ export function siteHtml(art: SiteArt, stylesheet: (css: string) => string, html
       );
 }
 
-export function siteNavigation(art: SiteArt, css: string): string {
-  return css.replace(
-    /background:\s*url\("\/art\/sprites\/ui-check\.png"\)[^;]+;/u,
-    `background:${background(art, "ui-check", 16, 3)};`,
-  );
-}
-
 // Replace source values before Vite extracts and hashes the page's stylesheet. The post-HTML
 // projection supplies these variables from the already built sheet, without rewriting CSS hashes.
 export function prepareSiteHtml(html: string): string {

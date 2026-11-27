@@ -10,16 +10,15 @@ export default gameViteConfig<typeof ConfigModules>({
   // Set just above it so that growth in Phaser or game code still warns.
   chunkSizeWarningLimit: 1100,
   configModules: "src/tools/viteConfigModules.ts",
-  // The home page at /, the game at /play/ and Tuning at /tuning/.
+  // The home page at / and the game at /play/.
   pages: {
     main: "pages/index.html",
     play: "pages/play/index.html",
-    tuning: "pages/tuning/index.html",
   },
   // atlasPlugin writes public/art/manifest.json from the art files, packs the art's images and
   // sprites into atlas pages, and writes every art file the game loads under /assets/art/ with a
   // content hash in its name, mapped from its path under /art/ in the game's code and in
-  // /art/art-files.json for the art gallery.
+  // /art/art-files.json for art tooling.
   // crashArtPlugin inlines the crash screen's art as data: URLs (src/tools/crashArtPlugin.ts).
   // crashFontPlugin writes the crash screen's body font as a WOFF2 subset to CRASH_FONT_TEXT
   // (src/tools/crashFontText.ts), and fails for a character of it the font lacks.

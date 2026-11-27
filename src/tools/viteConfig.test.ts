@@ -25,7 +25,6 @@ it("discovers only game source tests while preserving the configured plugins and
       pages: {
         main: "pages/index.html",
         play: "pages/play/index.html",
-        tuning: "pages/tuning/index.html",
       },
     }),
   );
