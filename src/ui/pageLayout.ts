@@ -85,13 +85,16 @@ export function pageBack(
       variant: "footer",
       width: modalFrameRooms(PAGE_FRAME.context).footer,
     },
-    [{
-      key: 0,
-      role: "primary",
-      size: { height: BACK.height, width: modalActionWidth(measure.inkWidth("title", label)) },
-    }],
+    [
+      {
+        key: 0,
+        role: "primary",
+        size: { height: BACK.height, width: modalActionWidth(measure.inkWidth("title", label)) },
+      },
+    ],
   ).actions;
-  return { ...panelButton(measure, back!.face, true, label), actionIndex: 0 };
+  if (back === undefined || back.hidden) throw new Error("Page Back action must be visible");
+  return { ...panelButton(measure, back.face, true, label), actionIndex: 0 };
 }
 
 // A page's rows from spec.y down, one per height, spec.width wide from spec.x and spec.gap apart.

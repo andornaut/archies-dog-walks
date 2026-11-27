@@ -99,7 +99,8 @@ describe.each(["home", "pause"] as const)("%s navigation geometry", (context) =>
     expect(first.y).toBeGreaterThanOrEqual(view.close.hit.y + view.close.hit.height + MODAL.gap);
     expect(
       view.buttons.every(
-        ({ rect, text }) => rect.height >= BUTTON_SIZE.compact.height && text.scale === ACTION_LABEL_SCALE,
+        ({ rect, text }) =>
+          rect.height >= BUTTON_SIZE.compact.height && text.scale === ACTION_LABEL_SCALE,
       ),
     ).toBe(true);
     for (const { rect, text } of view.buttons) {
