@@ -2,11 +2,13 @@ import { sceneStub } from "@andornaut/game-kit/test/phaser/sceneStub";
 import type { Scene } from "phaser";
 import { describe, expect, it, vi } from "vitest";
 
+import { ICON_LABEL_GAP } from "../data/layout.ts";
 import type { HudMoment, HudMomentPainter, MomentArt } from "../hud/dom/hudMoments.ts";
-import { heartPopFrame } from "../hud/feedback.ts";
+import { ABOVE_DOG_GAP, FLY_HEART, heartPopFrame } from "../hud/feedback.ts";
 import type { ChangeLabel } from "../hud/hudView.ts";
 import { gameFont } from "../testing/fontInk.ts";
 import type { DomTextBlock } from "../ui/dom/pixelLine.ts";
+import { FEEDBACK_ART } from "./feedbackArt.ts";
 import { HeartFeedback } from "./heartFeedback.ts";
 function fixture(still = false, hasFrames = true) {
   const timers: {
@@ -115,16 +117,17 @@ describe("native heart numeric notice", () => {
   });
   it("centres a collision row on the lead snapshot and retains the affected dog's landing", () => {
     const { landed, nodes, play } = fixture(true);
-    play(-1, 88, 0, { delayMs: 0, head: { x: 180, y: 370 } });
-    const chip = nodes[0]?.labels[0]?.backing;
+    const head = { x: 180, y: 370 };
+    play(-1, 88, 0, { delayMs: 0, head });
+    const chip = nodes[0]!.labels[0]!.backing!;
     const heart = nodes[1]!.view.state;
-    const artLeft = heart.x - 16 + 2;
-    const artRight = heart.x - 16 + 30;
-    const inkRight = chip!.x + chip!.width - 4;
-    expect((artLeft + inkRight) / 2).toBe(180);
-    expect(chip!.x + 4 - artRight).toBe(2);
-    expect(chip!.y + chip!.height / 2).toBe(heart.y - 16 + (3 + 29) / 2);
-    expect(heart.y - 16 + 29).toBe(366);
+    const { bottom, left, right, top } = FEEDBACK_ART.heartLoss.popInk;
+    const frame = { x: heart.x - FLY_HEART.frame / 2, y: heart.y - FLY_HEART.frame / 2 };
+    expect(nodes[0]!.rects[0]).toEqual(chip);
+    expect((frame.x + left + chip.x + chip.width) / 2).toBe(head.x);
+    expect(chip.x - (frame.x + right)).toBe(ICON_LABEL_GAP);
+    expect(chip.y + chip.height / 2).toBe(frame.y + (top + bottom) / 2);
+    expect(frame.y + bottom).toBe(head.y - ABOVE_DOG_GAP);
     nodes[1]?.art[0]?.onComplete?.();
     expect(landed).toHaveBeenCalledExactlyOnceWith(
       expect.objectContaining({ target: { cell: 4, dog: "archie", kind: "dog" } }),
