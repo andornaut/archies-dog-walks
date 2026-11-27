@@ -45,9 +45,7 @@
     <script src="/nav.js" defer></script>
     <script type="module" src="/src/homePage/main.ts"></script>
     <style>
-      /* Project home: the logo on Yonge Street's slate sky, the pitch and Play, then five
-         highlights, each a cream chrome card with a navy band, game art at an integer scale and a
-         line or two. Colours and controls are the house tokens (/tokens.css). */
+      /* One themed reading column: hero and actions, About, Controls, then site links. */
       :root {
         --f-display: "Silkscreen", ui-monospace, monospace;
         --f-body: "Atkinson Hyperlegible", system-ui, sans-serif;
@@ -69,23 +67,25 @@
         image-rendering: pixelated;
         image-rendering: crisp-edges;
       }
+      main,
+      .site-footer {
+        width: min(720px, calc(100% - 32px));
+        margin-inline: auto;
+      }
       main {
         display: grid;
-        justify-items: center;
+        grid-template-columns: minmax(0, 1fr);
         gap: 32px;
-        padding-block: 0 40px;
-        padding-left: max(16px, env(safe-area-inset-left, 0px));
-        padding-right: max(16px, env(safe-area-inset-right, 0px));
       }
-      /* The sky band: its slate top row runs on above the backdrop, which sits at its foot. The
-         band is the backdrop's width, so on a 360px phone its margins pull it over the gutters.
-         The highlights centre the same way. */
+      .hero {
+        display: grid;
+        justify-items: center;
+        gap: 24px;
+      }
       .sky {
         display: grid;
         justify-items: center;
-        --w: min(360px, 100vw);
-        width: var(--w);
-        margin-inline: calc((100% - var(--w)) / 2);
+        width: 100%;
         padding: 28px 0 166px;
         background: var(--palette-slate) url("/art/images/backdrop-yonge-street.png") no-repeat
           center bottom / 360px 158px;
@@ -93,16 +93,19 @@
         image-rendering: crisp-edges;
       }
       h1 {
+        width: min(290px, 100%);
         margin: 0;
       }
       .logo {
-        width: 290px;
-        height: 82px;
+        width: 100%;
+        height: auto;
       }
       .intro {
         display: grid;
         justify-items: center;
         gap: 16px;
+        min-width: 0;
+        width: 100%;
         max-width: 40ch;
         text-align: center;
       }
@@ -112,16 +115,10 @@
         line-height: 1.4;
         text-wrap: balance;
       }
-      .sub,
-      .keys {
+      .sub {
         margin: 0;
         color: var(--palette-grey);
       }
-      .keys {
-        font-size: 14px;
-      }
-      /* Play, and Install stacked above it while the game can be installed: full-width faces the
-         stacked gap apart, the primary bottommost, their labels one size. */
       .actions {
         display: flex;
         flex-direction: column;
@@ -131,14 +128,15 @@
         max-width: var(--button-wide-width);
         margin-top: 4px;
       }
+      .actions > .app-button {
+        max-width: 100%;
+      }
       .install,
       .play,
       .steps-close {
         font-family: var(--f-display);
         font-size: 32px;
       }
-      /* The browser's own install steps where it holds no install prompt, one kind's shown: a
-         highlight's card chrome and band over the dimmed page. */
       .steps {
         width: fit-content;
         max-width: calc(100vw - 32px);
@@ -162,15 +160,8 @@
         justify-self: center;
         font-size: 16px;
       }
-      /* A highlight: the card chrome (/controls.css), a navy band with a display heading, then
-         the art. On a
-         phone it is 366px wide, a 360px screenshot inside 2px of chrome on the left and 4px on
-         the right, or the viewport's width when narrower. */
       .hl {
-        --w: min(366px, 100vw);
-        width: var(--w);
-        margin-block: 0;
-        margin-inline: calc((100% - var(--w)) / 2);
+        width: 100%;
         display: grid;
         grid-template-columns: minmax(0, 1fr);
         padding: 1px 3px 3px 1px;
@@ -199,305 +190,229 @@
           2px 2px 0 var(--palette-dred),
           3px 3px 0 var(--palette-dred);
       }
-      .hl p {
+      .about-highlights {
+        display: grid;
+        gap: 8px;
         margin: 0;
-        padding: 12px 14px 14px;
+        padding: 12px 14px 14px 32px;
       }
-      /* A 360x560 game screenshot at 1x over a plum line. On a viewport narrower than the
-         highlight's chrome it runs into the chrome, centred, so it stays at 1x down to 360px;
-         below that it scales down to the viewport's width. */
-      .shot {
-        width: min(360px, 100vw);
-        height: auto;
-        margin-left: clamp(-2px, (100vw - 360px) / 2 - 2px, 0px);
-        object-fit: contain;
-        background: var(--palette-ink);
-        border-bottom: 1px solid var(--palette-plum);
-        image-rendering: pixelated;
-        image-rendering: crisp-edges;
+      .site-footer {
+        padding-block: 24px 32px;
       }
-      /* The start screen's screenshot opens the game, so its Start walk button does what it shows. */
-      .shot-link {
-        display: block;
-        line-height: 0;
-        cursor: pointer;
-      }
-      /* Focus fills the card's heading band, as a focused choice card's label band: cyan with an
-         ink heading, or Highlight with HighlightText in forced colours. */
-      .shot-link:focus-visible {
-        outline: none;
-      }
-      .hl:has(.shot-link:focus-visible) h2 {
-        background: var(--palette-cyan);
-        color: var(--palette-ink);
-        text-shadow: none;
-      }
-      @media (forced-colors: active) {
-        .hl:has(.shot-link:focus-visible) h2 {
-          forced-color-adjust: none;
-          background: Highlight;
-          color: HighlightText;
-        }
-      }
-      .art {
+      .site-footer nav {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        align-items: end;
-        gap: 12px;
-        padding: 16px 12px 0;
+        gap: 16px;
       }
-      .dogs {
-        display: grid;
-        grid-template-columns: repeat(3, 64px);
-        gap: 8px;
+      .site-footer a {
+        padding-block: 12px;
+        color: var(--palette-cream);
       }
-      /* An owner's moods: frames of a 32x32 face sheet at 2x. */
-      .mood {
-        margin: 0;
-        display: grid;
-        justify-items: center;
-        gap: 4px;
-        font-size: 14px;
-      }
-      .mood span {
-        width: 64px;
-        height: 64px;
-        background: url("/art/sprites/face-owner-kilo.png") no-repeat 0 0 / 320px 64px;
-        image-rendering: pixelated;
-        image-rendering: crisp-edges;
-      }
-      .m-neutral span {
-        background-position: -64px 0;
-      }
-      .m-upset span {
-        background-position: -128px 0;
-      }
-      .m-fired span {
-        background-position: -192px 0;
-      }
-      /* The six zones, easiest first, each a 16x16 zone icon at 2x beside its name. */
-      .zones {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px 12px;
-        margin: 0;
-        padding: 16px 14px 0;
-        list-style: none;
-        font-size: 14px;
-        line-height: 1.3;
-      }
-      .zones li {
-        display: grid;
-        grid-template-columns: 32px 1fr;
-        align-items: center;
-        gap: 8px;
-      }
-      .zones b {
-        display: block;
+      .site-footer a:focus-visible {
+        outline: none;
+        background: var(--palette-cyan);
+        color: var(--palette-ink);
       }
       @media (min-width: 760px) {
-        main {
-          gap: 40px;
-        }
-        .sky {
-          --w: 720px;
-          padding: 48px 0 328px;
-          background-size: 720px 316px;
-        }
-        .logo {
-          width: 435px;
-          height: 123px;
+        .hero {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+          align-items: center;
         }
         .pitch {
           font-size: 22px;
-        }
-        .hl {
-          --w: 694px;
-        }
-        .shot {
-          width: 100%;
-          height: 560px;
-          margin-left: 0;
         }
         .hl h2 {
           padding: 14px 16px 16px;
           font-size: 24px;
         }
-        .hl p {
-          padding: 16px 20px 20px;
-          font-size: 18px;
-        }
-        .dogs {
-          grid-template-columns: repeat(9, 64px);
-        }
-        .zones {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          padding: 20px 20px 0;
-          font-size: 16px;
-        }
+      }
+      .controls-body {
+        display: grid;
+        gap: 16px;
+        min-width: 0;
+        padding: 12px 14px 14px;
+      }
+      .controls table {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+      }
+      .controls caption {
+        padding-bottom: 8px;
+        font-weight: 700;
+        text-align: left;
+      }
+      .controls th,
+      .controls td {
+        padding-block: 8px;
+        text-align: left;
+        vertical-align: top;
+      }
+      .controls th:first-child {
+        width: 32%;
+        padding-right: 12px;
+      }
+      .controls thead {
+        border-bottom: 2px solid var(--palette-plum);
+      }
+      .controls tbody tr + tr {
+        border-top: 1px solid var(--palette-tan);
+      }
+      .controls kbd {
+        font: inherit;
+        font-weight: 700;
+        white-space: nowrap;
       }
     </style>
   </head>
   <body>
     <main>
-      <div class="sky">
-        <h1>
-          <img
-            class="logo"
-            src="/art/images/logo.png"
-            width="145"
-            height="41"
-            alt="Archie's Dog Walks"
-          />
-        </h1>
-      </div>
-
-      <div class="intro">
-        <p class="pitch">
-          Walk a pack of dogs through Toronto. Every card obstacle turns into a choice.
-        </p>
-        <p class="sub">
-          A cozy pixel-art lane runner for your phone. Four neighbourhoods a walk, about 9 minutes.
-        </p>
-        <div class="actions">
-          <button
-            class="install app-button app-button--display app-button--wide"
-            id="install"
-            type="button"
-            hidden
-          >
-            Install
-          </button>
-          <a
-            class="play app-button app-button--display app-button--primary app-button--wide"
-            href="/play/"
-            >Play</a
-          >
+      <header class="hero">
+        <div class="sky">
+          <h1>
+            <img
+              class="logo"
+              src="/art/images/logo.png"
+              width="145"
+              height="41"
+              alt="Archie's Dog Walks"
+            />
+          </h1>
         </div>
-        <p class="keys">Drag or tap to steer, or use the arrow keys.</p>
-      </div>
 
-      <section class="hl card-panel" aria-labelledby="h-bump">
-        <h2 id="h-bump">Every card obstacle, a choice</h2>
-        <img
-          class="shot"
-          src="/art/site/home-road.png"
-          width="360"
-          height="560"
-          alt="High Park: Trista walking Archie, Lady and Ginger toward the High Park Zoo gate, Ginger straining toward a black squirrel past a red-and-white ball and a tipped leaf bag, with the Muddy bar showing; the dog cards along the bottom"
-        />
-        <p>
-          The road moves: cars and trucks drive down their lanes, people step out and animals dart
-          across. A plain bump costs a heart. Run into another dog, a skunk, a thief or a
-          neighbourhood's own surprise and a card opens: pay up, lose hearts or take a debuff. A
-          puddle or a pothole leaves the pack Muddy, and a cheap way out can bring Muddy, Spotlight,
-          Stinky or Zoomies, each for 40 to 60 seconds. Grab tips, treats, lost wallets, friendly
-          neighbours and dropped gear on the way: found gear works for the rest of the walk.
-        </p>
-      </section>
-
-      <section class="hl card-panel" aria-labelledby="h-dogs">
-        <h2 id="h-dogs">Nine dogs to walk</h2>
-        <div class="art">
-          <div
-            class="dogs"
-            role="img"
-            aria-label="The nine dogs: Ginger, Buddy, Reggie, Lady, Archie, Pepe, Kilo, Penny and Sequoia"
-          >
-            <img src="/art/images/portrait-dog-ginger.png" width="64" height="64" alt="" />
-            <img src="/art/images/portrait-dog-buddy.png" width="64" height="64" alt="" />
-            <img src="/art/images/portrait-dog-reggie.png" width="64" height="64" alt="" />
-            <img src="/art/images/portrait-dog-lady.png" width="64" height="64" alt="" />
-            <img src="/art/images/portrait-dog-archie.png" width="64" height="64" alt="" />
-            <img src="/art/images/portrait-dog-pepe.png" width="64" height="64" alt="" />
-            <img src="/art/images/portrait-dog-kilo.png" width="64" height="64" alt="" />
-            <img src="/art/images/portrait-dog-penny.png" width="64" height="64" alt="" />
-            <img src="/art/images/portrait-dog-sequoia.png" width="64" height="64" alt="" />
+        <div class="intro">
+          <p class="pitch">
+            Walk a pack of dogs through Toronto. Every card obstacle turns into a choice.
+          </p>
+          <p class="sub">
+            A cozy pixel-art lane runner for your phone. Four neighbourhoods a walk, about 9
+            minutes.
+          </p>
+          <div class="actions">
+            <button
+              class="install app-button app-button--display app-button--wide"
+              id="install"
+              type="button"
+              hidden
+            >
+              Install
+            </button>
+            <a
+              class="play app-button app-button--display app-button--primary app-button--wide"
+              href="/play/"
+              >Play</a
+            >
           </div>
         </div>
-        <p>
-          Three small, three medium and three large. A small dog dodges 1 in 5 bumps, and large dogs
-          slow your lane changes. Every dog pulls the pack a lane toward a squirrel it spots.
-        </p>
+      </header>
+
+      <section class="hl card-panel" aria-labelledby="h-about">
+        <h2 id="h-about">About</h2>
+        <ul class="about-highlights">
+          <li>Pick a walker, your dogs and one gear item for your Pocket, then head out.</li>
+          <li>
+            Dodge bumps, collect tips and treats, and choose how to handle each card obstacle.
+          </li>
+          <li>Spend what you earn at the Pet shop on new dogs, dog slots and gear.</li>
+        </ul>
       </section>
 
-      <section class="hl card-panel" aria-labelledby="h-owners">
-        <h2 id="h-owners">Keep the owners happy</h2>
-        <div class="art" role="group" aria-label="Ralph, Kilo's owner, in four moods">
-          <figure class="mood"><span></span>Happy</figure>
-          <figure class="mood m-neutral"><span></span>Neutral</figure>
-          <figure class="mood m-upset"><span></span>Upset</figure>
-          <figure class="mood m-fired"><span></span>Fired!</figure>
+      <section class="hl card-panel controls" id="controls" aria-labelledby="h-controls">
+        <h2 id="h-controls">Controls</h2>
+        <div class="controls-body">
+          <table>
+            <caption>
+              Walking
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Action</th>
+                <th scope="col">Input</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Steer</th>
+                <td>
+                  <kbd>Left</kbd>/<kbd>Right</kbd> arrows, <kbd>A</kbd>/<kbd>D</kbd> or
+                  <kbd>H</kbd>/<kbd>L</kbd>. Tap either half of the road, or drag left/right.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Choose a card</th>
+                <td>Press its number, or click/tap the card.</td>
+              </tr>
+              <tr>
+                <th scope="row">Pause or resume</th>
+                <td><kbd>P</kbd> or <kbd>Escape</kbd>, or use Pause/Resume.</td>
+              </tr>
+              <tr>
+                <th scope="row">Sound</th>
+                <td><kbd>M</kbd>, or click/tap the sound button.</td>
+              </tr>
+            </tbody>
+          </table>
+          <table>
+            <caption>
+              Menus and loadout
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Action</th>
+                <th scope="col">Input</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Move focus</th>
+                <td>
+                  Arrow keys, <kbd>W/A/S/D</kbd>, <kbd>H/J/K/L</kbd> or <kbd>Tab</kbd>.
+                  <kbd>Shift+Tab</kbd> moves backwards.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Choose or confirm</th>
+                <td>
+                  <kbd>Enter</kbd>, <kbd>Space</kbd>, <kbd>E</kbd> or <kbd>F</kbd>. Click/tap a
+                  control, or right-click an available action.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Item details</th>
+                <td>Press and hold a walker, dog, gear item or Pet shop row.</td>
+              </tr>
+              <tr>
+                <th scope="row">Back or close</th>
+                <td><kbd>Escape</kbd>, or Back/Close/X, when dismissal is allowed.</td>
+              </tr>
+              <tr>
+                <th scope="row">Volume</th>
+                <td>
+                  <kbd>Left</kbd>/<kbd>Right</kbd> arrows on a focused slider, or click/tap or drag
+                  the slider.
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">Help</th>
+                <td><kbd>Shift+/</kbd> (<kbd>?</kbd>) on Start, or Help in Menu/Pause.</td>
+              </tr>
+              <tr>
+                <th scope="row">Exit</th>
+                <td><kbd>Q</kbd> on Start when Exit is shown.</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <p>
-          Every dog comes with an owner and a row of hearts: 2 for a small dog, 3 for a medium one
-          and 4 for a large one. A plain bump costs the owner of the dog that hit it a heart, and a
-          treat a dog picks up gives its owner one back, or pays $5 when every owner is already
-          full. At zero, the owner fires you and takes the dog home. Walk fewer dogs and your lead
-          dog's owner starts with extra hearts.
-        </p>
-      </section>
-
-      <section class="hl card-panel" aria-labelledby="h-zones">
-        <h2 id="h-zones">Pick your path</h2>
-        <ol class="zones" aria-label="Toronto's six neighbourhoods, easiest first">
-          <li>
-            <img src="/art/images/icon-zone-high-park.png" width="32" height="32" alt="" />
-            <span><b>High Park</b>Easiest</span>
-          </li>
-          <li>
-            <img src="/art/images/icon-zone-cabbagetown.png" width="32" height="32" alt="" />
-            <span><b>Cabbagetown</b>Easy</span>
-          </li>
-          <li>
-            <img src="/art/images/icon-zone-kensington-market.png" width="32" height="32" alt="" />
-            <span><b>Kensington Market</b>Normal</span>
-          </li>
-          <li>
-            <img src="/art/images/icon-zone-the-beaches.png" width="32" height="32" alt="" />
-            <span><b>The Beaches</b>Normal</span>
-          </li>
-          <li>
-            <img
-              src="/art/images/icon-zone-distillery-district.png"
-              width="32"
-              height="32"
-              alt=""
-            />
-            <span><b>Distillery District</b>Hard</span>
-          </li>
-          <li>
-            <img src="/art/images/icon-zone-yonge-street.png" width="32" height="32" alt="" />
-            <span><b>Yonge Street</b>Hardest</span>
-          </li>
-        </ol>
-        <p>
-          Every walk starts in High Park, ends on Yonge Street and covers four of Toronto's six
-          neighbourhoods. After each of the first three, a celebration banks your pay, then the road
-          forks: each path leads to a neighbourhood and carries an upgrade card, easiest on the left
-          and hardest on the right. Bring every dog home for a $50 Walk bonus. If every owner fires
-          you, you keep only your pay, so end the walk early from the pause menu to keep your cash.
-        </p>
-      </section>
-
-      <section class="hl card-panel" aria-labelledby="h-shop">
-        <h2 id="h-shop">Grow the business</h2>
-        <a class="shot-link" href="/play/" aria-label="Play Archie's Dog Walks"
-          ><img
-            class="shot"
-            src="/art/site/home-start.png"
-            width="360"
-            height="560"
-            alt="The start screen: on an autumn Toronto street, Trista picked from four walkers, Archie, Ginger and Kilo picked from nine dogs with more for sale, and Running shoes picked in Pick your gear"
-        /></a>
-        <p>
-          Pick a walker, your dogs and one gear item for your Pocket, then head out. Spend what you
-          earn at the Pet shop on new dogs, dog slots and gear. Casey walks first; Mr. B joins when
-          you first finish a walk with one dog, Ada with two and Trista with three.
-        </p>
       </section>
     </main>
+    <footer class="site-footer">
+      <nav aria-label="More about Archie">
+        <a href="/art/">Gallery</a>
+        <a href="https://github.com/andornaut/archies-dog-walks">GitHub</a>
+        <a href="/tuning/">Tuning</a>
+      </nav>
+    </footer>
 
     <dialog class="steps card-panel" id="install-steps" aria-labelledby="install-steps-other">
       <div class="steps-body">

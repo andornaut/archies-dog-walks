@@ -5,111 +5,78 @@ import { describe, expect, it } from "vitest";
 
 import palette from "../../shared/palette.json" with { type: "json" };
 import { gameData } from "../data/index.ts";
-import { helpBodyValues } from "../help/helpBody.ts";
-import { rosterRows } from "../home/home.ts";
-import { CARD_PANEL } from "../ui/paperPanel.ts";
 
 const HOME_PAGE = new URL("../../pages/index.html", import.meta.url);
 const SKY_BACKDROP = new URL("../../public/art/images/backdrop-yonge-street.png", import.meta.url);
 
-const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six"];
-
-function capitalized(text: string): string {
-  return text.replace(/^./u, (letter) => letter.toUpperCase());
-}
-
-function listed(items: readonly string[]): string {
-  return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
-}
-
-// The page's sentences that restate a number or a name from the data, rebuilt from the data.
-function pageFacts(): [string, string][] {
-  const { debuffs, defaultWalker, dogs, tuning, walkers, world } = gameData;
-  const zoneIndex = (zoneId: string) => world.zones.findIndex(({ id }) => id === zoneId);
-  const zoneName = (zoneId: string) => world.zones[zoneIndex(zoneId)]?.name ?? zoneId;
-  const count = (n: number) => NUMBER_WORDS[n] ?? String(n);
-  const sizes = ["small", "medium", "large"] as const;
-  const debuffSeconds = Object.values(debuffs).map(({ seconds }) => tuning.seconds[seconds]);
-  const [shortest, longest] = [Math.min(...debuffSeconds), Math.max(...debuffSeconds)];
-  const debuffNames = Object.values(debuffs)
-    .map(({ name }) => name)
-    .sort();
-  const perSize = sizes.map(
-    (size) => `${count(Object.values(dogs).filter((dog) => dog.size === size).length)} ${size}`,
-  );
-  const { large, medium, small } = tuning.hearts.maxBySize;
-  const unlocks = Object.values(walkers)
-    .flatMap((walker) => (walker.unlock === "finishWalk" ? [walker] : []))
-    .sort((a, b) => a.dogs - b.dogs)
-    .map(({ dogs, name }, i) =>
-      i
-        ? `${name} with ${count(dogs)}`
-        : `${name} joins when you first finish a walk with ${count(dogs)} dog${dogs === 1 ? "" : "s"}`,
-    );
-  return [
-    ["the world", `Walk a pack of dogs through ${world.name}.`],
-    ["the walk length", `${capitalized(count(world.walkLength))} neighbourhoods a walk`],
-    [
-      "the first and last zones",
-      `Every walk starts in ${zoneName(world.firstZone)}, ends on ${zoneName(world.lastZone)} and ` +
-        `covers ${count(world.walkLength)} of ${world.name}'s ${count(world.zones.length)} neighbourhoods.`,
-    ],
-    ["the dogs per size", `${capitalized(listed(perSize))}.`],
-    [
-      "the hearts per size",
-      `${small} for a small dog, ${medium} for a medium one and ${large} for a large one.`,
-    ],
-    [
-      "the small dog's dodge",
-      `A small dog dodges 1 in ${1 / tuning.probability.smallDodgeChance} bumps`,
-    ],
-    [
-      "the debuffs and their durations, shortest to longest",
-      `leaves the pack ${debuffs.muddy.name}, and a cheap way out can bring ` +
-        `${debuffNames.slice(0, -1).join(", ")} or ${debuffNames.at(-1)}, each for ` +
-        `${shortest === longest ? shortest : `${shortest} to ${longest}`} seconds.`,
-    ],
-    [
-      "the treat's cash at full hearts",
-      `or pays ${helpBodyValues(gameData).treatCash} when every owner is already full.`,
-    ],
-    [
-      "the Walk bonus",
-      `Bring every dog home for a ${helpBodyValues(gameData).walkBonus} Walk bonus`,
-    ],
-    ["the walkers' unlocks", `${walkers[defaultWalker].name} walks first; ${listed(unlocks)}.`],
-  ];
-}
-
-// The home page is static HTML, so its roster is checked against the data here.
-describe("the home page's roster", () => {
-  it("shows every dog's portrait in the start screen's order and names them in it", async () => {
+describe("the game homepage", () => {
+  it("keeps the themed hero, compact About, Controls and footer in reading order", async () => {
     const html = await readFile(HOME_PAGE, "utf8");
-    const roster =
-      /<div\s+class="dogs"[^>]*aria-label="The nine dogs: ([^"]*)"[^>]*>([\s\S]*?)<\/div>/u.exec(
-        html,
-      );
-    expect(roster).not.toBeNull();
-    const [, label = "", images = ""] = roster ?? [];
-    const arts = [...images.matchAll(/portrait-dog-([a-z]+)\.png/gu)].map(([, art]) => art);
-    const dogs = rosterRows(gameData)
-      .flat()
-      .map((id) => gameData.dogs[id]);
-    expect({ arts, label }).toEqual({
-      arts: dogs.map((dog) => dog.art),
-      label: listed(dogs.map((dog) => dog.name)),
-    });
+    const main = /<main>([\s\S]*?)<\/main>/u.exec(html)?.[1] ?? "";
+    expect(main).toMatch(/<header class="hero">/u);
+    expect([...main.matchAll(/<h2[^>]*>([^<]+)<\/h2>/gu)].map(([, title]) => title)).toEqual([
+      "About",
+      "Controls",
+    ]);
+    const about = /<ul class="about-highlights">([\s\S]*?)<\/ul>/u.exec(main)?.[1] ?? "";
+    expect([...about.matchAll(/<li>/gu)]).toHaveLength(3);
+    expect(main).toContain(`Walk a pack of dogs through ${gameData.world.name}.`);
+    expect(main).toContain("/art/images/logo.png");
+    expect(html.indexOf("<footer")).toBeGreaterThan(html.indexOf("</main>"));
   });
 
-  it("lists every zone in the world's order with its name, difficulty and icon", async () => {
+  it("keeps Play, the conditional Install control, metadata and existing site links", async () => {
     const html = await readFile(HOME_PAGE, "utf8");
-    const list = /<ol\s+class="zones"[^>]*>([\s\S]*?)<\/ol>/u.exec(html)?.[1] ?? "";
-    const shown = [
-      ...list.matchAll(/icon-zone-([a-z-]+)\.png[\s\S]*?<b>([^<]*)<\/b>([^<]*)<\/span>/gu),
-    ].map(([, art, name, difficultyName]) => ({ art, difficultyName, name }));
-    expect(shown).toEqual(
-      gameData.world.zones.map(({ art, difficultyName, name }) => ({ art, difficultyName, name })),
-    );
+    expect(html).toContain("<title>Archie's Dog Walks</title>");
+    for (const property of ["og:description", "og:image", "og:title", "og:type", "og:url"]) {
+      expect(html).toContain(`property="${property}"`);
+    }
+    for (const name of [
+      "description",
+      "twitter:description",
+      "twitter:image",
+      "twitter:title",
+      "viewport",
+    ]) {
+      expect(html).toContain(`name="${name}"`);
+    }
+    for (const relationship of ["canonical", "manifest", "apple-touch-icon"]) {
+      expect(html).toContain(`rel="${relationship}"`);
+    }
+    const actions = /<div class="actions">([\s\S]*?)<\/div>/u.exec(html)?.[1] ?? "";
+    expect(actions).toMatch(/<button[^>]*id="install"[^>]*hidden/u);
+    expect(actions).toMatch(/<a[^>]*class="play [^"]*"[^>]*href="\/play\/"/u);
+    expect(html).toContain('src="/src/homePage/main.ts"');
+    expect(html).toContain('src="/nav.js"');
+    const footer = /<footer[^>]*>([\s\S]*?)<\/footer>/u.exec(html)?.[1] ?? "";
+    expect([...footer.matchAll(/href="([^"]+)"/gu)].map(([, href]) => href)).toEqual([
+      "/art/",
+      "https://github.com/andornaut/archies-dog-walks",
+      "/tuning/",
+    ]);
+  });
+
+  it("exposes gameplay and menu controls as semantic Action and Input tables", async () => {
+    const html = await readFile(HOME_PAGE, "utf8");
+    const tables = [...html.matchAll(/<table>([\s\S]*?)<\/table>/gu)].map(([, table]) => table!);
+    expect(tables).toHaveLength(2);
+    expect(
+      tables.map((table) => /<caption>\s*([^<]+?)\s*<\/caption>/u.exec(table)?.[1]?.trim()),
+    ).toEqual(["Walking", "Menus and loadout"]);
+    for (const table of tables) {
+      const headers = /<thead>([\s\S]*?)<\/thead>/u.exec(table)?.[1] ?? "";
+      expect(
+        [...headers.matchAll(/<th scope="col">([^<]+)<\/th>/gu)].map(([, text]) => text),
+      ).toEqual(["Action", "Input"]);
+      const rows = /<tbody>([\s\S]*?)<\/tbody>/u.exec(table)?.[1] ?? "";
+      for (const [, row] of rows.matchAll(/<tr>([\s\S]*?)<\/tr>/gu)) {
+        expect(row).toMatch(/<th scope="row">[^<]+<\/th>/u);
+        expect(row).toMatch(/<td>[\s\S]+<\/td>/u);
+      }
+    }
+    expect(html).toContain("Tap either half of the road");
+    expect(html).toContain("Press and hold");
+    expect(html).toContain("right-click an available action");
   });
 
   it("gives every install steps kind its steps as the data has them", async () => {
@@ -122,11 +89,6 @@ describe("the home page's roster", () => {
       ].map(([, kind, title, steps]) => [kind, { steps, title }]),
     );
     expect(shown).toEqual(gameData.menuText.settings.installSteps);
-  });
-
-  it.each(pageFacts())("states %s as the data has it", async (_fact, sentence) => {
-    const html = (await readFile(HOME_PAGE, "utf8")).replaceAll(/\s+/gu, " ");
-    expect(html).toContain(sentence);
   });
 });
 
@@ -141,43 +103,5 @@ describe("the home page's sky band", () => {
       hex: topLeft.join(""),
       name: Object.entries(palette).find(([, colour]) => colour.hex === hex)?.[0],
     });
-  });
-});
-
-// On a phone, each screenshot shows at 1x inside the highlight's chrome, and is sized to its PNG.
-describe("the home page's screenshots", () => {
-  it("are their PNGs' size, and a phone's highlight is one wide plus its chrome", async () => {
-    const html = await readFile(HOME_PAGE, "utf8");
-    const highlight = /\.hl\s*\{([^}]*)\}/u.exec(html)?.[1] ?? "";
-    const px = (pattern: RegExp) => (pattern.exec(highlight)?.slice(1) ?? []).map(Number);
-    const [cardWidth] = px(/--w:\s*min\((\d+)px,\s*100vw\)/u);
-    // Each highlight wears the card chrome, its ink line round the padding.
-    expect(html).toMatch(/<section class="hl card-panel"/u);
-    const border = CARD_PANEL.line;
-    const [, right = Number.NaN, , left = Number.NaN] = px(
-      /padding:\s*(\d+)px\s+(\d+)px\s+(\d+)px\s+(\d+)px/u,
-    );
-    const shots = [
-      ...html.matchAll(/class="shot"\s+src="([^"]+)"\s+width="(\d+)"\s+height="(\d+)"/gu),
-    ];
-    const count = html.split('class="shot"').length - 1;
-    expect(count).toBeGreaterThan(0);
-    expect(shots).toHaveLength(count);
-    const pngs = await Promise.all(
-      shots.map(async ([, src = ""]) => {
-        const png = PNG.sync.read(await readFile(new URL(`../../public${src}`, import.meta.url)));
-        return { height: png.height, src, width: png.width };
-      }),
-    );
-    expect(
-      shots.map(([, src, width, height]) => ({
-        height: Number(height),
-        src,
-        width: Number(width),
-      })),
-    ).toEqual(pngs);
-    expect(pngs.map(({ width }) => width + 2 * border + left + right)).toEqual(
-      pngs.map(() => cardWidth),
-    );
   });
 });
