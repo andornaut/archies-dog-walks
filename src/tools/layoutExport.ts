@@ -1,6 +1,6 @@
-import { wrapWords } from "@andornaut/game-kit/runtime/lines";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { fontMetrics, inkWidth } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 
 import {
   DEPTH_STEPS,
@@ -25,10 +25,11 @@ import {
   END_LAYOUT,
   HOME_LAYOUT,
   homeBarButtons,
-  noteRoomForControl,
   overlayRegion,
   settingsInstallWidth,
   settingsLayout,
+  settingsNoteLines,
+  settingsRows,
   type SettingsRowShape,
   SHOP_LAYOUT,
   SHOP_TABS,
@@ -102,6 +103,7 @@ import {
   PAUSE_MENU_ITEMS,
   pauseMenuItemLabel,
   plainMarks,
+  textOnLines,
 } from "../ui/index.ts";
 import { readBitmapFont } from "./fontFile.ts";
 
@@ -132,24 +134,28 @@ function ownerLead(slot: LeadSlot, line: Rect) {
 const installWidth = settingsInstallWidth(
   inkWidth(readBitmapFont("font-title"), 2, plainMarks(MENU_TEXT.settings.install).toUpperCase()),
 );
-const noteLines = (width: number, text: string) =>
-  wrapWords(
-    (line) => inkWidth(readBitmapFont("font-body"), 2, plainMarks(line)),
-    noteRoomForControl(width),
-    text,
-  ).length;
-export const SETTINGS_EXPORT_ROWS: readonly SettingsRowShape[] = [
-  { kind: "switch", noteLines: noteLines(32, MENU_TEXT.settings.soundNote) },
-  { kind: "slider" },
-  { kind: "slider" },
-  { kind: "switch", noteLines: noteLines(32, MENU_TEXT.settings.motionNote) },
-  { kind: "switch", noteLines: 0 },
-  {
-    controlWidth: installWidth,
-    kind: "button",
-    noteLines: 0,
-  },
-];
+const settingsNoteMeasure = {
+  fitBody: (lines: number, room: number, text: string) =>
+    fittingText(
+      textOnLines(lines),
+      ({ scale }, line) => inkWidth(readBitmapFont("font-body"), scale, plainMarks(line)),
+      room,
+      text,
+    ).lines,
+  inkWidth: (_font: "body" | "title", line: string) =>
+    inkWidth(readBitmapFont("font-title"), 2, plainMarks(line).toUpperCase()),
+};
+export const SETTINGS_EXPORT_ROWS: readonly SettingsRowShape[] = settingsRows(true).map((row) => {
+  if (row.kind === "button") {
+    return { controlWidth: installWidth, kind: "button", noteLines: 0 };
+  }
+  return row.kind === "slider"
+    ? { kind: "slider" }
+    : {
+        kind: "switch",
+        noteLines: settingsNoteLines(settingsNoteMeasure, MENU_TEXT.settings, row).length,
+      };
+});
 
 // A top-bar button with where its icon sits.
 function withIcon(button: BarButton) {

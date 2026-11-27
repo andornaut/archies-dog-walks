@@ -1,12 +1,12 @@
 import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
-import { fittingText, type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
+import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import { buildLabel } from "@andornaut/game-kit/runtime/web/buildLabel";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { MIN_PRESS, ROWS_PAGE, SETTINGS_CARD } from "../data/layout.ts";
+import { ICON_LABEL_GAP, MIN_PRESS, ROWS_PAGE, SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
 import {
@@ -33,13 +33,12 @@ import {
   INSTALL_STEPS,
   INSTALL_STEPS_FIT,
   installStepsLayout,
-  noteRoomForControl,
   SETTINGS_BUILD_LABEL,
-  SETTINGS_NOTE_STYLE,
   SETTINGS_ROW,
   SETTINGS_SWITCH_GAP,
   settingsInstallWidth,
   settingsLayout,
+  settingsNoteFit,
   type SettingsRowShape,
   setVolumeSteps,
   switchStateCentre,
@@ -89,21 +88,23 @@ const SHIPPED_ROWS: readonly ShippedRow[] = [
   { kind: "switch", label: words.fpsCounter, states: [words.shown, words.hidden] },
   { kind: "button", label: words.install },
 ];
-const notedRows = SHIPPED_ROWS.filter((row) => "note" in row && row.note !== undefined);
-const fittedNotes = notedRows.map((row) =>
-  fittingText(
-    SETTINGS_NOTE_STYLE,
-    (style: TextFitStyle, line: string) => inkWidth("font-body", style, line),
-    noteRoomForControl(SETTINGS_ROW.switch.width),
-    "note" in row ? (row.note ?? "") : "",
-  ),
+const notedRows = SHIPPED_ROWS.filter((row) => row.kind === "switch").filter(
+  (row) => row.note !== undefined,
 );
+const fittedNotes = notedRows.map((row) => {
+  const stateWidth = Math.max(
+    ...row.states.map((word) => inkWidth("font-title", { scale: 2 }, word)),
+  );
+  const { room, style } = settingsNoteFit(stateWidth);
+  return fittingText(style, (at, line) => inkWidth("font-body", at, line), room, row.note ?? "");
+});
 const shapes: SettingsRowShape[] = SHIPPED_ROWS.map((row) =>
   row.kind === "slider"
     ? { kind: "slider" }
     : {
         kind: row.kind,
-        noteLines: fittedNotes[notedRows.indexOf(row)]?.lines.length ?? 0,
+        noteLines:
+          row.kind === "switch" ? (fittedNotes[notedRows.indexOf(row)]?.lines.length ?? 0) : 0,
         ...(row.kind === "button"
           ? {
               controlWidth: settingsInstallWidth(
@@ -218,6 +219,11 @@ describe("the Settings page", () => {
   const { rows } = layout;
   const rowContent = { ...layout.rowsViewport, height: layout.rowsContentHeight };
 
+  it("keeps the Sound description on one line and wraps longer descriptions in the same column", () => {
+    expect(fittedNotes[0]?.lines).toEqual([words.soundNote]);
+    expect(fittedNotes[1]?.lines).toHaveLength(2);
+  });
+
   it("exports the rows the shipped notes wrap to", () => {
     expect(SETTINGS_EXPORT_ROWS).toEqual(shapes);
   });
@@ -273,8 +279,14 @@ describe("the Settings page", () => {
       Math.abs(control.y - row.y - (row.y + row.height - state.y - state.height)),
     ).toBeLessThanOrEqual(1);
     expect(inside(state, rows[i]!.rect)).toBe(true);
+    const stackLeft = row.x + row.width - SETTINGS_ROW.pad - Math.max(control.width, state.width);
     for (const [name, ink] of parts) {
-      if (name === "label" || name.startsWith("note")) {
+      if (name.startsWith("note")) {
+        expect(ink.x + ink.width + ICON_LABEL_GAP, name).toBeLessThanOrEqual(stackLeft);
+      }
+    }
+    for (const [name, ink] of parts) {
+      if (name === "label") {
         const rowsOverlap = ink.y < state.y + state.height && state.y < ink.y + ink.height;
         if (rowsOverlap) {
           expect(ink.x + ink.width + SETTINGS_ROW.controlGap, name).toBeLessThanOrEqual(state.x);
@@ -314,7 +326,7 @@ describe("the Settings page", () => {
       const parts = new Map(rowParts(i));
       const control = parts.get("control") ?? parts.get("percentage");
       for (const [name, ink] of parts) {
-        if (name.startsWith("note") || name === "label") {
+        if (name === "label") {
           expect(ink.x + ink.width + SETTINGS_ROW.controlGap, name).toBeLessThanOrEqual(
             control?.x ?? 0,
           );

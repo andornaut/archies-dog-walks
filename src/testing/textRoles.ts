@@ -36,9 +36,8 @@ import { MENU_TEXT_FIELDS } from "../home/menuText.ts";
 import {
   INSTALL_STEPS_FIT,
   installStepsLayout,
-  noteRoom,
   SETTINGS_BUILD_LABEL,
-  SETTINGS_NOTE_STYLE,
+  settingsNoteFit,
 } from "../home/settings.ts";
 import { dogRows, gearRows, type ShopRow, slotRows } from "../home/shop.ts";
 import { SHOP_LAYOUT, SHOP_MESSAGE_FIT, shopRowTextRoom } from "../home/shopLayout.ts";
@@ -730,7 +729,11 @@ export function textRoleCases(): TextRoleCase[] {
     ...plainRole(
       "settings switch note",
       "font-body",
-      { room: noteRoom("switch"), style: SETTINGS_NOTE_STYLE },
+      settingsNoteFit(
+        Math.max(
+          ...[settings.on, settings.off].map((word) => inkWidth("font-title", TEXT_STYLE, word)),
+        ),
+      ),
       [settings.motionNote, settings.soundNote],
     ),
     ...plainRole(

@@ -17,6 +17,10 @@ activation. Recovery buttons use the same action for a tap, key activation or ho
 Copy keeps the crash screen open and Reload restarts it. A pressed choice highlights its title
 band. Required choices retain their existing gesture and dismissal rules.
 
+Settings descriptions wrap at words in the available row width, using the wider of the two
+switch state labels to reserve space for the control stack. The top bar centres visible effect
+wells on the screen when they fit. A full six-well row centres in its reserved region.
+
 Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../src/README.md#assets), [Phone](../../src/README.md#phone).
 
 ## Work items
@@ -117,3 +121,5 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0275 | Keep item selections steady on activation                             | [adw-0275.md](../work/adw-0275.md) |
 | adw-0276 | Align collision feedback over the lead dog                            | [adw-0276.md](../work/adw-0276.md) |
 | adw-0277 | Remove the repeated owner name from extra-heart details               | [adw-0277.md](../work/adw-0277.md) |
+| adw-0279 | Wrap Settings help to the available row width                         | [adw-0279.md](../work/adw-0279.md) |
+| adw-0280 | Centre visible effects in the top bar                                 | [adw-0280.md](../work/adw-0280.md) |

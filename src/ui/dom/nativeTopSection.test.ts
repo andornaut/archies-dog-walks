@@ -260,7 +260,7 @@ describe("native top section integration", () => {
     });
     expect(press).toHaveBeenCalledTimes(2);
   });
-  it("centres visible effects inside their reserved region and reuses native art nodes", () => {
+  it("centres two effects on the screen and reuses their nodes for a full row", () => {
     const { element, view } = fixture(6);
     const wells = element
       .all()
@@ -273,8 +273,8 @@ describe("native top section integration", () => {
         .filter((node) => !node.hidden)
         .map((node) => [node.style.left, node.style.top, node.style.width]),
     ).toEqual([
-      ["157px", "5px", "26px"],
-      ["183px", "5px", "26px"],
+      ["154px", "5px", "26px"],
+      ["180px", "5px", "26px"],
     ]);
     view.setEffectCount(6);
     expect(wells.filter((node) => !node.hidden).map((node) => node.style.left)).toEqual([
@@ -309,7 +309,7 @@ describe("native top section integration", () => {
     expect(press!.style.backgroundColor).toBe(`#${PALETTE.forest.toString(16)}`);
     expect(shown()).toEqual([
       ["7px", "5px"],
-      ["158px", "8px", "24px", "24px"],
+      ["155px", "8px", "24px", "24px"],
     ]);
     view.setEffectPressed(undefined);
     expect(shown()).toEqual([["5px", "5px"], []]);

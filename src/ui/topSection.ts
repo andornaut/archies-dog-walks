@@ -86,9 +86,8 @@ function topSectionControls<T extends TopSectionButton>(shown: readonly T[]) {
   return { controls, presses };
 }
 
-// Currency and controls keep fixed dimensions. Visible effects centre within their pinned region
-// (WALK_BAR_PARTS.effects.right), moving only with the effect count and never with the displayed
-// amount or the controls.
+// Currency and controls keep fixed dimensions. Centre effects on the screen when the group
+// clears the currency well and fits inside its pinned region; use the region's centre otherwise.
 export function topSectionLayout<T extends TopSectionButton>(
   visible: readonly T[],
   sections: { currency?: boolean; effects?: number } = {},
@@ -106,7 +105,12 @@ export function topSectionLayout<T extends TopSectionButton>(
     : undefined;
   const style = WALK_BAR_PARTS.effects;
   const span = effects * style.size + Math.max(0, effects - 1) * style.gap;
-  const effectsX = topSectionGapLeft(TOP_BAR_WELL.x + currencyWidth, style.right, span);
+  const effectLeft = TOP_BAR_WELL.x + currencyWidth;
+  const screenCentreX = topSectionGapLeft(0, SCREEN_CONFIG.width, span);
+  const effectsX =
+    screenCentreX > effectLeft && screenCentreX + span <= style.right
+      ? screenCentreX
+      : topSectionGapLeft(effectLeft, style.right, span);
   const effectWells = Array.from({ length: effects }, (_, i) => ({
     height: style.size,
     width: style.size,

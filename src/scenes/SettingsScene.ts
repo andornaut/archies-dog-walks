@@ -1,6 +1,5 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
-import { fittingText } from "@andornaut/game-kit/runtime/text/textFit";
 import { Scene, Scenes } from "phaser";
 
 import { BUILD_LABEL } from "../buildLabel.ts";
@@ -12,16 +11,14 @@ import {
   type InstallStepsLayout,
   installStepsLayout,
   moveFocus,
-  noteRoomForControl,
   type OverlayRegion,
   overlayRegion,
   SETTING_ROWS,
-  SETTINGS_NOTE_STYLE,
-  SETTINGS_ROW,
   type SettingsFonts,
   settingsInstallWidth,
   type SettingsLayout,
   settingsLayout,
+  settingsNoteLines,
   type SettingsRow,
   settingsRows,
   type SettingsRowShape,
@@ -54,13 +51,7 @@ import {
 } from "../pwa/index.ts";
 import type { Settings } from "../save/index.ts";
 import { barTitleRoom, cardTitleRow } from "../ui/index.ts";
-import {
-  fitPixelText,
-  labelInkWidth,
-  pixelFontMetrics,
-  setPixelText,
-  withProbe,
-} from "../ui/phaser/index.ts";
+import { fitPixelText, pixelFontMetrics, setPixelText, withProbe } from "../ui/phaser/index.ts";
 import { listenHomeBar } from "./homeBarPress.ts";
 import type { MenuSceneData } from "./MenuScene.ts";
 import { measureModalTitle, modalTextWidth } from "./modalMeasure.ts";
@@ -105,6 +96,7 @@ function stepsLines(scene: Scene, steps: string): string[] {
 // takes.
 function rowShapes(scene: Scene, rows: readonly Row[]): SettingsRowShape[] {
   const words = gameData.menuText.settings;
+  const measure = canvasSettingsMeasure(scene);
   return rows.map((row) => {
     if (row.kind === "slider") {
       return { kind: "slider" };
@@ -116,25 +108,9 @@ function rowShapes(scene: Scene, rows: readonly Row[]): SettingsRowShape[] {
         noteLines: 0,
       };
     }
-    if (row.note === undefined) {
-      return {
-        kind: row.kind,
-        noteLines: 0,
-      };
-    }
-    const note = words[row.note];
-    const controlWidth = SETTINGS_ROW.switch.width;
-    const { lines } = withProbe(scene, BODY_TEXT, (probe) =>
-      fittingText(
-        SETTINGS_NOTE_STYLE,
-        labelInkWidth(probe),
-        noteRoomForControl(controlWidth),
-        note,
-      ),
-    );
     return {
       kind: row.kind,
-      noteLines: lines.length,
+      noteLines: settingsNoteLines(measure, words, row).length,
     };
   });
 }

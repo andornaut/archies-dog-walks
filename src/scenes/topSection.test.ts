@@ -69,12 +69,12 @@ describe("the shared top section", () => {
     expect(max.currency).toEqual({ height: 29, width: 97, x: 5, y: 4 });
     expect(max.effectWells.map(({ x }) => x)).toEqual([105, 131, 157, 183, 209, 235]);
     expect(few.effectWells).toEqual([
-      { height: 26, width: 26, x: 157, y: 5 },
-      { height: 26, width: 26, x: 183, y: 5 },
+      { height: 26, width: 26, x: 154, y: 5 },
+      { height: 26, width: 26, x: 180, y: 5 },
     ]);
     expect(few.effectHolds).toEqual([
-      { height: 40, width: 26, x: 157, y: 0 },
-      { height: 40, width: 26, x: 183, y: 0 },
+      { height: 40, width: 26, x: 154, y: 0 },
+      { height: 40, width: 26, x: 180, y: 0 },
     ]);
     expect(max.controls.map(([, control]) => topSectionButtonBacking(control.face))).toEqual([
       { height: 29, width: 29, x: 277.5, y: 4 },

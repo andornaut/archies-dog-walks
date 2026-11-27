@@ -156,20 +156,15 @@ export function settingsInstallWidth(ink: number): number {
   return modalActionWidth(ink) + SETTINGS_CARD.installIconInk.width + SETTINGS_CARD.installGap;
 }
 
-// The room a switch or button row's note wraps in: from the icon's column to controlGap short
-// of its control.
-export function noteRoom(kind: "button" | "switch"): number {
-  return noteRoomForControl(SETTINGS_ROW[kind].width);
+// The description shares its row with the right-aligned switch stack. Reserve the full
+// stack width and the same gap as between an icon and its label.
+export function settingsNoteFit(stateInkWidth: number) {
+  const { note, pad, switch: toggle, width } = SETTINGS_ROW;
+  return {
+    room: width - pad - Math.max(toggle.width, stateInkWidth) - ICON_LABEL_GAP - note.dx,
+    style: textOnLines(note.lines),
+  };
 }
-
-// The actual control width determines the note's room on that row.
-export function noteRoomForControl(controlWidth: number): number {
-  const { controlGap, note, switchInset, width } = SETTINGS_ROW;
-  return width - switchInset - controlWidth - controlGap - note.dx;
-}
-
-// A note: at 2x, wrapped onto up to note.lines lines.
-export const SETTINGS_NOTE_STYLE = textOnLines(SETTINGS_ROW.note.lines);
 
 // Cheats keeps the shared standard gap. Settings follows the compact form stack.
 export const SWITCH_STATE_GAP = BUTTON_SIZE.stackGap;

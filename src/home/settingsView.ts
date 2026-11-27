@@ -27,12 +27,11 @@ import { MENU_TEXT_FIELDS } from "./menuText.ts";
 import {
   INSTALL_STEPS_FIT,
   type InstallStepsLayout,
-  noteRoomForControl,
   SETTINGS_BUILD_LABEL,
-  SETTINGS_NOTE_STYLE,
   SETTINGS_ROW,
   SETTINGS_SWITCH_GAP,
   type SettingsLayout,
+  settingsNoteFit,
   switchStateCentre,
   type VolumeKey,
   volumePercent,
@@ -154,6 +153,24 @@ export interface SettingsMeasure extends PanelMeasure {
     scale: number,
     text: string,
   ) => { left: number; right: number };
+}
+
+// Fit the same help lines for row height and drawing, using both possible state words
+// so toggling the switch cannot reflow its description.
+export function settingsNoteLines(
+  measure: Pick<SettingsMeasure, "fitBody" | "inkWidth">,
+  words: MenuText["settings"],
+  row: Extract<SettingsRow, { kind: "switch" }>,
+): string[] {
+  if (row.note === undefined) {
+    return [];
+  }
+  const stateWidth = Math.max(
+    measure.inkWidth("title", words[row.states.on]),
+    measure.inkWidth("title", words[row.states.off]),
+  );
+  const { room, style } = settingsNoteFit(stateWidth);
+  return measure.fitBody(style.lines ?? 1, room, words[row.note]);
 }
 
 // Lines of text: x is where its pen starts, where its first line's ink starts (ink), where each
@@ -279,7 +296,6 @@ function controlRow(
   const look = selectLook("normal");
   const pressed = state.pressed?.kind === "switch" && state.pressed.key === row.key;
   const { x } = rect;
-  const room = noteRoomForControl(control?.width ?? SETTINGS_ROW[row.kind].width);
   const description = row.note === undefined ? "" : words[row.note];
   const view: SettingsRowView = {
     description,
@@ -320,7 +336,7 @@ function controlRow(
               capTop: noteY,
               colour: PALETTE.darkBrown,
               font: "body" as const,
-              lines: measure.fitBody(SETTINGS_NOTE_STYLE.lines ?? 1, room, description),
+              lines: settingsNoteLines(measure, words, row),
               scale: TEXT_SCALE,
               x: x + NOTE.dx,
             },
