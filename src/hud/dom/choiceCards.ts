@@ -489,6 +489,7 @@ export function showChoiceCards(
   const shown = showQuestionPanel(layer, {
     close: null,
     closeLabel: input.closeLabel,
+    directionKeys: false,
     fonts: input.fonts,
     ...(gesture === undefined ? {} : { gesture }),
     label: input.view.title,
@@ -517,19 +518,18 @@ export function showChoiceCards(
   });
   const moveFocus = (event: KeyboardEvent) => {
     const direction = focusDirectionForKey(event.code);
-    if (
-      direction === undefined ||
-      !sceneKeyAllowed(event) ||
-      !menuKeyActs(event.repeat, event.code) ||
-      !shown.accepts() ||
-      !input.accepts()
-    ) {
+    if (direction === undefined || !sceneKeyAllowed(event)) {
       return;
     }
-    // The dialog owns navigation. Confirm is the native button's existing Enter/Space click.
+    // This dialog owns the choice order. The shared controls own confirmation and Escape.
     event.preventDefault();
     event.stopPropagation();
-    if (small[0]?.element.hidden) {
+    if (
+      !menuKeyActs(event.repeat, event.code) ||
+      !shown.accepts() ||
+      !input.accepts() ||
+      small[0]?.element.hidden
+    ) {
       return;
     }
     const current = small.findIndex(

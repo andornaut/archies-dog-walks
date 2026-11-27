@@ -6,11 +6,12 @@ import { gameData } from "../../data/index.ts";
 import { helpPicture } from "../../help/helpPictures.ts";
 import { SCREEN_LAYOUT } from "../../layout/screen.ts";
 import { cardRowIn } from "../../presentation/cardLayout.ts";
-import { MAX_CARD_OPTIONS } from "../../rules/cardViews.ts";
+import { cardFor, MAX_CARD_OPTIONS } from "../../rules/cardViews.ts";
 import { read } from "../../rules/units.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
+import type { NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { REFUSE } from "../../ui/refuse.ts";
@@ -22,12 +23,22 @@ async function mount(
   kind: "cards" | "zones",
   {
     gesture,
+    hallPass = false,
     picture = false,
     refused = 1,
-  }: { gesture?: { up: () => boolean }; picture?: boolean; refused?: number } = {},
+  }: { gesture?: NativeGesture; hallPass?: boolean; picture?: boolean; refused?: number } = {},
 ) {
   vi.useFakeTimers();
-  const original = helpPicture(gameData, kind).card!;
+  const help = helpPicture(gameData, kind);
+  const source = help.card!.source;
+  const original =
+    hallPass && source.kind === "encounter"
+      ? cardFor(
+          gameData,
+          { ...help.walk.run, skipPass: { gear: "hallPass", kind: "gear" } },
+          source,
+        )
+      : help.card!;
   // The first refused options are ones the walk cannot afford.
   const view = {
     ...original,
@@ -148,7 +159,10 @@ it.each(["cards", "zones"] as const)(
 );
 
 it("starts on the first displayed option, cycles focus, and leaves confirmation to its button", async () => {
-  const { accepts, choose, dialog, doc, options, shown } = await mount("cards");
+  const { accepts, choose, dialog, doc, options, shown, view } = await mount("cards", {
+    hallPass: true,
+  });
+  expect(view.skip).toBe(true);
   for (const option of options) {
     const matches = option.matches.bind(option);
     vi.spyOn(option, "matches").mockImplementation((selector) =>
@@ -156,8 +170,16 @@ it("starts on the first displayed option, cycles focus, and leaves confirmation 
     );
   }
   const key = (code: string, repeat = false, target = doc.activeElement) => {
-    const event = { code, preventDefault: vi.fn(), repeat, stopPropagation: vi.fn(), target };
-    dialog.fire("keydown", event);
+    const event = {
+      code,
+      preventDefault: vi.fn(),
+      repeat,
+      stopImmediatePropagation: vi.fn(),
+      stopPropagation: vi.fn(),
+      target,
+    };
+    const owner = code === "Escape" ? doc : dialog;
+    owner.fire("keydown", event);
     return event;
   };
   expect(doc.activeElement).toBe(dialog);
@@ -172,7 +194,16 @@ it("starts on the first displayed option, cycles focus, and leaves confirmation 
   expect(key("ArrowLeft").stopPropagation).toHaveBeenCalledOnce();
   expect(doc.activeElement).toBe(options[0]);
   key("ArrowUp", true);
-  expect(doc.activeElement).toBe(options.at(-1));
+  const skip = options.at(-1)!;
+  expect(doc.activeElement).toBe(skip);
+  expect(skip.getAttribute("aria-label")).toContain(gameData.runText.card.skip);
+  for (const repeat of [false, true]) {
+    const escape = key("Escape", repeat);
+    expect(escape.preventDefault).toHaveBeenCalledOnce();
+    expect(escape.stopImmediatePropagation).toHaveBeenCalledOnce();
+  }
+  expect(doc.activeElement).toBe(skip);
+  expect(choose).not.toHaveBeenCalled();
   key("KeyJ");
   expect(doc.activeElement).toBe(options[0]);
   key("KeyL");
@@ -182,8 +213,12 @@ it("starts on the first displayed option, cycles focus, and leaves confirmation 
   expect(doc.activeElement).toBe(options[1]);
   shown.setLarge(undefined);
   expect(choose).not.toHaveBeenCalled();
-  options[1]!.fire("click", { detail: 0 });
-  expect(choose).toHaveBeenCalledExactlyOnceWith(1);
+  const focused = options[1]!;
+  Object.assign(focused, { click: () => focused.fire("click", { detail: 0 }) });
+  focused.fire("keydown", { code: "KeyE", repeat: true, target: focused });
+  expect(choose).not.toHaveBeenCalled();
+  focused.fire("keydown", { code: "KeyF", repeat: false, target: focused });
+  expect(choose).toHaveBeenCalledExactlyOnceWith(view.options[1]!.index);
   shown.destroy();
 });
 
@@ -239,6 +274,37 @@ it("keeps a refused option focusable and silent, and refuses its keys one card a
   expect(groups[0]!.classList.contains("adw-refusing-still")).toBe(false);
   shown.refuse(0);
   expect(groups[0]!.hasAttribute(REFUSAL_RED)).toBe(true);
+  shown.destroy();
+});
+
+it("gives secondary activation only to an available option without a primary contact", async () => {
+  const gesture = { down: vi.fn(), up: vi.fn(() => true) };
+  const { choose, dialog, doc, options, shown } = await mount("cards", { gesture });
+  const refused = options[0]!;
+  const available = options[1]!;
+  for (const option of [refused, available]) {
+    Object.assign(option, { click: () => option.fire("click", { detail: 0 }) });
+  }
+  const secondaryOn = (target: FakeElement) => {
+    const event = {
+      button: 2,
+      isPrimary: true,
+      pointerId: 7,
+      preventDefault: vi.fn(),
+      target,
+    };
+    dialog.fire("pointerdown", { ...event, type: "pointerdown" });
+    doc.fire("pointerup", { ...event, type: "pointerup" });
+    target.fire("contextmenu", { ...event, type: "contextmenu" });
+    return event;
+  };
+  expect(secondaryOn(dialog).preventDefault).not.toHaveBeenCalled();
+  expect(secondaryOn(refused).preventDefault).not.toHaveBeenCalled();
+  expect(choose).not.toHaveBeenCalled();
+  expect(secondaryOn(available).preventDefault).toHaveBeenCalledOnce();
+  expect(choose).toHaveBeenCalledExactlyOnceWith(1);
+  expect(gesture.down).not.toHaveBeenCalled();
+  expect(gesture.up).not.toHaveBeenCalled();
   shown.destroy();
 });
 
