@@ -7,8 +7,8 @@
 //   layout (art window 3,15, body 6..76 x 76..117, badge spot 6,121) doubled with 1px detail. Title
 //   rows 4..24, art window 6,30, 154x116 (illustration at 2x at 8,32), body 12..153 x 152..233,
 //   badge spot 12,242, 142x26.
-// - card-cost: a 71x13 image. The small frame extends it with 2px left, right and top caps and
-//   a 3px bottom cap. The large frame uses it at 2x. The game centres the cost ink on its face.
+// - card-cost: a 71x13 image. The small frame extends it with 2px left and top caps and 3px right
+//   and bottom caps. The large frame uses it at 2x. The game centres Body 2 ink on the cream.
 // - card-<encounter>-<option>, card-<upgrade> and card-skip: 75x56 illustrations, one per option,
 //   composed from the exported sprites. Build the sprites first.
 // - card-zone-<zone>: 75x56, a fork's path card: the zone's road, sampled from its road strip,
