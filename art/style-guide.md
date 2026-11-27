@@ -65,7 +65,7 @@ Every piece is very readable, clean and not busy, judged at the size it's shown:
 
 - A zone pip's rim (`pipRim` in `art/tools/ui.ts`) steps its well's colour down its ramp (`DARKER`) until it holds 3:1 on the end screen's cream panel. `node art/tools/pixel.ts build` (part of every full build) writes `shared/palette.json`, which the game's dark ramp reads.
 - The neutral greys (`NEUTRAL` in `pixel.ts`: nlgrey d8d8d8, ngrey a4a4a4, nslate 727272, ndslate 4a4a4a, ink as their darkest step) are for disabled and locked UI only: Endesga's greys are cool, and disabled UI reads as neutral grey.
-- `deepAmber` (fc9124), outside the house palette and drawn only in code, is the box behind a picked tile's picture only: Endesga's amber sits too close to the tan box of an unpicked one.
+- `deepAmber` (fc9124), outside the house palette and drawn only in code, fills a held Start picker face. It is separate from amber focus and yellow settled selection.
 - Each non-modal palette-darkening hop maps a colour one step down its ramp (`DARKER`). Ambient dimming uses two hops. Modal coverage instead uniformly darkens original pixels with `brightness(0.28)`, equivalent to one neutral-black canvas layer at alpha 0.72. Apply it once per covered root or world region, keeping all background paint and layout, including Sound/Pause/Menu, cash, effect wells, doghouse cards and chrome, uniformly dimmed and inactive. Only the top modal stays undimmed and interactive. An opaque full-screen page such as Help may hide the roots it wholly covers. The Shop and Logbook pages leave the top bar painted, undimmed and live; a card or confirmation opened over either dims the whole screen once, top bar included. Preserve existing background cancellation and Back where closeable, mandatory-choice guards and nested input/inert ownership; do not palette-remap modal pixels or compound the dim.
 - Outlines are coloured: two ramp steps darker than the fill they border.
 - Road sprites use `roadEdge`: the outline continues down the ramp until it holds 3:1 against the roads in `ROADS` (`pixel.ts`: tan, pink and skin2, and Kensington Market's mid-grey stone, after the dslate road), and the fill carries the dslate road (the Distillery District's). On stone that takes most outlines to their ramp's darkest steps, ink at the bottom of every ramp. A dark area takes a light rim on its edges facing the top-left light (grey on navy and black, skin2 on dark skin, cyan on sky; `rim` and `LIT` in `art/tools/road.ts`) so it holds 3:1 on dslate and Yonge Street's shale. A sprite dark all over, such as Pepe's black coat, takes a grey outline instead. Cabbagetown's grey and The Beaches' cream are lighter than skin2, so `roadEdge` holds on them unchanged. A white coat on the road is white, not light grey, its lower-right silhouette one ramp step darker.
@@ -102,7 +102,7 @@ Names are `PALETTE` names in `src/ui/palette.ts`, or `K` names for the neutral g
 | forest on cream                | 5.39  | Money gained, an affordable price line, an earned badge's name                                                                    |
 | forest on lime                 | 4.80  | Zoomies' name on its pill                                                                                                         |
 | ink on cyan                    | 11.98 | A focused standard button (game, homepage, gallery, crash screen), top-bar face or `ui-pet-shop-board` `focused`                  |
-| ink on deepAmber               | 7.91  | A picked picture's outline on its box                                                                                             |
+| ink on deepAmber               | 7.91  | A held Start picker face’s persistent edge                                                                                        |
 | ink on green                   | 8.41  | Start walk and primary standard button labels, `ui-pet-shop` board, price on the buy plate, a pressed shop or Settings switch row |
 | ink on ngrey                   | 7.23  | The emblem's silhouette on a `locked` badge                                                                                       |
 | ink on nlgrey                  | 12.64 | The goal plate: a walker's name, a blocked slot's price, a disabled card's cost; an affordable picture's outline on its box       |
@@ -117,7 +117,7 @@ Names are `PALETTE` names in `src/ui/palette.ts`, or `K` names for the neutral g
 | nslate on cream                | 3.32  | A locked badge's goal and progress in the logbook (inactive, exempt)                                                              |
 | plum on amber                  | 7.35  | Text on amber: step number                                                                                                        |
 | plum on cream                  | 9.42  | Body text on cream: panels, quips, hints, the zone banner, `normal` tiles and buttons                                             |
-| plum on cyan                   | 9.07  | A focused shop row, picker tile, Settings row label or speech bubble                                                              |
+| plum on cyan                   | 9.07  | A focused shop row, Settings row label or speech bubble                                                                           |
 | plum on pink                   | 5.03  | Stinky's name on its pill, Stinky's "+$0" tip label                                                                               |
 | plum on tan                    | 6.49  | Body text on tan                                                                                                                  |
 | plum on yellow                 | 10.92 | Text on a selected face (`ui-tile` `selected`)                                                                                    |
@@ -204,7 +204,8 @@ Choice cards use an outer outline. Other controls add no outline, ring, keyline 
 - Choice card options use a 2-logical-pixel cyan outline flush to the outer edge for keyboard selection and active pointer presses or holds. Forced colours use system Highlight.
 - Logbook rows and end-screen badges take cyan at 35% over the cream page, drawn under their content, which stays at full opacity; a locked row's name and goal line are ndslate on it.
 - The Pet shop board's `focused` face is cyan with ink letters and its `pressed` face forest with white letters, sunk 2px.
-- Pet shop rows and picker tiles fill cyan with plum text on focus and preview cyan on a selectable press. A row the bank can't cover takes the same focus fill and keeps its ndslate text and darkRed short-plate price.
+- Start picker faces use cream at rest, amber on focus, deepAmber while held and yellow with the green check when selected. The picked Walker keeps its amber name strip when settled. The continuous flat face has no separate picture backing or one-sided focus stripe; native portrait and icon ink stays centred and stationary. See the [Start picture regions](controls.md#sizing-and-spacing).
+- Pet shop rows fill cyan with plum text on focus and preview cyan on a selectable press. A row the bank cannot cover takes the same focus fill and keeps its ndslate text and darkRed short-plate price.
 - Settings and Cheats rows, switch or slider, fill cyan on focus; an enabled switch row fills cyan with ink text while pressed and stays in place.
 - The speech bubble, tail included, fills cyan on focus, its words and owner's name plum.
 - The slot sign's inner panel fills cyan on focus; pressed, its board fills forest with white words and price and drops 1px.
@@ -340,7 +341,7 @@ Result summaries and earned-badge strips follow the [control guide's measured pl
 
 ## Animation
 
-- Native picker selections keep a stationary cyan face and check badge. Native picker and Shop controls change their interior fill or ink for focus and press. Reduced motion retains these cues. See the [control contract](controls.md#selection-controls).
+- Native Start picker selections keep a stationary yellow face and green check badge. Start uses warm focus and press fills; Shop retains cyan. Reduced motion retains these cues. See the [control contract](controls.md#selection-controls).
 
 - Animation names are the tag names in each sprite JSON's `meta.frameTags`. Keep tag names and order stable; append new tags. A frame-count change shifts later tags and needs matching exports, the same feet anchors and updated render-bound checks in the same change. Leash sockets and the logical collision, formation, pickup and planning geometry stay fixed; measure visual extents separately. Consumers resolve tags instead of hardcoding absolute frame indices. Motion is in whole pixels.
 - Walkers are seen from behind: `walk` has 8 frames at 80ms (640ms per stride), `react` 2, `stumble` 4 and `idle` 2 frames, no gear variants. `wave` and `cheer` face the camera at their own cadence, and Mr. B has his `phone` poses.

@@ -33,7 +33,8 @@ Use 4/8/16 for the ordinary row/group/panel spacing roles, and the button gaps f
 | HOME_SCREEN.speech.rim            | left 2, right 3                   | px         | Speech bubble rim rows the text centres between                        | [layout data](../src/data/layout.ts)                                                    |
 | ICON_LABEL_GAP                    | 4                                 | px         | A 16px icon's art cell to its label's first ink column                 | [layout data](../src/data/layout.ts)                                                    |
 | label.value.gap                   | 8                                 | px minimum | Clear ink between a label and its value or note on one line            | [shop layout](../src/home/shopLayout.ts) and [stats layout](../src/home/statsLayout.ts) |
-| LOCK_BADGE_OFFSET                 | dx -2, dy -3                      | px         | The lock badge on Dog, Walker and Pocket tiles and Pet shop rows       | [layout data](../src/data/layout.ts)                                                    |
+| LOCK_BADGE_OFFSET                 | dx -2, dy -3                      | px         | Pet shop row lock badge                                                | [layout data](../src/data/layout.ts)                                                    |
+| START_PICKER_MARK                 | x -8, y -6                        | px         | Start picker check, lock and bill anchors                              | [Start picture geometry](../src/home/startPickerArt.ts)                                 |
 | MODAL.gap                         | 8                                 | px         | Present groups; the gap above every modal footer                       | [modal tokens](../src/ui/modalGeometry.ts)                                              |
 | MODAL.pad / MODAL.margin          | 16                                | px         | Panel content / caller's protected area                                | [modal tokens](../src/ui/modalGeometry.ts)                                              |
 | MODAL.rowGap                      | 4                                 | px         | Text rows                                                              | [modal tokens](../src/ui/modalGeometry.ts)                                              |
@@ -58,7 +59,7 @@ Use `UI_PICTURE_SIZE` and `UI_FUNCTION_ICON_SIZE` for the logical artwork box. U
 | Compact functional icon           | 16×16        | Navigation glyphs, label icons and notice icons                                        | [`UI_FUNCTION_ICON_SIZE.compact`](../src/data/layout/controls.ts), used by the button glyph and label icon                 |
 | Standard functional icon          | 24×24        | Walk HUD effects, walker perks and card effect or gear indicators                      | [`UI_FUNCTION_ICON_SIZE.standard`](../src/data/layout/controls.ts), used by [walk HUD effects](../src/data/layout/walk.ts) |
 
-Measure wells, frames and hit targets independently. Road sprites, world effects and scene illustrations keep their authored dimensions. The walker picker places the native 32×32 portrait at tile-local (4,0), with the name strip starting at y = 32.
+Measure wells, frames and hit targets independently. Road sprites, world effects and scene illustrations keep their authored dimensions. The Walker picker centres the native 32×32 portrait’s visible ink in tile-local `(3,1,34,31)`, using the union of neutral and happy frames; its perk uses `(41,1,34,31)`. Its name strip starts at y = 32. The [control guide](controls.md#sizing-and-spacing) records the matching Dog and Pocket picture regions.
 
 ## Page bounds/alignment
 
