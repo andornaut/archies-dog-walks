@@ -23,8 +23,8 @@ import {
 import {
   dragScroll,
   focusDirectionForKey,
-  isConfirmKey,
   isDragging,
+  isForegroundConfirmKey,
   isPauseKey,
   type ListScroll,
   listScroll,
@@ -33,6 +33,7 @@ import {
   pressScroll,
   releaseScroll,
   resizeScroll,
+  sceneKeyAllowed,
   scrollBy,
   scrollMax,
   scrollToShow,
@@ -94,10 +95,16 @@ export class StatsScene extends Scene {
     this.scroll = listScroll(0);
     this.tab = OPEN_TAB;
     const onKey = (event: KeyboardEvent) => {
+      if (!sceneKeyAllowed(event)) {
+        return;
+      }
       if (!this.sys.isActive() || !this.input.enabled || !nativeSceneAccepts(this)) {
         return;
       }
-      if (isConfirmKey(event.code) && (event.target as HTMLElement | null)?.tagName === "BUTTON") {
+      if (
+        isForegroundConfirmKey(event.code) &&
+        (event.target as HTMLElement | null)?.tagName === "BUTTON"
+      ) {
         if (event.repeat) {
           event.preventDefault();
           event.stopImmediatePropagation();
@@ -109,8 +116,8 @@ export class StatsScene extends Scene {
         event.stopImmediatePropagation();
       }
     };
-    document.addEventListener("keydown", onKey, true);
-    this.events.once("shutdown", () => document.removeEventListener("keydown", onKey, true));
+    document.addEventListener("keydown", onKey);
+    this.events.once("shutdown", () => document.removeEventListener("keydown", onKey));
     // The Logbook is a page, not a modal, as the Pet shop is: its live top bar keeps its buttons,
     // and it has no outside, so a tap on the bar's empty area or beside the game does nothing. An
     // open badge card is modal, and its own backdrop closes it. The system back closes an open
@@ -179,7 +186,7 @@ export class StatsScene extends Scene {
     if (!menuKeyActs(repeat, code)) {
       return false;
     }
-    if (isPauseKey(code) || isConfirmKey(code)) {
+    if (isPauseKey(code) || isForegroundConfirmKey(code)) {
       this.back();
       return true;
     }

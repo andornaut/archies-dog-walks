@@ -1,7 +1,7 @@
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 
 import { SCREEN_CONFIG } from "../../data/index.ts";
-import { isConfirmKey } from "../../input/index.ts";
+import { focusDirectionForKey, isConfirmKey, sceneKeyAllowed } from "../../input/index.ts";
 import { artPixel, deviceX, deviceY, type DomScale, gridTransform } from "../index.ts";
 import { setBox } from "./pixelLine.ts";
 import type { UiLayer } from "./uiLayer.ts";
@@ -55,8 +55,59 @@ export function bindDialogKeys(
 ): void {
   const doc = dialog.ownerDocument;
   const { accepts, focusables } = input;
+  const visible = () =>
+    focusables().filter(
+      (control) =>
+        !control.hidden &&
+        control.closest?.("[hidden]") == null &&
+        (control.tagName.toLowerCase() !== "button" || control.tabIndex >= 0),
+    );
+  // Directional focus is admitted before a slider can take its vertical arrows.
+  dialog.addEventListener(
+    "keydown",
+    (event) => {
+      if (!accepts() || !sceneKeyAllowed(event)) {
+        return;
+      }
+      const direction = focusDirectionForKey(event.code);
+      if (direction === undefined) {
+        return;
+      }
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.getAttribute?.("role") === "slider" &&
+        (direction === "left" || direction === "right")
+      ) {
+        return;
+      }
+      const controls = visible().filter((control) => control.getAttribute("role") !== "region");
+      if (controls.length === 0) {
+        return;
+      }
+      const at = controls.indexOf(doc.activeElement as HTMLElement);
+      const backwards = direction === "up" || direction === "left";
+      const next =
+        at === -1
+          ? backwards
+            ? controls.length - 1
+            : 0
+          : (at + (backwards ? controls.length - 1 : 1)) % controls.length;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      controls[next]!.focus();
+    },
+    { capture: true },
+  );
   dialog.addEventListener("keydown", (event) => {
-    if (!accepts()) {
+    if (
+      !accepts() ||
+      event.defaultPrevented ||
+      event.isComposing ||
+      event.keyCode === 229 ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey
+    ) {
       return;
     }
     // Enter and Space press the focused control natively; the scene under never hears them.
@@ -73,22 +124,17 @@ export function bindDialogKeys(
       event.stopPropagation();
       return;
     }
-    if (event.code !== "Tab") {
+    if (!sceneKeyAllowed(event) || event.code !== "Tab") {
       return;
     }
-    const visible = focusables().filter(
-      (control) =>
-        (control.tagName.toLowerCase() !== "button" || control.tabIndex >= 0) &&
-        !control.hidden &&
-        control.closest?.("[hidden]") == null,
-    );
-    const at = visible.indexOf(doc.activeElement as HTMLElement);
-    const step = event.shiftKey ? visible.length - 1 : 1;
+    const controls = visible();
+    const at = controls.indexOf(doc.activeElement as HTMLElement);
+    const step = event.shiftKey ? controls.length - 1 : 1;
     // From the dialog itself, Tab enters at the first button and Shift+Tab at the close control.
     const next =
-      at === -1 ? (event.shiftKey ? visible.length - 1 : 0) : (at + step) % visible.length;
+      at === -1 ? (event.shiftKey ? controls.length - 1 : 0) : (at + step) % controls.length;
     event.preventDefault();
-    (visible[next] ?? dialog).focus();
+    (controls[next] ?? dialog).focus();
   });
 }
 

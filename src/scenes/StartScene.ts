@@ -54,14 +54,15 @@ import {
   focusDirectionForKey,
   type HoldPress,
   holdRule,
-  isConfirmKey,
   isExitKey,
+  isForegroundConfirmKey,
   isHelpKey,
   isMuteKey,
   isPauseKey,
   menuKeyActs,
   moveHold,
   releaseHold,
+  sceneKeyAllowed,
   screenArea,
   startHold,
   tickHold,
@@ -324,7 +325,13 @@ export class StartScene extends Scene {
     });
     // A held key acts once, so an Enter held from the end screen cannot start a walk.
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
+      if (!sceneKeyAllowed(event)) {
+        return;
+      }
       if (menuKeyActs(event.repeat, event.code)) {
+        if (focusDirectionForKey(event.code) !== undefined || isForegroundConfirmKey(event.code)) {
+          event.preventDefault();
+        }
         this.onKey(event);
       }
     });
@@ -470,29 +477,58 @@ export class StartScene extends Scene {
     }
     this.actAfterDip(target);
   }
-  private onKey({ code, shiftKey }: Pick<KeyboardEvent, "code" | "shiftKey">): void {
+  private onKey({
+    code,
+    shiftKey,
+    target: origin,
+  }: Pick<KeyboardEvent, "code" | "shiftKey"> & Partial<Pick<KeyboardEvent, "target">>): void {
     if (!this.nativeReady || (this.overlay === undefined && this.nativeHome?.accepts() !== true)) {
       return;
     }
     if (this.overlay !== undefined) {
-      if (isPauseKey(code) || isConfirmKey(code)) {
+      if (isPauseKey(code) || isForegroundConfirmKey(code)) {
         this.closeOverlay();
       }
       return;
     }
     const direction = focusDirectionForKey(code);
     if (direction !== undefined) {
-      const rows = focusRows(this.shownControls());
+      const rows = this.keyboardRows();
+      if (origin != null && this.topSection?.element.contains(origin as Node)) {
+        const buttons = [...this.topSection.element.querySelectorAll<HTMLButtonElement>("button")];
+        const column = buttons.findIndex((button) => button.contains(origin as Node));
+        if (column !== -1) {
+          this.focus = { column, row: 0 };
+        }
+      }
       this.focus = moveFocus(
         rows.map((row) => row.length),
         direction,
         this.focus,
       );
       this.action = this.focusAction(this.focused());
+      this.nativeHome?.element.focus();
+      const target = this.focused();
+      this.detailFocus = target === undefined ? undefined : targetId(target);
       this.render();
+      if (target?.kind === "menu" || target?.kind === "mute" || target?.kind === "exit") {
+        const section = this.topSection;
+        const id = target.kind;
+        void section?.revealed.then((ready) => {
+          if (
+            ready &&
+            section !== undefined &&
+            this.topSection === section &&
+            this.focused()?.kind === id
+          ) {
+            const index = [...section.buttons.keys()].indexOf(id);
+            section.element.querySelectorAll<HTMLButtonElement>("button")[index]?.focus();
+          }
+        });
+      }
       return;
     }
-    if (isConfirmKey(code)) {
+    if (isForegroundConfirmKey(code)) {
       const target = this.focused() ?? { kind: "start" };
       this.press = { held: false, id: targetId(target), startedMs: this.time.now };
       this.actAfterDip(target);
@@ -500,10 +536,6 @@ export class StartScene extends Scene {
     }
     if (isHelpKey(shiftKey, code)) {
       this.act({ kind: "help" });
-    } else if (code === "KeyS") {
-      this.act({ kind: "settings" });
-    } else if (code === "KeyL") {
-      this.act({ kind: "logbook" });
     } else if (isMuteKey(code)) {
       this.act({ kind: "mute" });
     } else if (isExitKey(code) && this.exit) {
@@ -515,11 +547,17 @@ export class StartScene extends Scene {
   }
   // The focused item, its column kept inside its row: the top row loses the dog slot sign once
   // the last slot is bought.
+  private keyboardRows(): Target[][] {
+    const bar = [...(this.topSection?.buttons.keys() ?? [])].flatMap((kind): Target[] =>
+      kind === "menu" || kind === "mute" || kind === "exit" ? [{ kind }] : [],
+    );
+    return [...(bar.length === 0 ? [] : [bar]), ...focusRows(this.shownControls())];
+  }
   private focused(): Target | undefined {
     if (this.focus === null) {
       return undefined;
     }
-    const row = focusRows(this.shownControls())[this.focus.row] ?? [];
+    const row = this.keyboardRows()[this.focus.row] ?? [];
     return row[clampIndex(row.length, this.focus.column)];
   }
   // Whether the dog slot sign shows: while a dog slot is for sale.
@@ -1007,6 +1045,16 @@ export class StartScene extends Scene {
         }
       },
       down: (event) => this.homePressDown(true, toGame(event)),
+      focused: (id) => {
+        const rows = this.keyboardRows();
+        for (const [row, controls] of rows.entries()) {
+          const column = controls.findIndex((target) => targetId(target) === id);
+          if (column !== -1) {
+            this.focus = { column, row };
+            break;
+          }
+        }
+      },
       move: (event) => this.homePressMove({ ...toGame(event), isDown: event.buttons !== 0 }),
       painted: () => {
         if (!this.nativeReady) {

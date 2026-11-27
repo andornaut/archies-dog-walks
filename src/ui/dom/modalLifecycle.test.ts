@@ -464,6 +464,16 @@ describe("a modal view's host", () => {
     expect(heard.mock.calls[0]![0].key).toBe("Escape");
     expect(escape.stopPropagation).toHaveBeenCalledOnce();
     expect(escape.preventDefault).toHaveBeenCalledOnce();
+    for (const extra of [
+      { defaultPrevented: true },
+      { isComposing: true },
+      { keyCode: 229 },
+      { ctrlKey: true },
+      { target: { tagName: "TEXTAREA" } },
+      { code: "Enter", target: { tagName: "BUTTON" } },
+    ]) {
+      scope.fire("keydown", Object.assign(key("Enter"), extra));
+    }
     scope.fire("keydown", key("Enter", true));
     scope.fire("keydown", key("1"));
     expect(heard).toHaveBeenCalledOnce();
@@ -471,4 +481,28 @@ describe("a modal view's host", () => {
     scope.fire("keydown", key("Escape"));
     expect(heard).toHaveBeenCalledOnce();
   });
+});
+
+it("leaves secondary contacts for the guarded context-menu action without disturbing primary gestures", () => {
+  const doc = new FakeDocument();
+  const root = doc.createElement("div");
+  const gate = createModalInputGate();
+  const down = vi.fn();
+  const up = vi.fn();
+  const stop = guardNativeInput(
+    { down, gate, subscribe: gate.subscribe, up },
+    root as unknown as HTMLElement,
+  );
+  const secondary = { ...pointer(2, root), button: 2 };
+  root.fire("pointerdown", secondary);
+  const release = { ...pointer(2, root, "pointerup"), button: 2 };
+  doc.fire("pointerup", release);
+  expect(down).not.toHaveBeenCalled();
+  expect(up).not.toHaveBeenCalled();
+  expect(release.preventDefault).not.toHaveBeenCalled();
+  freshDown(doc, root);
+  doc.fire("pointerup", pointer(1, root, "pointerup"));
+  expect(down).toHaveBeenCalledOnce();
+  expect(up).toHaveBeenCalledOnce();
+  stop();
 });

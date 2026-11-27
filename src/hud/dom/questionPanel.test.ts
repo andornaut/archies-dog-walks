@@ -542,10 +542,13 @@ it("keeps a base page with custom native controls interactive without a modal sc
     ...repeat,
     code: "ArrowRight",
     preventDefault: vi.fn(),
+    stopImmediatePropagation: vi.fn(),
     stopPropagation: vi.fn(),
   };
   layerViews(element)[0]?.fire("keydown", arrow);
-  expect(arrow.preventDefault).not.toHaveBeenCalled();
+  expect(arrow.preventDefault).toHaveBeenCalledOnce();
+  expect(arrow.stopImmediatePropagation).toHaveBeenCalledOnce();
+  expect(doc.activeElement).toBe(button);
   expect(arrow.stopPropagation).not.toHaveBeenCalled();
   shown.destroy();
 });

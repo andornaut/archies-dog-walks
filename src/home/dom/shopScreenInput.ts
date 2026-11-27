@@ -1,6 +1,6 @@
 import { containsPoint, type Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { isConfirmKey } from "../../input/index.ts";
+import { isConfirmKey, sceneKeyAllowed } from "../../input/index.ts";
 import type { NativeGesture } from "../../ui/dom/index.ts";
 import { shopTabRects } from "../index.ts";
 import type { DomPage } from "./page.ts";
@@ -87,7 +87,7 @@ export function createShopScreenInput(
           // The page moves focus on Tab and its controls take Enter and Space; every other key is the
           // scene's.
           element.addEventListener("keydown", (event) => {
-            if (!context.accepts() || event.code === "Tab") {
+            if (!context.accepts() || !sceneKeyAllowed(event) || event.code === "Tab") {
               return;
             }
             if (isConfirmKey(event.code) && onControl(event.target as Node)) {

@@ -2,7 +2,7 @@ import { Scene, Scenes } from "phaser";
 
 import type { OverlayRegion } from "../home/index.ts";
 import { coverHelpUnderlay } from "../hud/dom/index.ts";
-import { isMuteKey, isPauseKey, menuKeyActs } from "../input/index.ts";
+import { isMuteKey, isPauseKey, menuKeyActs, sceneKeyAllowed } from "../input/index.ts";
 import { type CheatsPage, openCheatsPage } from "./cheatsPage.ts";
 import { listenHomeBar } from "./homeBarPress.ts";
 import type { MenuSceneData } from "./MenuScene.ts";
@@ -69,6 +69,9 @@ export class CheatsScene extends Scene {
     });
     onBackPressed(this, () => this.back());
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
+      if (!sceneKeyAllowed(event)) {
+        return;
+      }
       if (!nativeSceneAccepts(this) || !menuKeyActs(event.repeat, event.code)) {
         return;
       }

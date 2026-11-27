@@ -46,6 +46,7 @@ function fixture() {
     activate: vi.fn(),
     cancel: vi.fn(),
     down: vi.fn(),
+    focused: vi.fn(),
     move: vi.fn(),
     painted: vi.fn(),
     up: vi.fn(),
@@ -101,7 +102,7 @@ describe("native home visit", () => {
     f.frames.shift()?.();
     expect(f.doc.activeElement).toBe(next.controls.get("start"));
     const heldKey = {
-      code: "Enter",
+      code: "NumpadEnter",
       preventDefault: vi.fn(),
       repeat: true,
       stopPropagation: vi.fn(),

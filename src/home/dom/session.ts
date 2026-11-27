@@ -1,3 +1,4 @@
+import { isConfirmKey } from "../../input/index.ts";
 import {
   bindGameAction,
   followModalUnderlay,
@@ -17,12 +18,14 @@ export function createNativeHomeSession(
     readonly cancel: () => void;
     readonly activate: (id: string) => void;
     readonly painted: () => void;
+    readonly focused?: (id: string) => void;
     readonly scaled?: () => void;
   },
 ) {
   const doc = layer.element.ownerDocument;
   const element = doc.createElement("div");
   element.className = "adw-dialog";
+  element.tabIndex = -1;
   const content = doc.createElement("div");
   element.append(content);
   layer.element.append(element);
@@ -63,7 +66,13 @@ export function createNativeHomeSession(
   );
   const key = (event: KeyboardEvent) => {
     if (
-      (event.code === "Enter" || event.code === "Space") &&
+      !event.defaultPrevented &&
+      !event.isComposing &&
+      event.keyCode !== 229 &&
+      !event.altKey &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      isConfirmKey(event.code) &&
       [...(view?.controls.values() ?? [])].some((control) => control === doc.activeElement)
     ) {
       event.stopPropagation();
@@ -73,6 +82,13 @@ export function createNativeHomeSession(
     }
   };
   element.addEventListener("keydown", key);
+  const focused = () => {
+    const id = focusedControl();
+    if (id !== undefined) {
+      context.focused?.(id);
+    }
+  };
+  element.addEventListener("focusin", focused);
   const stopUnderlay = followModalUnderlay(layer.input, element);
   const scaled = () => context.scaled?.();
   const stopScale = layer.onScale(scaled);
@@ -90,6 +106,7 @@ export function createNativeHomeSession(
       removeActions = [];
       view?.dispose();
       element.removeEventListener("keydown", key);
+      element.removeEventListener("focusin", focused);
       element.remove();
     },
     element,

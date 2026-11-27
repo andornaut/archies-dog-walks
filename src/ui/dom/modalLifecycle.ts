@@ -4,6 +4,7 @@ import { guardClicks, type PressGate } from "@andornaut/game-kit/runtime/web/ui/
 import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModality";
 import { PENDING_ATTRIBUTE, type Reveal } from "@andornaut/game-kit/runtime/web/ui/dom/imageReady";
 
+import { sceneKeyAllowed } from "../../input/index.ts";
 import { bindGameAction, bindGameActionHolds } from "./actionBinding.ts";
 import type { UiLayer } from "./uiLayer.ts";
 
@@ -57,9 +58,15 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
   };
   // A fresh contact can reuse a cancelled pointer ID in another root of the same document.
   const freshDown = (event: PointerEvent) => {
+    if (event.button !== undefined && event.button !== 0) {
+      return;
+    }
     cancelled.delete(event.pointerId);
   };
   const down = (event: PointerEvent) => {
+    if (event.button !== undefined && event.button !== 0) {
+      return;
+    }
     if (doc.hidden) {
       reject(event);
       return;
@@ -105,6 +112,9 @@ export function guardNativeInput(guard: NativeInputGuard, root: HTMLElement): ()
     guard.move?.(event);
   };
   const end = (event: PointerEvent) => {
+    if (event.type !== "pointercancel" && event.button !== undefined && event.button !== 0) {
+      return;
+    }
     if (cancelled.delete(event.pointerId)) {
       reject(event);
       return;
@@ -307,7 +317,13 @@ function forwardSceneKeys(root: HTMLElement): () => void {
   const page = root.ownerDocument.defaultView;
   const forward = (event: KeyboardEvent) => {
     const Keyboard = page?.KeyboardEvent;
-    if (event.cancelBubble || !SCENE_KEYS.has(event.key) || Keyboard === undefined) {
+    if (
+      !sceneKeyAllowed(event) ||
+      event.cancelBubble ||
+      !SCENE_KEYS.has(event.key) ||
+      event.key === "Tab" ||
+      Keyboard === undefined
+    ) {
       return;
     }
     event.stopPropagation();
@@ -363,6 +379,9 @@ export function mountModalLifecycle(
     backdrop.setAttribute("aria-hidden", "true");
     // Focus stays in the dialog, and Phaser never takes a backdrop press for one beside its canvas.
     backdrop.addEventListener("mousedown", (event) => {
+      if (event.button !== 0) {
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
     });

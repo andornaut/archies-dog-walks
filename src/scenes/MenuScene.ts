@@ -2,7 +2,7 @@ import { Scene, Scenes } from "phaser";
 
 import { gameData } from "../data/index.ts";
 import { overlayRegion } from "../home/index.ts";
-import { isPauseKey, menuKeyActs, screenArea } from "../input/index.ts";
+import { isPauseKey, menuKeyActs, sceneKeyAllowed, screenArea } from "../input/index.ts";
 import {
   type MenuContext,
   type MenuItem,
@@ -110,6 +110,9 @@ export class MenuScene extends Scene {
     listenOutsideTap(this, () => screenArea(covered), close);
     clearOnHomePageOpening(this, close);
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
+      if (!sceneKeyAllowed(event)) {
+        return;
+      }
       if (!nativeSceneAccepts(this)) {
         return;
       }

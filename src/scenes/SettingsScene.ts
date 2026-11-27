@@ -37,10 +37,11 @@ import {
 import { coverHelpUnderlay, type DomSettings } from "../hud/dom/index.ts";
 import {
   focusDirectionForKey,
-  isConfirmKey,
+  isForegroundConfirmKey,
   isMuteKey,
   isPauseKey,
   menuKeyActs,
+  sceneKeyAllowed,
 } from "../input/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
 import {
@@ -274,6 +275,9 @@ export class SettingsScene extends Scene {
     // Sound on the top bar flips the sound switch here too.
     onSceneEvent(this, this.game.events, BAR_MUTED_EVENT, () => this.render());
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
+      if (!sceneKeyAllowed(event)) {
+        return;
+      }
       if (!nativeSceneAccepts(this)) {
         return;
       }
@@ -286,7 +290,7 @@ export class SettingsScene extends Scene {
 
   private onKey(code: string): void {
     if (this.steps !== undefined) {
-      if (isPauseKey(code) || isConfirmKey(code)) {
+      if (isPauseKey(code) || isForegroundConfirmKey(code)) {
         this.closeSteps();
       }
       return;
@@ -314,7 +318,7 @@ export class SettingsScene extends Scene {
       this.render();
     } else if (isPauseKey(code)) {
       this.close();
-    } else if (isConfirmKey(code)) {
+    } else if (isForegroundConfirmKey(code)) {
       this.confirm(focusedRow);
     } else if (isMuteKey(code)) {
       this.flipAfterDip("muted");

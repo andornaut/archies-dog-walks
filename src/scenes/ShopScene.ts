@@ -37,8 +37,8 @@ import {
 import {
   dragScroll,
   focusDirectionForKey,
-  isConfirmKey,
   isDragging,
+  isForegroundConfirmKey,
   isPauseKey,
   type ListScroll,
   listScroll,
@@ -47,6 +47,7 @@ import {
   pressScroll,
   releaseScroll,
   resizeScroll,
+  sceneKeyAllowed,
   scrollMax,
   scrollToShow,
   stepScroll,
@@ -199,6 +200,9 @@ export class ShopScene extends Scene {
     // holding a dog or gear row opens its detail card, and the hold takes the press. With a card
     // open, a tap anywhere closes it, as on the Logbook.
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
+      if (!sceneKeyAllowed(event)) {
+        return;
+      }
       if (this.native?.accepts() === true && menuKeyActs(event.repeat, event.code)) {
         this.onKey(event.code);
       }
@@ -433,7 +437,7 @@ export class ShopScene extends Scene {
       this.moveList(paged);
       return;
     }
-    if (isConfirmKey(code) && this.focusId !== null) {
+    if (isForegroundConfirmKey(code) && this.focusId !== null) {
       this.actAfterDip({ id: this.focusId, kind: "row" });
     }
   }

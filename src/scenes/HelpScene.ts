@@ -15,7 +15,12 @@ import {
   helpView,
 } from "../help/index.ts";
 import { coverHelpUnderlay } from "../hud/dom/index.ts";
-import { isMuteKey } from "../input/index.ts";
+import {
+  isConfirmKey,
+  isForegroundConfirmKey,
+  isMuteKey,
+  sceneKeyAllowed,
+} from "../input/index.ts";
 import type { DomQuestionPanel } from "../ui/dom/index.ts";
 import { PALETTE } from "../ui/index.ts";
 import { addFilledRect, setPixelText, withProbe, wrapPixelText } from "../ui/phaser/index.ts";
@@ -101,6 +106,9 @@ export class HelpScene extends Scene {
     onSettingsChanged(this, () => this.draw());
 
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
+      if (!sceneKeyAllowed(event)) {
+        return;
+      }
       if (this.html?.accepts() !== true) {
         return;
       }
@@ -108,7 +116,10 @@ export class HelpScene extends Scene {
         this.game.events.emit(BAR_MUTED_EVENT, toggleMuted(this));
         return;
       }
-      const action = helpActionForKey(event.repeat, event.code);
+      const action = helpActionForKey(
+        event.repeat,
+        isForegroundConfirmKey(event.code) && !isConfirmKey(event.code) ? "Enter" : event.code,
+      );
       if (action !== undefined) {
         this.act(action);
       }

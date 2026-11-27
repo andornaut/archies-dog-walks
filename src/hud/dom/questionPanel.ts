@@ -4,7 +4,7 @@ import { focusTarget } from "@andornaut/game-kit/runtime/web/ui/dom/focusModalit
 
 import { BUTTON_SIZE, SCREEN_CONFIG } from "../../data/index.ts";
 import { MENU_TEXT_FIELDS } from "../../home/index.ts";
-import { cardNumberForKey, menuKeyActs } from "../../input/index.ts";
+import { cardNumberForKey, menuKeyActs, sceneKeyAllowed } from "../../input/index.ts";
 import {
   addTapBurst,
   artUrls,
@@ -354,6 +354,7 @@ export function showQuestionPanel(layer: UiLayer, input: DomQuestionPanelInput):
     const numberPresses = input.numberPresses ?? input.presses;
     const number = cardNumberForKey(numberPresses.length, event.code);
     if (
+      sceneKeyAllowed(event) &&
       input.numberKeys &&
       accepts() &&
       number !== undefined &&
