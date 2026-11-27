@@ -187,7 +187,7 @@ export class StartScene extends Scene {
     | undefined;
   // Taps waiting for their dip to finish before they act.
   private pending = new Set<Time.TimerEvent>();
-  private pops = new Map<string, number>();
+  private purchasePops = new Map<string, number>();
   private press:
     | {
         held: boolean;
@@ -237,7 +237,7 @@ export class StartScene extends Scene {
     this.detailFocus = undefined;
     this.overlay = undefined;
     this.overlayPress = undefined;
-    this.pops = new Map();
+    this.purchasePops = new Map();
     this.press = undefined;
     this.pressedTarget = undefined;
     this.quips = new Map();
@@ -688,7 +688,7 @@ export class StartScene extends Scene {
   private shopClosed(closed: ShopClosed): void {
     const { action } = closed;
     if (action.kind === "bought" && action.purchase.kind === "dog") {
-      this.pops.set(targetId({ dog: action.purchase.dog, kind: "dog" }), this.time.now);
+      this.purchasePops.set(targetId({ dog: action.purchase.dog, kind: "dog" }), this.time.now);
       this.drawQuip(action.purchase.dog);
     }
     this.action = action;
@@ -700,12 +700,16 @@ export class StartScene extends Scene {
   private drawQuip(dog: DogId): void {
     this.quips.set(dog, partingSpeech(gameData, Math.random, dog));
   }
-  // A tap's result, such as the selected state, shows once its press has dipped. A tap that
-  // opens a page opens it at once, its dip playing on under the page.
+  // A picker shows its chosen state on release. Other presses retain their dip before the
+  // action, except pages that open immediately while their dip plays underneath.
   private actAfterDip(target: Target): void {
     const press = this.press;
+    const timing = this.tapTiming(target);
+    if (timing === "selection" && press?.id === targetId(target)) {
+      this.press = undefined;
+    }
     const delay = press === undefined ? 0 : settleDelay(this.time.now, press.startedMs);
-    if (delay === 0 || this.opensPage(target)) {
+    if (delay === 0 || timing !== "dip") {
       this.act(target);
       return;
     }
@@ -715,9 +719,7 @@ export class StartScene extends Scene {
     });
     this.pending.add(timer);
   }
-  // Whether act opens a page for target, or leaves the game: help, the Logbook, the settings or
-  // the Pet shop, which a dog or gear not yet bought opens too, and Exit.
-  private opensPage(target: Target): boolean {
+  private tapTiming(target: Target): "page" | "selection" | "dip" {
     switch (target.kind) {
       case "dog":
       case "gear": {
@@ -726,7 +728,7 @@ export class StartScene extends Scene {
           target.kind === "dog"
             ? tapDog(gameData, owned, target.dog, this.loadout)
             : tapGear(owned, target.gear, this.loadout);
-        return tap.kind === "shop";
+        return tap.kind === "loadout" ? "selection" : tap.kind === "shop" ? "page" : "dip";
       }
       case "exit":
       case "help":
@@ -735,15 +737,16 @@ export class StartScene extends Scene {
       case "petShop":
       case "settings":
       case "slotSign":
-        return true;
+        return "page";
+      case "walker":
+        return this.save().owned.walkers.includes(target.walker) ? "selection" : "dip";
       case "bubble":
       case "mute":
       case "start":
-      case "walker":
-        return false;
+        return "dip";
       default:
         target satisfies never;
-        return false;
+        return "dip";
     }
   }
   private emphasiseRefusal(id: string): void {
@@ -784,6 +787,7 @@ export class StartScene extends Scene {
           this.render();
           this.emphasiseRefusal(id);
         } else {
+          this.purchasePops.delete(id);
           this.setLoadout(tap.loadout);
         }
         return;
@@ -816,9 +820,6 @@ export class StartScene extends Scene {
           return;
         }
         const walker = tap.kind === "pick" ? tap.walker : null;
-        if (tap.kind === "pick") {
-          this.pops.set(id, now);
-        }
         this.action = tap.kind === "pick" ? { kind: "notice", text: tap.text } : { kind: "none" };
         void updateProfile(this, (current) => ({ ...current, walker }));
         this.render();
@@ -858,13 +859,8 @@ export class StartScene extends Scene {
   }
   // Picks or drops a dog or gear item, and keeps the result as the last loadout.
   private setLoadout(next: HomeLoadout): void {
-    const now = this.time.now;
     for (const dog of next.dogs.filter((picked) => !this.loadout.dogs.includes(picked))) {
-      this.pops.set(targetId({ dog, kind: "dog" }), now);
       this.drawQuip(dog);
-    }
-    if (next.gear !== null && next.gear !== this.loadout.gear) {
-      this.pops.set(targetId({ gear: next.gear, kind: "gear" }), now);
     }
     this.loadout = next;
     this.action = { kind: "none" };
@@ -983,8 +979,8 @@ export class StartScene extends Scene {
         view.slot?.setAffordFrame(afford);
       }
       view.place(scale, (id) => ({
-        faceY: hopOffset(reduced, now, this.pops.get(id)),
-        markY: badgePopOffset(reduced, now, this.pops.get(id)),
+        faceY: hopOffset(reduced, now, this.purchasePops.get(id)),
+        markY: badgePopOffset(reduced, now, this.purchasePops.get(id)),
         pressed: dip(id) > 0,
         refusing: refusing(id),
         x: shakeOffset(reduced, now, this.shakes.get(id)),
@@ -1005,18 +1001,13 @@ export class StartScene extends Scene {
         y: down ? 0 : bobOffset(reduced, now, ready),
       });
       view.slot?.place(scale, { pressed: dip("slotSign") > 0, x: 0, y: 0 });
-      const gear = this.loadout.gear;
-      view.gearBadge?.place(scale, {
-        x: 0,
-        y:
-          gear === null
-            ? 0
-            : badgePopOffset(reduced, now, this.pops.get(targetId({ gear, kind: "gear" }))),
-      });
+      view.gearBadge?.place(scale, { x: 0, y: 0 });
       this.nativeHome?.setShown(this.sys.isVisible());
     }
     for (const { dog, footY, sprite } of this.gateDogs) {
-      sprite.setY(footY + hopOffset(reduced, now, this.pops.get(targetId({ dog, kind: "dog" }))));
+      sprite.setY(
+        footY + hopOffset(reduced, now, this.purchasePops.get(targetId({ dog, kind: "dog" }))),
+      );
     }
   }
   // Use the visible pick headings as the reason when a required selection is missing.
@@ -1048,7 +1039,11 @@ export class StartScene extends Scene {
       { focus: () => this.focused()?.kind === "petShop", root },
       save,
     );
-    const gate = drawStartGate(this, { pops: this.pops, root, save, yard }, this.loadout);
+    const gate = drawStartGate(
+      this,
+      { purchasePops: this.purchasePops, root, save, yard },
+      this.loadout,
+    );
     this.bubbleHits = gate.bubbleHits;
     this.gateDogs = gate.gateDogs;
     this.renderNativeHome(save);

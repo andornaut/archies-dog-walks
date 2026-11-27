@@ -6,6 +6,7 @@ import { expect, it, vi } from "vitest";
 import { gameData } from "../data/index.ts";
 import type { ShopScreenView } from "../home/dom/index.ts";
 import { messageLine } from "../home/homeLines.ts";
+import type { ShopTarget } from "../home/index.ts";
 import { gearRows, type ShopTab, slotRows } from "../home/shop.ts";
 import { SHOP_LAYOUT, SHOP_MESSAGE_FIT, shopRowTextRoom } from "../home/shopLayout.ts";
 import { type ListScroll, listScroll } from "../input/listScroll.ts";
@@ -44,7 +45,9 @@ const measure = {
 
 function render(message: string | null = null, save = newPlayerSave, tab: ShopTab = "gear") {
   const update = vi.fn();
+  const delayedCall = vi.fn();
   const scene = Object.create(ShopScene.prototype) as {
+    actAfterDip(target: ShopTarget): void;
     create(data: ShopSceneData): void;
     focusId: string | null;
     onKey(code: string): void;
@@ -66,12 +69,12 @@ function render(message: string | null = null, save = newPlayerSave, tab: ShopTa
     shakes: new Map(),
     tab,
     textures: { exists: () => false, getFrame: () => ({ height: 24, width: 24 }) },
-    time: { now: 0 },
+    time: { delayedCall, now: 0 },
   });
   vi.mocked(canvasPanelMeasure).mockReturnValue(measure);
   const { layer } = fakeLayer(new FakeDocument(), domScale(1, SCREEN_LAYOUT.screen));
   scene.renderNative({ fonts, layer });
-  return { scene, view: update.mock.calls[0]![0] as ShopScreenView };
+  return { delayedCall, scene, view: update.mock.calls[0]![0] as ShopScreenView };
 }
 
 it("fits and centres each Shop group inside the row hit geometry", () => {
@@ -220,4 +223,15 @@ it("keeps short shop rows unselected for slot-sign entry, taps and arrow navigat
   funded.scene.create({ focus: { kind: "dogSlot", slot: 2 } });
   expect(funded.scene.focusId).toBe("slot:2");
   expect(funded.view.rows.find(({ id }) => id === "slot:2")?.selectable).toBe(true);
+});
+
+it("settles an owned row immediately and leaves the refusal delay for a short row", () => {
+  const { delayedCall, scene } = render(null, newPlayerSave, "dogs");
+  scene.actAfterDip({ id: "slot:1", kind: "row" });
+  expect(scene.focusId).toBe("slot:1");
+  expect(delayedCall).not.toHaveBeenCalled();
+
+  scene.actAfterDip({ id: "slot:2", kind: "row" });
+  expect(scene.focusId).toBe("slot:1");
+  expect(delayedCall).toHaveBeenCalledOnce();
 });

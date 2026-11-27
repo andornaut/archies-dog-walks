@@ -442,11 +442,18 @@ export class ShopScene extends Scene {
     }
   }
 
-  // A key presses the tab or row; affordable rows open their modal during the dip.
+  // Tabs and owned rows settle on activation. A short row retains its press and refusal, and
+  // an affordable row still opens its modal during the dip.
   private actAfterDip(target: ShopTarget): void {
+    const row = target.kind === "row" ? this.rowById(target.id) : undefined;
+    if (target.kind === "tab" || row?.price === null) {
+      this.pressed = undefined;
+      this.act(target);
+      return;
+    }
     this.pressed = target;
     this.render();
-    const opens = this.opensItem(target);
+    const opens = row !== undefined && this.rowLook(this.save(), row) === "affordable";
     if (opens) {
       this.act(target);
     }
@@ -457,15 +464,6 @@ export class ShopScene extends Scene {
         this.act(target);
       }
     });
-  }
-
-  // Whether a tap opens an affordable unowned item's modal.
-  private opensItem(target: ShopTarget): boolean {
-    const row = target.kind === "row" ? this.rowById(target.id) : undefined;
-    if (row === undefined) {
-      return false;
-    }
-    return this.rowLook(this.save(), row) === "affordable";
   }
 
   private close(): void {

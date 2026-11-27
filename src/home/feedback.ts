@@ -2,18 +2,16 @@ import { refuseOffset } from "../ui/index.ts";
 
 // The home screen's tap feedback, from the art style guide: offsets in pixels and animation frames,
 // each a function of how long ago its effect started. With reduced motion every movement is 0 and
-// the pulse holds its first frame; the press dip, the picked lift and the tap sparkle stay, since
-// they show the tap landed. A tap shows in order: the dip and the sparkle at once, then the result
-// once the dip is over.
+// the pulse holds its first frame. The press dip, picked lift and tap sparkle stay. Successful
+// picks show their settled state as soon as the press activates.
 
 export const FEEDBACK = {
-  // A picked tile's or the badge's rise, and the badge's pop on pick.
+  // The check's rise when a dog is bought.
   badgePopMs: 200,
   badgePopPx: 3,
   // Ready Start walk rises 1px on every other beat.
   bobBeatMs: 600,
-  // fx-dust plays at the gate when a dog joins the pack, if the screen is drawn within this
-  // long of it joining.
+  // fx-dust plays at the gate when a dog is bought, if the screen is drawn soon enough.
   dustFrameMs: 80,
   hopMs: 480,
   hopPx: 4,
@@ -36,7 +34,7 @@ export function shakeOffset(
   return refuseOffset(reducedMotion, age(nowMs, startedMs));
 }
 
-// A picked face, or a dog at the gate, hops twice: negative is up.
+// A bought dog's portrait and gate sprite hop twice: negative goes up.
 export function hopOffset(
   reducedMotion: boolean,
   nowMs: number,
@@ -50,7 +48,7 @@ export function hopOffset(
   return -Math.round(Math.abs(Math.sin(phase)) * FEEDBACK.hopPx) || 0;
 }
 
-// The pick badge drops in from a little higher.
+// A bought dog's check badge drops in from a little higher.
 export function badgePopOffset(
   reducedMotion: boolean,
   nowMs: number,

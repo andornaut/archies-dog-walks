@@ -93,14 +93,14 @@ function drawPorch(
 export function drawStartGate(
   scene: Scene,
   context: {
-    readonly pops: ReadonlyMap<string, number>;
+    readonly purchasePops: ReadonlyMap<string, number>;
     readonly root: GameObjects.Container;
     readonly save: SaveDocument;
     readonly yard: GameObjects.Graphics;
   },
   loadout: HomeLoadout,
 ): { bubbleHits: Rect[]; gateDogs: GateDog[] } {
-  const { pops, root, save, yard } = context;
+  const { purchasePops, root, save, yard } = context;
   const { footY, x } = WALKER_AT_GATE;
   const reduced = currentSettings(scene).reducedMotion;
   drawPorch(scene, context, reduced, loadout.dogs);
@@ -127,8 +127,8 @@ export function drawStartGate(
     if (sprite !== undefined) {
       gateDogs.push({ dog, footY: feet.footY, sprite });
     }
-    // A dog that just joined hops onto the path in a puff of dust.
-    const popped = pops.get(targetId({ dog, kind: "dog" }));
+    // A just-purchased dog hops onto the path in a puff of dust.
+    const popped = purchasePops.get(targetId({ dog, kind: "dog" }));
     if (!reduced && popped !== undefined && now - popped < FEEDBACK.dustFrameMs) {
       playEffect(scene, "fx-dust", "play", { x: feet.x, y: feet.footY - 6 }, 0);
     }

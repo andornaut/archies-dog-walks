@@ -1,8 +1,16 @@
 import { expect, it, vi } from "vitest";
 
+import type { HomeLoadout } from "../home/index.ts";
+import { newPlayerSave } from "../testing/saves.ts";
+import { type Target, targetId } from "./start/targets.ts";
 import { StartScene } from "./StartScene.ts";
 
 vi.mock("phaser", () => ({ Core: { Events: {} }, Scene: class {}, Scenes: { Events: {} } }));
+
+vi.mock("./profileStore.ts", async (original) => ({
+  ...(await original<typeof import("./profileStore.ts")>()),
+  updateProfile: vi.fn(() => Promise.resolve()),
+}));
 
 const methods = StartScene.prototype as unknown as {
   onKey(event: { code: string; shiftKey: boolean }): void;
@@ -102,3 +110,49 @@ it("admits a canvas right click only for existing foreground Shop and gate-bubbl
   methods.onContextMenu.call(state, event());
   expect(state.act).toHaveBeenCalledTimes(2);
 });
+
+it.each(["pointer", "keyboard"])(
+  "shows a steady dog pick on %s activation without waiting for the press dip",
+  (input) => {
+    const dog = newPlayerSave.owned.dogs[0]!;
+    const target = { dog, kind: "dog" } as const;
+    const id = targetId(target);
+    const delayedCall = vi.fn();
+    const render = vi.fn();
+    const scene = Object.assign(
+      Object.create(StartScene.prototype) as {
+        actAfterDip(target: Target): void;
+        homePressUp(point: { x: number; y: number }, cancelled: boolean, native: boolean): boolean;
+        loadout: HomeLoadout;
+        onKey(event: { code: string; shiftKey: boolean }): void;
+        press: { held: boolean; id: string; startedMs: number } | undefined;
+        purchasePops: Map<string, number>;
+      },
+      {
+        drawQuip: vi.fn(),
+        focused: () => target,
+        loadout: { dogs: [], gear: null },
+        nativeHome: { accepts: () => true },
+        nativeReady: true,
+        press: { held: true, id, startedMs: 99 },
+        pressedTarget: target,
+        purchasePops: new Map([[id, 0]]),
+        render,
+        save: () => newPlayerSave,
+        targetAt: () => target,
+        time: { delayedCall, now: 100 },
+      },
+    );
+    if (input === "pointer") {
+      expect(scene.homePressUp({ x: 50, y: 50 }, false, true)).toBe(false);
+      scene.actAfterDip(target);
+    } else {
+      scene.onKey({ code: "Enter", shiftKey: false });
+    }
+    expect(scene.loadout.dogs).toEqual([dog]);
+    expect(scene.press).toBeUndefined();
+    expect(scene.purchasePops.has(id)).toBe(false);
+    expect(delayedCall).not.toHaveBeenCalled();
+    expect(render).toHaveBeenCalledOnce();
+  },
+);
