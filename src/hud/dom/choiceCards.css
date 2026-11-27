@@ -1,6 +1,6 @@
 /* The existing hit button follows the card frame's outer edges. Focus and press share one
    outline there. The held view paints the same outline on its larger frame. */
-.adw-choice-option:focus-visible,
+.adw-choice-group .adw-choice-option:focus-visible,
 .adw-choice-pressed .adw-choice-option,
 .adw-choice-held-outline {
   outline: var(--adw-slice-2) solid var(--adw-cyan);
@@ -27,7 +27,7 @@
 }
 
 @media (forced-colors: active) {
-  .adw-choice-option:focus-visible,
+  .adw-choice-group .adw-choice-option:focus-visible,
   .adw-choice-pressed .adw-choice-option,
   .adw-choice-held-outline {
     forced-color-adjust: none;
