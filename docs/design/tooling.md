@@ -81,3 +81,4 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0271 | Adopt Game Kit 0.92.0 manifest retry                                         | [adw-0271.md](../work/adw-0271.md) |
 | adw-0272 | Organise crowded source areas around their responsibilities                  | [adw-0272.md](../work/adw-0272.md) |
 | adw-0273 | Complete keyboard navigation across the game                                 | [adw-0273.md](../work/adw-0273.md) |
+| adw-0278 | Reduce active-play frame-interval p99 by at least 10%                        | [adw-0278.md](../work/adw-0278.md) |
