@@ -41,9 +41,9 @@ Use 4/8/16 for the ordinary row/group/panel spacing roles, and the button gaps f
 | OWNER_CARD_FACE                   | 20                                | px         | Inline owner faces and the placeholder face                            | [layout data](../src/data/layout.ts)                                                    |
 | PAGE.rowTextGap                   | 8                                 | px         | A page row's art box to its text                                       | [layout data](../src/data/layout.ts)                                                    |
 | PAGE.trackGap                     | 6                                 | px         | Page rows and body lines to the scrollbar track                        | [layout data](../src/data/layout.ts)                                                    |
-| separator                         | 1px line, 8 clear above and below | px         | Every content separator, full content width                            | [separator](../src/ui/separator.ts)                                                     |
+| separator                         | 1px line, 8 clear above and below | px         | Standard content separator, full content width                         | [separator](../src/ui/separator.ts)                                                     |
 
-**Separators.** Every content separator (Settings rows, the Cheats dividers, the Cheats section divider included, and the detail card) is one 1px line across the full content width with 8 clear rows to the boxes above and below, a 17-row band. On the Settings and Cheats pages that width is x = 8–338. A section break that must read stronger needs its own named pattern, not a second spacing. Its colour is in the [style guide](style-guide.md#ui).
+**Separators.** The standard separator, including the Cheats dividers and the detail card, is a 1px rule with 8 clear rows above and below, a 17-row band. Settings uses the same 1px rule directly between adjacent row targets. Both Settings and Cheats draw their rules across x = 8–338. A section break that must read stronger needs its own named pattern, not a second spacing. Its colour is in the [style guide](style-guide.md#ui).
 
 The [button gaps](controls.md#sizing-and-spacing) define which buttons are small, give the tile-grid rule and list the named exemptions. Omit absent groups and their gaps. Keep the full font role; wrap text or grow its measured container rather than reducing its scale. Detailed ink gaps remain in [Controls](controls.md#labels-and-icons).
 
@@ -104,12 +104,12 @@ Settings and Cheats are frameless pages `(0,40,360,520)` on Game Kit's page fram
 - **Content rectangle:** x = 8–338 (330 wide), with the [scrollbar room](#page-boundsalignment) always reserved and the track at x = 344–351.
 - **Title:** the page title row `(16,64,328,15)`, a 3× heading with its ink centred at x = 180 and no X.
 - **Body viewport:** from 24 below the title's ink (y = 103) to 8 above the next fixed element: the version label on Settings, Back on Cheats. Only the body scrolls.
-- **Separators:** the one [separator](#spacing-tokens), 1px across x = 8–338 with 8 clear above and below.
+- **Separators:** the shared 1px [rule](#spacing-tokens). Settings places it directly between row targets. Cheats keeps the standard 8px clearance on each side.
 - **Back:** `page.back`, `(136.5,500,87,48)`.
 
-**Settings.** Rows span x = 8–338 and keep their internal layout: the icon 6 in, at x = 14; the label column at x = 34, the 16px icon cell plus `ICON_LABEL_GAP`; the [switch](#switch-rows) 15 in from the right, at x = 291–323, its top 9 below the row's top and the label's capitals 12 below it on every switch row; the state word ink-centred on the switch's centre, x = 307; slider tracks from the label column to the right inset, with values right-aligned to x = 330. Install is its row's sole action, one [ink group](#icons-beside-labels) centred on the row. The version label is metadata above the dismissal footer: its ink centred at x = 180, its ink bottom at y = 492, 8 above Back's face, fixed.
+**Settings.** Use a single column across x = 8–338. On switch rows the icon starts at x = 14 and the label at x = 34, one 16px icon cell plus `ICON_LABEL_GAP` apart. Keep the left label and note stack and the right [switch and state stack](#switch-rows) centred independently. Slider tracks still run from the label column to the right inset, with values right-aligned to x = 330. Install is its row's sole action, one [ink group](#icons-beside-labels) centred on the row. The version label is metadata above the dismissal footer: its ink centred at x = 180, its ink bottom at y = 492, 8 above Back's face, fixed.
 
-**Cheats.** Two columns 16 apart (`BUTTON_SIZE.gap`), each 157 wide, at x = 8–165 and x = 181–338, used in the neighbourhood grid and the Unlocks and Money columns when the labels fit. The Unlocks and Money headings start their ink on their columns' left edges. Measure labels at the ordinary 2.5× action scale. Wrap at spaces into balanced lines and grow past the 48px minimum when the ink needs more height. Stack only a paired row whose longest word exceeds its column's ink room. Centre those equal-width buttons with the standard 8px stacked gap. The Invincible owners and Reset save rows take the Settings row geometry, and the switch row follows the [switch-row layout](#switch-rows). The Reset save? confirmation is an ordinary [modal](#modals) over the page. See [Cheats layout](../src/cheats/cheatsView.ts) and [scroll placement](../src/hud/dom/cheats.ts).
+**Cheats.** Two columns 16 apart (`BUTTON_SIZE.gap`), each 157 wide, at x = 8–165 and x = 181–338, used in the neighbourhood grid and the Unlocks and Money columns when the labels fit. The Unlocks and Money headings start their ink on their columns' left edges. Measure labels at the ordinary 2.5× action scale. Wrap at spaces into balanced lines and grow past the 48px minimum when the ink needs more height. Stack only a paired row whose longest word exceeds its column's ink room. Centre those equal-width buttons with the standard 8px stacked gap. Invincible owners follows the [Cheats switch-row layout](#switch-rows). Reset save is its row’s sole action. The Reset save? confirmation is an ordinary [modal](#modals) over the page. See [Cheats layout](../src/cheats/cheatsView.ts) and [scroll placement](../src/hud/dom/cheats.ts).
 
 ## Groups/columns
 
@@ -219,7 +219,11 @@ Use dedicated `MODAL_TITLE_SCALE = 3` for ordinary modal headings and the Shop, 
 
 ### Switch rows
 
-Settings and Cheats switch rows share one layout. The row's leading icon or label starts 6 in from the row's left, and the 32×16 switch sits at the row's upper right, 15 in from its right edge, so the widest state word (Hidden, 62px of ink) centred under it ends on the row's right edge. The switch's top is 9 below the row's top, and the label's capitals start 12 below it on every switch row, with or without a note, so the label and the 16px icon cell share the switch's rows. The state word sits 8 below the switch, its ink centred on the switch's centre. The whole row is the target, and row heights follow their content (Cheats 48, Settings Sound 82).
+Both pages inset the 32×16 switch 15px from the right edge. The whole row is the target, with a 48px minimum.
+
+**Settings.** Centre the left label and note stack, including the leading icon, independently of the right switch and state stack. Measure the taller stack with 4px of padding above and below. The state's visible ink sits 4 logical pixels below the switch. Project the text against the painted switch so their horizontal centres agree within half an art pixel after rounding.
+
+**Cheats.** The leading icon or label starts 6px from the row's left. Keep the switch 9px below the row's top. Centre the state word's visible ink under the switch with an 8px gap. Label capitals start 12px below the row's top.
 
 ## HUD/overlays
 
