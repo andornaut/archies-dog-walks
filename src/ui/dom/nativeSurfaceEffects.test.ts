@@ -24,7 +24,7 @@ function fixture(
     },
     dialog as unknown as HTMLElement,
   );
-  const key = (code: string, extra = {}) => {
+  const key = (code: string, extra = {}, type = "keydown") => {
     const event = {
       code,
       defaultPrevented: false,
@@ -34,11 +34,12 @@ function fixture(
       stopImmediatePropagation: vi.fn(),
       stopPropagation: vi.fn(),
       target: doc.activeElement ?? dialog,
+      type,
       ...extra,
     };
-    doc.fire("keydown", event);
+    doc.fire(type, event);
     if (!event.defaultPrevented) {
-      dialog.fire("keydown", event);
+      dialog.fire(type, event);
     }
     return event;
   };
@@ -75,6 +76,11 @@ it("yields owned, editing and composition keys and preserves native confirmation
   }
   expect(key("Enter").defaultPrevented).toBe(false);
   expect(key("NumpadEnter", { repeat: true }).defaultPrevented).toBe(true);
+  for (const phase of ["keydown", "keypress", "keyup"]) {
+    const space = key("Space", {}, phase);
+    expect(space.stopPropagation).toHaveBeenCalledOnce();
+    expect(space.defaultPrevented).toBe(false);
+  }
   active.accepts = false;
   key("ArrowDown");
   expect(doc.activeElement).toBe(controls[0]);

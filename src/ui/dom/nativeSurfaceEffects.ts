@@ -1,7 +1,12 @@
 import type { Point } from "@andornaut/game-kit/runtime/rect";
 
 import { SCREEN_CONFIG } from "../../data/index.ts";
-import { focusDirectionForKey, isConfirmKey, sceneKeyAllowed } from "../../input/index.ts";
+import {
+  focusDirectionForKey,
+  isConfirmKey,
+  nativeButtonKeyAllowed,
+  sceneKeyAllowed,
+} from "../../input/index.ts";
 import { artPixel, deviceX, deviceY, type DomScale, gridTransform } from "../index.ts";
 import { setBox } from "./pixelLine.ts";
 import type { UiLayer } from "./uiLayer.ts";
@@ -131,33 +136,28 @@ export function bindDialogKeys(
     },
     { capture: true },
   );
-  dialog.addEventListener("keydown", (event) => {
+  // Preserve the complete native confirmation. In particular, Space clicks on keyup.
+  const nativeConfirm = (event: KeyboardEvent) => {
     if (
-      !accepts() ||
-      event.defaultPrevented ||
-      event.isComposing ||
-      event.keyCode === 229 ||
-      event.altKey ||
-      event.ctrlKey ||
-      event.metaKey
-    ) {
-      return;
-    }
-    // Enter and Space press the focused control natively; the scene under never hears them.
-    if (
+      accepts() &&
       isConfirmKey(event.code) &&
+      nativeButtonKeyAllowed(event) &&
       focusables().some(
         (control) =>
           control.tagName.toLowerCase() === "button" && control.contains(event.target as Node),
       )
     ) {
-      if (event.repeat) {
+      if (event.type === "keydown" && event.repeat) {
         event.preventDefault();
       }
       event.stopPropagation();
-      return;
     }
-    if (!sceneKeyAllowed(event) || event.code !== "Tab") {
+  };
+  for (const type of ["keydown", "keypress", "keyup"] as const) {
+    dialog.addEventListener(type, nativeConfirm);
+  }
+  dialog.addEventListener("keydown", (event) => {
+    if (!accepts() || event.code !== "Tab" || !sceneKeyAllowed(event)) {
       return;
     }
     const controls = visible();
