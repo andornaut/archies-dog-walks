@@ -5,8 +5,7 @@ import { ownerNameWrap } from "../presentation/ownerName.ts";
 import { fontFileMetrics, fontInk, fontInkRows, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
-import { BUTTON_LIP_PX } from "../ui/selection.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { ACTION_LABEL_SCALE, TEXT_SCALE } from "../ui/textFit.ts";
 import { END_LAYOUT } from "./endLayout.ts";
 import { type EndMeasure, endScreenView } from "./endScreenView.ts";
 
@@ -47,16 +46,15 @@ it("sizes End's ordinary action from its ink and uses the same narrow pointer ta
   });
   const { backToTitle: button } = view;
   const anchor = END_LAYOUT.backToTitle;
-  const ink = measure.inkWidth("title", gameData.menuText.end.headHome);
-  expect(button.rect.width).toBe(ink + 2 * MODAL.pad);
+  const ink = inkWidth("font-title", { scale: ACTION_LABEL_SCALE }, button.label.toUpperCase());
+  expect(button.rect.width).toBe(Math.ceil(ink + 2 * MODAL.pad));
   expect(button.rect.width).toBeLessThan(anchor.width);
   expect(button.rect).toMatchObject({ height: anchor.height, y: anchor.y });
   expect(button.rect.x + button.rect.width / 2).toBe(anchor.x + anchor.width / 2);
   expect(button.hit).toEqual(button.rect);
-  expect(button.text.scale).toBe(TEXT_SCALE);
-  const rows = fontInkRows("font-title", { scale: TEXT_SCALE }, button.label.toUpperCase());
+  expect(button.text.scale).toBe(ACTION_LABEL_SCALE);
+  const rows = fontInkRows("font-title", { scale: ACTION_LABEL_SCALE }, button.label.toUpperCase());
   const inkCentre = button.text.capTop + (rows.top + rows.bottom) / 2;
-  expect(
-    Math.abs(inkCentre - (anchor.y + (anchor.height - BUTTON_LIP_PX) / 2)),
-  ).toBeLessThanOrEqual(1);
+  expect(inkCentre).toBe(anchor.y + anchor.height / 2);
+  expect(button.text.centreX).toBe(button.rect.x + button.rect.width / 2);
 });

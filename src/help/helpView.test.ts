@@ -143,7 +143,9 @@ it.each([
     expect(view.dots.map(({ rect }) => rect.x)).toEqual(
       Array.from({ length: gameData.help.length }, (_, i) => countX + 12 * i),
     );
-    expect(view.footer.rect).toEqual({ height: 48, width: 87, x: 136.5, y: 500 });
+    // Kit places the odd-width footer face on whole logical pixels; its ink follows that face.
+    expect(view.footer.rect).toEqual({ height: 48, width: 87, x: 136, y: 500 });
+    expect(view.footer.text.centreX).toBe(view.footer.rect.x + view.footer.rect.width / 2);
     // The press areas are the faces and half the stacked gap round them: 4 short of the dots
     // and of Back.
     expect(previous!.hit).toEqual({

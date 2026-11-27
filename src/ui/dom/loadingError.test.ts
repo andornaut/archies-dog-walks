@@ -8,6 +8,7 @@ import type { DomScale } from "../domScale.ts";
 import { MODAL } from "../modalGeometry.ts";
 import { PALETTE } from "../palette.ts";
 import { PAPER_PANEL } from "../paperPanel.ts";
+import { ACTION_LABEL_SCALE, TEXT_SCALE } from "../textFit.ts";
 import { mountLaunchFailure } from "./launchFailure.ts";
 import { mountLoadingError } from "./loadingError.ts";
 import { loadingFailurePresentation } from "./loadingFailureStyle.ts";
@@ -77,7 +78,7 @@ it("keeps fixed CSS text while fitting its Large width, margin and action on res
     safeInsetPx: MODAL_SPACING.margin * scale.unit,
   });
   expect(first.text).toMatchObject({
-    action: { sizePx: 18 },
+    action: { sizePx: (18 * ACTION_LABEL_SCALE) / TEXT_SCALE },
     body: { sizePx: 18 },
     title: { sizePx: 24 },
   });

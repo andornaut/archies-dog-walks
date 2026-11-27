@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { gameData } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
-import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
+import { fontFileMetrics, fontInkRows, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
@@ -18,7 +18,7 @@ import {
   pauseMenuItemLabel,
 } from "../ui/navigationMenu.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
+import { ACTION_LABEL_SCALE, TEXT_SCALE } from "../ui/textFit.ts";
 import { NOTE_PLATE } from "./pauseMenu.ts";
 import { questionPanelView } from "./questionPanelView.ts";
 
@@ -99,9 +99,14 @@ describe.each(["home", "pause"] as const)("%s navigation geometry", (context) =>
     expect(first.y).toBeGreaterThanOrEqual(view.close.hit.y + view.close.hit.height + MODAL.gap);
     expect(
       view.buttons.every(
-        ({ rect, text }) => rect.height >= BUTTON_SIZE.compact.height && text.scale === TEXT_SCALE,
+        ({ rect, text }) => rect.height >= BUTTON_SIZE.compact.height && text.scale === ACTION_LABEL_SCALE,
       ),
     ).toBe(true);
+    for (const { rect, text } of view.buttons) {
+      const ink = fontInkRows("font-title", { scale: text.scale }, text.text.toUpperCase());
+      expect(text.centreX).toBe(rect.x + rect.width / 2);
+      expect(text.capTop + (ink.top + ink.bottom) / 2).toBe(rect.y + rect.height / 2);
+    }
     if (context === "pause") {
       const plate = view.notePlate!;
       expect(plate).toBeDefined();

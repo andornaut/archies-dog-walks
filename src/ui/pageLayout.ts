@@ -1,13 +1,15 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 import {
   type ModalFrameContext,
   type ModalTitleSize,
+  modalFrameRooms,
   placeModalFrame,
 } from "@andornaut/game-kit/runtime/ui/modalFrame";
 
 import { PAGE, ROWS_PAGE, SCREEN_CONFIG, SHOP_PAGE, TOP_BAR_HEIGHT } from "../data/index.ts";
 import { BUTTON_SIZE } from "./buttonGeometry.ts";
-import { arrangePanelActions } from "./modal/actionGroup.ts";
+import { modalActionWidth } from "./modal/layout.ts";
 import type { PanelButton, PanelMeasure } from "./modal/types.ts";
 import { panelButton } from "./modal/view.ts";
 import { MODAL } from "./modalGeometry.ts";
@@ -76,10 +78,20 @@ export function pageBack(
   measure: Pick<PanelMeasure, "inkWidth" | "title" | "titleInk">,
   label: string,
 ): PanelButton {
-  const [back] = arrangePanelActions(measure, RECT, "row", [
-    panelButton(measure, BACK, true, label),
-  ]);
-  return back!;
+  const [back] = arrangeActions(
+    {
+      origin: FRAME.footer!,
+      press: { margin: 0 },
+      variant: "footer",
+      width: modalFrameRooms(PAGE_FRAME.context).footer,
+    },
+    [{
+      key: 0,
+      role: "primary",
+      size: { height: BACK.height, width: modalActionWidth(measure.inkWidth("title", label)) },
+    }],
+  ).actions;
+  return { ...panelButton(measure, back!.face, true, label), actionIndex: 0 };
 }
 
 // A page's rows from spec.y down, one per height, spec.width wide from spec.x and spec.gap apart.
