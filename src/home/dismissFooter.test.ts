@@ -118,7 +118,9 @@ it("keeps the Shop and Logbook scroll viewport clear of their fixed Back", () =>
   const { back } = shopPageView(measure, { tabs: [], title: gameData.menuText.stats.title });
   expect(back).toMatchObject({ label: gameData.menuText.pageBack, primary: true });
   expect(back.rect.width).toBe(modalActionWidth(measure.inkWidth("title", back.label)));
-  expect(back.rect.x + back.rect.width / 2).toBe(PAGE_LAYOUT.back.x + PAGE_LAYOUT.back.width / 2);
+  expect(back.rect.x).toBe(
+    PAGE_LAYOUT.back.x + Math.floor((PAGE_LAYOUT.back.width - back.rect.width) / 2),
+  );
   expect(back.rect).toMatchObject({ height: PAGE_LAYOUT.back.height, y: PAGE_LAYOUT.back.y });
   expect(back.hit).toEqual(back.rect);
   for (const rect of [SHOP_LAYOUT.list.rect, STATS_LAYOUT.view]) {

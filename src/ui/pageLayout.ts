@@ -2,8 +2,8 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 import {
   type ModalFrameContext,
-  type ModalTitleSize,
   modalFrameRooms,
+  type ModalTitleSize,
   placeModalFrame,
 } from "@andornaut/game-kit/runtime/ui/modalFrame";
 
@@ -93,7 +93,9 @@ export function pageBack(
       },
     ],
   ).actions;
-  if (back === undefined || back.hidden) throw new Error("Page Back action must be visible");
+  if (back === undefined || back.hidden) {
+    throw new Error("Page Back action must be visible");
+  }
   return { ...panelButton(measure, back.face, true, label), actionIndex: 0 };
 }
 

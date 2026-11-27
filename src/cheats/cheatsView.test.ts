@@ -142,7 +142,7 @@ describe("Cheats layout", () => {
   it("scrolls the rows in the page's body, Back fixed under it", () => {
     const { layout, page } = current;
     expect(page.back).toMatchObject({ label: words.pageBack, primary: true });
-    expect(page.back.rect.x + page.back.rect.width / 2).toBe(SCREEN_CONFIG.width / 2);
+    expect(page.back.rect.x).toBe(Math.floor((SCREEN_CONFIG.width - page.back.rect.width) / 2));
     expect(layout.viewport).toEqual({ height: 389, width: 330, x: 8, y: 103 });
     expect(page.back.rect.y - (layout.viewport.y + layout.viewport.height)).toBe(8);
     expect(page.title.map(({ text }) => text)).toEqual([words.cheats.title]);
@@ -155,7 +155,7 @@ describe("Cheats layout", () => {
     expect(reset.rect.width).toBe(
       modalActionWidth(MEASURE.inkWidth("title", words.cheats.resetSave)),
     );
-    expect(reset.rect.x + reset.rect.width / 2).toBe(8 + 330 / 2);
+    expect(reset.rect.x).toBe(8 + Math.floor((330 - reset.rect.width) / 2));
   });
 
   it("lays the invincible switch row out as Settings' switch rows, as tall as one", () => {
