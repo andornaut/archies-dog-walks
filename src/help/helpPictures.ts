@@ -100,6 +100,8 @@ export interface HelpPicture {
   readonly drag: DragLoop | null;
   // Changes the walk raises, which the HUD shows: a heart change pops over its dog.
   readonly changes: readonly Change[];
+  // A collision cue starts over the lead dog from the pack before the illustrated loss.
+  readonly collisionLead?: DogId;
   // Whether the walk is held, as under a card: the pack and items stand idle.
   readonly halted: boolean;
   // Whether the HUD (the walk bar and the dog cards) is drawn.
@@ -128,11 +130,11 @@ export const HELP_SCENES = {
     zone: "cabbagetown",
   },
   owners: {
-    // The dog that loses a heart to a bump.
-    bumped: { dog: "archie", lost: 1 },
     dogs: ["kilo", "archie", "ginger"],
     fired: "ginger",
     lane: 1,
+    // The lead dog loses a heart to a bump.
+    lost: 1,
     // How far through the neighbourhood the walk is, which the progress line under the cards
     // shows.
     zoneFraction: 0.6,
@@ -366,26 +368,28 @@ function cards(data: GameData): HelpPicture {
 }
 
 function owners(data: GameData): HelpPicture {
-  const { bumped, dogs, fired, lane, zoneFraction } = HELP_SCENES.owners;
+  const { dogs, fired, lane, lost, zoneFraction } = HELP_SCENES.owners;
   const started = startRun(data, dogs);
-  const before = heartsOf(started, bumped.dog) ?? 0;
-  const after = clampHearts(before, before - bumped.lost);
+  const lead = started.pack[0].dog;
+  const before = heartsOf(started, lead) ?? 0;
+  const after = clampHearts(before, before - lost);
   const pack = mapPack((slot): PackSlot => {
     if (slot.dog === fired) {
       return { dog: slot.dog, status: "fired", zoneIndex: 0 };
     }
-    return slot.dog === bumped.dog && slot.status === "walking" ? { ...slot, hearts: after } : slot;
+    return slot.dog === lead && slot.status === "walking" ? { ...slot, hearts: after } : slot;
   }, started.pack);
   const change: Change = {
     after,
     before: clampHearts(before, before),
     causes: [{ amount: after - before, kind: "bump" }],
-    dog: bumped.dog,
+    dog: lead,
     kind: "hearts",
   };
   return {
     ...STILL,
     changes: [change],
+    collisionLead: lead,
     hud: true,
     strips: [{ height: HELP_PICTURE_HEIGHT, screenY: SCREEN_CONFIG.height - HELP_PICTURE_HEIGHT }],
     walk: walkIn(

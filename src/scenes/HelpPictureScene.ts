@@ -220,6 +220,15 @@ export class HelpPictureScene extends Scene {
     this.whenCreated(SCENE_KEYS.helpHud, (hud) => {
       if (picture.changes.length > 0) {
         const labels = changeLabels(overPack(packPoint(walk)), picture.changes);
+        const { collisionLead } = picture;
+        const head = collisionLead === undefined ? undefined : pack.dogPoint(collisionLead);
+        if (head !== undefined) {
+          for (const label of labels) {
+            if (label.target.kind === "dog" && label.amount < 0) {
+              label.collision = { delayMs: 0, head };
+            }
+          }
+        }
         events.emit(CHANGE_LABELS_EVENT, labels);
       }
       hud.events.once(Scenes.Events.POST_UPDATE, () => freezeScene(hud, STILL_FRAMES));

@@ -84,19 +84,27 @@ describe("helpPicture", () => {
     expect(card?.options.every((option) => option.availability.enabled)).toBe(true);
   });
 
-  it("shows each owner's hearts by their dog's size, the bumped dog's less what the bump took", () => {
-    const { bumped, fired } = HELP_SCENES.owners;
-    const { changes, walk } = helpPicture(gameData, "owners");
+  it("shows each owner's hearts by size and anchors the lead dog's heart loss to its head", () => {
+    const { fired, lost } = HELP_SCENES.owners;
+    const { changes, collisionLead, walk } = helpPicture(gameData, "owners");
+    const [lead] = packDogs(walk.run);
+    expect(collisionLead).toBe(lead);
     const hearts = walk.run.pack.map((slot) => (slot.status === "walking" ? slot.hearts : null));
     const expected = walk.run.pack.map(({ dog }) => {
       if (dog === fired) {
         return null;
       }
       const max = gameData.tuning.hearts.maxBySize[gameData.dogs[dog].size];
-      return dog === bumped.dog ? max - bumped.lost : max;
+      return dog === lead ? max - lost : max;
     });
     expect(hearts).toEqual(expected);
-    expect(changes).toEqual([expect.objectContaining({ dog: bumped.dog, kind: "hearts" })]);
+    expect(changes).toEqual([
+      expect.objectContaining({
+        causes: [{ amount: -lost, kind: "bump" }],
+        dog: lead,
+        kind: "hearts",
+      }),
+    ]);
   });
 
   it.each([["pickups"]] satisfies [HelpPictureId][])(
