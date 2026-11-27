@@ -1,5 +1,11 @@
 import { MAX_PACK_DOGS } from "../../packCapacity.ts";
-import { FACE_SIZE, ICON_LABEL_GAP, LABEL_ICON, OWNER_CARD_FACE } from "./controls.ts";
+import {
+  FACE_SIZE,
+  ICON_LABEL_GAP,
+  LABEL_ICON,
+  OWNER_CARD_FACE,
+  UI_FUNCTION_ICON_SIZE,
+} from "./controls.ts";
 
 // Walk HUD
 
@@ -34,7 +40,7 @@ export const WALK_BAR_PARTS = {
     // An icon's inset in its well.
     icon: 1,
     // art: an effect icon's side.
-    iconSize: 24,
+    iconSize: UI_FUNCTION_ICON_SIZE.standard,
     // art: the right end of the region the wells centre in, from the bar's left; the region
     // starts at the cash well's right edge and is pinned, so the wells keep their places
     // whatever the controls' press areas.
@@ -49,7 +55,7 @@ export const WALK_BAR_PARTS = {
 export const SPARE_TREAT_PIP = { inset: 1, size: 12 } as const;
 
 // Runtime debuff chrome: native icons and the shared body role fit above the bottom rim.
-const DEBUFF_ICON_SIZE = 16;
+const DEBUFF_ICON_SIZE = UI_FUNCTION_ICON_SIZE.compact;
 const DEBUFF_SPACING = 4;
 const DEBUFF_RIM = 1;
 const DEBUFF_HEIGHT = DEBUFF_ICON_SIZE + 2 * DEBUFF_SPACING;

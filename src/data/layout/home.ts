@@ -149,7 +149,7 @@ export const HOME_SCREEN = {
   // edge and tops, and its name strip's rows at the tile's foot.
   walkerTile: {
     badge: LOCK_BADGE_OFFSET,
-    face: { dx: 5, dy: 1, size: 30 },
+    face: { dx: 4, dy: 0, size: FACE_SIZE },
     icons: { dx: 44, dy: [4] },
     strip: 17,
   },

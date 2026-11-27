@@ -2,7 +2,7 @@ import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { GameObjects, Scene } from "phaser";
 
 import { dogPortraitKey, gearIconKey } from "../assets/index.ts";
-import { gameData } from "../data/index.ts";
+import { gameData, UI_PICTURE_SIZE } from "../data/index.ts";
 import type { DetailPicture, Purchase } from "../home/index.ts";
 import { type Badge, PALETTE } from "../ui/index.ts";
 import { addPixelText, fillRect } from "../ui/phaser/index.ts";
@@ -23,13 +23,14 @@ export const BADGE_KEYS: Readonly<Record<Badge, string>> = {
 // A purchase's picture on its detail card: a dog's portrait, a gear item's icon or the slot's art
 // at 2x.
 export function purchasePicture(purchase: Purchase): DetailPicture {
+  const scale = UI_PICTURE_SIZE.detail / UI_PICTURE_SIZE.standard;
   switch (purchase.kind) {
     case "dog":
       return { key: dogPortraitKey(gameData, purchase.dog), scale: 1 };
     case "dogSlot":
-      return { key: SHOP_ART.dogSlot, scale: 2 };
+      return { key: SHOP_ART.dogSlot, scale };
     case "gear":
-      return { key: gearIconKey(purchase.gear), scale: 2 };
+      return { key: gearIconKey(purchase.gear), scale };
     default:
       return purchase satisfies never;
   }

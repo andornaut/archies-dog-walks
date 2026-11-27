@@ -11,6 +11,10 @@ import {
 // Exempt: the walk bar's effect wells (tap to explain) and the debuff bars (hold only).
 export const MIN_PRESS = HIT_RULE.minTarget;
 
+// Picture and functional artwork sizes in game pixels. Wells, frames and targets have their own sizes.
+export const UI_PICTURE_SIZE = { detail: 64, standard: 32 } as const;
+export const UI_FUNCTION_ICON_SIZE = { compact: 16, standard: 24 } as const;
+
 // Standard button sizes.
 export const BUTTON_SIZE = {
   // A card's or modal's button.
@@ -19,7 +23,7 @@ export const BUTTON_SIZE = {
   // buttons counting as standard: every game's.
   gap: BUTTON_GAP,
   // art: ui-icon-button-normal's face side, the glyph drawn on it, and the square press target round it.
-  icon: { face: 20, glyph: 16, target: MIN_PRESS },
+  icon: { face: 20, glyph: UI_FUNCTION_ICON_SIZE.compact, target: MIN_PRESS },
   // How far a pressed face sinks.
   press: 2,
   // The gap between neighbouring faces, side by side or stacked, where either is smaller than a
@@ -43,16 +47,16 @@ export const BUTTON_LIP_PX = 4;
 export const ICON_LABEL_GAP = 4;
 
 // art: the side of an icon beside a label.
-export const LABEL_ICON = 16;
+export const LABEL_ICON = UI_FUNCTION_ICON_SIZE.compact;
 
 // art: a dog's or owner's face's side, as the face sheets draw it.
-export const FACE_SIZE = 32;
+export const FACE_SIZE = UI_PICTURE_SIZE.standard;
 
 // art: an owner's card face's side (the face shown inline in walk text and on the message strip).
 export const OWNER_CARD_FACE = 20;
 
 // art: a gear icon's side at scale 1.
-export const GEAR_ICON = 32;
+export const GEAR_ICON = UI_PICTURE_SIZE.standard;
 
 // art: a raised button's rows outside its flat face and lip: its ink outline and lit row over the
 // face, and its ink outline under the lip.
@@ -100,7 +104,7 @@ export const AFFORD_OUTSET = 2;
 export const MARK_OFFSET = { x: -6, y: -1 } as const;
 
 // art: the ui-check mark's side.
-export const CHECK_SIZE = 16;
+export const CHECK_SIZE = UI_FUNCTION_ICON_SIZE.compact;
 
 // A lock badge's offset from its tile's or row's top-left corner, over which it hangs.
 export const LOCK_BADGE_OFFSET = { dx: -2, dy: -3 } as const;

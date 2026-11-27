@@ -32,6 +32,8 @@ export {
   SLICES,
   TOP_BAR_HEIGHT,
   TOP_BAR_SIZES,
+  UI_FUNCTION_ICON_SIZE,
+  UI_PICTURE_SIZE,
   WIDE_BUTTON_X,
 } from "./layout/controls.ts";
 

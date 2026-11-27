@@ -4,7 +4,7 @@ import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { dogFaceKey, gearIconKey } from "../assets/index.ts";
 import type { DogId, GearId, WalkerId } from "../data/ids.ts";
-import { type GameData, PLATE_PAD } from "../data/index.ts";
+import { FACE_SIZE, type GameData, PLATE_PAD } from "../data/index.ts";
 import { dollarText, hudEffectIconKey, walkerEffectItems } from "../presentation/index.ts";
 import type { SaveDocument } from "../save/index.ts";
 import {
@@ -164,7 +164,7 @@ export function homeSelectionViews(
     const portrait = {
       key: walker.portraitKey,
       moving: !reducedMotion,
-      scale: face.size / 32,
+      scale: face.size / FACE_SIZE,
       tag: tile.kind === "picked" ? "happy" : "neutral",
       x: x + face.dx,
       y: y + face.dy,

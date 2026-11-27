@@ -72,8 +72,8 @@ it("projects picker art into the available space with selected and locked treatm
     ],
   });
   const pictures = [
-    [5, 1, 30],
-    [5, 1, 30],
+    [4, 0, 32],
+    [4, 0, 32],
     [4, 5, 32],
     [13, 9, 32],
     [13, 2, 32],
