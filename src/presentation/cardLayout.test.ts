@@ -13,7 +13,7 @@ import { DIFFICULTY_KEY } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { charmEffects } from "../hud/buffMarks.ts";
 import { largeBodyText, smallCardText } from "../hud/cardText.ts";
-import { choiceCharmPlates } from "../hud/choiceCharms.ts";
+import { choiceCharmStack } from "../hud/choiceCharms.ts";
 import { CARD_CHARMS_HEIGHT, cardCharmPlates, CHARM } from "../layout/buffLayout.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
@@ -149,10 +149,12 @@ describe("a card's charms", () => {
     const card = ROWS.at(-1)![0]!;
     const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
     for (const charm of CHARM_CASES) {
-      const [plate] = choiceCharmPlates(fonts, card, [charm]);
+      const stack = choiceCharmStack(fonts, card.width, [charm]);
+      const [plate] = stack.place(card);
       const { labels, rect } = plate!;
       expect(rect.width + 2 * CHARM.ring, charm.name).toBeLessThanOrEqual(card.width);
       expect(rect.height, charm.name).toBeLessThanOrEqual(CHARM.card.maxHeight);
+      expect(bottom(rect) + CHARM.ring - bottom(card)).toBe(stack.height);
       expect(
         labels
           .filter(({ font }) => font === "body")

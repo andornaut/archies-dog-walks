@@ -29,7 +29,7 @@ import {
 import { GREYED, inkWithPills, PALETTE, plainMarks, TEXT_SCALE } from "../ui/index.ts";
 import { optionMarks } from "./buffMarks.ts";
 import { largeBodyText, plaqueTexts, smallCardText } from "./cardText.ts";
-import { type ChoiceCharmPlate, choiceCharmPlates } from "./choiceCharms.ts";
+import { type ChoiceCharmPlate, choiceCharmStack } from "./choiceCharms.ts";
 
 export interface ChoiceEntry {
   readonly choice: Choice;
@@ -87,6 +87,7 @@ export function choiceCardSurface(
   const ink = (role: "body" | "title") => (style: TextFitStyle, line: string) =>
     choiceCardInk(fonts, role, style, line);
   const marks = optionMarks(data, view, entry.option);
+  const charms = choiceCharmStack(fonts, large ? CARD.large.width : place.width, marks.charms);
   const texts: DetailText[] = [];
   const label = entry.option?.label ?? data.runText.card.skip;
   const grey = !large && !entry.enabled;
@@ -101,18 +102,18 @@ export function choiceCardSurface(
         )
       : null;
   const bodyBox = largeBodyBox(metrics, warning?.lines.length ?? 0);
-  const bodyStyle = largeBodyStyle(metrics.body, bodyBox.height, place);
+  const bodyStyle = largeBodyStyle(metrics.body, bodyBox.height, place, charms.height);
   const body = large
     ? fittingText(bodyStyle, ink("body"), CARD.large.body.width, largeBodyText(data, entry.option))
     : null;
   const contentHeight =
-    (marks.forgiven === null ? bodyBox.top : 0) +
+    bodyBox.top +
     inkRowsOfLines(
       metrics.body,
       marks.forgiven === null ? (body?.lines.length ?? 0) : marks.forgiven.rows.length + 1,
     ) *
       bodyStyle.scale;
-  const rect = large ? largeCardRect(place, largeCardHeight(contentHeight)) : place;
+  const rect = large ? largeCardRect(place, largeCardHeight(contentHeight), charms.height) : place;
   const shift = rect.height - CARD.large.height;
   const add = (
     font: "body" | "title",
@@ -242,7 +243,7 @@ export function choiceCardSurface(
     };
   }
   return {
-    charms: choiceCharmPlates(fonts, rect, marks.charms),
+    charms: charms.place(rect),
     frame: {
       key: large ? "card-frame-large" : "card-frame",
       large,

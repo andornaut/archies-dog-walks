@@ -42,8 +42,10 @@ import {
 } from "../home/settings.ts";
 import { dogRows, gearRows, type ShopRow, slotRows } from "../home/shop.ts";
 import { SHOP_LAYOUT, SHOP_MESSAGE_FIT, shopRowTextRoom } from "../home/shopLayout.ts";
+import { optionMarks } from "../hud/buffMarks.ts";
 import { largeBodyText, smallCardText } from "../hud/cardText.ts";
 import { CELEBRATION_LAYOUT, GREETING_FIT, ZONE_EARNINGS_FIT } from "../hud/celebrationLayout.ts";
+import { choiceCharmStack } from "../hud/choiceCharms.ts";
 import {
   type FaceText,
   faceTextWithNamePills,
@@ -215,6 +217,7 @@ function changeLabelRoles(): TextRoleCase[] {
 // firing warning, and the enlarged card's warning and changes.
 function cardRoles(): TextRoleCase[] {
   const { large } = CARD_LAYOUT;
+  const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
   // A forgiven loss's rows in the smaller area, a firing card's.
   const area = cardEffectArea(BODY, true);
   const bodyWidth = (style: TextFitStyle, line: string) =>
@@ -246,7 +249,9 @@ function cardRoles(): TextRoleCase[] {
           : fitInFont("font-title", FIRES_FIT.large.style, FIRES_FIT.large.room, shownWarning).lines
               .length;
       const box = largeBodyBox({ body: BODY, title: TITLE }, warningLines);
-      const style = largeBodyStyle(BODY, box.height, SCREEN_LAYOUT.walkView);
+      const { charms } = optionMarks(gameData, { modified: [] }, option);
+      const { height } = choiceCharmStack(fonts, large.width, charms);
+      const style = largeBodyStyle(BODY, box.height, SCREEN_LAYOUT.walkView, height);
       const changes = { room: large.body.width, style };
       const enlarged = plainRole("enlarged card's changes", "font-body", changes, [
         largeBodyText(gameData, option),

@@ -40,14 +40,14 @@ function measuredLines(bitmap: BitmapFont, room: number, role: Role, text: strin
   });
 }
 
-export function choiceCharmPlates(
+export function choiceCharmStack(
   fonts: Readonly<Record<Role, BitmapFont>>,
-  card: Rect,
+  cardWidth: number,
   charms: readonly CardCharm[],
-): ChoiceCharmPlate[] {
+): { readonly height: number; readonly place: (card: Rect) => ChoiceCharmPlate[] } {
   const { padY, rowGap, textX } = CHARM.card;
   const cell = WALK_BAR_PARTS.effects.size;
-  const room = card.width - cardCharmWidth(0) - 2 * CHARM.ring;
+  const room = cardWidth - cardCharmWidth(0) - 2 * CHARM.ring;
   const contents = charms.map((charm) => {
     const rows = [
       ...measuredLines(fonts.body, room, "body", charm.name),
@@ -61,15 +61,21 @@ export function choiceCharmPlates(
       width: cardCharmWidth(Math.max(...rows.map((row) => row.width))),
     };
   });
-  return cardCharmPlates(card, contents).map((rect, index) => {
-    const { inkHeight, rows } = contents[index]!;
-    const x = rect.x + cell + textX;
-    let y = rect.y + Math.floor((rect.height - inkHeight) / 2);
-    const labels = rows.map(({ font, height, text, width }) => {
-      const face = { height, width, x, y };
-      y += height + rowGap;
-      return { face, font, text };
+  const local = cardCharmPlates({ height: 0, width: cardWidth, x: 0, y: 0 }, contents);
+  const last = local.at(-1);
+  const height = last === undefined ? 0 : last.y + last.height + CHARM.ring;
+  const place = (card: Rect) =>
+    local.map((plate, index) => {
+      const rect = { ...plate, x: plate.x + card.x, y: plate.y + card.y + card.height };
+      const { inkHeight, rows } = contents[index]!;
+      const x = rect.x + cell + textX;
+      let y = rect.y + Math.floor((rect.height - inkHeight) / 2);
+      const labels = rows.map(({ font, height, text, width }) => {
+        const face = { height, width, x, y };
+        y += height + rowGap;
+        return { face, font, text };
+      });
+      return { charm: charms[index]!, labels, rect };
     });
-    return { charm: charms[index]!, labels, rect };
-  });
+  return { height, place };
 }

@@ -136,21 +136,30 @@ export function largeCardHeight(contentHeight: number): number {
 
 // The enlarged card's changes in a body box height tall: body text at 2x on the lines the box
 // holds once the card grows as far as area holds it and its charms.
-export function largeBodyStyle(body: FontMetrics, height: number, area: Rect): TextFitStyle {
+export function largeBodyStyle(
+  body: FontMetrics,
+  height: number,
+  area: Rect,
+  charmHeight = CARD_CHARMS_HEIGHT,
+): TextFitStyle {
   const { large } = CARD_LAYOUT;
-  const growth = area.height - (large.height + CARD_CHARMS_HEIGHT);
+  const growth = area.height - (large.height + charmHeight);
   return boxStyle(body, height + growth);
 }
 
-// The enlarged card's rect, height tall, centred in area on whole pixels with its charms'
-// rows under it, reserved whether or not the option has a charm.
-export function largeCardRect(area: Rect, height: number = CARD_LAYOUT.large.height): Rect {
+// The enlarged card centred together with its charms. Use the structural reserve for layout
+// exports and pass the measured stack height for a rendered choice.
+export function largeCardRect(
+  area: Rect,
+  height: number = CARD_LAYOUT.large.height,
+  charmHeight = CARD_CHARMS_HEIGHT,
+): Rect {
   const { width } = CARD_LAYOUT.large;
   return {
     height,
     width,
     x: area.x + Math.floor((area.width - width) / 2),
-    y: area.y + Math.floor((area.height - (height + CARD_CHARMS_HEIGHT)) / 2),
+    y: area.y + Math.floor((area.height - (height + charmHeight)) / 2),
   };
 }
 
