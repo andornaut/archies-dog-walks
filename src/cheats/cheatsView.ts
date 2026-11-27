@@ -16,7 +16,8 @@ import {
 } from "../data/index.ts";
 import {
   MENU_TEXT_FIELDS,
-  SWITCH_STATE_GAP,
+  SETTINGS_SWITCH_GAP,
+  switchRowContent,
   switchRowHeight,
   switchStateCentre,
 } from "../home/index.ts";
@@ -380,9 +381,6 @@ function layoutCheats(
   };
 }
 
-// art: the Settings switch, right-aligned in its row.
-const SWITCH = ROW.switch;
-
 interface CheatButtonView extends PanelButton {
   readonly action: CheatAction;
   readonly lines: readonly PanelText[];
@@ -397,7 +395,7 @@ export interface CheatRowView {
   // What a screen reader reads it by.
   readonly label: string;
   readonly rect: Rect;
-  // Whether the switch is on; its kit form row list places it (SWITCH_ROWS).
+  // Whether the switch is on; the same compact form row list as Settings places it.
   readonly switch?: { readonly on: boolean };
   readonly texts: readonly PanelText[];
   readonly value: string;
@@ -467,14 +465,10 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
       };
     }
     case "switch": {
-      // Settings' switch-row layout and height: the label 6 in and its capitals ROW.label.dy
-      // down, the switch at the upper right, switchInset in, and the state word under it, its ink centred
-      // on the switch (switchStateCentre).
       const hit = { ...rect, height: switchRowHeight(measure.title) };
+      const { control, labelY } = switchRowContent(measure, { noteLines: 0 }, hit);
       const look = row.enabled ? selectLook("normal") : { ...selectLook("normal"), ...GREYED };
       const colour = PALETTE[look.text];
-      const switchX = rect.x + rect.width - ROW.switchInset - SWITCH.width;
-      const switchY = hit.y + ROW.icon.dy;
       const line = { colour, font: "title", line: 0, scale: TEXT_SCALE } as const;
       return {
         ...plain,
@@ -486,16 +480,16 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
         texts: [
           {
             ...line,
-            capTop: hit.y + ROW.label.dy,
+            capTop: labelY,
             centre: "left",
             centreX: hit.x + ROW.icon.dx,
             text: row.label,
           },
           {
             ...line,
-            capTop: switchY + SWITCH.height + SWITCH_STATE_GAP,
+            capTop: control.y + control.height + SETTINGS_SWITCH_GAP,
             centre: "ink",
-            centreX: switchStateCentre({ width: SWITCH.width, x: switchX }),
+            centreX: switchStateCentre(control),
             text: row.value,
           },
         ],

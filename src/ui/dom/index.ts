@@ -17,7 +17,13 @@ export {
 export { createControlGlyph } from "./controlGlyph.ts";
 export { cutDomArt } from "./domCuts.ts";
 export { type LoadingBar, mountDomLoadingBar } from "./domLoadingBar.ts";
-export { cutFrameProperties, placeFormRows, rowIcon, switchFrames } from "./formRows.ts";
+export {
+  cutFrameProperties,
+  placeFormRows,
+  placeSwitchState,
+  rowIcon,
+  switchFrames,
+} from "./formRows.ts";
 export { mountFpsCounter } from "./fpsCounter.ts";
 export { createGameButton, createGameFormRow } from "./gameButton.ts";
 export { mountLaunchFailure } from "./launchFailure.ts";

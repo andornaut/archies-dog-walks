@@ -3,11 +3,13 @@ import { expect, it, vi } from "vitest";
 import { NEXT_WALK_OFF, startZones } from "../../cheats/cheats.ts";
 import { cheatsView } from "../../cheats/cheatsView.ts";
 import { gameData } from "../../data/index.ts";
+import { SETTINGS_ROW, SETTINGS_SWITCH_GAP } from "../../home/settings.ts";
 import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../testing/fakeDom.ts";
-import { fontFileMetrics, gameFont, inkWidth } from "../../testing/fontInk.ts";
+import { fontFileMetrics, fontInk, gameFont, inkWidth } from "../../testing/fontInk.ts";
 import { ownArtFrames } from "../../testing/ownArtFrames.ts";
+import { capRows, shownText, WEB_FONT_EM } from "../../ui/dom/pixelLine.ts";
 import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
-import { domScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
+import { artPixel, domScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { showCheats } from "./cheats.ts";
@@ -21,6 +23,7 @@ async function cheatsScreen(
   inWalk = false,
   canResetSave = false,
   scale = domScale(1, { height: 560, width: 360, x: 0, y: 0 }),
+  invincible = false,
 ) {
   const doc = new FakeDocument();
   const { element, layer } = fakeLayer(doc, scale);
@@ -40,8 +43,8 @@ async function cheatsScreen(
     { data: gameData, words: gameData.menuText },
     {
       canResetSave,
-      next: NEXT_WALK_OFF,
-      walk: inWalk ? { invincible: false, zone: startZones(gameData)[0]! } : undefined,
+      next: { ...NEXT_WALK_OFF, invincible },
+      walk: inWalk ? { invincible, zone: startZones(gameData)[0]! } : undefined,
     },
   );
   const act = vi.fn();
@@ -89,6 +92,7 @@ it("keeps Cheats actions guarded and disposable and renders only the approved co
     .find((button) => button.available !== false)!;
   const button = element.all().find((node) => node.getAttribute("aria-label") === action.label)!;
   expect(button.classList.contains("adw-standard-button")).toBe(true);
+  expect(button.classList.contains("adw-selectable-button")).toBe(true);
   expect(button.getAttribute("data-ui-selected")).toBe("");
   shown.setInert(true);
   button.fire("click");
@@ -185,8 +189,6 @@ it.each([
   const scale = domScale(dpr, { height: h, width: w, x: 0, y: 0 });
   const { element, shown, view } = await cheatsScreen(false, true, scale);
   const { viewport } = view.layout;
-  const stacks = view.rows.some((row) => row.buttons.some((button) => button.rect.y > row.rect.y));
-  expect(stacks).toBe(true);
   const px = (value: string | undefined) => Number.parseFloat(value ?? "");
   for (const button of view.rows.flatMap((row) => row.buttons)) {
     const control = element.all().find((node) => node.getAttribute("aria-label") === button.label)!;
@@ -208,3 +210,48 @@ it.each([
   }
   shown.destroy();
 });
+
+it.each([
+  [360, 1, false],
+  [360, 1, true],
+  [575, 1, false],
+  [575, 1, true],
+  [390, 2.625, false],
+  [390, 2.625, true],
+  [393, 3, false],
+  [393, 3, true],
+] as const)(
+  "anchors Cheats' %s/DPR%s switch state %s on Settings' painted grid",
+  async (width, dpr, on) => {
+    const scale = domScale(dpr, { height: (width * 560) / 360, width, x: 0, y: 0 });
+    const { element, shown, view } = await cheatsScreen(false, true, scale, on);
+    const row = element.all().find((node) => node.getAttribute("role") === "switch")!;
+    const current = view.rows.find(({ kind }) => kind === "switch")!;
+    const word = shownText("title", current.value);
+    const span = row
+      .all()
+      .find((node) => node.classList.contains("adw-text") && node.textContent === word)!;
+    const toggle = row.all().find((node) => node.classList.contains("ui-switch"))!;
+    const pixel = (name: string) => Number.parseFloat(row.style.getPropertyValue(name));
+    const right =
+      gridX(scale, current.rect.x + current.rect.width - SETTINGS_ROW.pad) -
+      gridX(scale, current.rect.x);
+    const switchRight =
+      right - pixel("--ui-form-switch-end") + Number.parseFloat(toggle.style.left!);
+    const switchCentre = switchRight - pixel("--ui-switch-width") / 2;
+    const switchBottom = pixel("--ui-form-value-offset") + pixel("--ui-switch-height");
+    const fontPixel = Number.parseFloat(span.style.fontSize!) / WEB_FONT_EM;
+    const ink = fontInk("font-title", { scale: 1 }, word);
+    const inkCentre =
+      Number.parseFloat(span.style.left!) + ((ink.left + ink.right) * fontPixel) / 2;
+    const inkRight = Number.parseFloat(span.style.left!) + ink.right * fontPixel;
+    const capTop =
+      Number.parseFloat(span.style.top!) + capRows(gameFont("font-title"), "title") * fontPixel;
+    expect(Math.abs(inkCentre - switchCentre)).toBeLessThanOrEqual(0.5);
+    expect(Math.max(inkRight, switchRight)).toBe(right);
+    expect(capTop - switchBottom).toBe(SETTINGS_SWITCH_GAP * artPixel(scale));
+    expect(row.getAttribute("aria-checked")).toBe(String(on));
+    expect(row.hasAttribute("data-ui-form-press-dip")).toBe(false);
+    shown.destroy();
+  },
+);

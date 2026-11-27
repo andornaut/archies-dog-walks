@@ -203,7 +203,7 @@ export interface SettingsRowView {
   readonly key: SettingsRow["key"];
   readonly kind: SettingsRow["kind"];
   readonly label: string;
-  // Whether it is held pressed, which dips a switch row's art (its kit form row's pressDip).
+  // Whether the scene holds the row's selecting state for the current contact.
   readonly pressed: boolean;
   // The label and the note, or the label and the volume.
   readonly texts: readonly SettingsText[];
@@ -264,7 +264,7 @@ export interface SettingsState {
   readonly steps: (InstallStepsLayout & { readonly kind: InstallStepsKind }) | undefined;
 }
 
-// A noted row: a normal row that dips while pressed, with its icon, label and note, and its
+// A noted row: its selecting state, icon, label and note, and its
 // switch or button. A switch row shows its setting in its icon and switch. The note wraps in its
 // room.
 function controlRow(

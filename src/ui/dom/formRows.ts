@@ -1,14 +1,55 @@
 import "@andornaut/game-kit/runtime/web/ui/dom/formRow.css";
 
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type {
   FormRowsView,
   PlacedFormRowEntry,
 } from "@andornaut/game-kit/runtime/web/ui/dom/formRow";
 
-import { artPixel, type DomScale, gridX, gridY } from "../index.ts";
+import {
+  artPixel,
+  type DomScale,
+  exactDeviceX,
+  exactDeviceY,
+  fontPixel,
+  gridX,
+  gridY,
+  lineInk,
+  wholeArtPixels,
+} from "../index.ts";
 import type { DomArtSource } from "./artElements.ts";
 import { cutDomFrame } from "./domCuts.ts";
+import { type DomTextLine, shownText } from "./pixelLine.ts";
+
+// Keep the switch over its state ink, with their union ending at the row's right inset.
+// Both pages use the painted switch's whole-art-pixel geometry at fractional viewport fits.
+export function placeSwitchState(
+  context: {
+    readonly face: Rect;
+    readonly font: BitmapFont;
+    readonly gap: number;
+    readonly right: number;
+    readonly scale: DomScale;
+  },
+  text: Pick<DomTextLine, "capTop" | "centreX" | "font" | "scale" | "text">,
+  toggle: HTMLElement,
+): { readonly capTop: number; readonly centreX: number; readonly shift: number } {
+  const { face, font, gap, right, scale } = context;
+  const deviceUnit = scale.unit * scale.dpr;
+  const ink = lineInk(font, shownText(text.font, text.text), fontPixel(scale, text.scale));
+  const inkWidth = ink.right - ink.left;
+  const centre = gridX(scale, right) - Math.max(face.width, inkWidth) / 2;
+  const inkLeft = centre - inkWidth / 2;
+  toggle.style.position = "relative";
+  toggle.style.left = `${Math.round(centre - face.width / 2) - face.x}px`;
+  const cap = face.y + face.height + gap * artPixel(scale);
+  return {
+    capTop: text.capTop + (cap - exactDeviceY(scale, text.capTop)) / deviceUnit,
+    centreX: text.centreX + (centre - exactDeviceX(scale, text.centreX)) / deviceUnit,
+    shift: Math.round(inkLeft) - wholeArtPixels(scale, inkLeft),
+  };
+}
 
 // Game Kit form rows on the game's art-pixel grid: a list placed through the grid's projection,
 // its art at whole art pixels, and the per-state frames its stylesheets draw, each cut from its

@@ -141,3 +141,17 @@ it("returns manual install instructions to the live Install row without leaving 
   expect(f.doc.activeElement).toBe(install);
   f.shown.destroy();
 });
+
+it("flips a confirmed switch immediately without scheduling presentation delay", async () => {
+  const { SettingsScene } = await import("./SettingsScene.ts");
+  const flip = vi.fn();
+  const delayedCall = vi.fn();
+  const scene = Object.create(SettingsScene.prototype) as {
+    confirm(row: SettingsRow): void;
+  };
+  Object.assign(scene, { flip, render: vi.fn(), time: { delayedCall } });
+  const row = settingsRows(false).find((row) => row.kind === "switch")!;
+  scene.confirm(row);
+  expect(flip).toHaveBeenCalledExactlyOnceWith(row.key);
+  expect(delayedCall).not.toHaveBeenCalled();
+});

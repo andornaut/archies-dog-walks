@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { gameData } from "../data/index.ts";
 import { SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
-import { SWITCH_STATE_GAP, switchRowHeight } from "../home/settings.ts";
+import { SETTINGS_SWITCH_GAP, settingsLayout, switchRowHeight } from "../home/settings.ts";
 import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { MODAL, modalActionWidth } from "../ui/modal/layout.ts";
@@ -165,20 +165,20 @@ describe("Cheats layout", () => {
     expect(invincible?.action?.kind).toBe("invincible");
     const { rect } = invincible!;
     expect(rect.height).toBe(switchRowHeight(MEASURE.title));
-    // The switch as Art's layout places it: switchInset in from the row's right.
-    const { icon, label, switch: art, switchInset } = SETTINGS_CARD.row;
-    const sw = { x: rect.x + rect.width - switchInset - art.width, y: rect.y + icon.dy };
+    const settings = settingsLayout(MEASURE, [{ kind: "switch", noteLines: 0 }]).rows[0]!;
+    const sw = settings.control!;
+    const dy = rect.y - settings.rect.y;
     expect(invincible!.switch).toEqual({ on: false });
     expect(invincible!.texts[0]).toMatchObject({
-      capTop: rect.y + label.dy,
+      capTop: settings.labelY + dy,
       centre: "left",
-      centreX: rect.x + icon.dx,
+      centreX: rect.x + SETTINGS_CARD.row.icon.dx,
     });
     // The state word's ink is centred on the switch.
     expect(invincible!.texts[1]).toMatchObject({
-      capTop: sw.y + art.height + SWITCH_STATE_GAP,
+      capTop: sw.y + dy + sw.height + SETTINGS_SWITCH_GAP,
       centre: "ink",
-      centreX: sw.x + art.width / 2,
+      centreX: sw.x + sw.width / 2,
       text: words.settings.off,
     });
     const on = view({ ...HOME, next: { ...HOME.next, invincible: true } }).rows.find(
@@ -254,6 +254,23 @@ describe("Cheats layout", () => {
         );
       }
     }
+  });
+
+  it("keeps High Park and Cabbagetown together whenever their shared full-size column room fits", () => {
+    const zones = buttons(HOME).filter(({ action }) => action.kind === "startAt");
+    const pair = ["highPark", "cabbagetown"].map((id) =>
+      zones.find(({ action }) => action.kind === "startAt" && action.zone === id)!,
+    );
+    const room = 157 - 2 * MODAL.rowGap;
+    const fits = pair.every(({ label }) =>
+      label
+        .split(/\s+/u)
+        .every((word) => actionLabelWidth(MEASURE.inkWidth("title", word)) <= room),
+    );
+    expect(pair[0]!.rect.y === pair[1]!.rect.y).toBe(fits);
+    expect(pair.map(({ lines }) => lines.map(({ text }) => text).join(" "))).toEqual(
+      pair.map(({ label }) => label),
+    );
   });
 
   it.each([

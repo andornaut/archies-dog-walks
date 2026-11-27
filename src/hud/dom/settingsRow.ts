@@ -4,7 +4,6 @@ import { createSlider } from "@andornaut/game-kit/runtime/web/ui/dom/slider";
 
 import { gameData, LABEL_ICON } from "../../data/index.ts";
 import {
-  FEEDBACK,
   SETTINGS_ROW,
   SETTINGS_SLIDER,
   SETTINGS_SWITCH_GAP,
@@ -19,25 +18,13 @@ import {
   createGameFormRow,
   type DomQuestionPanel,
   guardNativeInput,
+  placeSwitchState,
   refuse,
   rowIcon,
-  shownText,
   textBlock,
   type UiLayer,
 } from "../../ui/dom/index.ts";
-import {
-  artPixel,
-  cssHex,
-  deviceY,
-  type DomScale,
-  exactDeviceX,
-  exactDeviceY,
-  fontPixel,
-  gridX,
-  gridY,
-  lineInk,
-  wholeArtPixels,
-} from "../../ui/index.ts";
+import { artPixel, cssHex, deviceY, type DomScale, gridX, gridY } from "../../ui/index.ts";
 import { hideKitText, installPart } from "./settingsInstall.ts";
 import type { DomSettingsInput, RowPart } from "./settingsTypes.ts";
 
@@ -89,23 +76,22 @@ function rowArt(doc: Document, input: DomSettingsInput, first: SettingsRowView) 
         let anchored = text;
         let shift = 0;
         if (text.anchor === "inkCentre" && face !== undefined && toggle !== undefined) {
-          // The switch is painted at a whole art-pixel size; its far edge does not follow the
-          // fractional layout projection. Feed its actual anchor back to the ink placer.
-          const deviceUnit = scale.unit * scale.dpr;
-          const word = shownText(text.font, text.lines[0] ?? "");
-          const ink = lineInk(input.fonts[text.font], word, fontPixel(scale, text.scale));
-          const inkWidth = ink.right - ink.left;
-          const right = gridX(scale, row.rect.x + row.rect.width - SETTINGS_ROW.pad);
-          const centre = right - Math.max(face.width, inkWidth) / 2;
-          const inkLeft = centre - inkWidth / 2;
-          shift = Math.round(inkLeft) - wholeArtPixels(scale, inkLeft);
-          toggle.style.position = "relative";
-          toggle.style.left = `${Math.round(centre - face.width / 2) - face.x}px`;
-          const cap = face.y + face.height + SETTINGS_SWITCH_GAP * artPixel(scale);
+          const placed = placeSwitchState(
+            {
+              face,
+              font: input.fonts[text.font],
+              gap: SETTINGS_SWITCH_GAP,
+              right: row.rect.x + row.rect.width - SETTINGS_ROW.pad,
+              scale,
+            },
+            { ...text, centreX: text.x, text: text.lines[0] ?? "" },
+            toggle,
+          );
+          shift = placed.shift;
           anchored = {
             ...text,
-            capTop: text.capTop + (cap - exactDeviceY(scale, text.capTop)) / deviceUnit,
-            x: text.x + (centre - exactDeviceX(scale, text.x)) / deviceUnit,
+            capTop: placed.capTop,
+            x: placed.centreX,
           };
         }
         texts[i]?.update(anchored);
@@ -118,8 +104,7 @@ function rowArt(doc: Document, input: DomSettingsInput, first: SettingsRowView) 
 
 // A switch row: the kit form row (one button, role switch, its label its name and its note its
 // description) over the row's face and text, its icon and the ui-switch frames on the kit's icon
-// slot and switch. A press holds the row pressed through the scene, which dips its art
-// (pressDip), and the kit's activation flips it.
+// slot and switch. A press holds the row's selecting state through the scene; activation flips it.
 function switchPart(
   layer: UiLayer,
   input: DomSettingsInput,
@@ -142,7 +127,6 @@ function switchPart(
     ...(art.icon === undefined ? {} : { icon: art.icon.element }),
     label: first.label,
     ...(first.description === "" ? {} : { note: first.description }),
-    pressDip: FEEDBACK.pressDipPx,
     switch: true,
   });
   const { element } = control;

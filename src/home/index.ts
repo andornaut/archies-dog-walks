@@ -133,7 +133,7 @@ export {
   type SettingsRowShape,
   setVolumeSteps,
   SWITCH_ROWS,
-  SWITCH_STATE_GAP,
+  switchRowContent,
   switchRowHeight,
   switchStateCentre,
   VOLUME_STEPS,

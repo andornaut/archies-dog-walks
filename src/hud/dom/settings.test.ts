@@ -326,6 +326,7 @@ it.each([
   switches.forEach((row, i) => {
     // These are the dimensions, end margin and stack top consumed by the projected switch CSS.
     const { rect, switch: toggle } = views[i]!;
+    expect(row.hasAttribute("data-ui-form-press-dip")).toBe(false);
     const word = shownText("title", toggle!.word);
     const block = row.children.find(
       (part) => part.classList.contains("adw-lines") && part.children[0]?.textContent === word,

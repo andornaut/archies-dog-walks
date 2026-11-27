@@ -166,8 +166,7 @@ export function settingsNoteFit(stateInkWidth: number) {
   };
 }
 
-// Cheats keeps the shared standard gap. Settings follows the compact form stack.
-export const SWITCH_STATE_GAP = BUTTON_SIZE.stackGap;
+// Both form pages use the same compact switch and state stack.
 export const SETTINGS_SWITCH_GAP = 4;
 const SETTINGS_SWITCH_PAD = 4;
 
@@ -187,7 +186,7 @@ export function switchStateCentre(control: Pick<Rect, "width" | "x">): number {
 // Switch rows as Game Kit form rows across the rows' column, on the page's art-pixel grid, as tall
 // as the list's height: the label's column ICON_LABEL_GAP after an icon's, the switch switchInset
 // in from the row's right, centred in a value column that reaches the row's pad, and icon.dy
-// down, its state word SWITCH_STATE_GAP under it and centred on it (switchState), and the rows a
+// down, its state word SETTINGS_SWITCH_GAP under it and centred on it (switchState), and the rows a
 // separator and its clearance apart (SEPARATOR_BAND). The list's pad leaves a slider's track to
 // the row's pad. Cheats' rows, which carry no icon, take it as it is; the game draws every label
 // and state word itself.
@@ -198,7 +197,7 @@ export const SWITCH_ROWS: Omit<FormRowLayout, "height"> = {
   padding: { bottom: 0, left: SETTINGS_ROW.icon.dx, right: SETTINGS_ROW.pad, top: 0 },
   switch: SETTINGS_ROW.switch,
   value: {
-    gap: SWITCH_STATE_GAP,
+    gap: SETTINGS_SWITCH_GAP,
     offset: SETTINGS_ROW.icon.dy,
     state: "center",
     track: SETTINGS_ROW.switch.width + 2 * (SETTINGS_ROW.switchInset - SETTINGS_ROW.pad),
@@ -288,13 +287,30 @@ function rowControl(title: FontMetrics, row: Rect, shape: SettingsRowShape): Rec
   };
 }
 
+// The same label/help stack and toggle origin on Settings and Cheats. Rows without help
+// retain their existing press height and centre their label beside the compact value stack.
+export function switchRowContent(
+  fonts: SettingsFonts,
+  shape: { readonly controlWidth?: number; readonly noteLines: number },
+  row: Rect,
+) {
+  const { noteLines } = shape;
+  const stack = labelStack(fonts, noteLines);
+  const labelY = row.y + Math.floor((row.height - stack.height) / 2) + stack.iconRise;
+  return {
+    control: rowControl(fonts.title, row, { ...shape, kind: "switch" })!,
+    labelY,
+    noteY: noteLines === 0 ? null : labelY + stack.labelToNote,
+  };
+}
+
 // A switch row with no note: its press height, from the switch to the state word under it.
 export function switchRowHeight(title: FontMetrics): number {
   return Math.max(
     MIN_PRESS,
     SETTINGS_ROW.icon.dy +
       SETTINGS_ROW.switch.height +
-      SWITCH_STATE_GAP +
+      SETTINGS_SWITCH_GAP +
       title.capHeight * TEXT_SCALE,
   );
 }
@@ -322,17 +338,13 @@ export function settingsLayout(
       separators.push({ height: SEPARATOR.height, width: rect.width, x: rect.x, y: bottom });
     }
     rowY = bottom + SEPARATOR.height;
-    const notes = shape.kind === "switch" ? shape.noteLines : 0;
-    const stack = labelStack(fonts, notes);
-    const labelY =
-      rect.y +
-      (shape.kind === "switch"
-        ? Math.floor((rect.height - stack.height) / 2) + stack.iconRise
-        : SETTINGS_ROW.label.dy);
+    if (shape.kind === "switch") {
+      return { ...switchRowContent(fonts, shape, rect), rect };
+    }
     return {
       control: rowControl(fonts.title, rect, shape),
-      labelY,
-      noteY: notes === 0 ? null : labelY + stack.labelToNote,
+      labelY: rect.y + SETTINGS_ROW.label.dy,
+      noteY: null,
       rect,
     };
   });

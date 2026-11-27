@@ -215,11 +215,9 @@ export class SettingsScene extends Scene {
     const stopWatching = onInstallStateChange(() => this.scene.restart(data));
     this.events.once(Scenes.Events.SHUTDOWN, stopWatching);
 
-    // The switch rows, which dip before they act, the install row, which dips as it opens the
-    // browser's prompt or the steps' card, and the steps' card's close control.
+    // Switches act on the admitted release. Install retains its existing prompt timing.
     listenTargetPress<Target>(this, {
-      dipMs: (target) =>
-        target.kind === "switch" || target.kind === "install" ? FEEDBACK.pressDipMs : 0,
+      dipMs: (target) => (target.kind === "install" ? FEEDBACK.pressDipMs : 0),
       onPressed: (target) => {
         this.pressed = target;
         this.render();
@@ -297,7 +295,7 @@ export class SettingsScene extends Scene {
     } else if (isConfirmKey(code)) {
       this.confirm(focusedRow);
     } else if (isMuteKey(code)) {
-      this.flipAfterDip("muted");
+      this.flip("muted");
     }
   }
 
@@ -305,7 +303,7 @@ export class SettingsScene extends Scene {
   // focused.
   private confirm(focusedRow: Row | undefined): void {
     if (focusedRow?.kind === "switch") {
-      this.flipAfterDip(focusedRow.key);
+      this.flip(focusedRow.key);
     } else if (focusedRow?.kind === "button") {
       // Install opens at once, its dip playing on.
       this.pressed = { kind: "install" };
@@ -409,13 +407,6 @@ export class SettingsScene extends Scene {
       return { key: row.key, kind: "switch" };
     }
     return row?.kind === "button" ? { kind: "install" } : undefined;
-  }
-
-  // A key presses the switch row: it dips, then flips.
-  private flipAfterDip(key: SwitchKey): void {
-    this.pressed = { key, kind: "switch" };
-    this.render();
-    this.time.delayedCall(FEEDBACK.pressDipMs, () => this.flip(key));
   }
 
   private flip(key: SwitchKey): void {

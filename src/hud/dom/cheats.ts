@@ -1,12 +1,14 @@
 import "@andornaut/game-kit/runtime/web/ui/dom/actionGroup.css";
 
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
+import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import type { PlacedFormRow } from "@andornaut/game-kit/runtime/ui/formRow";
 import { createActionGroup } from "@andornaut/game-kit/runtime/web/ui/dom/actionGroup";
 import { createFormRows } from "@andornaut/game-kit/runtime/web/ui/dom/formRow";
 
 import type { CheatAction, CheatRowView, CheatsView } from "../../cheats/index.ts";
 import { type DomPage, showPage } from "../../home/dom/index.ts";
-import { SWITCH_ROWS } from "../../home/index.ts";
+import { SETTINGS_ROW, SETTINGS_SWITCH_GAP, settingsFormRows } from "../../home/index.ts";
 import {
   bindPanelFeedback,
   createContentSeparator,
@@ -21,6 +23,7 @@ import {
   placeContentSeparator,
   placeFormRows,
   placeFrame,
+  placeSwitchState,
   placeText,
   refuse,
   switchFrames,
@@ -60,7 +63,7 @@ interface RowPart {
   readonly dispose?: () => void;
   readonly controls: readonly HTMLElement[];
   readonly element: HTMLElement;
-  readonly place: (scale: DomScale, row: CheatRowView) => void;
+  readonly place: (scale: DomScale, row: CheatRowView, placed?: PlacedFormRow) => void;
   readonly ready: Promise<readonly string[]>;
 }
 
@@ -71,11 +74,29 @@ function textLines(
   origin: Point,
   scale: DomScale,
   row: CheatRowView,
+  toggle?: { readonly element: HTMLElement; readonly face: Rect },
 ): void {
-  const lines = row.texts.map((line) => {
+  const lines = row.texts.map((line, index) => {
     const element = createTextLine(doc, line);
     element.setAttribute("aria-hidden", "true");
-    placeText(input.fonts[line.font], scale, origin, element, line);
+    const anchored =
+      toggle !== undefined && index === row.texts.length - 1
+        ? placeSwitchState(
+            {
+              face: toggle.face,
+              font: input.fonts[line.font],
+              gap: SETTINGS_SWITCH_GAP,
+              right: row.rect.x + row.rect.width - SETTINGS_ROW.pad,
+              scale,
+            },
+            line,
+            toggle.element,
+          )
+        : undefined;
+    placeText(input.fonts[line.font], scale, origin, element, { ...line, ...anchored });
+    if (anchored !== undefined) {
+      element.style.left = `${parseFloat(element.style.left) + anchored.shift}px`;
+    }
     return element;
   });
   holder.replaceChildren(...lines);
@@ -124,7 +145,14 @@ function buttonsPart(
     const label = doc.createElement("span");
     label.className = "adw-lines";
     const view = createGameButton(doc, {
-      appearance: { className: "adw-button", face: { className: "adw-face" }, role: "secondary" },
+      appearance: {
+        className:
+          first.buttons[i]!.selected === undefined
+            ? "adw-button"
+            : "adw-button adw-selectable-button",
+        face: { className: "adw-face" },
+        role: "secondary",
+      },
       content: { icon: label, kind: "icon", name: first.buttons[i]!.label },
       getAction: () => {
         const currentButton = current().buttons[i];
@@ -257,8 +285,19 @@ function settingRowPart(
       view.dispose();
     },
     element,
-    place: (scale, row) => {
-      textLines(doc, input, texts, row.rect, scale, row);
+    place: (scale, row, placed) => {
+      const toggle = view.switch;
+      textLines(
+        doc,
+        input,
+        texts,
+        row.rect,
+        scale,
+        row,
+        toggle !== undefined && placed?.switch !== undefined
+          ? { element: toggle, face: placed.switch }
+          : undefined,
+      );
       view.setLabel(row.label);
       view.refresh();
     },
@@ -289,7 +328,7 @@ function switchLists(
   return runs.map((indexes) => {
     const view = createFormRows(
       doc,
-      { ...SWITCH_ROWS, height: rows[indexes[0]!]!.rect.height },
+      settingsFormRows(fontMetrics(input.fonts.title), rows[indexes[0]!]!.rect.height),
       { className: "adw-framed adw-form-rows" },
     );
     view.element.append(...indexes.map((i) => parts[i]!.element));
@@ -348,16 +387,18 @@ export function showCheats(layer: UiLayer, input: DomCheatsInput): DomCheats {
     content.style.height = `${
       gridY(scale, viewport.y + current.layout.contentHeight) - gridY(scale, viewport.y)
     }px`;
+    const placedRows = new Map<number, PlacedFormRow>();
     for (const { indexes, view } of lists) {
-      placeFormRows(scale, origin, view, {
+      const { placed } = placeFormRows(scale, origin, view, {
         rect: current.rows[indexes[0]!]!.rect,
         rows: indexes.map((i, n) => ({ element: rows[i]!.element, ...(n > 0 ? { gap: 0 } : {}) })),
       });
+      placed.rows.forEach((row, index) => placedRows.set(indexes[index]!, row));
     }
     rows.forEach((row, i) => {
       const view = current.rows[i];
       if (view !== undefined) {
-        row.place(scale, view);
+        row.place(scale, view, placedRows.get(i));
       }
     });
   };
