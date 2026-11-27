@@ -13,16 +13,12 @@ import { DIFFICULTY_KEY } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
 import { charmEffects } from "../hud/buffMarks.ts";
 import { largeBodyText, smallCardText } from "../hud/cardText.ts";
-import {
-  CARD_CHARMS_HEIGHT,
-  cardCharmPlates,
-  cardCharmWidth,
-  CHARM,
-} from "../layout/buffLayout.ts";
+import { choiceCharmPlates } from "../hud/choiceCharms.ts";
+import { CARD_CHARMS_HEIGHT, cardCharmPlates, CHARM } from "../layout/buffLayout.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { MAX_CARD_OPTIONS } from "../rules/choices.ts";
 import { everyCardOption } from "../testing/everyCardOption.ts";
-import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
 import { CARD_HEADER } from "../ui/cardRow.ts";
 import { pillIndex, pillRows } from "../ui/namePills.ts";
@@ -74,12 +70,11 @@ describe("the card's illustration", () => {
   });
 });
 
-// A card's band runs across the card inside its 2px frame. Its body-font label, which every
-// label fits, keeps at least 1px clear either side.
+// A card's band runs across the card inside its 2px frame.
 describe("the card's band label", () => {
-  it("keeps at least 1px clear of either end of the band", () => {
+  it("keeps the title inside the frame rim", () => {
     const { band, width } = CARD_LAYOUT;
-    expect((width - 2 * 2 - band.room) / 2).toBeGreaterThanOrEqual(1);
+    expect((width - band.room) / 2).toBeGreaterThanOrEqual(2);
   });
 });
 
@@ -94,11 +89,12 @@ const SMALL_CARDS = ROWS.flatMap((row) => row.map((card) => ({ card, row })));
 const HEAD_HOME = forkHomeRect(itemAt(itemAt(ROWS, 0), 0), WALK.x + WALK.width / 2);
 
 describe("the card row's block", () => {
-  it("sits at the walk view's 2/3 line: the rows over it and under it 1:2", () => {
+  it("keeps its 1:2 placement as far as the full fork footer allows", () => {
     const top = cardRowTop(WALK) - CARD_HEADER.titleRise;
     const above = top - WALK.y;
     const below = bottom(WALK) - (top + CARD_ROW_BLOCK_HEIGHT);
-    expect(above).toBe(Math.round((above + below) / 3));
+    const footer = CARD_LAYOUT.forkHome.gap + CARD_LAYOUT.forkHome.height;
+    expect(above).toBe(Math.min(Math.round((above + below) / 3), above + below - footer));
   });
 
   it.each(ROWS.map((row, i) => ({ count: i + 1, row })))(
@@ -137,21 +133,45 @@ const ITEMS: EffectItem[] = [
   ...keysOf(gameData.walkerPerks).map((perk): EffectItem => ({ kind: "perk", perk })),
   ...keysOf(gameData.upgrades).map((upgrade): EffectItem => ({ kind: "upgrade", upgrade })),
 ];
-const ONE_X = { scale: 1 };
-const CHARM_WIDTHS = ITEMS.flatMap((item) =>
-  charmEffects(gameData, item).map((effect) => {
-    const name = inkWidth("font-body", ONE_X, effectName(gameData, item));
-    const line = plainMarks(gameData.runText.card.charmEffect[effect]).toUpperCase();
-    return cardCharmWidth(Math.max(name, inkWidth("font-title", ONE_X, line)));
-  }),
+const CHARM_CASES = ITEMS.flatMap((item) =>
+  charmEffects(gameData, item).map((effect) => ({
+    effect: gameData.runText.card.charmEffect[effect],
+    item,
+    name: effectName(gameData, item),
+  })),
 );
-const WIDEST = Math.max(...CHARM_WIDTHS);
 
 describe("a card's charms", () => {
-  it("cover every charm effect", () => {
+  it("fits the full name and every charm effect at their regular size", () => {
     expect(new Set(ITEMS.flatMap((item) => charmEffects(gameData, item)))).toEqual(
       new Set(keysOf(gameData.runText.card.charmEffect)),
     );
+    const card = ROWS.at(-1)![0]!;
+    const fonts = { body: gameFont("font-body"), title: gameFont("font-title") };
+    for (const charm of CHARM_CASES) {
+      const [plate] = choiceCharmPlates(fonts, card, [charm]);
+      const { labels, rect } = plate!;
+      expect(rect.width + 2 * CHARM.ring, charm.name).toBeLessThanOrEqual(card.width);
+      expect(rect.height, charm.name).toBeLessThanOrEqual(CHARM.card.maxHeight);
+      expect(
+        labels
+          .filter(({ font }) => font === "body")
+          .map(({ text }) => text)
+          .join(" "),
+      ).toBe(charm.name);
+      expect(
+        labels
+          .filter(({ font }) => font === "title")
+          .map(({ text }) => text)
+          .join(" "),
+      ).toBe(charm.effect.toUpperCase());
+      for (const [index, label] of labels.entries()) {
+        expect(inside(label.face, rect)).toBe(true);
+        if (index > 0) {
+          expect(label.face.y - bottom(labels[index - 1]!.face)).toBe(CHARM.card.rowGap);
+        }
+      }
+    }
   });
 
   const cases = Array.from({ length: CHARM.card.most }, (_, i) => i + 1).flatMap((count) => [
@@ -176,8 +196,11 @@ describe("a card's charms", () => {
   it.each(cases)(
     "stack $count at the widest under the $size card, centred on it, in their reserved rows",
     ({ card, controls, count, row }) => {
-      const widths = Array.from({ length: count }, () => WIDEST);
-      const rings = cardCharmPlates(card, widths).map((plate) => insetRect(-CHARM.ring, plate));
+      const sizes = Array.from({ length: count }, () => ({
+        height: CHARM.card.maxHeight,
+        width: card.width - 2 * CHARM.ring,
+      }));
+      const rings = cardCharmPlates(card, sizes).map((plate) => insetRect(-CHARM.ring, plate));
       const reserved = bottom(card) + CARD_CHARMS_HEIGHT;
       expect(itemAt(rings, 0).y).toBe(bottom(card) + CHARM.under);
       rings.slice(1).forEach((ring, i) => {

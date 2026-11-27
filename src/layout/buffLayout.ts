@@ -1,19 +1,14 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { BUFF_POP_PLACE, CHARM } from "../data/index.ts";
+import { BUFF_POP_PLACE, CHARM, WALK_BAR_PARTS } from "../data/index.ts";
 
 // The buff charm: the walk bar's ui-effect-well, size square, holding the buff's 20x20 icon at
 // icon,icon, the same on the road and the bar. Lit, it wears a ring-wide amber ring around the
 // well. fx-sparkle plays centred at sparkle from its top-left. A second charm stacks gap left of
 // the first over the road.
 //
-// Under a card option, small or enlarged, the charm's well widens into a plate: the icon at its
-// left, and right of the well, card.textX columns on, the item's name in the body font with its
-// capitals card.nameY rows under the plate's top and, under it, what the item did in the title
-// font with its capitals card.effectY rows under the top, the plate ending card.padRight
-// columns past the wider line's ink. An option's charms, card.most at most (the walker's perk
-// and one money item), stack gap apart, each centred on the card, the first ring under rows
-// below it, at 1x under the enlarged card too, so every charm fits the card it is under.
+// An option's charms use the native HUD icon cell, with measured name and effect rows beside
+// it. The plates stack under the card, within its column, and keep their own measured heights.
 export { CHARM };
 
 // A pop over the road: the charm appears lit, centred on its dog's or item's column with its
@@ -36,33 +31,32 @@ export const BUFF_POP = {
   walker: BUFF_POP_PLACE.walker,
 } as const;
 
-// A lit charm's side at scale: the well and its ring each side.
-function charmRingSize(scale: number): number {
-  return (CHARM.size + 2 * CHARM.ring) * scale;
-}
-
 // A card charm's plate width, in plate pixels, for text whose wider line inks inkWidth columns.
 export function cardCharmWidth(inkWidth: number): number {
   const { padRight, textX } = CHARM.card;
-  return CHARM.size + textX + inkWidth + padRight;
+  return WALK_BAR_PARTS.effects.size + textX + inkWidth + padRight;
 }
 
 // The rows under a card its charms take, reserved whether or not it has any: the gap, then
 // card.most lit charms stacked gap apart.
 export const CARD_CHARMS_HEIGHT =
-  CHARM.under + CHARM.card.most * charmRingSize(1) + (CHARM.card.most - 1) * CHARM.gap;
+  CHARM.under +
+  CHARM.card.most * (CHARM.card.maxHeight + 2 * CHARM.ring) +
+  (CHARM.card.most - 1) * CHARM.gap;
 
 // The plates of a card's charms, widths wide: stacked gap apart, the first ring under rows below
 // the card, each centred on the card, the odd pixel to the right.
-export function cardCharmPlates(card: Rect, widths: readonly number[]): Rect[] {
-  const { gap, ring, size, under } = CHARM;
-  const top = card.y + card.height + under + ring;
-  return widths.map((width, i) => ({
-    height: size,
-    width,
-    x: card.x + Math.floor((card.width - (width + 2 * ring)) / 2) + ring,
-    y: top + i * (charmRingSize(1) + gap),
-  }));
+export function cardCharmPlates(
+  card: Rect,
+  sizes: readonly Pick<Rect, "height" | "width">[],
+): Rect[] {
+  const { gap, ring, under } = CHARM;
+  let y = card.y + card.height + under + ring;
+  return sizes.map(({ height, width }) => {
+    const rect = { height, width, x: card.x + Math.floor((card.width - width) / 2), y };
+    y += height + 2 * ring + gap;
+    return rect;
+  });
 }
 
 // The charm's rect over the road: centred on centreX with its bottom gap rows over top.

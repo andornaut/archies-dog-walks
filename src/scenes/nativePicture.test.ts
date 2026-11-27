@@ -119,3 +119,24 @@ it("shows the screen from its screenX column at the frame's left edge", () => {
   expect(context.scale().origin).toEqual({ x: 0, y: 16 });
   projected.dispose();
 });
+
+it("fits passive choice cards over the whole Help picture width without clipping the strip", () => {
+  const doc = new FakeDocument();
+  const { element, layer } = fakeLayer(doc, domScale(1, { height: 560, width: 360, x: 0, y: 0 }));
+  const frame = { height: 196, width: 328, x: 16, y: 56 };
+  const screenY = 149;
+  const { dispose, layers } = createNativePicture(
+    layer,
+    { frame, screenX: frame.x, strips: [{ height: frame.height, screenY }] },
+    "fit-width",
+  );
+  const [context] = layers;
+  const fit = 328 / 360;
+  const verticalPad = (frame.height * (1 - fit)) / 2;
+  expect(element.children[0]!.style).toMatchObject({ overflow: "hidden", width: "328px" });
+  expect(context!.scale().unit).toBe(fit);
+  expect(context!.scale().origin.x).toBe(frame.x);
+  expect(context!.scale().origin.y + screenY * fit).toBeCloseTo(frame.y + verticalPad);
+  expect(context!.element.style).toMatchObject({ left: "0px", width: "328px" });
+  dispose();
+});

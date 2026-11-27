@@ -12,7 +12,7 @@ import { cardRowRects, type CardRowSpec, pillRiseOverCaps, TEXT_SCALE } from "..
 
 // The choice cards: the card-frame sprite's parts in card pixels, the row of cards centred
 // on the road, and the enlarged card a hold opens, card-frame-large, centred in the dimmed band
-// and road. A band's label is body text at 1x, at most room wide. The frame outlines the
+// and road. A band's label is Body 2 at most room wide. The frame outlines the
 // illustration's window art.outline rows deep, which counts as the image. A card's effect, at 2x,
 // starts under the art and ends effect.plaqueGap rows over the plaque, or over the ui-fires
 // marker's top ink (fires.inkTop rows into it) on an option that would fire an owner, which
@@ -26,6 +26,7 @@ const CARDS = CHOICE_CARDS;
 export const CARD_LAYOUT = {
   art: CARDS.art,
   badge: CARDS.badge,
+  badgeSlices: CARDS.badgeSlices,
   band: CARDS.band,
   effect: CARDS.effect,
   fires: CARDS.fires,
@@ -158,10 +159,12 @@ export function largeCardRect(area: Rect, height: number = CARD_LAYOUT.large.hei
 export const CARD_ROW_BLOCK_HEIGHT =
   CARD_HEADER.titleRise + CARD_LAYOUT.height + CARD_CHARMS_HEIGHT;
 
-// The cards' top in walkView: the block sits with the rows over it and under it 1:2.
+// The cards' top in walkView: use the 1:2 placement where it leaves the full fork action below.
 export function cardRowTop(walkView: Rect): number {
   const free = walkView.height - CARD_ROW_BLOCK_HEIGHT;
-  return walkView.y + Math.round(free / 3) + CARD_HEADER.titleRise;
+  const forkSpace = CARD_LAYOUT.forkHome.gap + CARD_LAYOUT.forkHome.height;
+  const above = Math.max(0, Math.min(Math.round(free / 3), free - forkSpace));
+  return walkView.y + above + CARD_HEADER.titleRise;
 }
 
 // A row of count cards, maxCount at most, centred across walkView with their top at

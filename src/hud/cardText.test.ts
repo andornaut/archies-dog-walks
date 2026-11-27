@@ -1,6 +1,6 @@
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { inkRowsOfLines } from "@andornaut/game-kit/runtime/text/bitmapFont";
-import { fitsRoom, type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
+import { fitsRoom, fittingText, type TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
@@ -11,32 +11,54 @@ import { cardFor, hasPlaque, type OptionView } from "../rules/choices.ts";
 import { upgradeLine } from "../rules/effectText.ts";
 import { defined } from "../testing/defined.ts";
 import { everyCardOption } from "../testing/everyCardOption.ts";
-import { fontFileMetrics, inkWidth } from "../testing/fontInk.ts";
+import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
 import { testState } from "../testing/runState.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
+import { TEXT_SCALE } from "../ui/textFit.ts";
 import { plaqueTexts, smallCardText } from "./cardText.ts";
 
 const BODY = fontFileMetrics("font-body");
-const ONE: TextFitStyle = { scale: 1 };
 const body = (text: string) => plainMarks(text);
-const title = (text: string) => plainMarks(text).toUpperCase();
 
 const CASES = everyCardOption();
 const firesOf = (option: OptionView | undefined) =>
   option === undefined || option.fires.length === 0 ? null : option.fires;
 const bodyWidth = (style: TextFitStyle, line: string) => inkWidth("font-body", style, body(line));
 
+function fitsBody2(lines: readonly string[], room: number, rows: number): boolean {
+  const { glyphs, lineHeight } = gameFont("font-body");
+  const ink = lines.flatMap((line, index) =>
+    [...line].flatMap((letter) => {
+      const glyph = glyphs.get(letter)!;
+      const top = index * lineHeight + glyph.yOffset;
+      return glyph.height > 0 ? [{ bottom: top + glyph.height, top }] : [];
+    }),
+  );
+  const top = Math.min(...ink.map((glyph) => glyph.top));
+  const bottom = Math.max(...ink.map((glyph) => glyph.bottom));
+  return (
+    lines.every((line) => bodyWidth({ scale: TEXT_SCALE }, line) <= room) &&
+    (bottom - top) * TEXT_SCALE <= rows
+  );
+}
+
 // The names of the cards that fitsOn rejects.
 const misfits = (fitsOn: (option: OptionView | undefined) => boolean) =>
   CASES.filter(([, option]) => !fitsOn(option)).map(([name]) => name);
 
 describe("every card the data can deal", () => {
-  it("fits its band label in the body font at 1x, small and enlarged", () => {
-    const room = Math.min(CARD_LAYOUT.band.room, CARD_LAYOUT.large.band.room);
+  it("fits the full name at Body2 in up to two small rows and one held row", () => {
+    const { band, large } = CARD_LAYOUT;
     expect(
       misfits((option) => {
         const label = option?.label ?? gameData.runText.card.skip;
-        return inkWidth("font-body", ONE, body(label)) <= room;
+        const small = fittingText({ lines: 2, scale: TEXT_SCALE }, bodyWidth, band.room, label);
+        return (
+          small.lines.length <= 2 &&
+          small.lines.join(" ") === label &&
+          fitsBody2(small.lines, band.room, band.height) &&
+          fitsBody2([label], large.band.room, large.band.height)
+        );
       }),
     ).toEqual([]);
   });
@@ -57,23 +79,30 @@ describe("every card the data can deal", () => {
   });
 
   it("fits a plaque text in the plaque beside any fires marker, small and enlarged", () => {
-    const { badge, fires: marker, large } = CARD_LAYOUT;
+    const { badge, badgeSlices: slices, fires: marker, large } = CARD_LAYOUT;
     expect(
       misfits((option) => {
         if (!hasPlaque(option)) {
           return true;
         }
         const fired = firesOf(option) !== null;
-        const small = plaqueRoom(badge.x, badge.width, fired ? marker.x + marker.size : undefined);
+        const caps = slices.left + slices.right;
+        const small = plaqueRoom(
+          badge.x + slices.left,
+          badge.width - caps,
+          fired ? marker.x + marker.size : undefined,
+        );
         const enlarged = plaqueRoom(
-          large.badge.x,
-          large.badge.width,
+          large.badge.x + 2 * slices.left,
+          large.badge.width - 2 * caps,
           fired ? large.fires.x + 2 * marker.size : undefined,
         );
-        const narrowest = Math.min(
-          ...plaqueTexts(gameData, option).map((text) => inkWidth("font-title", ONE, title(text))),
+        const texts = [...plaqueTexts(gameData, option), gameData.runText.card.free];
+        return texts.every(
+          (text) =>
+            fitsBody2([text], small, badge.face.height) &&
+            fitsBody2([text], enlarged, large.badge.face.height),
         );
-        return narrowest <= small && narrowest <= enlarged;
       }),
     ).toEqual([]);
   });

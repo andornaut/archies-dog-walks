@@ -113,7 +113,7 @@ export interface HelpPicture {
 // and how far ahead of the walker's feet in road pixels, and the moment shown.
 export const HELP_SCENES = {
   // The card row's top this many rows into a card page's picture, its header band left out.
-  cardTopInset: 12,
+  cardTopInset: 10,
   cards: { dogs: ["archie"], encounter: "skunk", lane: 2 },
   lanes: {
     dogs: ["archie", "lady", "ginger"],

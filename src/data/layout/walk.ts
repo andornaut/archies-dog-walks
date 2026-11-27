@@ -202,9 +202,8 @@ export const BUFF_POP_PLACE = {
 
 // A buff's charm, in charm pixels.
 export const CHARM = {
-  // Its plate under a card option: the effect's and name's capitals' tops, the most a card holds,
-  // the plate's padding right of the wider line, and the text's columns right of the well.
-  card: { effectY: 13, most: 2, nameY: 3, padRight: 4, textX: 3 },
+  // A plate can hold two Body 2 and two Title 2 rows beside a native HUD icon.
+  card: { maxHeight: 62, most: 2, padRight: 2, padY: 2, rowGap: 2, textX: 2 },
   // The rows between stacked charms.
   gap: 2,
   // The icon's inset in the well.
@@ -330,24 +329,34 @@ export const CELEBRATIONS = {
 
 // Exempt from the button gap rule: three choice cards sit 6 apart in a row across the screen.
 const CHOICE_CARD_GAP = 6;
+const CHOICE_CARD_TITLE_GROWTH = 24;
+const CHOICE_CARD_PLAQUE_GROWTH = 8;
+const CHOICE_CARD_COST_SLICES = { bottom: 3, left: 2, right: 3, top: 2 } as const;
 
 // The choice cards, in card pixels.
 export const CHOICE_CARDS = {
   // art: card-frame's illustration window and its outline's rows.
-  art: { height: 56, outline: 1, width: 75, x: 18, y: 16 },
+  art: { height: 56, outline: 1, width: 75, x: 18, y: 16 + CHOICE_CARD_TITLE_GROWTH },
   // art: card-frame's plaque, and the rows of the card-cost face its text is centred on.
-  badge: { face: { height: 8, y: 2 }, height: 13, width: 71, x: 20, y: 136 },
+  badge: {
+    face: { height: 8 + CHOICE_CARD_PLAQUE_GROWTH, y: CHOICE_CARD_COST_SLICES.top },
+    height: 13 + CHOICE_CARD_PLAQUE_GROWTH,
+    width: 71,
+    x: 20,
+    y: 136 + CHOICE_CARD_TITLE_GROWTH,
+  },
+  badgeSlices: CHOICE_CARD_COST_SLICES,
   // art: card-frame's band: the margin between the frame and the picture's outline, its top and
-  // height, which the press fill covers and the label is centred on, and its label's widest ink.
-  band: { height: 13, room: 106, y: 2 },
+  // height, which the refusal fill covers and the label is centred on, and its label's widest ink.
+  band: { height: 36, room: 108, y: 2 },
   // The effect: its rows over the plaque, its width and left edge.
   effect: { plaqueGap: 1, width: 100, x: 6 },
   // art: ui-fires: its top ink's row, side and top-left.
-  fires: { inkTop: 1, size: 16, x: 18, y: 134 },
+  fires: { inkTop: 1, size: 16, x: 18, y: 134 + CHOICE_CARD_TITLE_GROWTH + 4 },
   // A fork card's End walk button's rows under its paths' charms.
   forkHomeGap: 6,
   // art: card-frame's height.
-  height: 153,
+  height: 153 + CHOICE_CARD_TITLE_GROWTH + CHOICE_CARD_PLAQUE_GROWTH,
   // art: card-frame-large's parts, and the rows round its body's text.
   large: {
     art: { outline: 2, x: 8, y: 32 },
@@ -361,7 +370,7 @@ export const CHOICE_CARDS = {
     width: 166,
   },
   // A path card's paws: their height and top.
-  paws: { height: 10, y: 76 },
+  paws: { height: 10, y: 76 + CHOICE_CARD_TITLE_GROWTH },
   // A plaque's text's inset from its sides.
   plaquePadX: 2,
   // The gap between cards in a row.

@@ -1157,21 +1157,27 @@
         "outline": 1,
         "width": 75,
         "x": 18,
-        "y": 16
+        "y": 40
       },
       "badge": {
         "face": {
-          "height": 8,
+          "height": 16,
           "y": 2
         },
-        "height": 13,
+        "height": 21,
         "width": 71,
         "x": 20,
-        "y": 136
+        "y": 160
+      },
+      "badgeSlices": {
+        "bottom": 3,
+        "left": 2,
+        "right": 3,
+        "top": 2
       },
       "band": {
-        "height": 13,
-        "room": 106,
+        "height": 36,
+        "room": 108,
         "y": 2
       },
       "effect": {
@@ -1180,16 +1186,16 @@
         "x": 6,
         "area": {
           "fires": {
-            "height": 53,
+            "height": 54,
             "width": 100,
             "x": 6,
-            "y": 81
+            "y": 105
           },
           "plain": {
             "height": 54,
             "width": 100,
             "x": 6,
-            "y": 81
+            "y": 105
           }
         }
       },
@@ -1197,14 +1203,14 @@
         "inkTop": 1,
         "size": 16,
         "x": 18,
-        "y": 134
+        "y": 162
       },
       "forkHome": {
         "height": 48,
         "width": 128,
         "gap": 6
       },
-      "height": 153,
+      "height": 185,
       "large": {
         "art": {
           "outline": 2,
@@ -1244,7 +1250,7 @@
       },
       "paws": {
         "height": 10,
-        "y": 76
+        "y": 100
       },
       "pillGap": 2,
       "plaquePadX": 2,
@@ -1257,49 +1263,49 @@
         "height": 280,
         "width": 166,
         "x": 97,
-        "y": 92
+        "y": 52
       },
       "rows": [
         [
           {
-            "height": 153,
+            "height": 185,
             "width": 112,
             "x": 124,
-            "y": 142
+            "y": 105
           }
         ],
         [
           {
-            "height": 153,
+            "height": 185,
             "width": 112,
             "x": 65,
-            "y": 142
+            "y": 105
           },
           {
-            "height": 153,
+            "height": 185,
             "width": 112,
             "x": 183,
-            "y": 142
+            "y": 105
           }
         ],
         [
           {
-            "height": 153,
+            "height": 185,
             "width": 112,
             "x": 6,
-            "y": 142
+            "y": 105
           },
           {
-            "height": 153,
+            "height": 185,
             "width": 112,
             "x": 124,
-            "y": 142
+            "y": 105
           },
           {
-            "height": 153,
+            "height": 185,
             "width": 112,
             "x": 242,
-            "y": 142
+            "y": 105
           }
         ]
       ]

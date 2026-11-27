@@ -12,7 +12,11 @@ export interface NativePicture {
 }
 
 // Each strip paints the same native HUD through a clipped, passive logical viewport.
-export function createNativePicture(layer: UiLayer, picture: ScenePicture): NativePicture {
+export function createNativePicture(
+  layer: UiLayer,
+  picture: ScenePicture,
+  projection: "crop" | "fit-width" = "crop",
+): NativePicture {
   const doc = layer.element.ownerDocument;
   const clips = stripViewports(picture.frame, picture.strips).flatMap((viewport, index) => {
     const strip = picture.strips[index];
@@ -39,12 +43,19 @@ export function createNativePicture(layer: UiLayer, picture: ScenePicture): Nati
         return;
       }
       const { unit } = scale;
+      const fitted = projection === "fit-width";
+      const contentUnit = fitted ? (unit * viewport.width) / SCREEN_CONFIG.width : unit;
+      const left = fitted ? 0 : -picture.screenX * unit;
+      const top = (viewport.height * (unit - contentUnit)) / 2 - strip.screenY * contentUnit;
       current = {
         ...scale,
         origin: {
-          x: scale.origin.x + (viewport.x - picture.screenX) * unit,
-          y: scale.origin.y + (viewport.y - strip.screenY) * unit,
+          x: scale.origin.x + (fitted ? viewport.x : viewport.x - picture.screenX) * unit,
+          y:
+            scale.origin.y +
+            (fitted ? viewport.y * unit + top : (viewport.y - strip.screenY) * unit),
         },
+        unit: contentUnit,
       };
       Object.assign(clip.style, {
         height: `${viewport.height * unit}px`,
@@ -53,10 +64,10 @@ export function createNativePicture(layer: UiLayer, picture: ScenePicture): Nati
         width: `${viewport.width * unit}px`,
       });
       Object.assign(content.style, {
-        height: `${SCREEN_CONFIG.height * unit}px`,
-        left: `${-picture.screenX * unit}px`,
-        top: `${-strip.screenY * unit}px`,
-        width: `${SCREEN_CONFIG.width * unit}px`,
+        height: `${SCREEN_CONFIG.height * contentUnit}px`,
+        left: `${left}px`,
+        top: `${top}px`,
+        width: `${SCREEN_CONFIG.width * contentUnit}px`,
       });
       for (const listener of scales) {
         listener(current);

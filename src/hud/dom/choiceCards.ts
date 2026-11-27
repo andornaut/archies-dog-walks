@@ -2,7 +2,7 @@ import "../../ui/dom/buttonReset.css";
 import "./choiceCards.css";
 
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
-import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { type BitmapFont, fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import {
   type ButtonRefusal,
   type ButtonView,
@@ -10,11 +10,16 @@ import {
 } from "@andornaut/game-kit/runtime/web/ui/dom/button";
 
 import { cardGreyPath, DIFFICULTY_KEY } from "../../assets/index.ts";
-import { CHARM, type GameData, SCREEN_CONFIG, SLICES } from "../../data/index.ts";
+import { type GameData, SCREEN_CONFIG, SLICES, WALK_BAR_PARTS } from "../../data/index.ts";
 import { textPart } from "../../home/dom/index.ts";
 import { focusDirectionForKey, menuKeyActs, sceneKeyAllowed } from "../../input/index.ts";
 import { SCREEN_LAYOUT } from "../../layout/index.ts";
-import { CARD_LAYOUT, cardRowIn, forkHomeRect, walkBarIconKey } from "../../presentation/index.ts";
+import {
+  CARD_LAYOUT,
+  cardRowIn,
+  forkHomeRect,
+  hudEffectIconKey,
+} from "../../presentation/index.ts";
 import { type CardView, MAX_CARD_OPTIONS } from "../../rules/index.ts";
 import {
   createGameButton,
@@ -23,11 +28,13 @@ import {
   type DomPart,
   type DomQuestionPanel,
   type DomQuestionPanelInput,
+  type DomTextLine,
   framelessView,
   gridBoxPart,
   imageArt,
   imageNineSlice,
   type NativeGesture,
+  placeBackedText,
   placeBox,
   placeText,
   refusalPlaying,
@@ -73,15 +80,53 @@ export interface NativeChoiceCards extends DomQuestionPanel {
   refuse(index: number): void;
 }
 
-function imagePart(doc: Document, source: DomArtSource, key: string, rect: Rect): DomPart {
+function imagePart(
+  doc: Document,
+  source: DomArtSource,
+  key: string,
+  rect: Rect,
+  projection: "art" | "layout" = "art",
+): DomPart {
   const image = imageArt(doc, source, key);
   return {
     element: image.element,
     place: (scale) => {
-      image.place(scale, ORIGIN, rect);
-      placeBox(scale, ORIGIN, image.element, rect);
+      image.place(scale, ORIGIN, { ...rect, projection });
+      if (projection === "art") {
+        placeBox(scale, ORIGIN, image.element, rect);
+      }
     },
     ready: image.ready,
+  };
+}
+
+function labelPart(
+  doc: Document,
+  bitmap: BitmapFont,
+  label: ChoiceCardSurface["title"],
+  font: "body" | "title" = "body",
+): DomPart {
+  const element = doc.createElement("div");
+  element.className = "adw-lines";
+  const { face } = label;
+  const lines = label.lines.map((text, index) => {
+    const line: DomTextLine = {
+      capTop: face.y + index * bitmap.lineHeight * TEXT_SCALE,
+      centre: "ink",
+      centreX: face.x + face.width / 2,
+      colour: label.colour,
+      font,
+      line: index,
+      projection: "layout",
+      scale: TEXT_SCALE,
+      text,
+    };
+    return { element: createTextLine(doc, line), line };
+  });
+  element.append(...lines.map((placed) => placed.element));
+  return {
+    element,
+    place: (scale) => placeBackedText(bitmap, scale, ORIGIN, face, lines, "layout"),
   };
 }
 
@@ -178,8 +223,25 @@ function surfaceParts(
     );
   }
   all.push(imagePart(doc, source, surface.illustration.key, surface.illustration.rect));
-  if (surface.plaque !== undefined) {
-    all.push(imagePart(doc, source, "card-cost", surface.plaque));
+  const plaque = surface.plaque;
+  if (plaque !== undefined) {
+    if (frame.large) {
+      all.push(imagePart(doc, source, "card-cost", plaque.rect, "layout"));
+    } else {
+      // Stretch the cream between the original corners and shaded edge rows.
+      const cost = imageNineSlice(
+        doc,
+        source,
+        "card-cost",
+        { height: CARD_LAYOUT.large.badge.height / 2, width: CARD_LAYOUT.large.badge.width / 2 },
+        CARD_LAYOUT.badgeSlices,
+      );
+      all.push({
+        element: cost.element,
+        place: (scale) => cost.place(scale, ORIGIN, plaque.rect),
+        ready: cost.ready,
+      });
+    }
   }
   if (surface.marker !== undefined) {
     sheet("ui-fires", surface.grey || original.reduced ? "static" : "pulse", surface.marker, {
@@ -208,6 +270,7 @@ function surfaceParts(
       text,
     ),
   );
+  const title = labelPart(doc, original.fonts.body, surface.title);
   if (refusalBand) {
     const band = doc.createElement("span");
     band.className = "adw-art adw-choice-refusal-band";
@@ -221,10 +284,13 @@ function surfaceParts(
         y: rect.y + y,
       }),
     );
-    labels[0]?.element.classList.add("adw-choice-refusal-label");
+    title.element.classList.add("adw-choice-refusal-label");
   }
-  all.push(...labels);
-  for (const { charm, rect: plate } of surface.charms) {
+  all.push(title, ...labels);
+  if (plaque !== undefined) {
+    all.push(labelPart(doc, original.fonts.body, plaque));
+  }
+  for (const { charm, labels, rect: plate } of surface.charms) {
     const well = imageNineSlice(
       doc,
       original,
@@ -238,33 +304,29 @@ function surfaceParts(
       ready: well.ready,
     });
     all.push(ringPart(doc, ORIGIN, charmRing(plate)));
+    const { icon, iconSize } = WALK_BAR_PARTS.effects;
     all.push(
-      imagePart(doc, original, walkBarIconKey(charm.item), {
-        height: CHARM.size - 2 * CHARM.icon,
-        width: CHARM.size - 2 * CHARM.icon,
-        x: plate.x + CHARM.icon,
-        y: plate.y + CHARM.icon,
-      }),
+      imagePart(
+        doc,
+        original,
+        hudEffectIconKey(charm.item),
+        {
+          height: iconSize,
+          width: iconSize,
+          x: plate.x + icon,
+          y: plate.y + Math.floor((plate.height - iconSize) / 2),
+        },
+        "layout",
+      ),
     );
-    all.push(
-      textPart(doc, original, {
-        capTop: plate.y + CHARM.card.nameY,
-        colour: PALETTE.cream,
-        lines: [charm.name],
-        scale: 1,
-        x: plate.x + CHARM.size + CHARM.card.textX,
-      }),
-    );
-    if (charm.effect !== null) {
+    for (const { face, font, text } of labels) {
       all.push(
-        textPart(doc, original, {
-          capTop: plate.y + CHARM.card.effectY,
-          colour: PALETTE.amber,
-          font: "title",
-          lines: [charm.effect],
-          scale: 1,
-          x: plate.x + CHARM.size + CHARM.card.textX,
-        }),
+        labelPart(
+          doc,
+          original.fonts[font],
+          { colour: font === "body" ? PALETTE.cream : PALETTE.amber, face, lines: [text] },
+          font,
+        ),
       );
     }
   }
@@ -360,9 +422,11 @@ export function showChoiceCards(
     const rendered = surfaceParts(doc, input, surface, !input.picture);
     const group = doc.createElement("div");
     group.className = "adw-choice-group";
-    const name = [surface.label, ...surface.texts.slice(1).flatMap(({ lines }) => lines)].join(
-      ". ",
-    );
+    const name = [
+      surface.label,
+      ...surface.texts.flatMap(({ lines }) => lines),
+      ...(surface.plaque?.lines ?? []),
+    ].join(". ");
     const refusal: ButtonRefusal = {
       reducedMotion: input.reducedMotion,
       refuse: (reducedMotion) => playRefusal(reducedMotion, group),

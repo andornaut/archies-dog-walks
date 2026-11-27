@@ -5,8 +5,9 @@ import { afterEach, expect, it, vi } from "vitest";
 import { gameData } from "../../data/index.ts";
 import { helpPicture } from "../../help/helpPictures.ts";
 import { SCREEN_LAYOUT } from "../../layout/screen.ts";
-import { cardRowIn } from "../../presentation/cardLayout.ts";
+import { CARD_LAYOUT, cardRowIn } from "../../presentation/cardLayout.ts";
 import { cardFor, MAX_CARD_OPTIONS } from "../../rules/cardViews.ts";
+import { formatDollars } from "../../rules/effectText.ts";
 import { read } from "../../rules/units.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
@@ -15,6 +16,7 @@ import type { NativeGesture } from "../../ui/dom/modalLifecycle.ts";
 import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
 import { domScale } from "../../ui/domScale.ts";
 import { REFUSE } from "../../ui/refuse.ts";
+import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { showChoiceCards } from "./choiceCards.ts";
 
 afterEach(() => vi.useRealTimers());
@@ -22,11 +24,18 @@ afterEach(() => vi.useRealTimers());
 async function mount(
   kind: "cards" | "zones",
   {
+    canvasWidth = SCREEN_LAYOUT.screen.width,
     gesture,
     hallPass = false,
     picture = false,
     refused = 1,
-  }: { gesture?: NativeGesture; hallPass?: boolean; picture?: boolean; refused?: number } = {},
+  }: {
+    canvasWidth?: number;
+    gesture?: NativeGesture;
+    hallPass?: boolean;
+    picture?: boolean;
+    refused?: number;
+  } = {},
 ) {
   vi.useFakeTimers();
   const help = helpPicture(gameData, kind);
@@ -57,7 +66,10 @@ async function mount(
     performance: { now: () => Date.now() },
     setTimeout: globalThis.setTimeout,
   });
-  const { element, layer } = fakeLayer(doc, domScale(1, SCREEN_LAYOUT.screen));
+  const { element, layer } = fakeLayer(
+    doc,
+    domScale(1, { ...SCREEN_LAYOUT.screen, width: canvasWidth }),
+  );
   const choose = vi.fn();
   const accepts = vi.fn(() => true);
   const requests = new Map<string, Promise<unknown>>();
@@ -111,6 +123,46 @@ async function mount(
   const dialog = element.all().find((node) => node.getAttribute("role") === "dialog")!;
   return { accepts, choose, dialog, doc, element, groups, layer, options, requests, shown, view };
 }
+
+it("paints small and held cost plaques and larger type at fractional fit", async () => {
+  const canvasWidth = 575;
+  const { element, groups, options, shown, view } = await mount("cards", { canvasWidth });
+  const cost = formatDollars(view.options[0]!.cost);
+  const isCost = (node: FakeElement) => node.style.backgroundImage?.includes("/card-cost");
+  const px = (node: FakeElement, property: string) =>
+    Number.parseFloat(node.style.getPropertyValue(property));
+  const group = groups[0]!;
+  const small = group.children.find((node) => node.children.some(isCost))!;
+  const parts = small.children.filter(isCost);
+  expect(parts).toHaveLength(9);
+  const partsRight = Math.max(...parts.map((part) => px(part, "left") + px(part, "width")));
+  const partsBottom = Math.max(...parts.map((part) => px(part, "top") + px(part, "height")));
+  expect(partsRight).toBe(px(small, "width"));
+  expect(partsBottom).toBe(px(small, "height"));
+  shown.setLarge(0);
+  const heldGroup = element
+    .all()
+    .find(
+      (node) =>
+        !node.hidden &&
+        node.children.some((part) => part.classList.contains("adw-choice-held-outline")),
+    )!;
+  const held = heldGroup.children.find(isCost)!;
+  const { backgroundSize, height, width } = held.style;
+  expect(backgroundSize).toBe(`${width} ${height}`);
+  expect(px(small, "width")).toBeGreaterThan(CARD_LAYOUT.badge.width);
+  expect(px(held, "width")).toBeGreaterThan(CARD_LAYOUT.large.badge.width);
+  expect(options[0]!.getAttribute("aria-label")).toContain(cost);
+  for (const card of [group, heldGroup]) {
+    const label = card
+      .all()
+      .find((child) => child.classList.contains("adw-font-body") && child.textContent === cost)!;
+    expect(px(label, "font-size")).toBeCloseTo(
+      (8 * canvasWidth * TEXT_SCALE) / SCREEN_LAYOUT.screen.width,
+    );
+  }
+  shown.destroy();
+});
 
 it.each(["cards", "zones"] as const)(
   "mounts %s with original metadata, Kit options and a reversible held view",

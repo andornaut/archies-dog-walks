@@ -153,7 +153,7 @@ export class CardScene extends Scene {
     source: Parameters<typeof showChoiceCards>[1],
     picture: ScenePicture,
   ): void {
-    const host = createNativePicture(layer, picture);
+    const host = createNativePicture(layer, picture, "fit-width");
     const panels = host.layers.map((context) =>
       showChoiceCards(context, { ...source, headHome: null, picture: true }),
     );
