@@ -530,10 +530,10 @@ describe("control state cues", () => {
       "background:var(--palette-cyan)",
     ],
     [
-      "the homepage screenshot link's focused heading band",
+      "a focused homepage footer link with ink text",
       "home",
-      ".hl:has(.shot-link:focus-visible) h2",
-      "background:var(--palette-cyan)",
+      ".site-footer a:focus-visible",
+      "background:var(--palette-cyan);color:var(--palette-ink)",
     ],
     [
       "a focused gallery ground swatch's press",
