@@ -24,7 +24,7 @@ const descendants = (node: FakeElement): FakeElement[] => [
   ...node.children.flatMap(descendants),
 ];
 describe("native selection tile", () => {
-  it("keeps the full hit target fixed while selected paint lifts and shakes", async () => {
+  it("keeps the full hit target fixed while a selected tile plays a refusal", async () => {
     const doc = new FakeDocument();
     const name = gameData.dogs.kilo.name;
     const host = createGameButton(doc as unknown as Document, {
@@ -42,7 +42,7 @@ describe("native selection tile", () => {
       state: "selected",
     });
     await tile.ready;
-    tile.place(SCALE, { markY: 0, x: 3, y: -2 });
+    tile.place(SCALE, { markY: 0, x: 3 });
     expect(tile.element).toBe(host.element);
     expect(tile.element.getAttribute("aria-pressed")).toBe("true");
     expect(tile.element.style).toMatchObject({
@@ -59,11 +59,11 @@ describe("native selection tile", () => {
       top: "0px",
       width: "96px",
     });
-    expect(paint?.style.transform).toBe("translate(6px,-4px)");
-    tile.place(SCALE, { markY: 0, x: 0, y: 0 });
+    expect(paint?.style.transform).toBe("translateX(6px)");
+    tile.place(SCALE, { markY: 0, x: 0 });
     expect(tile.element.style).toMatchObject({ left: "24px", top: "480px" });
     const fractional = domScale(1, { height: 844, width: 390, x: 0, y: 0 });
-    tile.place(fractional, { markY: 0, x: 0, y: 0 });
+    tile.place(fractional, { markY: 0, x: 0 });
     const face = descendants(tile.element as unknown as FakeElement).find((node) =>
       node.className.includes("adw-selection-face"),
     )!;
@@ -94,14 +94,14 @@ describe("native selection tile", () => {
       state: "disabled",
     });
     await tile.ready;
-    tile.place(SCALE, { focused: true, markY: 0, x: 0, y: 0 });
+    tile.place(SCALE, { focused: true, markY: 0, x: 0 });
     expect(tile.element.hasAttribute("data-picker-focused")).toBe(true);
     const painted = descendants(tile.element as unknown as FakeElement);
     expect(painted.filter((node) => node.className.includes("adw-selection-face"))).toHaveLength(1);
     expect(tile.element.style.getPropertyValue("--adw-selection-fill")).toBe(
       hex(PALETTE.neutralGrey),
     );
-    tile.place(SCALE, { focused: false, markY: 0, x: 0, y: 0 });
+    tile.place(SCALE, { focused: false, markY: 0, x: 0 });
     expect(tile.element.hasAttribute("data-picker-focused")).toBe(false);
     expect(tile.element.getAttribute("aria-pressed")).toBe("false");
     expect(tile.element.style.width).toBe("96px");
@@ -124,10 +124,10 @@ describe("native selection tile", () => {
       state: "selected",
     });
     expect(await tile.ready).toEqual([]);
-    tile.place(SCALE, { markY: 0, x: 0, y: -2 });
+    tile.place(SCALE, { markY: 0, x: 0 });
     const painted = descendants(tile.element as unknown as FakeElement);
     expect(source.loadSheet).not.toHaveBeenCalled();
-    expect(tile.element.style.getPropertyValue("--adw-selection-fill")).toBe(hex(PALETTE.yellow));
+    expect(tile.element.style.getPropertyValue("--adw-selection-fill")).toBe(hex(PALETTE.cyan));
     expect(tile.element.style.getPropertyValue("--adw-selection-edge")).toBe(hex(PALETTE.ink));
     expect(painted.some((node) => node.style.backgroundColor === hex(PALETTE.green))).toBe(true);
     expect(painted.some((node) => node.textContent === "+")).toBe(true);

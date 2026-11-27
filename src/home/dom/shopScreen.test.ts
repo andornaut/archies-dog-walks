@@ -77,8 +77,8 @@ function fixture({
       {
         tabs: tabs
           ? [
-              { label: gameData.homeText.shop.tabs.gear, open: true, pressed: false },
-              { label: gameData.homeText.shop.tabs.dogs, open: false, pressed: false },
+              { label: gameData.homeText.shop.tabs.gear, open: true },
+              { label: gameData.homeText.shop.tabs.dogs, open: false },
             ]
           : [],
         title: gameData.homeText.shop.title,
@@ -139,7 +139,7 @@ function fixture({
 }
 const settle = () => setImmediate();
 
-// A row the bank does not cover keeps its greyed text under focus and inks it under press.
+// A row the bank does not cover keeps its greyed text and skips the cyan press preview.
 it.each([
   [true, "adw-selection-focus-ink"],
   [false, "adw-selection-press-ink"],
@@ -161,6 +161,10 @@ it.each([
     .flatMap((node) => node.className.split(" "))
     .filter((name) => name.startsWith("adw-selection-") && name.endsWith("-ink"));
   expect(inks).toEqual([ink]);
+  const row = f.root
+    .all()
+    .find((node) => node.getAttribute("aria-label") === f.view.rows[0]!.label);
+  expect(row?.hasAttribute("data-picker-selectable")).toBe(selectable);
   f.screen.destroy();
 });
 
@@ -466,7 +470,7 @@ it("projects only Shop principal art to the well at fractional fit", async () =>
   screen.destroy();
 });
 
-it("keeps the row and first pointer alive across dip, focus and scroll painting", async () => {
+it("keeps the row and first pointer alive across focus and scroll painting", async () => {
   const { doc, down, layer, root, screen, up, view } = fixture();
   await settle();
   const row = root.all().find((node) => node.getAttribute("aria-label") === view.rows[0]!.label)!;
@@ -477,7 +481,6 @@ it("keeps the row and first pointer alive across dip, focus and scroll painting"
   root.fire("pointerdown", pointer(row, 1, "pointerdown"));
   screen.update(view);
   screen.place({
-    pressed: "row",
     rows: new Map([["row", { focused: true, x: 2 }]]),
     scroll: { max: 120, settled: false, y: 8 },
   });

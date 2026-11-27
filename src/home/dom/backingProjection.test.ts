@@ -121,7 +121,7 @@ it("projects picker art into the available space with selected and locked treatm
       for (const scale of [domScale(1, { ...viewport, width: 575 }), domScale(2.625, viewport)]) {
         const hit = gridRect(scale, model.hit);
         for (const faceY of [0, -FEEDBACK.hopPx]) {
-          tile.place(scale, { faceY, markY: 0, refusing: false, x: 0, y: 0 });
+          tile.place(scale, { faceY, markY: 0, refusing: false, x: 0 });
           const dest = gridRect(scale, {
             height: size,
             width: size,

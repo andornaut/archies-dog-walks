@@ -402,17 +402,18 @@ describe("control state cues", () => {
       "forced-color-adjust:none",
     ],
     [
-      "a picker tile's or Pet shop row's cyan focus and green press under plum and ink",
+      "a picker tile's or Pet shop row's cyan focus and press under plum",
       "tile",
       ".adw-selection-tile",
       "--ui-colour-button-focus-face:var(--adw-cyan);--ui-colour-button-focus-text:var(--adw-plum);" +
-        "--ui-colour-button-pressed-face:var(--adw-green);--ui-colour-button-pressed-text:var(--adw-ink)",
+        "--ui-colour-button-pressed-face:var(--adw-cyan);--ui-colour-button-pressed-text:var(--adw-plum)",
     ],
     [
-      "a pressed Pet shop row's text, an unaffordable one's included",
+      "an available pressed Pet shop row's text",
       "tile",
-      ".adw-selection-tile[data-ui-pressed]:not([data-picker-refusing]):not(.adw-refusing)" +
-        ":not(.adw-refusing-still) :is(.adw-selection-focus-ink, .adw-selection-press-ink)",
+      ".adw-selection-tile:where([data-picker-selectable])[data-ui-pressed]" +
+        ":not([data-picker-refusing]):not(.adw-refusing):not(.adw-refusing-still)" +
+        " :is(.adw-selection-focus-ink, .adw-selection-press-ink)",
       "color:var(--ui-colour-button-pressed-text)!important",
     ],
     [
@@ -456,8 +457,16 @@ describe("control state cues", () => {
     [
       "a pressed or disabled standard button's sunk flat face",
       "game",
-      '.adw-standard-button:is([data-ui-pressed], :disabled, [aria-disabled="true"]) .adw-standard-button-face',
+      ".adw-standard-button:is([data-ui-pressed]:not(.adw-selectable-button)," +
+        ' :disabled, [aria-disabled="true"]) .adw-standard-button-face',
       "background:linear-gradient(var(--adw-button-fill),var(--adw-button-fill));transform:translateY",
+    ],
+    [
+      "a standard selection control's press with its settled colour",
+      "game",
+      ".adw-standard-button.adw-selectable-button",
+      "--ui-colour-button-pressed-face:var(--ui-colour-button-selected-face);" +
+        "--ui-colour-button-pressed-text:var(--ui-colour-button-selected-text)",
     ],
     [
       "a standard button's state colours",
@@ -467,7 +476,8 @@ describe("control state cues", () => {
         "--ui-colour-button-disabled-text:var(--adw-neutralDarkSlate);" +
         "--ui-colour-button-focus-face:var(--adw-cyan);--ui-colour-button-focus-text:var(--adw-ink);" +
         "--ui-colour-button-pressed-face:var(--adw-forest);" +
-        "--ui-colour-button-pressed-text:var(--adw-white)",
+        "--ui-colour-button-pressed-text:var(--adw-white);" +
+        "--ui-colour-button-selected-face:var(--adw-cyan)",
     ],
     [
       "an unavailable standard button's navy focus under cream",
@@ -538,7 +548,7 @@ describe("control state cues", () => {
   // Each control family sets its focus and press colours in Game Kit's theme state slots on its
   // root, once in normal and once in forced colours, and one rule reads each: every focus or press
   // rule that fills one of the family's parts reads a slot. The standard button's unavailable
-  // focus is the one variant that sets its focus slots again.
+  // focus and a selectable button's cyan press are explicit variants.
   it.each([
     [
       "standard button, the Help pager's included",
@@ -589,7 +599,13 @@ describe("control state cues", () => {
         rules(text).filter(({ selector }) => selector.startsWith(scope));
       const normal = own(unforced(SHEETS[sheet]));
       const forcedRules = own(forced(SHEETS[sheet]));
-      const variants = sheet === "game" ? ['.adw-standard-button[aria-disabled="true"]'] : [];
+      const variants =
+        sheet === "game"
+          ? [
+              '.adw-standard-button[aria-disabled="true"]',
+              ".adw-standard-button.adw-selectable-button",
+            ]
+          : [];
       const count = (list: typeof normal, test: (body: string) => boolean) =>
         new Set(list.filter(({ body }) => test(body)).map(({ index }) => index)).size;
       for (const [slot, shown] of [

@@ -352,11 +352,9 @@ function tabContent(
   }
 }
 
-// What the Logbook shows: the open tab, the save it reads, the badge wall, and what is pressed.
+// What the Logbook shows: the open tab, the save it reads and the badge wall.
 export interface LogbookState {
   readonly badges: readonly BadgeView[];
-  // The tab pressed, by index, or undefined.
-  readonly pressedTab: number | undefined;
   readonly save: Pick<SaveDocument, "owned" | "stats">;
   readonly tab: StatsTab;
 }
@@ -365,10 +363,9 @@ export interface LogbookState {
 export function logbookView(measure: LogbookMeasure, data: Data, state: LogbookState): LogbookView {
   const words = data.menuText.stats;
   const page = shopPageView(measure, {
-    tabs: STATS_TABS.map((tab, i) => ({
+    tabs: STATS_TABS.map((tab) => ({
       label: words.tabs[tab],
       open: tab === state.tab,
-      pressed: state.pressedTab === i,
     })),
     title: words.title,
   });

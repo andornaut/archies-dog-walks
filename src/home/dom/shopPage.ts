@@ -28,10 +28,10 @@ export function createPageTab(
   label.setAttribute("aria-hidden", "true");
   content.append(label);
   const view = createGameButton(doc, {
-    appearance: { className: "adw-button", role: "secondary" },
+    appearance: { className: "adw-button adw-selectable-button", role: "secondary" },
     content: { icon: content, kind: "icon", name: tab.label.text },
     getAction: () => (input.press.accepts() ? { activate: input.press.press } : null),
-    getState: () => ({ selected: tab.framed }),
+    getState: () => ({ selected: tab.selected }),
   });
   const stopFeedback = bindPanelFeedback(view, input.press);
   return {

@@ -148,9 +148,9 @@ describe("interaction-state colours", () => {
         TEXT,
       ],
       ["a focused unaffordable Pet shop row's line", PALETTE[GREYED.text], PALETTE.cyan, TEXT],
-      ["a pressed unaffordable Pet shop row's name and line", PALETTE.ink, PALETTE.green, TEXT],
+      ["a pressed available Pet shop row's name and line", PALETTE.plum, PALETTE.cyan, TEXT],
       ["a focused Settings row's note", PALETTE.darkBrown, PALETTE.cyan, TEXT],
-      ["a pressed Settings row's text", PALETTE.ink, PALETTE.green, TEXT],
+      ["a pressed Settings row's text", PALETTE.ink, PALETTE.cyan, TEXT],
       ["a pressed standard button's label", PALETTE.white, PALETTE.forest, TEXT],
       ["a focused speech bubble's words and owner", PALETTE.plum, PALETTE.cyan, TEXT],
       [

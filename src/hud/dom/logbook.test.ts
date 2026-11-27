@@ -74,7 +74,6 @@ function nativeFixture() {
       tabs: STATS_TABS.map((tab) => ({
         label: gameData.menuText.stats.tabs[tab],
         open: tab === "badges",
-        pressed: false,
       })),
       title: gameData.menuText.stats.title,
     },
@@ -224,7 +223,7 @@ it("keeps standard tab controls stable and dispatches each native click once whi
   const hit = statsTabRects()[0]!;
   const at = { clientX: hit.x + hit.width / 2, clientY: hit.y + hit.height / 2 };
   root.fire("pointerdown", { ...pointer(tab, 1, "pointerdown"), ...at });
-  panel.setPage({ ...page, tabs: page.tabs.map((tab) => ({ ...tab, dy: tab.dy + 2 })) });
+  panel.setPage({ ...page, fill: { ...page.fill, colour: PALETTE.ink } });
   scrollTo(18.5);
   root.fire("pointerdown", pointer(tab, 2, "pointerdown"));
   doc.fire("pointerup", { ...pointer(tab, 1, "pointerup"), ...at });

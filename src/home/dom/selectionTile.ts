@@ -25,7 +25,6 @@ import {
   selectLook,
   type TileState,
 } from "../../ui/index.ts";
-import { FEEDBACK } from "../index.ts";
 export interface NativeTileFill {
   readonly colour: number;
   readonly rect: Rect;
@@ -34,7 +33,6 @@ export interface NativeTileMotion {
   readonly focused?: boolean;
   readonly markY: number;
   readonly x: number;
-  readonly y: number;
 }
 export interface NativeSelectionTile {
   readonly content: HTMLElement;
@@ -42,7 +40,7 @@ export interface NativeSelectionTile {
   readonly ready: Promise<readonly string[]>;
   place(scale: DomScale, motion: NativeTileMotion): void;
 }
-// Native picks and shop rows share a persistent edge, state fill, motion and marker.
+// Native picks and shop rows share a fixed face, state fill, refusal offset and marker.
 export function createSelectionTile(
   doc: Document,
   source: DomArtSource,
@@ -53,6 +51,7 @@ export function createSelectionTile(
     readonly mark: "art" | "fallback" | "none";
     readonly hit: Rect;
     readonly rect: Rect;
+    readonly selectable?: boolean;
     readonly state: TileState;
   },
 ): NativeSelectionTile {
@@ -60,6 +59,7 @@ export function createSelectionTile(
   element.classList.add("adw-selection-tile");
   element.setAttribute("data-picker-focus", view.focus);
   element.setAttribute("data-picker-state", view.state);
+  element.toggleAttribute("data-picker-selectable", view.selectable ?? view.state !== "disabled");
   const look = selectLook(view.state);
   element.style.setProperty("--adw-selection-fill", cssHex(PALETTE[look.face]));
   element.style.setProperty(
@@ -85,12 +85,6 @@ export function createSelectionTile(
       top: box.top - gridY(scale, origin.y),
     };
   };
-  const shadow = view.state === "selected" ? doc.createElement("span") : undefined;
-  if (shadow !== undefined) {
-    shadow.className = "adw-framed";
-    shadow.style.backgroundColor = cssHex(PALETTE.plum);
-    host.append(shadow);
-  }
   host.append(paint);
   const face = doc.createElement("span");
   face.className = "adw-framed adw-selection-face";
@@ -135,7 +129,6 @@ export function createSelectionTile(
         scale.origin.x,
         scale.origin.y,
         motion.x,
-        motion.y,
         motion.markY,
       ].join(":");
       if (key === placement) {
@@ -145,19 +138,8 @@ export function createSelectionTile(
       const hit = gridRect(scale, origin);
       setBox(element, hit);
       setBox(host, { ...hit, left: 0, top: 0 });
-      if (shadow !== undefined) {
-        setBox(
-          shadow,
-          local(scale, {
-            height: FEEDBACK.liftPx,
-            width: view.rect.width - 2,
-            x: view.rect.x + 2,
-            y: view.rect.y + view.rect.height - FEEDBACK.liftPx,
-          }),
-        );
-      }
       const pixel = artPixel(scale);
-      paint.style.transform = `translate(${Math.round(motion.x) * pixel}px,${Math.round(motion.y) * pixel}px)`;
+      paint.style.transform = motion.x === 0 ? "" : `translateX(${Math.round(motion.x) * pixel}px)`;
       const faceBox = gridRect(scale, view.rect);
       setBox(face, {
         ...faceBox,

@@ -17,7 +17,6 @@ import {
   bubbleTurnLine,
   type DetailPicture,
   dogInfo,
-  FEEDBACK,
   type Focus,
   gearInfo,
   type HomeAction,
@@ -700,7 +699,7 @@ export class StartScene extends Scene {
   private drawQuip(dog: DogId): void {
     this.quips.set(dog, partingSpeech(gameData, Math.random, dog));
   }
-  // A picker shows its chosen state on release. Other presses retain their dip before the
+  // A picker settles or refuses on release. Other presses retain their dip before the
   // action, except pages that open immediately while their dip plays underneath.
   private actAfterDip(target: Target): void {
     const press = this.press;
@@ -728,7 +727,7 @@ export class StartScene extends Scene {
           target.kind === "dog"
             ? tapDog(gameData, owned, target.dog, this.loadout)
             : tapGear(owned, target.gear, this.loadout);
-        return tap.kind === "loadout" ? "selection" : tap.kind === "shop" ? "page" : "dip";
+        return tap.kind === "shop" ? "page" : "selection";
       }
       case "exit":
       case "help":
@@ -739,7 +738,7 @@ export class StartScene extends Scene {
       case "slotSign":
         return "page";
       case "walker":
-        return this.save().owned.walkers.includes(target.walker) ? "selection" : "dip";
+        return "selection";
       case "bubble":
       case "mute":
       case "start":
@@ -984,11 +983,6 @@ export class StartScene extends Scene {
         pressed: dip(id) > 0,
         refusing: refusing(id),
         x: shakeOffset(reduced, now, this.shakes.get(id)),
-        y:
-          dip(id) +
-          (this.nativeSelections.find((model) => model.id === id)?.tile.kind === "picked"
-            ? -FEEDBACK.liftPx
-            : 0),
       }));
       const ready = this.startUnavailable(this.sections(this.save())) === undefined;
       const waiting = this.launch.waiting() === "start";

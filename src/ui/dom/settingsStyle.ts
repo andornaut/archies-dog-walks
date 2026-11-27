@@ -1,6 +1,6 @@
 // The settings card's own rules in the HTML interface's stylesheet (uiStyle.ts): its rows, each
-// a control that shows focus and press as its face's fill, as a Pet shop row does (cyan focused,
-// green with ink text pressed, Highlight in forced colours), from Game Kit's theme state slots set
+// a control that shows cyan focus and press, as a Pet shop row does (Highlight in forced colours),
+// from Game Kit's theme state slots set
 // once on .adw-row and once in forced colours; and every content separator's colour
 // (tan, CanvasText in forced colours). Settings' and Cheats' rows are Game Kit form rows (kit
 // buttons, whose own focus fill the face replaces) in kit lists that place them: switch rows,
@@ -19,7 +19,7 @@ export const SETTINGS_STYLE = `
   touch-action:pan-y;scrollbar-width:thin}
 .adw-row:focus-visible{z-index:1}
 .adw-row.ui-form-row{background-color:transparent!important}
-.adw-row{--ui-colour-button-focus-face:var(--adw-cyan);--ui-colour-button-pressed-face:var(--adw-green);
+.adw-row{--ui-colour-button-focus-face:var(--adw-cyan);--ui-colour-button-pressed-face:var(--adw-cyan);
   --ui-colour-button-pressed-text:var(--adw-ink)}
 @media (forced-colors:active){
   .adw-row{--ui-colour-button-focus-face:Highlight;--ui-colour-button-focus-text:HighlightText;

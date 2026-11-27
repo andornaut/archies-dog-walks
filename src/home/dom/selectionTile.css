@@ -5,8 +5,8 @@
 .adw-selection-tile {
   --ui-colour-button-focus-face: var(--adw-cyan);
   --ui-colour-button-focus-text: var(--adw-plum);
-  --ui-colour-button-pressed-face: var(--adw-green);
-  --ui-colour-button-pressed-text: var(--adw-ink);
+  --ui-colour-button-pressed-face: var(--adw-cyan);
+  --ui-colour-button-pressed-text: var(--adw-plum);
 }
 .adw-selection-face {
   box-sizing: border-box;
@@ -40,7 +40,7 @@
   .adw-selection-focus-ink {
   color: var(--ui-colour-button-focus-text) !important;
 }
-.adw-selection-tile[data-ui-pressed]:is(
+.adw-selection-tile:where([data-picker-selectable])[data-ui-pressed]:is(
     *,
     :focus-visible,
     .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
@@ -48,12 +48,23 @@
   :is(.adw-selection-face, .adw-selection-focus-fill) {
   background-color: var(--ui-colour-button-pressed-face) !important;
 }
-/* A pressed row's text turns ink, the greyed text of a row the bank does not cover included. */
-.adw-selection-tile[data-ui-pressed]:not([data-picker-refusing]):not(.adw-refusing):not(
-    .adw-refusing-still
-  )
+/* Only an available row previews selection on press. */
+.adw-selection-tile:where([data-picker-selectable])[data-ui-pressed]:not(
+    [data-picker-refusing]
+  ):not(.adw-refusing):not(.adw-refusing-still)
   :is(.adw-selection-focus-ink, .adw-selection-press-ink) {
   color: var(--ui-colour-button-pressed-text) !important;
+}
+.adw-selection-tile[aria-pressed="true"]:is(
+    :focus-visible,
+    .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+  )
+  .adw-selection-face {
+  background-image: linear-gradient(
+    to right,
+    var(--ui-colour-button-focus-text) 0 var(--adw-slice-2),
+    transparent var(--adw-slice-2)
+  );
 }
 /* A refusal's red phases, focused or pressed alike: a picker tile's name area, or a Shop row's
    interior, fills dark red under a white label (7.34:1). */

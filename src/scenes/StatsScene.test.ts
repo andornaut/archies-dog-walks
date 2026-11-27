@@ -45,7 +45,6 @@ function nativeFixture() {
       tabs: STATS_TABS.map((tab) => ({
         label: gameData.menuText.stats.tabs[tab],
         open: tab === "badges",
-        pressed: false,
       })),
       title: gameData.menuText.stats.title,
     },

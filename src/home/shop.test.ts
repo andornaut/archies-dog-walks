@@ -336,8 +336,8 @@ describe("the shop's tabs", () => {
   it("clear the title row and the list by at least 6px when selected", () => {
     const { list, tab } = SHOP_LAYOUT;
     const row = SHOP_LAYOUT.title.row;
-    const above = tab.drawY - FEEDBACK.liftPx - SELECT_OUTSET - (row.y + row.height);
-    const below = list.rect.y - (tab.drawY + tab.drawHeight + SELECT_OUTSET);
+    const above = tab.drawY - (row.y + row.height);
+    const below = list.rect.y - (tab.drawY + tab.drawHeight);
     expect(above).toBeGreaterThanOrEqual(6);
     expect(below).toBeGreaterThanOrEqual(6);
   });
@@ -368,8 +368,7 @@ describe("the shop's tabs", () => {
       expect(Math.min(tab.width, tab.height)).toBeGreaterThanOrEqual(MIN_TAP_SIZE);
       const titleBottom =
         SHOP_LAYOUT.title.capTop + modalTitleInk(gameFont("font-title"), title).bottom;
-      const selectedFaceTop = shopTabFace(tab).y - FEEDBACK.liftPx;
-      expect(selectedFaceTop - titleBottom).toBe(MODAL.titleTop);
+      expect(shopTabFace(tab).y - titleBottom).toBe(MODAL.titleTop + FEEDBACK.liftPx);
     }
   });
 });

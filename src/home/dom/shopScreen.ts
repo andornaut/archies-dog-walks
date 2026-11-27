@@ -9,7 +9,7 @@ import {
   type UiLayer,
 } from "../../ui/dom/index.ts";
 import { gridRect, type PanelText, scrollPlace, type TileState } from "../../ui/index.ts";
-import { FEEDBACK, SHOP_LAYOUT, type ShopPageView } from "../index.ts";
+import { SHOP_LAYOUT, type ShopPageView } from "../index.ts";
 import { type DomPage, showPage } from "./page.ts";
 import type { NativeSelectionTile, NativeTileFill } from "./selectionTile.ts";
 import { createShopScreenInput } from "./shopScreenInput.ts";
@@ -55,7 +55,6 @@ export interface ShopScreenView {
 }
 
 export interface ShopScreenMotion {
-  readonly pressed?: string;
   readonly scroll: { readonly max: number; readonly settled: boolean; readonly y: number };
   readonly rows: ReadonlyMap<
     string,
@@ -163,7 +162,6 @@ export function showShopScreen(
         focused: state?.focused ?? false,
         markY: 0,
         x: state?.x ?? 0,
-        y: motion?.pressed === id ? FEEDBACK.pressDipPx : 0,
       });
       row.parts.forEach((part) => part.place(scrolling.scale));
     }

@@ -1,5 +1,5 @@
-// How a tile, tab or row shows its interaction state, as ui-tile draws it: normal is cream,
-// selected gold, disabled flat grey. Colours are the scenes' PALETTE names.
+// How a native selection tile or row shows its interaction state: normal is cream,
+// selected cyan, disabled flat grey. Colours are the scenes' PALETTE names.
 import { AFFORD_OUTSET, BUTTON_LIP_PX, SELECT_OUTSET } from "../data/index.ts";
 import type { ButtonState, ItemLook, TileState } from "./interaction.ts";
 
@@ -28,18 +28,20 @@ export const GREYED = {
   text: "neutralDarkSlate",
 } as const;
 
+const SELECTION_COLOUR = "cyan";
+
 interface SelectLook {
-  face: "cream" | typeof GREYED.face | "yellow";
+  face: "cream" | typeof GREYED.face | typeof SELECTION_COLOUR;
   state: TileState;
   text: typeof GREYED.text | "plum";
 }
 
-// Text on each face: plum on cream (9.42:1) and yellow (10.92); a disabled label holds the
+// Text on each face: plum on cream and cyan; a disabled label holds the
 // 3:1 its exemption needs.
 const LOOKS: Readonly<Record<TileState, Omit<SelectLook, "state">>> = {
   disabled: { face: GREYED.face, text: GREYED.text },
   normal: { face: "cream", text: "plum" },
-  selected: { face: "yellow", text: "plum" },
+  selected: { face: SELECTION_COLOUR, text: "plum" },
 };
 
 // A button's look: its interaction state, or secondary, the cream button a card's own
@@ -137,10 +139,11 @@ export function selectLook(state: TileState): SelectLook {
 }
 
 // The box behind an item's portrait or icon.
-export type PictureBox = typeof GREYED.affordBox | "deepAmber" | typeof GREYED.box | "tan";
+export type PictureBox =
+  typeof GREYED.affordBox | typeof SELECTION_COLOUR | typeof GREYED.box | "tan";
 
 // A picture's box, from its art and state: grey art sits on the grey box; art in full colour
-// on the tan box an owned item has, the deep amber one while picked, or, on a disabled tile
+// on the tan box an owned item has, the cyan one while picked, or, on a disabled tile
 // (an item the player can buy now), the light grey one.
 export function pictureBox(look: Pick<ItemLook, "art" | "state">): PictureBox {
   if (look.art === "grey") {
@@ -150,7 +153,7 @@ export function pictureBox(look: Pick<ItemLook, "art" | "state">): PictureBox {
     case "disabled":
       return GREYED.affordBox;
     case "selected":
-      return "deepAmber";
+      return SELECTION_COLOUR;
     default:
       return "tan";
   }

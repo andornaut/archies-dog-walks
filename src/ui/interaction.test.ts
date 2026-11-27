@@ -45,7 +45,7 @@ describe("itemTile", () => {
   });
 
   // A tile not owned stays disabled, its art in colour only while the player can buy it. Art in
-  // colour sits on the tan box (deep amber while picked, light grey while for sale), grey art on
+  // colour sits on the tan box (cyan while picked, light grey while for sale), grey art on
   // the grey box.
   it("shows each dog or item tile as available, picked, full, locked or goal-locked", () => {
     for (const [, input, tile, state, art, box] of [
@@ -56,7 +56,7 @@ describe("itemTile", () => {
         { kind: "picked" },
         "selected",
         "colour",
-        "deepAmber",
+        "cyan",
       ],
       [
         "a picked dog in a full pack",
@@ -64,7 +64,7 @@ describe("itemTile", () => {
         { kind: "picked" },
         "selected",
         "colour",
-        "deepAmber",
+        "cyan",
       ],
       [
         "an unpicked dog in a full pack",

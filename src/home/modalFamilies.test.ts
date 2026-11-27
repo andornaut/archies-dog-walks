@@ -214,7 +214,6 @@ it("reflows narrow Logbook stat labels and grows content before the following se
   const save = veteranSave();
   const view = logbookView({ ...measure, bodyInk: () => ({ bottom: 0, top: 0 }) }, gameData, {
     badges: [],
-    pressedTab: undefined,
     save: {
       ...save,
       stats: {

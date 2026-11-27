@@ -17,7 +17,7 @@
   --ui-colour-button-focus-text: var(--adw-ink);
   --ui-colour-button-pressed-face: var(--adw-forest);
   --ui-colour-button-pressed-text: var(--adw-white);
-  --ui-colour-button-selected-face: var(--adw-yellow);
+  --ui-colour-button-selected-face: var(--adw-cyan);
   --ui-colour-button-selected-text: var(--adw-ink);
   position: absolute;
   border-radius: 0;
@@ -35,6 +35,10 @@
   --adw-button-highlight: var(--adw-tan);
   --adw-button-lip: var(--adw-plum);
   --adw-button-text: var(--adw-cream);
+}
+.adw-standard-button.adw-selectable-button {
+  --ui-colour-button-pressed-face: var(--ui-colour-button-selected-face);
+  --ui-colour-button-pressed-text: var(--ui-colour-button-selected-text);
 }
 /* An unavailable button's focus is navy under cream. */
 .adw-standard-button[aria-disabled="true"] {
@@ -145,7 +149,11 @@
 /* The sunk face moves down 2 rows; its bottom frame row is 3 deep and the 2 rows below the box are
    clipped, so its last row is ink on the box's bottom row. Its fill is an image, as the raised
    face's is, so it covers Kit's focus background colour. */
-.adw-standard-button:is([data-ui-pressed], :disabled, [aria-disabled="true"])
+.adw-standard-button:is(
+    [data-ui-pressed]:not(.adw-selectable-button),
+    :disabled,
+    [aria-disabled="true"]
+  )
   .adw-standard-button-face {
   border-bottom-width: calc(3 * var(--adw-button-unit));
   background: linear-gradient(var(--adw-button-fill), var(--adw-button-fill));
@@ -164,4 +172,9 @@ button.adw-standard-button.ui-standard-button:focus-visible
   content: none;
   outline: none;
   box-shadow: none;
+}
+/* On a selected face the bevel and lip distinguish keyboard focus. */
+.adw-selectable-button:is([data-ui-selected], [aria-pressed="true"]):focus-visible {
+  --adw-button-highlight: var(--ui-colour-button-focus-text);
+  --adw-button-lip: var(--ui-colour-button-focus-text);
 }

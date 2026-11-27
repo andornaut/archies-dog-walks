@@ -31,14 +31,19 @@ const measure: PanelMeasure = {
   wrapNote: (room, line) =>
     wrapWords((text) => inkWidth("font-body", { scale: 2 }, text), room, line),
 };
-function balanced(panelTop: number, title: readonly PanelText[], firstVisibleBody: number) {
+function balanced(
+  panelTop: number,
+  title: readonly PanelText[],
+  firstVisibleBody: number,
+  bodyGap = 24,
+) {
   const ink = title.map((line) => {
     const rows = measure.titleInk(line.text);
     return { bottom: line.capTop + rows.bottom, top: line.capTop + rows.top };
   });
   expect(title.every((line) => line.scale === MODAL_TITLE_SCALE)).toBe(true);
   expect(Math.min(...ink.map((line) => line.top)) - panelTop).toBe(24);
-  expect(firstVisibleBody - Math.max(...ink.map((line) => line.bottom))).toBe(24);
+  expect(firstVisibleBody - Math.max(...ink.map((line) => line.bottom))).toBe(bodyGap);
 }
 it.each([
   gameData.menuText.menu.title,
@@ -56,16 +61,16 @@ it.each([
   balanced(view.panel.y, view.title, view.buttons[0]!.rect.y);
 });
 it.each([gameData.homeText.shop.title, gameData.menuText.stats.title])(
-  "uses the same role and visible selected-tab clearance for %s",
+  "uses the same role and fixed visible tab clearance for %s",
   (title) => {
     const page = shopPageView(measure, {
       tabs: [
-        { label: gameData.homeText.shop.tabs.dogs, open: true, pressed: false },
-        { label: gameData.homeText.shop.tabs.gear, open: false, pressed: false },
+        { label: gameData.homeText.shop.tabs.dogs, open: true },
+        { label: gameData.homeText.shop.tabs.gear, open: false },
       ],
       title,
     });
-    balanced(page.panel.y, page.title, Math.min(...page.tabs.map((tab) => tab.face.y + tab.dy)));
+    balanced(page.panel.y, page.title, Math.min(...page.tabs.map((tab) => tab.face.y)), 26);
   },
 );
 it.each([gameData.homeText.update.title, gameData.homeText.update.failure])(

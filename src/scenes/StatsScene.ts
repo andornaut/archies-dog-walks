@@ -7,7 +7,6 @@ import { gameData } from "../data/index.ts";
 import {
   type BadgeView,
   badgeWall,
-  FEEDBACK,
   logbookView,
   overlayRegion,
   STATS_LAYOUT,
@@ -75,7 +74,6 @@ export class StatsScene extends Scene {
   private htmlCard: KeptPanel | undefined;
   private page: DomLogbook | undefined;
   private pageKey = "";
-  private pressed: Target | undefined;
   private resumeKey: SceneKey | undefined;
   private scroll: ListScroll = listScroll(0);
   private dragging = false;
@@ -90,7 +88,6 @@ export class StatsScene extends Scene {
     this.htmlCard = undefined;
     this.page = undefined;
     this.pageKey = "";
-    this.pressed = undefined;
     this.detail = undefined;
     this.dragging = false;
     this.scroll = listScroll(0);
@@ -173,16 +170,6 @@ export class StatsScene extends Scene {
     this.tab = tab;
   }
 
-  private openTabAfterDip(index: number): void {
-    this.pressed = { tab: index };
-    this.render();
-    this.time.delayedCall(FEEDBACK.pressDipMs, () => {
-      this.pressed = undefined;
-      this.openTab(TABS[index] ?? this.tab);
-      this.render();
-    });
-  }
-
   private onKey(code: string, repeat: boolean): boolean {
     if (!menuKeyActs(repeat, code)) {
       return false;
@@ -205,7 +192,7 @@ export class StatsScene extends Scene {
       const index = TABS.indexOf(this.tab);
       const next = clampIndex(TABS.length, index + (direction === "left" ? -1 : 1));
       if (next !== index) {
-        this.openTabAfterDip(next);
+        this.act({ tab: next });
       }
       return true;
     }
@@ -222,7 +209,6 @@ export class StatsScene extends Scene {
   }
 
   private cancelPress(): void {
-    this.pressed = undefined;
     this.dragging = false;
     this.scroll = releaseScroll(LIST_SCROLL_RULE, true, this.time.now, this.scroll);
   }
@@ -239,7 +225,6 @@ export class StatsScene extends Scene {
     this.scroll = dragScroll(LIST_SCROLL_RULE, point.y, this.time.now, this.scroll);
     if (!was && isDragging(this.scroll)) {
       this.dragging = true;
-      this.pressed = undefined;
       this.render();
     }
   }
@@ -269,8 +254,6 @@ export class StatsScene extends Scene {
     };
     const view = logbookView(measure, gameData, {
       badges,
-      pressedTab:
-        typeof this.pressed === "object" && "tab" in this.pressed ? this.pressed.tab : undefined,
       save,
       tab: this.tab,
     });

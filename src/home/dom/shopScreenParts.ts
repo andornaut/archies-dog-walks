@@ -90,11 +90,11 @@ export function createShopScreenParts(doc: Document, input: ShopScreenInput) {
       hit: row.rect,
       mark: "none",
       rect: row.rect,
+      selectable: row.selectable,
       state: row.state,
     });
     const parts: DomPart[] = row.fills.map((fill) => gridFillPart(doc, row.rect, fill));
-    // A row the bank does not cover keeps its greyed text on the focus fill and turns ink, as
-    // any row's does, on the press fill.
+    // A row the bank does not cover keeps its greyed text on the focus fill.
     parts.push(
       ...row.texts.map((line) => {
         const part = textPart(line, row.rect);

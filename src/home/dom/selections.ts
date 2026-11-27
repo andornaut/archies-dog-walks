@@ -45,7 +45,6 @@ interface SelectionArtSource extends DomArtSource {
 }
 export interface SelectionMotion {
   readonly x: number;
-  readonly y: number;
   readonly faceY: number;
   readonly pressed?: boolean;
   readonly refusing: boolean;

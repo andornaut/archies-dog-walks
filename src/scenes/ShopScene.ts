@@ -9,7 +9,6 @@ import {
   answerPurchase,
   type ConfirmChoice,
   dogRows,
-  FEEDBACK,
   gearRows,
   type HomeAction,
   itemModal,
@@ -146,7 +145,6 @@ export class ShopScene extends Scene {
   private message: { readonly refused: boolean; readonly text: string } | null = null;
   private placed: ShopPlacedRow[] = [];
   private messagePlate: Rect = PLATE;
-  private pressed: ShopTarget | undefined;
   private resumeKey: SceneKey | undefined;
   // The open tab's scroll and fling state.
   private scroll: ListScroll = listScroll(0);
@@ -164,7 +162,6 @@ export class ShopScene extends Scene {
     // The scene's shutdown destroyed any HTML card.
     this.htmlDetail = undefined;
     this.message = null;
-    this.pressed = undefined;
     this.scroll = listScroll(0);
     this.shakes = new Map();
     this.tab = shopOpenTab(data.focus);
@@ -196,9 +193,8 @@ export class ShopScene extends Scene {
     this.render();
     this.showFocus();
 
-    // A tap acts once its dip ends, but an affordable row opens its item modal as it lifts;
-    // holding a dog or gear row opens its detail card, and the hold takes the press. With a card
-    // open, a tap anywhere closes it, as on the Logbook.
+    // An admitted tap selects on release. Holding a dog or gear row opens its detail card and
+    // consumes the press, as on the Logbook.
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
       if (!sceneKeyAllowed(event)) {
         return;
@@ -230,13 +226,9 @@ export class ShopScene extends Scene {
   }
 
   private nativeMove(point: Point): void {
-    const was = isDragging(this.scroll);
     this.scroll = dragScroll(LIST_SCROLL_RULE, point.y, this.time.now, this.scroll);
     if (isDragging(this.scroll)) {
       this.nativeDragging = true;
-      if (!was) {
-        this.pressed = undefined;
-      }
       this.placeList();
     }
   }
@@ -254,7 +246,6 @@ export class ShopScene extends Scene {
   }
 
   private cancelNativePress(): void {
-    this.pressed = undefined;
     this.nativeDragging = false;
     this.scroll = releaseScroll(LIST_SCROLL_RULE, true, this.time.now, this.scroll);
   }
@@ -266,7 +257,6 @@ export class ShopScene extends Scene {
       return at !== undefined && refusalRed(reduced, this.time.now - at);
     };
     this.native?.place({
-      ...(this.pressed?.kind === "row" ? { pressed: this.pressed.id } : {}),
       rows: new Map(
         this.placed.map(({ row }) => {
           return [
@@ -306,7 +296,7 @@ export class ShopScene extends Scene {
         measure,
         shownText,
       },
-      { focusId: this.focusId, message: this.message, pressed: this.pressed, save, tab: this.tab },
+      { focusId: this.focusId, message: this.message, save, tab: this.tab },
     );
     this.focusId = focusId;
     this.scroll = resizeScroll(scrollMax(layout.frame.rect, layout.bottom), this.scroll);
@@ -320,13 +310,13 @@ export class ShopScene extends Scene {
         showShopScreen(
           layer,
           {
-            activateRow: (id) => this.actAfterDip({ id, kind: "row" }),
+            activateRow: (id) => this.act({ id, kind: "row" }),
             active: () => this.sys.isActive() && this.isListOpen(),
             cancel: () => this.cancelNativePress(),
             click: (point) => {
               const target = this.targetAt(point.x, point.y);
               if (target !== undefined) {
-                this.actAfterDip(target);
+                this.act(target);
               }
             },
             close: () => this.close(),
@@ -420,7 +410,7 @@ export class ShopScene extends Scene {
     if (direction === "left" || direction === "right") {
       const tab = shopTabForArrow(this.tab, direction);
       if (tab !== undefined && tab !== this.tab) {
-        this.actAfterDip({ kind: "tab", tab });
+        this.act({ kind: "tab", tab });
       }
       return;
     }
@@ -438,32 +428,8 @@ export class ShopScene extends Scene {
       return;
     }
     if (isForegroundConfirmKey(code) && this.focusId !== null) {
-      this.actAfterDip({ id: this.focusId, kind: "row" });
+      this.act({ id: this.focusId, kind: "row" });
     }
-  }
-
-  // Tabs and owned rows settle on activation. A short row retains its press and refusal, and
-  // an affordable row still opens its modal during the dip.
-  private actAfterDip(target: ShopTarget): void {
-    const row = target.kind === "row" ? this.rowById(target.id) : undefined;
-    if (target.kind === "tab" || row?.price === null) {
-      this.pressed = undefined;
-      this.act(target);
-      return;
-    }
-    this.pressed = target;
-    this.render();
-    const opens = row !== undefined && this.rowLook(this.save(), row) === "affordable";
-    if (opens) {
-      this.act(target);
-    }
-    this.time.delayedCall(FEEDBACK.pressDipMs, () => {
-      this.pressed = undefined;
-      this.render();
-      if (!opens) {
-        this.act(target);
-      }
-    });
   }
 
   private close(): void {
@@ -502,7 +468,6 @@ export class ShopScene extends Scene {
 
   private openDetail(id: string): void {
     const purchase = this.rowById(id)?.purchase;
-    this.pressed = undefined;
     if (purchase !== undefined) {
       this.detail = purchase;
     }

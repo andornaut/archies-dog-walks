@@ -20,7 +20,6 @@ import { pricePlateView } from "./pricePlateView.ts";
 import { SHOP_ROW_VIEWS, SHOP_TABS, shopRowLook, type ShopTab } from "./shop.ts";
 import { SHOP_LAYOUT, shopHeadingBand, shopRowTextLayout } from "./shopLayout.ts";
 import { shopPageView } from "./shopPageView.ts";
-import type { ShopTarget } from "./shopTargets.ts";
 import { type ShopFonts, type ShopShownText, shopTextLayout } from "./shopTextLayout.ts";
 
 const ROW = SHOP_LAYOUT.row;
@@ -45,7 +44,6 @@ export function shopScreenView(
   subject: {
     readonly focusId: string | null;
     readonly message: { readonly refused: boolean; readonly text: string } | null;
-    readonly pressed: ShopTarget | undefined;
     readonly save: SaveDocument;
     readonly tab: ShopTab;
   },
@@ -199,7 +197,6 @@ export function shopScreenView(
       tabs: SHOP_TABS.map((tab) => ({
         label: words.tabs[tab],
         open: tab === subject.tab,
-        pressed: subject.pressed?.kind === "tab" && subject.pressed.tab === tab,
       })),
       title: words.title,
     }),
