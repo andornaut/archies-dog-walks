@@ -38,7 +38,7 @@ Use 4/8/16 for the ordinary row/group/panel spacing roles, and the button gaps f
 | MODAL.pad / MODAL.margin          | 16                                | px         | Panel content / caller's protected area                                | [modal tokens](../src/ui/modalGeometry.ts)                                              |
 | MODAL.rowGap                      | 4                                 | px         | Text rows                                                              | [modal tokens](../src/ui/modalGeometry.ts)                                              |
 | MOMENT_PARTS.firing.faceScale     | 2                                 | scale      | The fired owner face                                                   | [layout data](../src/data/layout.ts)                                                    |
-| OWNER_CARD_FACE                   | 20                                | px         | Inline owner faces and the placeholder face                            | [layout data](../src/data/layout.ts)                                                    |
+| OWNER_CARD_FACE                   | 20                                | px         | Legacy boot placeholder                                                | [boot assets](../src/scenes/boot/assets.ts)                                             |
 | PAGE.rowTextGap                   | 8                                 | px         | A page row's art box to its text                                       | [layout data](../src/data/layout.ts)                                                    |
 | PAGE.trackGap                     | 6                                 | px         | Page rows and body lines to the scrollbar track                        | [layout data](../src/data/layout.ts)                                                    |
 | separator                         | 1px line, 8 clear above and below | px         | Standard content separator, full content width                         | [separator](../src/ui/separator.ts)                                                     |
@@ -49,16 +49,16 @@ The [button gaps](controls.md#sizing-and-spacing) define which buttons are small
 
 ### Portrait, item picture and icon sizes
 
-Use these logical sizes for the artwork box. Use portrait and icon assets authored for the target size where available. The 64px detail role also supports the existing pixel-exact 2× item pictures.
+Use `UI_PICTURE_SIZE` and `UI_FUNCTION_ICON_SIZE` for the logical artwork box. Use portrait and icon assets authored for the target size where available. The 64px detail role also supports the existing pixel-exact 2× item pictures.
 
-| Role                              | Logical size | Use                                                                                    | Existing source                                                                                                               |
-| --------------------------------- | ------------ | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Standard portrait or item picture | 32×32        | Character portraits and catalogue item pictures on pickers, list rows and the walk HUD | [`FACE_SIZE` and `GEAR_ICON`](../src/data/layout/controls.ts)                                                                 |
-| Detail portrait or item picture   | 64×64        | Main subject in a detail view                                                          | [Dog and walker portrait assets](../src/assets/spriteKeys.ts) and [purchase art](../src/scenes/itemArt.ts)                    |
-| Compact functional icon           | 16×16        | Navigation glyphs, label icons and notice icons                                        | [`BUTTON_SIZE.icon.glyph` and `LABEL_ICON`](../src/data/layout/controls.ts)                                                   |
-| Standard functional icon          | 24×24        | Walk HUD effects, walker perks and card effect or gear indicators                      | [`WALK_BAR_PARTS.effects.iconSize`](../src/data/layout/walk.ts) and [native effect icons](../src/presentation/effectIcons.ts) |
+| Role                              | Logical size | Use                                                                                    | Existing source                                                                                                            |
+| --------------------------------- | ------------ | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Standard portrait or item picture | 32×32        | Character portraits and catalogue item pictures on pickers, list rows and the walk HUD | [`UI_PICTURE_SIZE.standard`](../src/data/layout/controls.ts), used by `FACE_SIZE` and `GEAR_ICON`                          |
+| Detail portrait or item picture   | 64×64        | Main subject in a detail view                                                          | [`UI_PICTURE_SIZE.detail`](../src/data/layout/controls.ts) and [purchase art](../src/scenes/itemArt.ts)                    |
+| Compact functional icon           | 16×16        | Navigation glyphs, label icons and notice icons                                        | [`UI_FUNCTION_ICON_SIZE.compact`](../src/data/layout/controls.ts), used by the button glyph and label icon                 |
+| Standard functional icon          | 24×24        | Walk HUD effects, walker perks and card effect or gear indicators                      | [`UI_FUNCTION_ICON_SIZE.standard`](../src/data/layout/controls.ts), used by [walk HUD effects](../src/data/layout/walk.ts) |
 
-Measure wells, frames and hit targets independently. Road sprites, world effects and scene illustrations keep their authored dimensions. The 30px walker picker portrait and 20px inline owner face are pending migrations. Check the name strip's clearance for the walker and the measured line height and wrapping for the inline face before changing them.
+Measure wells, frames and hit targets independently. Road sprites, world effects and scene illustrations keep their authored dimensions. The walker picker places the native 32×32 portrait at tile-local (4,0), with the name strip starting at y = 32.
 
 ## Page bounds/alignment
 
@@ -230,6 +230,8 @@ Both pages inset the 32×16 switch 15px from the right edge. The whole row is th
 ## HUD/overlays
 
 Keep gameplay notices below overlay scenes and scrims. A high object depth inside the run scene is not permission to draw above a modal. The message strip stays in the HUD with its paused lifetime and enlarged-card hiding; [messageStripView](../src/scenes/messageStripView.ts) owns its rendering. Ordinary content icons and effect icons use the strip's same 16px cell. An owner-led notice uses the walk HUD's 32×32 portrait in a 34×34 cell at screen x = 14 and 6px below the panel top. The quip starts at screen x = 52 with 294px of text room. One text row still makes a 48px panel with 8px below the portrait cell. Taller quips keep every measured text row.
+
+Walk notices and low-health messages show owner names as Body 2 text. Treat each full name and its immediately adjacent signed heart amount as one wrapping unit. A speaker-led quip still uses its 32px leading portrait. The owner tab above a dog card remains a separate cue. [Notice text wrapping](../src/hud/noticeText.ts)
 
 | Token            | Value                                            | Unit       | Scope                                                                       | Source                                                                               |
 | ---------------- | ------------------------------------------------ | ---------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
