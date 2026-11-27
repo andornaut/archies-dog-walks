@@ -1713,12 +1713,8 @@ const ILLUSTRATIONS: ReadonlyMap<string, () => cards.Art> = new Map([
 // The illustration in an encounter card frame, cost plaque included, as cards.ts's mockCard shows
 // one, scale times bigger, on dbrown.
 function card(key: string, scale = 1): RgbaImage {
-  const im = toImage(cards.cardFrame("encounter").px);
-  paste({ at: { x: 6, y: 121 } }, toImage(cards.cardCost().px), im);
-  paste({ at: { x: 4, y: 16 } }, ILLUSTRATIONS.get(key)!().img, im);
-  const bg = filledImage([...sn.rgb("dbrown"), 255], im.width, im.height);
-  paste({ at: { x: 0, y: 0 }, keepAlpha: true, mask: "alpha" }, im, bg);
-  return resizeNearest(bg.width * scale, bg.height * scale, bg);
+  const im = cards.mockCard("encounter", ILLUSTRATIONS.get(key)!().img);
+  return resizeNearest(im.width * scale, im.height * scale, im);
 }
 
 // ---------- sprites ----------

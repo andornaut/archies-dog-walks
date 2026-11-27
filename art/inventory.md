@@ -323,14 +323,14 @@ These static 24×24 images have no tags and retain the existing subjects and col
 
 ## Choice cards
 
-| Key                           | Type   | Size    | Tags                 | Note                                                                      |
-| ----------------------------- | ------ | ------- | -------------------- | ------------------------------------------------------------------------- |
-| `card-<encounter>-<option>`   | image  | 75×56   |                      | One per option of the encounters and lucky encounters                     |
-| `card-<upgrade>`, `card-skip` | image  | 75×56   |                      | One per upgrade (6), and the Walk on by option Hall pass adds             |
-| `card-cost`                   | image  | 71×13   |                      | Cost plaque, at 2× on the large frame                                     |
-| `card-frame`                  | sprite | 112×153 | `encounter`, `route` | The game draws `encounter` for an obstacle and `route` for a fork; alike  |
-| `card-frame-large`            | sprite | 166×280 | as `card-frame`      | Tap-to-enlarge view                                                       |
-| `card-zone-<zone>`            | image  | 75×56   |                      | A fork's path card: the zone's road to a cross street, its scenery beyond |
+| Key                           | Type   | Size    | Tags                 | Note                                                                                           |
+| ----------------------------- | ------ | ------- | -------------------- | ---------------------------------------------------------------------------------------------- |
+| `card-<encounter>-<option>`   | image  | 75×56   |                      | One per option of the encounters and lucky encounters                                          |
+| `card-<upgrade>`, `card-skip` | image  | 75×56   |                      | One per upgrade (6), and the Walk on by option Hall pass adds                                  |
+| `card-cost`                   | image  | 71×13   |                      | Cost plaque source, nine-sliced to 71×21 on the small frame and drawn at 2× on the large frame |
+| `card-frame`                  | sprite | 112×185 | `encounter`, `route` | The game draws `encounter` for an obstacle and `route` for a fork; alike                       |
+| `card-frame-large`            | sprite | 166×280 | as `card-frame`      | Tap-to-enlarge view                                                                            |
+| `card-zone-<zone>`            | image  | 75×56   |                      | A fork's path card: the zone's road to a cross street, its scenery beyond                      |
 
 Card keys use the data keys (`card-skunk-rinse`, `card-belly-rubs`). The neighbour opens no card: `card-friendly-neighbour-take`, her patting a pack dog on the head under rising hearts, is its popup art. Both lucky popups (`card-lost-wallet-keep` too) are cut out on transparency, with no background.
 

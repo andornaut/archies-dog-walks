@@ -1,17 +1,14 @@
 // Draw the choice card frame and compose the card illustrations.
 //
-// - card-frame: a 112x153 sprite, one frame per card type (tags encounter for an obstacle's card,
-//   route for a fork's path cards; the two frames are alike). The game draws the title centred over
-//   the art window with the close X at the top right, the effect text in the body and the cost in
-//   the badge. Layout, in card pixels: title rows 2..12, art window 17,15 to 93,72 (illustration at
-//   18,16, 75x56), centred with cream face either side, body 6..105 x 76..130, badge spot 20,134,
-//   71x13 (plain face; card-cost goes there on a paid option).
+// - card-frame: a 112x185 sprite with identical encounter and route frames. The plain title band
+//   at 2,2 is 108x36 for up to two Body 2 lines. The window at 17,39 is 77x58, with the 75x56
+//   illustration at 18,40. A paid option draws its 71x21 cost plaque at 20,160 over the cream face.
 // - card-frame-large: a 166x280 sprite with the same tags, for the tap-to-enlarge view: the 83x140
 //   layout (art window 3,15, body 6..76 x 76..117, badge spot 6,121) doubled with 1px detail. Title
 //   rows 4..24, art window 6,30, 154x116 (illustration at 2x at 8,32), body 12..153 x 152..233,
 //   badge spot 12,242, 142x26.
-// - card-cost: a 71x13 image, the cost plaque laid over the badge (at 2x on the large frame); the
-//   game writes the cost centred on its face.
+// - card-cost: a 71x13 image. The small frame extends it with 2px left, right and top caps and
+//   a 3px bottom cap. The large frame uses it at 2x. The game centres the cost ink on its face.
 // - card-<encounter>-<option>, card-<upgrade> and card-skip: 75x56 illustrations, one per option,
 //   composed from the exported sprites. Build the sprites first.
 // - card-zone-<zone>: 75x56, a fork's path card: the zone's road, sampled from its road strip,
@@ -56,15 +53,18 @@ const USAGE = `Usage:
                                             illustrations and cost plaque to public/art/images/`;
 
 export const CW = 112;
-export const CH = 153;
+export const CH = 185;
 export const AW = 75;
 export const AH = 56;
 // The illustration's top left on card-frame, centred across the card, and the badge spot's (the
 // cost plaque's), centred under the body.
 const ART_X = Math.floor((CW - AW) / 2);
-const ART_Y = 16;
-const BADGE_X = Math.floor((CW - 71) / 2);
-const BADGE_Y = 134;
+const ART_Y = 40;
+const COST_W = 71;
+const COST_H = 13;
+const SMALL_COST_H = 21;
+const BADGE_X = Math.floor((CW - COST_W) / 2);
+const BADGE_Y = 160;
 // card-frame-large keeps the 83x140 layout doubled.
 const LBW = 83;
 const LBH = 140;
@@ -144,13 +144,10 @@ function cardFrameLarge(kind: string): Grid {
   return g;
 }
 
-// 71x13: the cost plaque, laid over the frame's badge spot at 20,134 (12,242 at 2x on the large
-// frame). ui.ts's chrome with its corners cut 1px: the cream face is x 2 to 67, rows 2 to 9, over
-// the tan lip. The game writes the cost ($, $$$, the heart change, Free or Need $...) centred in
-// font-title, plum (9.42:1), caps in rows 4 to 8. A disabled card's grey copy turns the face nlgrey,
-// where ink holds 12.64:1.
-export function cardCost(): Grid {
-  return chrome(new Grid(71, 13), 0, 0, 71, 13);
+// The 71x13 cost texture, or the same chrome at the small preview's taller size. The cream face
+// starts 2px down and ends above the 3px bottom cap.
+export function cardCost(height = COST_H): Grid {
+  return chrome(new Grid(COST_W, height), 0, 0, COST_W, height);
 }
 
 // ---------- illustration helpers ----------
@@ -1857,12 +1854,12 @@ function* frameSprite(): Generator<Sprite> {
 // A whole card as the game will show it, cost plaque included, for previews: an opaque image.
 export function mockCard(
   kind: string,
-  key: string,
+  illustration: string | RgbaImage,
   { large = false }: { large?: boolean } = {},
 ): RgbaImage {
   const scale = large ? 2 : 1;
   const im = toImage((large ? cardFrameLarge : cardFrame)(kind).px);
-  const cost = toImage(cardCost().px);
+  const cost = toImage(cardCost(large ? COST_H : SMALL_COST_H).px);
   const [badge, at] = large
     ? [
         [6, 121],
@@ -1877,7 +1874,8 @@ export function mockCard(
     resizeNearest(cost.width * scale, cost.height * scale, cost),
     im,
   );
-  const art = ILLUSTRATIONS.get(key)!().img;
+  const art =
+    typeof illustration === "string" ? ILLUSTRATIONS.get(illustration)!().img : illustration;
   paste(
     { at: { x: at[0]! * scale, y: at[1]! * scale } },
     resizeNearest(AW * scale, AH * scale, art),
