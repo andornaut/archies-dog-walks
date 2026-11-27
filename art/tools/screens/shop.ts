@@ -128,9 +128,9 @@ export function petShopFront({ doorFrame = null, pressed = false }: PetShopOptio
 }
 
 // The PET SHOP board from its frame's top left: the go state (STATES.go), a green face with a yellow
-// top highlight on a forest lip 4px deep, in an ink line with its corners cut, and PET SHOP in the
-// sign letters' shapes at 2x, filled ink (8.41:1 on green) with no outline or shadow, as the go
-// label. Raised, row 0 is ink, row 1 the highlight, the face runs to row 16, the lip fills rows 17
+// top highlight on a forest lip 4px deep, in an ink line with clipped upper corners and a square
+// lower edge. PET SHOP uses the sign letters' shapes at 2x, filled ink (8.41:1 on green) without an
+// outline or shadow. Raised, row 0 is ink, row 1 the highlight, the face runs to row 16, the lip fills rows 17
 // to 20 and ink row 21; the caps fill rows 4 to 13. Pressed fills the face forest with white
 // letters (7.80:1), the pressed treatment of Start walk and every standard button; the lip and
 // highlight give way to face, and face and letters sink BOARD_DROP, a dip that only adds to the
@@ -148,8 +148,8 @@ function shopBoard(cv: Canvas, state: BoardState): void {
   const t = pressed ? BOARD_DROP : 0;
   const [, lip, hi] = STATES.go!;
   const [face, ink] = BOARD_FACES[state];
-  cv.fill(1, t, bw - 2, bh, "ink");
-  cv.fill(0, 1 + t, bw, bh - 2, "ink");
+  cv.fill(1, t, bw - 2, bh - 1, "ink");
+  cv.fill(0, 1 + t, bw, bh - 1, "ink");
   cv.fill(1, 1 + t, bw - 2, bh - 2, face);
   if (!pressed) {
     cv.fill(1, 1, bw - 2, 1, hi!);

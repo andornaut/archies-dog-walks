@@ -143,11 +143,12 @@ const TILE_LIP = "brown";
 // bottom and 1px at the right. selected is the gold of ui-section's complete state: an ink line, a 1px
 // amber band and an orange line round a yellow face on a 1px amber lip. disabled (not owned and short,
 // the pack full, not available) is flat in the neutral greys: an ink line, an nslate line and an ngrey
-// face with no lip. Content sits from 3px in.
+// face with no lip. All states have a square ink bottom edge. Content sits from 3px in.
 function tile(state: string, phase: number | null = null): Grid {
   const [face, stateLip] = STATES[state]!;
   const lip = state === "normal" ? TILE_LIP : stateLip;
   const g = new Grid(TILE, TILE);
+  g.rect(0, TILE - 1, TILE, 1, "ink");
   if (state === "selected") {
     g.rect(1, 0, TILE - 2, TILE, "ink");
     g.rect(0, 1, TILE, TILE - 2, "ink");
