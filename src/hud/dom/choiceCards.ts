@@ -12,6 +12,7 @@ import {
 import { cardGreyPath, DIFFICULTY_KEY } from "../../assets/index.ts";
 import { CHARM, type GameData, SCREEN_CONFIG, SLICES } from "../../data/index.ts";
 import { textPart } from "../../home/dom/index.ts";
+import { focusDirectionForKey, menuKeyActs, sceneKeyAllowed } from "../../input/index.ts";
 import { SCREEN_LAYOUT } from "../../layout/index.ts";
 import { CARD_LAYOUT, cardRowIn, forkHomeRect, walkBarIconKey } from "../../presentation/index.ts";
 import { type CardView, MAX_CARD_OPTIONS } from "../../rules/index.ts";
@@ -123,12 +124,12 @@ function sheetPart(
   };
 }
 
-// A card's parts; stateBand adds the label band that focus and an enabled card's press fill.
+// A card's parts. A live small card also has a band for its refusal flash.
 function surfaceParts(
   doc: Document,
   original: Source,
   surface: ChoiceCardSurface,
-  stateBand = false,
+  refusalBand = false,
 ) {
   const source: Source = surface.grey
     ? { ...original, artUrl: (path) => original.artUrl(cardGreyPath(path)) }
@@ -207,9 +208,9 @@ function surfaceParts(
       text,
     ),
   );
-  if (stateBand) {
+  if (refusalBand) {
     const band = doc.createElement("span");
-    band.className = "adw-art adw-choice-press-band";
+    band.className = "adw-art adw-choice-refusal-band";
     band.setAttribute("aria-hidden", "true");
     const { height, room, y } = CARD_LAYOUT.band;
     all.push(
@@ -220,7 +221,7 @@ function surfaceParts(
         y: rect.y + y,
       }),
     );
-    labels[0]?.element.classList.add("adw-choice-press-label");
+    labels[0]?.element.classList.add("adw-choice-refusal-label");
   }
   all.push(...labels);
   for (const { charm, rect: plate } of surface.charms) {
@@ -442,10 +443,17 @@ export function showChoiceCards(
         const rendered = surfaceParts(doc, input, surface);
         const group = doc.createElement("div");
         group.hidden = true;
-        group.append(...rendered.all.map(({ element }) => element));
+        const outline = doc.createElement("span");
+        outline.className = "adw-art adw-choice-held-outline";
+        outline.setAttribute("aria-hidden", "true");
+        const placedOutline = gridBoxPart(ORIGIN, outline, surface.rect);
+        group.append(...rendered.all.map(({ element }) => element), outline);
         parts.push({
           element: group,
-          place: (scale) => rendered.all.forEach((part) => part.place(scale)),
+          place: (scale) => {
+            rendered.all.forEach((part) => part.place(scale));
+            placedOutline.place(scale);
+          },
           ready: Promise.all(
             rendered.all.flatMap((part) => (part.ready === undefined ? [] : [part.ready])),
           ).then((urls) => urls.flat()),
@@ -507,12 +515,38 @@ export function showChoiceCards(
             ],
     }),
   });
+  const moveFocus = (event: KeyboardEvent) => {
+    const direction = focusDirectionForKey(event.code);
+    if (
+      direction === undefined ||
+      !sceneKeyAllowed(event) ||
+      !menuKeyActs(event.repeat, event.code) ||
+      !shown.accepts() ||
+      !input.accepts()
+    ) {
+      return;
+    }
+    // The dialog owns navigation. Confirm is the native button's existing Enter/Space click.
+    event.preventDefault();
+    event.stopPropagation();
+    if (small[0]?.element.hidden) {
+      return;
+    }
+    const current = small.findIndex(
+      ({ option }) => option === doc.activeElement && option.matches(":focus-visible"),
+    );
+    const step = direction === "up" || direction === "left" ? -1 : 1;
+    shown.focusControl(current === -1 ? 0 : (current + step + small.length) % small.length);
+  };
   if (input.picture) {
     shown.setInert(true);
+  } else {
+    shown.element.addEventListener("keydown", moveFocus);
   }
   return {
     ...shown,
     destroy: () => {
+      shown.element.removeEventListener("keydown", moveFocus);
       small.forEach((part) => part.destroy());
       large.forEach((part) => part.destroy());
       shown.destroy();

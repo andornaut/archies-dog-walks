@@ -1,83 +1,46 @@
-/* An option shows focus and press as its label band's fill: cyan for focus, green for an enabled
-   card's press, from Game Kit's theme state slots on the card's group, Highlight in forced
-   colours. */
-.adw-choice-option:focus-visible {
-  outline: none;
+/* The existing hit button follows the card frame's outer edges. Focus and press share one
+   outline there. The held view paints the same outline on its larger frame. */
+.adw-choice-option:focus-visible,
+.adw-choice-pressed .adw-choice-option,
+.adw-choice-held-outline {
+  outline: var(--adw-slice-2) solid var(--adw-cyan);
+  outline-offset: 0;
 }
 
-/* A card's group is its parts' containing block and stacking context, still or shaking in a
-   refusal (refusal.ts). */
+/* Keep the card and its outline together during a refusal. */
 .adw-choice-group {
-  --ui-colour-button-focus-face: var(--adw-cyan);
-  --ui-colour-button-pressed-face: var(--adw-green);
   transform: translateX(0);
 }
 
-.adw-choice-press-band {
+.adw-choice-refusal-band {
   display: none;
 }
 
-.adw-choice-group:has(.adw-choice-option:focus-visible) .adw-choice-press-band {
-  display: block;
-  background: var(--ui-colour-button-focus-face);
-}
-
-.adw-choice-pressed:has(.adw-choice-option:not([aria-disabled="true"])) .adw-choice-press-band {
-  display: block;
-  background: var(--ui-colour-button-pressed-face);
-}
-
-/* A refusal's red phases on the group (refusal.ts): the label band fills dark red under a white
-   label, over a focused option's band. */
-.adw-choice-group[data-refusal-red]:is(*, :has(.adw-choice-option:focus-visible))
-  .adw-choice-press-band {
+/* A refusal fills the label band dark red under a white label. */
+.adw-choice-group[data-refusal-red] .adw-choice-refusal-band {
   display: block;
   background: var(--adw-darkRed);
 }
 
-.adw-choice-group[data-refusal-red] :is(.adw-choice-press-label, .adw-choice-press-label *) {
+.adw-choice-group[data-refusal-red] :is(.adw-choice-refusal-label, .adw-choice-refusal-label *) {
   color: var(--adw-white) !important;
 }
 
 @media (forced-colors: active) {
-  .adw-choice-group {
-    --ui-colour-button-focus-face: Highlight;
-    --ui-colour-button-focus-text: HighlightText;
-    --ui-colour-button-pressed-face: Highlight;
-    --ui-colour-button-pressed-text: HighlightText;
-  }
-
-  .adw-choice-press-band {
+  .adw-choice-option:focus-visible,
+  .adw-choice-pressed .adw-choice-option,
+  .adw-choice-held-outline {
     forced-color-adjust: none;
+    outline-color: Highlight;
   }
 
-  .adw-choice-group:has(.adw-choice-option:focus-visible) .adw-choice-press-label,
-  .adw-choice-group:has(.adw-choice-option:focus-visible) .adw-choice-press-label * {
-    forced-color-adjust: none;
-    color: var(--ui-colour-button-focus-text) !important;
-  }
-
-  .adw-choice-pressed:has(.adw-choice-option:not([aria-disabled="true"])) .adw-choice-press-label,
-  .adw-choice-pressed:has(.adw-choice-option:not([aria-disabled="true"]))
-    .adw-choice-press-label
-    * {
-    forced-color-adjust: none;
-    color: var(--ui-colour-button-pressed-text) !important;
-  }
-
-  /* A refusal's red phases fill the band ButtonText under a ButtonFace label, the inverse of the
-     resting face, over a focused option's Highlight band. */
-  .adw-choice-group[data-refusal-red]:is(*, :has(.adw-choice-option:focus-visible))
-    .adw-choice-press-band {
+  /* A refusal reverses the button colours during its flash. */
+  .adw-choice-group[data-refusal-red] .adw-choice-refusal-band {
     forced-color-adjust: none;
     background: ButtonText;
   }
 
-  .adw-choice-group[data-refusal-red]:is(*, :has(.adw-choice-option:focus-visible))
-    .adw-choice-press-label,
-  .adw-choice-group[data-refusal-red]:is(*, :has(.adw-choice-option:focus-visible))
-    .adw-choice-press-label
-    * {
+  .adw-choice-group[data-refusal-red] :is(.adw-choice-refusal-label, .adw-choice-refusal-label *) {
     forced-color-adjust: none;
     color: ButtonFace !important;
   }

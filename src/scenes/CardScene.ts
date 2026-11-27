@@ -12,6 +12,7 @@ import {
   menuKeyActs,
   pressDown,
   pressUp,
+  sceneKeyAllowed,
   startHold,
   type TargetPress,
   tickHold,
@@ -87,7 +88,7 @@ export class CardScene extends Scene {
       return;
     }
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      if (!nativeSceneAccepts(this)) {
+      if (!sceneKeyAllowed(event) || !nativeSceneAccepts(this)) {
         return;
       }
       const number = cardNumberForKey(this.entries.length, event.code);

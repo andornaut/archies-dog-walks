@@ -5,6 +5,8 @@ import { afterEach, expect, it, vi } from "vitest";
 import { gameData } from "../../data/index.ts";
 import { helpPicture } from "../../help/helpPictures.ts";
 import { SCREEN_LAYOUT } from "../../layout/screen.ts";
+import { cardRowIn } from "../../presentation/cardLayout.ts";
+import { MAX_CARD_OPTIONS } from "../../rules/cardViews.ts";
 import { read } from "../../rules/units.ts";
 import { FakeDocument, type FakeElement, fakeLayer } from "../../testing/fakeDom.ts";
 import { gameFont } from "../../testing/fontInk.ts";
@@ -18,7 +20,11 @@ afterEach(() => vi.useRealTimers());
 
 async function mount(
   kind: "cards" | "zones",
-  { gesture, refused = 1 }: { gesture?: { up: () => boolean }; refused?: number } = {},
+  {
+    gesture,
+    picture = false,
+    refused = 1,
+  }: { gesture?: { up: () => boolean }; picture?: boolean; refused?: number } = {},
 ) {
   vi.useFakeTimers();
   const original = helpPicture(gameData, kind).card!;
@@ -80,6 +86,7 @@ async function mount(
       return request;
     },
     now: () => 0,
+    picture,
     pillColours: () => undefined,
     reduced: true,
     reducedMotion: () => true,
@@ -97,7 +104,7 @@ async function mount(
 it.each(["cards", "zones"] as const)(
   "mounts %s with original metadata, Kit options and a reversible held view",
   async (kind) => {
-    const { choose, groups, layer, options, requests, shown, view } = await mount(kind);
+    const { choose, element, groups, layer, options, requests, shown, view } = await mount(kind);
     expect(groups.length).toBe(view.options.length + (view.skip ? 1 : 0));
     expect(options.every((option) => option.tagName === "button")).toBe(true);
     expect(options.map((option) => option.getAttribute("aria-disabled"))).toEqual(
@@ -105,9 +112,9 @@ it.each(["cards", "zones"] as const)(
     );
     expect(layer.input.accepts()).toBe(false);
     const pressed = groups[1]!;
-    expect(pressed.children.some((part) => part.classList.contains("adw-choice-press-band"))).toBe(
-      true,
-    );
+    expect(
+      pressed.children.some((part) => part.classList.contains("adw-choice-refusal-band")),
+    ).toBe(true);
     shown.setPressed(1);
     expect(groups.filter((group) => group.classList.contains("adw-choice-pressed"))).toEqual([
       pressed,
@@ -116,6 +123,20 @@ it.each(["cards", "zones"] as const)(
     expect(groups.some((group) => group.classList.contains("adw-choice-pressed"))).toBe(false);
     shown.setLarge(0);
     expect(groups.every((group) => group.hidden)).toBe(true);
+    const held = element
+      .all()
+      .find(
+        (node) => node.classList.contains("adw-choice-held-outline") && !node.parentElement?.hidden,
+      )!;
+    const x = Number.parseFloat(held.style.getPropertyValue("left"));
+    const y = Number.parseFloat(held.style.getPropertyValue("top"));
+    const width = Number.parseFloat(held.style.getPropertyValue("width"));
+    const height = Number.parseFloat(held.style.getPropertyValue("height"));
+    expect(held.getAttribute("aria-hidden")).toBe("true");
+    expect(x - 2).toBeGreaterThanOrEqual(0);
+    expect(y - 2).toBeGreaterThanOrEqual(0);
+    expect(x + width + 2).toBeLessThanOrEqual(SCREEN_LAYOUT.screen.width);
+    expect(y + height + 2).toBeLessThanOrEqual(SCREEN_LAYOUT.screen.height);
     shown.setLarge(undefined);
     expect(groups.every((group) => !group.hidden)).toBe(true);
     options[1]!.fire("click", { detail: 0 });
@@ -125,6 +146,75 @@ it.each(["cards", "zones"] as const)(
     expect(layer.input.accepts()).toBe(true);
   },
 );
+
+it("starts on the first displayed option, cycles focus, and leaves confirmation to its button", async () => {
+  const { accepts, choose, dialog, doc, options, shown } = await mount("cards");
+  for (const option of options) {
+    const matches = option.matches.bind(option);
+    vi.spyOn(option, "matches").mockImplementation((selector) =>
+      selector === ":focus-visible" ? doc.activeElement === option : matches(selector),
+    );
+  }
+  const key = (code: string, repeat = false, target = doc.activeElement) => {
+    const event = { code, preventDefault: vi.fn(), repeat, stopPropagation: vi.fn(), target };
+    dialog.fire("keydown", event);
+    return event;
+  };
+  expect(doc.activeElement).toBe(dialog);
+  accepts.mockReturnValue(false);
+  key("ArrowLeft");
+  expect(doc.activeElement).toBe(dialog);
+  accepts.mockReturnValue(true);
+  const editing = doc.createElement("input");
+  key("ArrowLeft", false, editing);
+  expect(doc.activeElement).toBe(dialog);
+
+  expect(key("ArrowLeft").stopPropagation).toHaveBeenCalledOnce();
+  expect(doc.activeElement).toBe(options[0]);
+  key("ArrowUp", true);
+  expect(doc.activeElement).toBe(options.at(-1));
+  key("KeyJ");
+  expect(doc.activeElement).toBe(options[0]);
+  key("KeyL");
+  expect(doc.activeElement).toBe(options[1]);
+  shown.setLarge(1);
+  key("ArrowRight");
+  expect(doc.activeElement).toBe(options[1]);
+  shown.setLarge(undefined);
+  expect(choose).not.toHaveBeenCalled();
+  options[1]!.fire("click", { detail: 0 });
+  expect(choose).toHaveBeenCalledExactlyOnceWith(1);
+  shown.destroy();
+});
+
+it("keeps help pictures inert when a directional key is sent to their dialog", async () => {
+  const { choose, dialog, doc, element, options, shown } = await mount("zones", { picture: true });
+  expect(options.every((option) => option.tagName === "span")).toBe(true);
+  const active = doc.activeElement;
+  dialog.fire("keydown", { code: "ArrowLeft", target: dialog });
+  expect(doc.activeElement).toBe(active);
+  expect(choose).not.toHaveBeenCalled();
+  expect(element.all().some((node) => node.classList.contains("adw-choice-held-outline"))).toBe(
+    false,
+  );
+  shown.destroy();
+});
+
+it("fits two outer pixels around each choice at every supported card count", () => {
+  for (let count = 1; count <= MAX_CARD_OPTIONS; count += 1) {
+    const rects = cardRowIn(SCREEN_LAYOUT.walkView, MAX_CARD_OPTIONS, count);
+    for (const [index, rect] of rects.entries()) {
+      expect(rect.x - 2).toBeGreaterThanOrEqual(0);
+      expect(rect.y - 2).toBeGreaterThanOrEqual(0);
+      expect(rect.x + rect.width + 2).toBeLessThanOrEqual(SCREEN_LAYOUT.screen.width);
+      expect(rect.y + rect.height + 2).toBeLessThanOrEqual(SCREEN_LAYOUT.screen.height);
+      if (index > 0) {
+        const previous = rects[index - 1]!;
+        expect(previous.x + previous.width + 2).toBeLessThan(rect.x - 2);
+      }
+    }
+  }
+});
 
 it("keeps a refused option focusable and silent, and refuses its keys one card at a time", async () => {
   const { accepts, choose, groups, options, shown } = await mount("cards", { refused: 2 });

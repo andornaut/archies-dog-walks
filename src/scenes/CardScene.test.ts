@@ -94,6 +94,7 @@ it("requires painted admission, rejects repeat keys, and accepts one choice per 
   expect(input.accepts()).toBe(false);
   vi.mocked(nativeSceneAccepts).mockReturnValue(true);
   keyboard.emit("keydown", { code: "Digit1", repeat: true });
+  keyboard.emit("keydown", { code: "Digit1", repeat: false, target: { tagName: "INPUT" } });
   expect(choose).not.toHaveBeenCalled();
   expect(input.accepts()).toBe(true);
   keyboard.emit("keydown", { code: "Digit1", repeat: false });
