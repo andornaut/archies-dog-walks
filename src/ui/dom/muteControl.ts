@@ -7,42 +7,13 @@ import crashArt from "virtual:adw-crash-art";
 
 import { BUTTON_SIZE, SCREEN_CONFIG } from "../../data/index.ts";
 import { MENU_TEXT } from "../../data/menuText.ts";
-import {
-  cssHex,
-  PALETTE,
-  TITLE_CAP_ROWS,
-  TOP_BAR_FACE,
-  topBarGlyphRect,
-  topSectionLayout,
-  topSectionStateCapTop,
-} from "../index.ts";
+import { cssHex, PALETTE, TOP_BAR_FACE, topBarGlyphRect, topSectionLayout } from "../index.ts";
 import { bindGameActionHolds } from "./actionBinding.ts";
 import { createGameButton } from "./gameButton.ts";
 
-// Rows from the top of an 8px line box to Silkscreen's capitals at 8px, which the crash screen's
-// title face (src/crash/crash.css) sets the state word in, as font-title draws it on the top bar.
-export const STATE_WORD_CAP_TOP = 2;
-
-// The state word's face, as muteControl.css sets it, for measuring its ink.
-const STATE_FONT = '8px "Archie crash title"';
-
-// The pen's x that centres text's ink on centreX, its first inked column on the game pixel
-// nearest where the middle puts it, a half rounded up, as the top bar places its state word.
-// Undefined where the document cannot measure text.
-function inkCentredPen(doc: Document, text: string, centreX: number): number | undefined {
-  const context = doc.createElement("canvas").getContext?.("2d");
-  if (!context) {
-    return undefined;
-  }
-  context.font = STATE_FONT;
-  const ink = context.measureText(text);
-  const width = ink.actualBoundingBoxLeft + ink.actualBoundingBoxRight;
-  return Math.floor(centreX - width / 2 + 0.5) + ink.actualBoundingBoxLeft;
-}
-
 // Renderer failure uses the same device preference as Phaser's soundboard.
 // The control needs neither a compatible progress save nor loaded game fonts or textures: it
-// draws the top bar's Sound from inlined art, with its state word below.
+// draws the top bar's Sound from inlined art.
 export interface MuteControlSettings {
   readonly current: { readonly muted: boolean };
   setMuted(muted: boolean): void;
@@ -104,13 +75,6 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
     top: px(face.y - hit.y),
     width: px(TOP_BAR_FACE.size),
   });
-  // The current state, as the top bar shows it: directly below the face, its ink centred on the
-  // face. The button's pressed state carries it for assistive technology.
-  const state = doc.createElement("span");
-  state.className = "adw-standalone-mute-state";
-  state.setAttribute("aria-hidden", "true");
-  state.style.top = px(topSectionStateCapTop(face, TITLE_CAP_ROWS) - STATE_WORD_CAP_TOP);
-  view.append(state);
   let pressed = false;
   let disposed = false;
   // The face's parts, as the top bar places them: the pressed frame, the fill and the glyph sink
@@ -150,14 +114,6 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
     const word = muted ? MENU_TEXT.settings.off : MENU_TEXT.settings.on;
     button.title = `${MENU_TEXT.settings.sound}: ${word}`;
     button.setAttribute("data-muted", String(muted));
-    state.textContent = word.toUpperCase();
-    const pen = inkCentredPen(doc, state.textContent, face.x + TOP_BAR_FACE.size / 2);
-    Object.assign(
-      state.style,
-      pen === undefined
-        ? { left: px(hit.x), textAlign: "center", width: px(hit.width) }
-        : { left: px(pen), textAlign: "left", width: "" },
-    );
   };
   // The held face, by pointer while the press stays over the button, or by Enter or Space.
   let pointer: number | undefined;
@@ -258,8 +214,6 @@ export function mountMuteControl(settings: MuteControlSettings, parent: HTMLElem
   placeFace();
   show();
   place();
-  // The state word's ink is measured in its own face once that has loaded.
-  void doc.fonts?.load(STATE_FONT).then(show, () => undefined);
   return () => {
     disposed = true;
     stop();

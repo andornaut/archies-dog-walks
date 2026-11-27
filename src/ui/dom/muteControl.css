@@ -38,13 +38,3 @@
 .adw-standalone-mute button[data-muted="true"] .adw-standalone-mute-glyph {
   background-position-x: 100%;
 }
-
-.adw-standalone-mute-state {
-  position: absolute;
-  color: var(--adw-cream);
-  font:
-    8px / 8px "Archie crash title",
-    ui-monospace,
-    monospace;
-  white-space: nowrap;
-}

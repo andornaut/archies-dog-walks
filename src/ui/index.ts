@@ -140,7 +140,6 @@ export {
   topSectionCurrency,
   topSectionCurrencyText,
   topSectionLayout,
-  topSectionStateCapTop,
 } from "./topSection.ts";
 export {
   deviceFitOwned,

@@ -5,10 +5,8 @@ import { afterEach, expect, it, vi } from "vitest";
 import { MENU_TEXT } from "../data/menuText.ts";
 import { DeviceSettings, SETTINGS_KEYS } from "../save/settings.ts";
 import { FakeDocument } from "../testing/fakeDom.ts";
-import { mountMuteControl, STATE_WORD_CAP_TOP } from "../ui/dom/muteControl.ts";
+import { mountMuteControl } from "../ui/dom/muteControl.ts";
 import { PALETTE } from "../ui/palette.ts";
-import { TITLE_CAP_ROWS } from "../ui/textFit.ts";
-import { TOP_BAR_FACE } from "../ui/topBarTrim.ts";
 import { topBarGlyphRect, topSectionLayout } from "../ui/topSection.ts";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -165,64 +163,21 @@ it.each([
   remove();
 });
 
-it.each([false, true])(
-  "reports Sound pressed only while on and shows its state below the face (muted %s)",
-  (muted) => {
-    const settings = new DeviceSettings(undefined, false);
-    settings.setMuted(muted);
-    const doc = new FakeDocument();
-    const parent = Object.assign(doc.createElement("div"), { clientHeight: 560, clientWidth: 360 });
-    doc.body.append(parent);
-    const remove = mountMuteControl(settings, parent as unknown as HTMLElement);
-    const button = parent.all().find((node) => node.tagName === "button")!;
-    const word = parent.all().find((node) => node.className === "adw-standalone-mute-state")!;
-    expect(button.getAttribute("aria-label")).toBe(MENU_TEXT.settings.sound);
-    expect(button.getAttribute("aria-pressed")).toBe(String(!muted));
-    expect(word.getAttribute("aria-hidden")).toBe("true");
-    expect(word.textContent).toBe(
-      (muted ? MENU_TEXT.settings.off : MENU_TEXT.settings.on).toUpperCase(),
-    );
-    // The word's capitals lie between the face's bottom and the hit box's, centred on the face.
-    const [, { face, hit }] = topSectionLayout(["mute", "menu"]).controls[0]!;
-    const capTop = Number.parseFloat(word.style.top!) + STATE_WORD_CAP_TOP;
-    expect(capTop).toBeGreaterThanOrEqual(face.y + TOP_BAR_FACE.size);
-    expect(capTop + TITLE_CAP_ROWS).toBeLessThanOrEqual(hit.y + hit.height);
-    const left = Number.parseFloat(word.style.left!);
-    expect(left + Number.parseFloat(word.style.width!) / 2).toBe(face.x + TOP_BAR_FACE.size / 2);
-    expect(word.style.textAlign).toBe("center");
-    settings.setMuted(!muted);
-    expect(button.getAttribute("aria-pressed")).toBe(String(muted));
-    expect(word.textContent).toBe(
-      (muted ? MENU_TEXT.settings.on : MENU_TEXT.settings.off).toUpperCase(),
-    );
-    remove();
-  },
-);
-
-// Ink 11 columns wide, a column right of the pen, and 14 wide from the pen.
-it.each([
-  [MENU_TEXT.settings.on, { actualBoundingBoxLeft: -1, actualBoundingBoxRight: 12 }],
-  [MENU_TEXT.settings.off, { actualBoundingBoxLeft: 0, actualBoundingBoxRight: 14 }],
-])("centres the %s state word's ink on the face, a half rounded up", (word, ink) => {
+it("shows the Sound icon alone and exposes its toggle state", () => {
   const settings = new DeviceSettings(undefined, false);
-  settings.setMuted(word === MENU_TEXT.settings.off);
   const doc = new FakeDocument();
-  const create = doc.createElement.bind(doc);
-  vi.spyOn(doc, "createElement").mockImplementation((tagName) =>
-    tagName === "canvas"
-      ? Object.assign(create(tagName), { getContext: () => ({ font: "", measureText: () => ink }) })
-      : create(tagName),
-  );
   const parent = Object.assign(doc.createElement("div"), { clientHeight: 560, clientWidth: 360 });
   doc.body.append(parent);
   const remove = mountMuteControl(settings, parent as unknown as HTMLElement);
-  const state = parent.all().find((node) => node.className === "adw-standalone-mute-state")!;
-  const [, { face }] = topSectionLayout(["mute", "menu"]).controls[0]!;
-  const width = ink.actualBoundingBoxLeft + ink.actualBoundingBoxRight;
-  const inkLeft = Number.parseFloat(state.style.left!) - ink.actualBoundingBoxLeft;
-  expect(state.textContent).toBe(word.toUpperCase());
-  expect(Number.isInteger(inkLeft)).toBe(true);
-  expect([0, 0.5]).toContain(inkLeft + width / 2 - (face.x + TOP_BAR_FACE.size / 2));
-  expect(state.style.textAlign).toBe("left");
+  const view = parent.children[0]!;
+  const button = view.children[0]!;
+  expect(view.children).toEqual([button]);
+  expect(button.getAttribute("aria-label")).toBe(MENU_TEXT.settings.sound);
+  expect(button.getAttribute("aria-pressed")).toBe("true");
+  expect(button.getAttribute("data-muted")).toBe("false");
+  settings.setMuted(true);
+  expect(view.children).toEqual([button]);
+  expect(button.getAttribute("aria-pressed")).toBe("false");
+  expect(button.getAttribute("data-muted")).toBe("true");
   remove();
 });

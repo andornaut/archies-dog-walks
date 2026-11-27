@@ -15,13 +15,7 @@ import {
   WALK_BAR_PARTS,
 } from "../data/index.ts";
 import { TITLE_CAP_ROWS } from "./textFit.ts";
-import {
-  TOP_BAR_FACE,
-  TOP_BAR_HEIGHT,
-  TOP_BAR_WELL,
-  topBarContentRows,
-  wellCapsTop,
-} from "./topBarTrim.ts";
+import { TOP_BAR_FACE, TOP_BAR_HEIGHT, TOP_BAR_WELL, wellCapsTop } from "./topBarTrim.ts";
 
 // The currency's text in its well, the walk's cash and the home bank alike: its scale and its
 // capitals' top row.
@@ -143,14 +137,6 @@ export function topSectionButtonBacking(face: Point): Rect {
     x: face.x + (TOP_BAR_FACE.size - TOP_BAR_WELL.height) / 2,
     y: TOP_BAR_WELL.y,
   };
-}
-
-// The top row of a toggle's state word, capRows tall, under a control's face: centred down the
-// plum rows between the face's bottom and the bar's edge, so it sits directly below the face.
-export function topSectionStateCapTop(face: Point, capRows: number): number {
-  return Math.floor(
-    (face.y + TOP_BAR_FACE.size + topBarContentRows(TOP_BAR_HEIGHT).bottom - capRows) / 2,
-  );
 }
 
 // art: where a top bar button's glyph sits on its face, in from the face's corner.

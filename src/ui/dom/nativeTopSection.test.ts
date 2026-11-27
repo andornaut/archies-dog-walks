@@ -340,66 +340,15 @@ describe("native top section integration", () => {
     view.setAmount("9".repeat(16), "999K");
     expect(currencyTexts(view).map((node) => node.textContent)).toContain("999K");
     const root = view.element as unknown as FakeElement;
-    const state = root.children.find((node) => node.classList.contains("adw-text"));
-    expect(state?.textContent).toBe(gameData.menuText.settings.on.toUpperCase());
-    expect(state?.getAttribute("aria-hidden")).toBe("true");
+    const captions = () => root.children.filter((node) => node.classList.contains("adw-text"));
+    expect(captions()).toEqual([]);
+    expect(buttons[0]?.getAttribute("aria-pressed")).toBe("true");
     view.setMuted(true);
-    expect(state?.textContent).toBe(gameData.menuText.settings.off.toUpperCase());
+    expect(captions()).toEqual([]);
     expect(buttons[0]?.getAttribute("aria-pressed")).toBe("false");
     expect(element.all().filter((node) => node.tagName === "button")).toEqual(buttons);
   });
 });
-
-// Each layout's game frame: a turned short landscape phone lays the frame out portrait, so its
-// rows run across the device and "below" is measured in the frame, not on the page.
-it.each(
-  [
-    { canvas: { height: 560, width: 360, x: 0, y: 0 }, dpr: 3, layout: "portrait 360x608" },
-    {
-      canvas: { height: (390 * 560) / 360, width: 390, x: 0, y: 0 },
-      dpr: 3,
-      layout: "short landscape 844x390, turned",
-    },
-    {
-      canvas: { height: 720, width: (720 * 360) / 560, x: (1280 - (720 * 360) / 560) / 2, y: 0 },
-      dpr: 1,
-      layout: "desktop 1280x720",
-    },
-  ].flatMap((row) => [false, true].map((muted) => ({ ...row, muted }))),
-)(
-  "sets the Sound state below its face, centred on it, in $layout (muted $muted)",
-  ({ canvas, dpr, muted }) => {
-    const scale = domScale(dpr, canvas);
-    const { view } = fixture(0, false, scale);
-    view.setMuted(muted);
-    const [, { face, hit }] = topSectionLayout(["mute", "menu"], { currency: true }).controls[0]!;
-    const faceBox = gridRect(scale, {
-      ...face,
-      height: TOP_BAR_FACE.size,
-      width: TOP_BAR_FACE.size,
-    });
-    const hitBox = gridRect(scale, hit);
-    const root = view.element as unknown as FakeElement;
-    const word = root.children.find((node) => node.classList.contains("adw-text"))!;
-    const text = (
-      muted ? gameData.menuText.settings.off : gameData.menuText.settings.on
-    ).toUpperCase();
-    expect(word.textContent).toBe(text);
-    const font = gameFont("font-title");
-    const pixel = fontPixel(scale, 1);
-    const ink = fontInk("font-title", { scale: pixel }, text);
-    const rows = fontInkRows("font-title", { scale: pixel }, text);
-    const capTop = Number.parseFloat(word.style.top!) + fontMetrics(font).capTop * pixel;
-    const left = Number.parseFloat(word.style.left!) + ink.left;
-    const right = Number.parseFloat(word.style.left!) + ink.right;
-    expect(capTop + rows.top).toBeGreaterThanOrEqual(faceBox.top + faceBox.height);
-    expect(capTop + rows.bottom).toBeLessThanOrEqual(hitBox.top + hitBox.height);
-    expect(Math.abs((left + right) / 2 - (faceBox.left + faceBox.width / 2))).toBeLessThanOrEqual(
-      pixel / 2,
-    );
-    view.dispose();
-  },
-);
 
 function glyphPaths(glyph: FakeElement) {
   return glyph.children.map((part) => part.getAttribute("d"));

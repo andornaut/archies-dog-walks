@@ -141,7 +141,6 @@ export function createNativeTopSection(
     origin: ORIGIN,
     readScale: () => layer.scale(),
     root,
-    title,
   };
   // Each button covers the part of its hit it owns, so where neighbours' hits overlap a press goes
   // to the nearer face (topSectionLayout), whatever the buttons' stacking order.
