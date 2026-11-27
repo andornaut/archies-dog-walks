@@ -18,7 +18,9 @@ import { shownText } from "../ui/dom/pixelLine.ts";
 import type { UiLayer } from "../ui/dom/uiLayer.ts";
 import { domScale } from "../ui/domScale.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
+import { PALETTE } from "../ui/palette.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
+import { cents } from "../units.ts";
 import { canvasPanelMeasure } from "./modalMeasure.ts";
 import { ShopScene, type ShopSceneData } from "./ShopScene.ts";
 
@@ -47,7 +49,7 @@ function render(message: string | null = null, save = newPlayerSave, tab: ShopTa
   const update = vi.fn();
   const delayedCall = vi.fn();
   const scene = Object.create(ShopScene.prototype) as {
-    actAfterDip(target: ShopTarget): void;
+    act(target: ShopTarget): void;
     create(data: ShopSceneData): void;
     focusId: string | null;
     onKey(code: string): void;
@@ -73,8 +75,11 @@ function render(message: string | null = null, save = newPlayerSave, tab: ShopTa
   });
   vi.mocked(canvasPanelMeasure).mockReturnValue(measure);
   const { layer } = fakeLayer(new FakeDocument(), domScale(1, SCREEN_LAYOUT.screen));
-  scene.renderNative({ fonts, layer });
-  return { delayedCall, scene, view: update.mock.calls[0]![0] as ShopScreenView };
+  const readView = () => {
+    scene.renderNative({ fonts, layer });
+    return update.mock.lastCall![0] as ShopScreenView;
+  };
+  return { delayedCall, readView, scene, view: readView() };
 }
 
 it("fits and centres each Shop group inside the row hit geometry", () => {
@@ -225,13 +230,22 @@ it("keeps short shop rows unselected for slot-sign entry, taps and arrow navigat
   expect(funded.view.rows.find(({ id }) => id === "slot:2")?.selectable).toBe(true);
 });
 
-it("settles an owned row immediately and leaves the refusal delay for a short row", () => {
-  const { delayedCall, scene } = render(null, newPlayerSave, "dogs");
-  scene.actAfterDip({ id: "slot:1", kind: "row" });
+it("selects an owned row immediately and refuses a short row without changing selection", () => {
+  const { delayedCall, readView, scene } = render(null, newPlayerSave, "dogs");
+  scene.act({ id: "slot:1", kind: "row" });
   expect(scene.focusId).toBe("slot:1");
-  expect(delayedCall).not.toHaveBeenCalled();
+  expect(readView().message).toBeUndefined();
 
-  scene.actAfterDip({ id: "slot:2", kind: "row" });
+  const short = slotRows(gameData, newPlayerSave.owned).find(({ id }) => id === "slot:2")!;
+  scene.act({ id: short.id, kind: "row" });
   expect(scene.focusId).toBe("slot:1");
-  expect(delayedCall).toHaveBeenCalledOnce();
+  const refusal = readView().message!;
+  const text = messageLine(gameData.homeText, {
+    amount: cents(short.price! - newPlayerSave.bankCents),
+    kind: "cantAfford",
+    name: short.name,
+  });
+  expect(refusal.lines.map((line) => line.text).join(" ")).toBe(text);
+  expect(refusal.lines.every((line) => line.colour === PALETTE.darkRed)).toBe(true);
+  expect(delayedCall).not.toHaveBeenCalled();
 });
