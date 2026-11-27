@@ -13,9 +13,8 @@ import { faceMood } from "../rules/treats.ts";
 import type { Pack } from "../state/runState.ts";
 import { bodyRunWidth } from "../testing/bodyFont.ts";
 import { defined } from "../testing/defined.ts";
-import { fitInFont, fontFileMetrics, gameFont } from "../testing/fontInk.ts";
+import { fitInFont, fontFileMetrics } from "../testing/fontInk.ts";
 import { PACK_PLACES } from "../testing/packPlaces.ts";
-import { lineInk } from "../ui/lineInk.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
 import { TEXT_SCALE } from "../ui/textFit.ts";
 import { cents, clampHearts } from "../units.ts";
@@ -393,24 +392,20 @@ describe("the low-hearts chip", () => {
 describe("a fired line's bubble", () => {
   const { topBar } = SCREEN_LAYOUT;
   const bars = Array.from({ length: Object.keys(gameData.debuffs).length + 1 }, (_, i) => i);
-  const owners = Object.entries(gameData.dogs).flatMap(([dog, data]) => {
-    const ink = lineInk(gameFont("font-body"), data.owner.name);
-    const room = ownerLeadLayout(stripLeadSlot(BODY), ink).room;
-    return [
-      ...gameData.quips[dog as keyof typeof gameData.dogs].happier,
-      ...gameData.quips[dog as keyof typeof gameData.dogs].upset,
-    ].map((text) => ({
-      ink,
-      rows: messageRows(
-        (run) => bodyRunWidth({ scale: TEXT_SCALE }, run),
-        inlineFaceBox(BODY, TEXT_SCALE),
-        room,
-        "owner",
-        { text },
-      ).length,
-    }));
-  });
-  const panels = bars.flatMap((count) => linePanels(BODY, owners, count, topBar));
+  const room = ownerLeadLayout(stripLeadSlot(BODY)).room;
+  const ownerRows = Object.values(gameData.quips).flatMap(({ happier, upset }) =>
+    [...happier, ...upset].map(
+      (text) =>
+        messageRows(
+          (run) => bodyRunWidth({ scale: TEXT_SCALE }, run),
+          inlineFaceBox(BODY, TEXT_SCALE),
+          room,
+          "owner",
+          { text },
+        ).length,
+    ),
+  );
+  const panels = bars.flatMap((count) => linePanels(BODY, ownerRows, count, topBar));
   const stripBottom = Math.max(...panels.map((panel) => panel.y + panel.height));
   const fired = Object.values(gameData.quips).flatMap(({ fired: lines }) => lines);
   it.each(fired)("holds %j", (text) => {

@@ -1,7 +1,7 @@
 import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { Scene } from "phaser";
 
-import { ownerCardFaceKey } from "../assets/index.ts";
+import { ownerFaceKey } from "../assets/index.ts";
 import { gameData, MESSAGE_STRIP, SLICES } from "../data/index.ts";
 import type { HudMoment, HudMomentPainter } from "../hud/dom/index.ts";
 import {
@@ -27,7 +27,7 @@ import {
   withoutFace,
 } from "../hud/index.ts";
 import type { NameMark } from "../presentation/index.ts";
-import { lineInk, PALETTE, TEXT_SCALE } from "../ui/index.ts";
+import { PALETTE } from "../ui/index.ts";
 // A line said from the run scene, as a MessageLine: the HUD shows it on its message strip.
 export const MESSAGE_EVENT = "message";
 // Says a line on the walk's message strip from the run scene.
@@ -39,7 +39,7 @@ interface Drawn {
   id: number;
   view: HudMoment;
 }
-// A line as drawn, led by its icon's key or an owner's face and name. id names the line.
+// A line as drawn, led by its icon's key or an owner's portrait. id names the line.
 interface StripLine extends FaceText {
   readonly id: number;
   readonly lead: OwnerLead | string;
@@ -108,15 +108,12 @@ export class MessageStrip {
 }
 // The line's lead and text, its rows at 2x on a panel as tall as they are, under bars debuff
 // bars. An owner's lead moves the text right, and grows a panel shorter than the lead. Each
-// owner the text names has their face inline before their name, but the owner whose face and
-// name lead the line.
+// owner the text names has their face inline before their name, except for the leading owner.
 function draw(painter: HudMomentPainter, depth: number, bars: number, line: StripLine): Drawn {
   const body = fontMetrics(painter.fonts.body);
   const owner = typeof line.lead === "string" ? undefined : line.lead;
-  const name = owner === undefined ? "" : gameData.dogs[owner.dog].owner.name;
   const slot = stripLeadSlot(body, bars);
-  const nameInk = owner === undefined ? undefined : lineInk(painter.fonts.body, name);
-  const lead = nameInk === undefined ? undefined : ownerLeadLayout(slot, nameInk);
+  const lead = owner === undefined ? undefined : ownerLeadLayout(slot);
   const textX = lead?.textX ?? slot.textX;
   const said = faceTextWithNamePills(gameData, {
     ...withoutFace(owner?.dog, line),
@@ -138,30 +135,28 @@ function draw(painter: HudMomentPainter, depth: number, bars: number, line: Stri
     native: { height: 24, width: 24 },
     slices: SLICES["ui-panel"],
   });
-  view.faceRows({ capsTop: place.capsTop, x: textX }, box, MESSAGE_STRIP.scale, PALETTE.plum, rows);
   if (owner !== undefined && lead !== undefined) {
+    const speaker = view.element.ownerDocument.createElement("span");
+    speaker.className = "visually-hidden";
+    speaker.textContent = `${gameData.dogs[owner.dog].owner.name}: `;
+    view.element.append(speaker);
     view.panel(lead.frame, undefined, { border: PALETTE.ink, fill: PALETTE.tan });
     view.art({
       at: { x: lead.frame.x + 1, y: lead.frame.y + 1 },
       clock: "now",
-      key: ownerCardFaceKey(gameData, owner.dog),
+      key: ownerFaceKey(gameData, owner.dog),
       loop: true,
+      projection: "layout",
       tags: [owner.mood, "neutral"],
-    });
-    view.text({
-      capTop: lead.name.y,
-      colour: PALETTE.rust,
-      font: "body",
-      lines: [name],
-      scale: TEXT_SCALE,
-      x: lead.name.x - nameInk!.left,
     });
   } else if (typeof line.lead === "string") {
     view.art({
       at: place.icon,
       image: { height: MESSAGE_STRIP.icon.size, width: MESSAGE_STRIP.icon.size },
       key: line.lead,
+      projection: "layout",
     });
   }
+  view.faceRows({ capsTop: place.capsTop, x: textX }, box, MESSAGE_STRIP.scale, PALETTE.plum, rows);
   return { bars, id: line.id, view };
 }

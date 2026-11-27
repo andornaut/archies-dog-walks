@@ -825,25 +825,19 @@
       "rise": 5
     },
     "ownerLead": {
-      "face": 20,
-      "nameGap": 2,
+      "face": 32,
       "rise": 4,
       "strip": {
-        "bottom": 92,
         "frame": {
-          "height": 22,
-          "width": 22,
-          "x": 42,
+          "height": 34,
+          "width": 34,
+          "x": 14,
           "y": 52
         },
-        "name": {
-          "x": 14,
-          "y": 78
-        },
-        "room": 250,
-        "textX": 96,
+        "room": 294,
+        "textX": 52,
         "panel": {
-          "height": 54,
+          "height": 48,
           "width": 344,
           "x": 8,
           "y": 46
@@ -851,42 +845,32 @@
       },
       "underBars": [
         {
-          "bottom": 112,
           "frame": {
-            "height": 22,
-            "width": 22,
-            "x": 42,
+            "height": 34,
+            "width": 34,
+            "x": 14,
             "y": 72
           },
-          "name": {
-            "x": 14,
-            "y": 98
-          },
-          "room": 250,
-          "textX": 96,
+          "room": 294,
+          "textX": 52,
           "panel": {
-            "height": 54,
+            "height": 48,
             "width": 344,
             "x": 8,
             "y": 66
           }
         },
         {
-          "bottom": 136,
           "frame": {
-            "height": 22,
-            "width": 22,
-            "x": 42,
+            "height": 34,
+            "width": 34,
+            "x": 14,
             "y": 96
           },
-          "name": {
-            "x": 14,
-            "y": 122
-          },
-          "room": 250,
-          "textX": 96,
+          "room": 294,
+          "textX": 52,
           "panel": {
-            "height": 54,
+            "height": 48,
             "width": 344,
             "x": 8,
             "y": 90

@@ -7,13 +7,12 @@ import { type GameData, MESSAGE_STRIP, OWNER_LEAD } from "../data/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { effectIconKey, type EffectItem, type NameMark } from "../presentation/index.ts";
 import { read } from "../rules/index.ts";
-import type { LineInk } from "../ui/index.ts";
 import { type FaceBox, type FaceRow, faceRows, type FaceText } from "./faceText.ts";
 import { debuffBarRects } from "./walkHud.ts";
 
 // The message strip: what just happened, in a ui-panel across the top of the backdrop band's
 // flat sky, under the walk bar and clear of the cross street and the far road. It shows one
-// line, body text at 2x led by its 16x16 icon, or an owner's quip led by their face and name
+// line, body text at 2x led by its 16x16 icon, or an owner's quip led by their portrait
 // (OWNER_LEAD), with all measured owner rows retained; icon-led text keeps MESSAGE_STRIP.rows.
 // An owner the text names has their
 // face inline before their name (faceText.ts); the panel is as tall as the rows it
@@ -39,14 +38,14 @@ export const MESSAGE_ICONS = {
 } as const;
 export type MessageIcon = EffectItem | keyof typeof MESSAGE_ICONS;
 
-// An owner's quip leads with the owner's face, in mood, and their name, in place of an icon.
+// An owner's quip leads with the owner's portrait in the corresponding mood.
 export interface OwnerLead {
   readonly dog: DogId;
   readonly kind: "owner";
   readonly mood: string;
 }
 
-// What leads a line: its icon, or an owner's face and name.
+// What leads a line: its icon or an owner's portrait.
 type MessageLead = MessageIcon | OwnerLead;
 
 export function isOwnerLead(lead: MessageLead): lead is OwnerLead {
@@ -130,12 +129,8 @@ export function linePlace(
   return { capsTop: strip.rowTops[0] ?? 0, icon: strip.icon, panel };
 }
 
-// An owner's quip line leads with the owner's face-owner-<art>-20 (face square) in a 1px ink
-// frame over tan, at the icon's column, the frame's top rise rows above the top of the first
-// row's capitals at 2x; and the owner's name in the full-size body role centred under it, its
-// actual ink nameGap rows under the frame. The lead's column is as wide as the frame, or as the
-// name's ink where that is wider, the frame centred in it; the text starts as far right of the
-// column as it starts right of an icon, its room narrowed to match.
+// An owner's quip uses the walk HUD portrait in a 1px ink frame at the icon's column. Its top
+// starts rise rows above the first row's capitals. The text keeps the icon's gap after the frame.
 export { OWNER_LEAD };
 
 // Where a line's lead and text go: the icon's column and the text's start and room, and the top
@@ -148,11 +143,7 @@ export interface LeadSlot {
 }
 
 export interface OwnerLeadLayout {
-  // The row under the name's lowest ink.
-  bottom: number;
   frame: Rect;
-  // The left of the name's ink and the top of its capitals.
-  name: Point;
   room: number;
   textX: number;
 }
@@ -163,24 +154,19 @@ export function stripLeadSlot(body: FontMetrics, bars = 0, bar: Rect = WALK_BAR_
   return { capsTop: rowTops[0] ?? 0, iconX: icon.x, room, textX };
 }
 
-// An owner's lead in slot, using the name's actual visible ink bounds.
-export function ownerLeadLayout(slot: LeadSlot, nameInk: LineInk): OwnerLeadLayout {
-  const { face, nameGap, rise } = OWNER_LEAD;
+// An owner's portrait and the space for message text alongside it.
+export function ownerLeadLayout(slot: LeadSlot): OwnerLeadLayout {
+  const { face, rise } = OWNER_LEAD;
   const framed = face + 2;
-  const nameWidth = nameInk.right - nameInk.left;
-  const column = Math.max(framed, nameWidth);
-  const shift = column - MESSAGE_STRIP.icon.size;
+  const shift = framed - MESSAGE_STRIP.icon.size;
   const frame = {
     height: framed,
     width: framed,
-    x: slot.iconX + Math.floor((column - framed) / 2),
+    x: slot.iconX,
     y: slot.capsTop - rise,
   };
-  const nameTop = frame.y + frame.height + nameGap;
   return {
-    bottom: nameTop + nameInk.bottom - nameInk.top,
     frame,
-    name: { x: slot.iconX + (column - nameWidth) / 2, y: nameTop - nameInk.top },
     room: slot.room - shift,
     textX: slot.textX + shift,
   };
@@ -188,7 +174,7 @@ export function ownerLeadLayout(slot: LeadSlot, nameInk: LineInk): OwnerLeadLayo
 
 // A panel grown, where it is shorter, to end MESSAGE_STRIP.padBottom under an owner's lead.
 export function ownerLeadPanel(panel: Rect, lead: OwnerLeadLayout): Rect {
-  const height = lead.bottom + MESSAGE_STRIP.padBottom - panel.y;
+  const height = lead.frame.y + lead.frame.height + MESSAGE_STRIP.padBottom - panel.y;
   return { ...panel, height: Math.max(panel.height, height) };
 }
 
@@ -196,19 +182,17 @@ export function ownerLeadPanel(panel: Rect, lead: OwnerLeadLayout): Rect {
 // each grown to an owner's lead.
 export function linePanels(
   body: FontMetrics,
-  owners: readonly { readonly ink: LineInk; readonly rows: number }[],
+  ownerRows: readonly number[],
   bars: number,
   bar: Rect = WALK_BAR_RECT,
 ): Rect[] {
   const plain = Array.from({ length: MESSAGE_STRIP.rows }, (_, row) =>
     messagePanel(body, row + 1, bars, bar),
   );
-  const slot = stripLeadSlot(body, bars, bar);
+  const lead = ownerLeadLayout(stripLeadSlot(body, bars, bar));
   return [
     ...plain,
-    ...owners.map((owner) =>
-      ownerLeadPanel(messagePanel(body, owner.rows, bars, bar), ownerLeadLayout(slot, owner.ink)),
-    ),
+    ...ownerRows.map((rows) => ownerLeadPanel(messagePanel(body, rows, bars, bar), lead)),
   ];
 }
 
@@ -226,8 +210,8 @@ export function messageRows(
   return lead === "owner" ? rows : rows.slice(0, MESSAGE_STRIP.rows);
 }
 
-// icon: what leads the line, an icon or an owner's face and name. Each owner its text names
-// (marks) is drawn led by their face, but for an owner whose face and name lead the line. names:
+// icon: what leads the line, an icon or an owner's portrait. Each owner its text names
+// (marks) is drawn led by their face, except for the leading owner. names:
 // effects' names the line sets apart in their colours, beyond the "Name:" leads every line's
 // names get (effectNameMarks), as a debuff's start line marks its lead. keepsWaiting: the line
 // waits its turn however long it takes, as a badge, a hint or a firing does.

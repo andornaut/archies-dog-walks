@@ -11,11 +11,9 @@ import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { bodyRunWidth } from "../testing/bodyFont.ts";
 import { defined } from "../testing/defined.ts";
 import { everyStripLine } from "../testing/everyStripLine.ts";
-import { fontFileMetrics, gameFont } from "../testing/fontInk.ts";
+import { fontFileMetrics } from "../testing/fontInk.ts";
 import { inside } from "../testing/rects.ts";
-import { type LineInk, lineInk } from "../ui/lineInk.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
-import { TEXT_SCALE } from "../ui/textFit.ts";
 import { type FaceText, faceTextWithNamePills, inlineFaceBox } from "./faceText.ts";
 import {
   EMPTY_MESSAGE_STRIP,
@@ -306,12 +304,10 @@ describe("the strip's lines", () => {
   });
 });
 
-// Owners' quips on the strip: every owner's name's actual ink at full Body2, and each place a line can be,
-// with the panel a line of its own text would have: the strip on one row and on two, under no,
-// one and two debuff bars.
+// Owners' quips and each panel position under the active debuff bars.
 const OWNER_NAMES = keysOf(gameData.dogs).map((dog) => {
   const { name } = gameData.dogs[dog].owner;
-  return [dog, name, lineInk(gameFont("font-body"), name)] as const;
+  return [dog, name] as const;
 });
 const LEAD_PLACES: readonly (readonly [string, LeadSlot, Rect])[] = [0, 1, 2].flatMap((bars) =>
   [1, 2].map(
@@ -325,53 +321,20 @@ const LEAD_PLACES: readonly (readonly [string, LeadSlot, Rect])[] = [0, 1, 2].fl
 );
 // The moments a walk's owners quip on the strip; a firing's quip shows in its own moment.
 const WALK_QUIP_MOMENTS = ["happier", "upset"] as const satisfies readonly QuipMoment[];
-// A lead's layout reads only its name's ink: the narrowest and the widest, and a name of the
-// other parity when those two share one, as an odd ink centres differently under the face.
-const inkWidthOf = (ink: LineInk) => ink.right - ink.left;
-const BY_INK = [...OWNER_NAMES].sort((a, b) => inkWidthOf(a[2]) - inkWidthOf(b[2]));
-const NARROWEST = defined(BY_INK[0]);
-const WIDEST = defined(BY_INK.at(-1));
-const LEAD_NAMES = [
-  NARROWEST,
-  WIDEST,
-  ...(inkWidthOf(NARROWEST[2]) % 2 === inkWidthOf(WIDEST[2]) % 2
-    ? BY_INK.filter(([, , ink]) => inkWidthOf(ink) % 2 !== inkWidthOf(NARROWEST[2]) % 2).slice(0, 1)
-    : []),
-];
 
 describe("an owner's lead", () => {
   const right = (rect: Rect) => rect.x + rect.width;
   const iconGap = MESSAGE_STRIP.textX - MESSAGE_STRIP.icon.x - MESSAGE_STRIP.icon.size;
 
-  it.each(
-    LEAD_PLACES.flatMap(([place, slot, panel]) =>
-      LEAD_NAMES.map(([, name, ink]) => [place, name, slot, panel, ink] as const),
-    ),
-  )(
-    "keeps the face and name of %s's owner %s inside the panel, the text clear of them",
-    (_place, _name, slot, base, ink) => {
-      const lead = ownerLeadLayout(slot, ink);
+  it.each(LEAD_PLACES)(
+    "keeps the leading portrait inside %s, with the text clear of it",
+    (_place, slot, base) => {
+      const lead = ownerLeadLayout(slot);
       const panel = ownerLeadPanel(base, lead);
-      const name = {
-        height: ink.bottom - ink.top,
-        width: inkWidthOf(ink),
-        x: lead.name.x,
-        y: lead.name.y + ink.top,
-      };
-      const column = Math.max(right(lead.frame), right(name));
       const problems: [string, boolean][] = [
         ["frame not 1px around the face", lead.frame.width !== OWNER_LEAD.face + 2],
         ["frame outside the panel", !inside(lead.frame, panel)],
-        ["name outside the panel", !inside(name, panel)],
-        [
-          "name not under the frame",
-          name.y !== lead.frame.y + lead.frame.height + OWNER_LEAD.nameGap,
-        ],
-        [
-          "name off the frame's centre",
-          Math.abs(name.x + inkWidthOf(ink) / 2 - (lead.frame.x + lead.frame.width / 2)) > 0.5,
-        ],
-        ["text not an icon's gap past the lead", lead.textX !== column + iconGap],
+        ["text not an icon's gap past the lead", lead.textX !== right(lead.frame) + iconGap],
         [
           "text past the panel's right",
           lead.textX + lead.room > right(panel) - MESSAGE_STRIP.padRight,
@@ -391,16 +354,16 @@ describe("an owner's lead", () => {
         true,
       ],
       [
-        `grows the strip's two-row panel under ${bars} bars`,
+        `preserves the strip's two-row panel under ${bars} bars`,
         stripLeadSlot(BODY, bars),
         messagePanel(BODY, 2, bars),
-        true,
+        false,
       ],
     ]),
-  )("%s to end padBottom under the lead's name", (_name, slot, panel, grows) => {
-    const lead = ownerLeadLayout(slot, lineInk(gameFont("font-body"), WIDEST[1]));
+  )("%s with room below the leading portrait", (_name, slot, panel, grows) => {
+    const lead = ownerLeadLayout(slot);
     const grown = ownerLeadPanel(panel, lead);
-    const under = lead.bottom + MESSAGE_STRIP.padBottom - panel.y;
+    const under = lead.frame.y + lead.frame.height + MESSAGE_STRIP.padBottom - panel.y;
     expect(grown.height > panel.height).toBe(grows);
     expect(grown.height).toBe(Math.max(panel.height, under));
     expect({ ...grown, height: 0 }).toEqual({ ...panel, height: 0 });
@@ -435,9 +398,9 @@ function shownLine(bars: number, said: FaceText): Shown {
   return { faces, panel: place.panel };
 }
 
-// An owner's quip, led by their face and name, its text wrapped beside the lead.
-function shownQuip(bars: number, ink: LineInk, text: string): Shown {
-  const lead = ownerLeadLayout(stripLeadSlot(BODY, bars), ink);
+// An owner's quip with its text wrapped beside the leading portrait.
+function shownQuip(bars: number, text: string): Shown {
+  const lead = ownerLeadLayout(stripLeadSlot(BODY, bars));
   const rows = messageRows(width2x, BOX_2X, lead.room, "owner", { text });
   const panel = ownerLeadPanel(linePlace(BODY, bars, rows.length).panel, lead);
   return { faces: [lead.frame], panel };
@@ -474,9 +437,9 @@ describe("a line's faces", () => {
       const shown = named.map((said) => [said.text, shownLine(bars, said)] as const);
       expect(shown.some(([, { faces }]) => faces.length > 0)).toBe(true);
       expect(shown.filter(([, line]) => cramped(line)).map(([text]) => text)).toEqual([]);
-      const misfits = OWNER_NAMES.flatMap(([dog, name, ink]) =>
+      const misfits = OWNER_NAMES.flatMap(([dog, name]) =>
         WALK_QUIP_MOMENTS.flatMap((moment) => gameData.quips[dog][moment])
-          .filter((said) => cramped(shownQuip(bars, ink, plainMarks(said))))
+          .filter((said) => cramped(shownQuip(bars, plainMarks(said))))
           .map((said) => `${name}: ${said}`),
       );
       expect(misfits).toEqual([]);
@@ -493,16 +456,12 @@ it("preserves all owner-led rows while retaining the icon-only two-row cap", () 
   expect(messageRows(width2x, BOX_2X, room, "icon", { text })).toHaveLength(MESSAGE_STRIP.rows);
 });
 
-it("fits all current owner-led quips at Body2 in each matching measured name column", () => {
-  const slot = stripLeadSlot(BODY);
-  const aunt = lineInk(gameFont("font-body"), gameData.dogs.sequoia.owner.name);
-  const widest = ownerLeadLayout(slot, aunt);
-  expect(widest.textX).toBe(96);
-  expect(widest.room).toBe(250);
-  expect(widest.name.y + aunt.top).toBe(widest.frame.y + widest.frame.height + OWNER_LEAD.nameGap);
-  expect(ownerLeadPanel(messagePanel(BODY, 1), widest).height).toBe(54);
-  for (const [dog, name, ink] of OWNER_NAMES) {
-    const lead = ownerLeadLayout(slot, ink);
+it("fits all authored owner-led quips at Body2 in the shared portrait layout", () => {
+  const lead = ownerLeadLayout(stripLeadSlot(BODY));
+  expect(lead.textX).toBe(52);
+  expect(lead.room).toBe(294);
+  expect(ownerLeadPanel(messagePanel(BODY, 1), lead).height).toBe(48);
+  for (const [dog, name] of OWNER_NAMES) {
     for (const text of WALK_QUIP_MOMENTS.flatMap((moment) => gameData.quips[dog][moment])) {
       const rows = messageRows(width2x, BOX_2X, lead.room, "owner", { text });
       expect(rows.flatMap((row) => row.texts.map((part) => part.text)).join(" ")).toBe(text);
@@ -511,8 +470,9 @@ it("fits all current owner-led quips at Body2 in each matching measured name col
         `${name}: ${text}`,
       ).toBe(true);
       const panel = ownerLeadPanel(messagePanel(BODY, rows.length), lead);
-      expect(panel.y + panel.height - lead.bottom).toBeGreaterThanOrEqual(MESSAGE_STRIP.padBottom);
-      expect(ink.bottom - ink.top).toBeGreaterThanOrEqual(TEXT_SCALE * BODY.capHeight);
+      expect(panel.y + panel.height - lead.frame.y - lead.frame.height).toBeGreaterThanOrEqual(
+        MESSAGE_STRIP.padBottom,
+      );
     }
   }
 });

@@ -128,10 +128,8 @@ export const MESSAGE_STRIP = {
 
 // An owner's quip's lead on the message strip.
 export const OWNER_LEAD = {
-  // The owner's face's side.
-  face: OWNER_CARD_FACE,
-  // The name's actual ink gap under the face's frame.
-  nameGap: 2,
+  // The same portrait the owner's walk HUD card uses.
+  face: FACE_SIZE,
   // The frame's top above the first row's capitals.
   rise: 4,
 } as const;

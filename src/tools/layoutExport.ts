@@ -97,8 +97,6 @@ import { MAX_CARD_OPTIONS, read } from "../rules/index.ts";
 import { walkProjection } from "../runner/index.ts";
 import {
   gridRects,
-  type LineInk,
-  lineInk,
   MODAL,
   modalActionWidth,
   navigationMenuWidth,
@@ -125,10 +123,9 @@ function roadRow(projection: RoadProjection, road: Rect, row: number) {
   };
 }
 
-// An owner's quip's lead in slot, for the tallest measured name, and the panel it grows
-// line's panel to.
-function ownerLead(ink: LineInk, slot: LeadSlot, line: Rect) {
-  const lead = ownerLeadLayout(slot, ink);
+// The leading portrait and the panel around it and the message.
+function ownerLead(slot: LeadSlot, line: Rect) {
+  const lead = ownerLeadLayout(slot);
   return { ...lead, panel: ownerLeadPanel(line, lead) };
 }
 
@@ -198,11 +195,6 @@ export function layoutExport(
   const bandRows = Array.from({ length: road.y - rasterView.y }, (_, i) => rasterView.y + i);
   const bodyFont = readBitmapFont("font-body");
   const body = fontMetrics(bodyFont);
-  const leadInk = Object.values(data.dogs)
-    .map((dog) => lineInk(bodyFont, dog.owner.name))
-    .sort(
-      (a, b) => b.bottom - b.top - (a.bottom - a.top) || b.right - b.left - (a.right - a.left),
-    )[0]!;
   const title = fontMetrics(readBitmapFont("font-title"));
   const titleInk = (text: string) =>
     inkWidth(readBitmapFont("font-title"), 2, plainMarks(text).toUpperCase());
@@ -267,7 +259,7 @@ export function layoutExport(
     },
     // The message strip under the walk bar: its panel at its tallest (two rows), the line's
     // icon, the text column and its room, and each row's capitals top; the same under one and
-    // two debuff bars; and an owner's quip's lead (OWNER_LEAD) for the tallest measured name,
+    // two debuff bars; and an owner's leading portrait (OWNER_LEAD),
     // on the strip and under one and two bars, with the panels it grows a one-row line
     // to. inlineFace: an owner's face inline before their name in walk text at
     // 2x (INLINE_FACE): the frame's side, the gap from the frame to the name, and how far the
@@ -277,9 +269,9 @@ export function layoutExport(
       inlineFace: { ...INLINE_FACE, ...inlineFaceBox(body, INLINE_FACE.textScale) },
       ownerLead: {
         ...OWNER_LEAD,
-        strip: ownerLead(leadInk, stripLeadSlot(body), messagePanel(body, 1)),
+        strip: ownerLead(stripLeadSlot(body), messagePanel(body, 1)),
         underBars: [1, 2].map((bars) =>
-          ownerLead(leadInk, stripLeadSlot(body, bars), messagePanel(body, 1, bars)),
+          ownerLead(stripLeadSlot(body, bars), messagePanel(body, 1, bars)),
         ),
       },
       underBars: [1, 2].map((bars) => messageStripLayout(body, bars)),

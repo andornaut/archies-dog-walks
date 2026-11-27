@@ -94,7 +94,6 @@ import type { Owned } from "../save/schema.ts";
 import { readBitmapFont } from "../tools/fontFile.ts";
 import { barTitleRoom } from "../ui/barTitle.ts";
 import { type CloseControl, closeControl } from "../ui/closeControl.ts";
-import { lineInk } from "../ui/lineInk.ts";
 import { MODAL, modalTitleLayout } from "../ui/modal/layout.ts";
 import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
@@ -166,16 +165,15 @@ function faceRole(
   }));
 }
 
-// Each owner's walk quips beside their face and name leading the strip, on its rows: the strip
+// Each owner's walk quips beside their leading portrait, on its rows: the strip
 // keeps its room under the debuff bars.
 function ownerQuipRoles(): TextRoleCase[] {
+  const room = ownerLeadLayout(stripLeadSlot(BODY)).room;
   return keysOf(gameData.dogs).flatMap((dog) => {
     const { name } = gameData.dogs[dog].owner;
-    const ink = lineInk(gameFont("font-body"), name);
     const quips = [...gameData.quips[dog].happier, ...gameData.quips[dog].upset].map((text) => ({
       text,
     }));
-    const room = ownerLeadLayout(stripLeadSlot(BODY), ink).room;
     return quips.flatMap((quip) => {
       const rows = messageRows(
         (text) => bodyRunWidth(TEXT_STYLE, text),
