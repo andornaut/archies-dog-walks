@@ -308,6 +308,33 @@ it("gives secondary activation only to an available option without a primary con
   shown.destroy();
 });
 
+it("suppresses compatibility mouse input only for an admitted touch on a choice", async () => {
+  const gesture = { down: vi.fn(), up: vi.fn(() => true) };
+  const { dialog, doc, options, shown } = await mount("cards", { gesture });
+  const option = options[1]!;
+  const press = (pointerType: string, target: FakeElement) => {
+    const pointer = {
+      button: 0,
+      isPrimary: true,
+      pointerId: 7,
+      pointerType,
+      preventDefault: vi.fn(),
+      target,
+    };
+    dialog.fire("pointerdown", { ...pointer, type: "pointerdown" });
+    doc.fire("pointerup", { ...pointer, type: "pointerup" });
+    return pointer;
+  };
+  expect(press("touch", option).preventDefault).toHaveBeenCalledOnce();
+  expect(gesture.up).toHaveBeenLastCalledWith(
+    expect.objectContaining({ pointerType: "touch", target: option }),
+    false,
+  );
+  expect(press("mouse", option).preventDefault).not.toHaveBeenCalled();
+  expect(press("touch", dialog).preventDefault).not.toHaveBeenCalled();
+  shown.destroy();
+});
+
 it.each([false, true])(
   "gives the scene every pointer press that starts on an option (scene handled: %s)",
   async (handled) => {

@@ -478,6 +478,11 @@ export function showChoiceCards(
           },
           down: (event) => {
             onOption = small.some((part) => part.option.contains(event.target as Node));
+            // The scene owns this touch through pointerup. Omit compatibility mouse
+            // events that could land on the walk once the chosen card disappears.
+            if (onOption && event.pointerType === "touch") {
+              event.preventDefault();
+            }
             input.gesture?.down?.(event);
           },
           up: (event, cancelled) => {
