@@ -6,7 +6,13 @@ import type { ButtonView } from "@andornaut/game-kit/runtime/web/ui/dom/button";
 import type { PressGuard } from "@andornaut/game-kit/runtime/web/ui/dom/domPress";
 
 import { gameData } from "../../data/index.ts";
-import { holdRule, TILE_SLOP_PX } from "../../input/index.ts";
+import {
+  holdRule,
+  isConfirmKey,
+  isForegroundConfirmKey,
+  sceneKeyAllowed,
+  TILE_SLOP_PX,
+} from "../../input/index.ts";
 
 export type ActionOrigin =
   | { readonly kind: "click"; readonly event: MouseEvent }
@@ -32,6 +38,56 @@ const buttons = new WeakMap<HTMLElement, HoldControl>();
 // Kit controls whose scene reads their pointer presses, taps and holds, through its own gesture.
 const scenePointers = new WeakSet<HTMLElement>();
 const roots = new WeakMap<HTMLElement, { readonly accepts: () => boolean }>();
+
+function executableButton(element: HTMLElement): boolean {
+  return !element.matches(":disabled") && element.getAttribute("aria-disabled") !== "true";
+}
+
+// A foreground alias uses the existing native click, including its refusal and lifetime guards.
+// Secondary clicks use that path only for an available control.
+function bindActionAlternates(
+  accepts: () => boolean,
+  canSecondaryClick: () => boolean,
+  element: HTMLElement,
+): () => void {
+  const keydown = (event: KeyboardEvent) => {
+    if (
+      !isForegroundConfirmKey(event.code) ||
+      isConfirmKey(event.code) ||
+      !sceneKeyAllowed(event) ||
+      element.ownerDocument.activeElement !== element ||
+      !accepts()
+    ) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    if (!event.repeat) {
+      element.click();
+    }
+  };
+  const contextmenu = (event: MouseEvent) => {
+    if (
+      event.button !== 2 ||
+      event.defaultPrevented ||
+      !sceneKeyAllowed({ code: "", target: event.target }) ||
+      !accepts() ||
+      !canSecondaryClick()
+    ) {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    element.focus({ preventScroll: true });
+    element.click();
+  };
+  element.addEventListener("keydown", keydown);
+  element.addEventListener("contextmenu", contextmenu);
+  return () => {
+    element.removeEventListener("keydown", keydown);
+    element.removeEventListener("contextmenu", contextmenu);
+  };
+}
 
 // A standard control needs its nearest live input root before it accepts native clicks.
 export function gameButtonAccepts(element: HTMLElement): boolean {
@@ -62,9 +118,18 @@ export function registerGameButton(view: HoldControl): () => void {
     throw new Error("A control must have one action binding");
   }
   buttons.set(element, view);
+  const unbind = bindActionAlternates(
+    () => gameButtonAccepts(element),
+    () => {
+      const action = view.holdAction();
+      return action?.available() === true && executableButton(element);
+    },
+    element,
+  );
   return () => {
     if (buttons.get(element) === view) {
       buttons.delete(element);
+      unbind();
     }
   };
 }
@@ -125,10 +190,19 @@ export function bindGameAction(action: GameAction, element: HTMLElement): () => 
   if (action.nativeClick !== true) {
     element.addEventListener("click", click);
   }
+  const unbind =
+    element.tagName.toLowerCase() === "button" || element.getAttribute("role") === "button"
+      ? bindActionAlternates(
+          () => gameButtonAccepts(element) && actionAvailable(action, element),
+          () => executableButton(element),
+          element,
+        )
+      : undefined;
   return () => {
     if (actions.get(element) === action) {
       actions.delete(element);
       element.removeEventListener("click", click);
+      unbind?.();
     }
   };
 }

@@ -76,6 +76,7 @@ function fixture(override = false, unavailable: boolean | "pointer" = false) {
       button.fire("click", event);
     }
   };
+  Object.assign(button, { click });
   return {
     activate,
     bind,
@@ -108,6 +109,55 @@ it("fails closed without its input root and rechecks readiness for native activa
   stop();
   current.click();
   expect(current.activate).toHaveBeenCalledTimes(2);
+});
+
+it("uses the focused button's action once for a foreground key without intercepting native Enter", () => {
+  const current = fixture();
+  const stop = current.bind();
+  const preventDefault = vi.fn();
+  const send = (code: string, repeat = false) =>
+    current.button.fire("keydown", { code, preventDefault, repeat, target: current.button });
+  send("KeyE");
+  expect(current.activate).not.toHaveBeenCalled();
+  current.button.focus();
+  send("Enter");
+  expect(preventDefault).not.toHaveBeenCalled();
+  send("KeyE");
+  send("KeyE", true);
+  expect(current.activate).toHaveBeenCalledOnce();
+  const modal = current.gate.open();
+  send("KeyF");
+  expect(current.activate).toHaveBeenCalledOnce();
+  modal.close();
+  send("KeyF");
+  expect(current.activate).toHaveBeenCalledTimes(2);
+  stop();
+  current.view.dispose();
+});
+
+it("suppresses secondary context only when it invokes an available foreground action", () => {
+  const active = fixture();
+  const denied = fixture(false, true);
+  const stopActive = active.bind();
+  const stopDenied = denied.bind();
+  const right = (current: ReturnType<typeof fixture>) => {
+    const event = { ...current.pointer("contextmenu"), button: 2 };
+    current.button.fire("contextmenu", event);
+    return event.preventDefault;
+  };
+  expect(right(active)).toHaveBeenCalledOnce();
+  expect(active.activate).toHaveBeenCalledOnce();
+  expect(right(denied)).not.toHaveBeenCalled();
+  expect(denied.activate).not.toHaveBeenCalled();
+  expect(denied.refuse).not.toHaveBeenCalled();
+  const modal = active.gate.open();
+  expect(right(active)).not.toHaveBeenCalled();
+  expect(active.activate).toHaveBeenCalledOnce();
+  modal.close();
+  stopActive();
+  stopDenied();
+  active.view.dispose();
+  denied.view.dispose();
 });
 
 it("supplies the actual button to action and state resolvers through native admission", () => {
