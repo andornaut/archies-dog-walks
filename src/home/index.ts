@@ -44,7 +44,6 @@ export {
 } from "./endScreenView.ts";
 export { closingLines, earningsBreakdown, earningsKind } from "./endView.ts";
 export {
-  badgePopOffset,
   bobOffset,
   FEEDBACK,
   hopOffset,
@@ -101,7 +100,7 @@ export { itemModal } from "./itemModal.ts";
 export { type LogbookView, logbookView } from "./logbookView.ts";
 export { MENU_TEXT_FIELDS } from "./menuText.ts";
 export { porchOwners } from "./porch.ts";
-export { plateStripView, type PricePlateView, pricePlateView } from "./pricePlateView.ts";
+export { type PricePlateView, pricePlateView } from "./pricePlateView.ts";
 export { answerPurchase, type ConfirmChoice, type PendingPurchase } from "./purchaseConfirm.ts";
 export {
   homecomers,
@@ -192,5 +191,6 @@ export {
 export { type ShopPlacedRow } from "./shopTextLayout.ts";
 export { slotSign, slotSignPurchase } from "./slotSign.ts";
 export { type HomeSpeechView, homeSpeechView } from "./speechView.ts";
+export { START_PICKER_MARK } from "./startPickerArt.ts";
 export { STATS_LAYOUT, STATS_TABS, type StatsTab, statsTabRects } from "./statsLayout.ts";
 export { tapWalker } from "./walkers.ts";

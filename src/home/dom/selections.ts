@@ -1,14 +1,13 @@
+import "./startSelection.css";
+
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
-import {
-  advanceWidth,
-  type BitmapFont,
-  fontMetrics,
-} from "@andornaut/game-kit/runtime/text/bitmapFont";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import {
   createGameButton,
   createTextLine,
   type DomArtSource,
+  type DomTextLine,
   imageArt,
   placeBackedText,
   placeText,
@@ -19,20 +18,18 @@ import {
 import {
   cssHex,
   type DomScale,
-  frameRect,
+  GREYED,
+  gridRect,
   gridX,
   gridY,
   itemTileLook,
+  lineInk,
+  PALETTE,
   plainMarks,
+  PLATE_LOOKS,
   TEXT_SCALE,
 } from "../../ui/index.ts";
-import {
-  homeSelectionColour,
-  type HomeSelectionView,
-  plateStripView,
-  type PricePlateView,
-  pricePlateView,
-} from "../index.ts";
+import { homeSelectionColour, type HomeSelectionView, START_PICKER_MARK } from "../index.ts";
 import { createSelectionTile } from "./selectionTile.ts";
 interface SelectionArtSource extends DomArtSource {
   readonly hasArt: (key: string) => boolean;
@@ -45,10 +42,8 @@ interface SelectionArtSource extends DomArtSource {
 }
 export interface SelectionMotion {
   readonly x: number;
-  readonly faceY: number;
   readonly pressed?: boolean;
   readonly refusing: boolean;
-  readonly markY: number;
 }
 export interface NativeHomeSelection {
   readonly element: HTMLButtonElement;
@@ -69,12 +64,11 @@ export function createHomeSelection(
     readonly activate: () => void;
     readonly hold: () => void;
     readonly focused?: boolean;
-    readonly platePadding: number;
   },
   view: HomeSelectionView,
 ): NativeHomeSelection {
   const { body } = fonts;
-  const { activate, hold, platePadding } = context;
+  const { activate, hold } = context;
   const control = createGameButton(doc, {
     content: { kind: "icon", name: view.label },
     getAction: () => ({ activate, hold }),
@@ -84,20 +78,22 @@ export function createHomeSelection(
   control.element.toggleAttribute("data-picker-focused", context.focused === true);
   const tile = createSelectionTile(doc, source, fonts.title, {
     control,
-    focus: "content",
+    focus: "face",
     hit: view.hit,
     mark: view.tile.kind === "picked" ? (source.hasArt("ui-check") ? "art" : "fallback") : "none",
+    markOffset: START_PICKER_MARK,
     rect: view.rect,
     state: itemTileLook(view.tile).state,
+    variant: "start",
   });
   const paint = tile.content,
     origin = view.hit;
-  const parts: ((scale: DomScale, motion: SelectionMotion) => void)[] = [];
+  const parts: ((scale: DomScale) => void)[] = [];
   const promises: Promise<readonly string[]>[] = [tile.ready];
   const frames = new Map<number, string | number | SheetFrame>();
   let lastPlacement = "";
   const local = (scale: DomScale, rect: Rect) => {
-    const box = frameRect(scale, rect);
+    const box = gridRect(scale, rect);
     return {
       ...box,
       left: box.left - gridX(scale, origin.x),
@@ -114,11 +110,6 @@ export function createHomeSelection(
     parts.push((scale) => setBox(box, local(scale, rect)));
     return box;
   };
-  const nameStrip = view.strip !== undefined && view.strip.text === view.label;
-  const pictureWell = fill(view.fill.rect, view.fill.colour);
-  if (view.name === undefined && !nameStrip) {
-    pictureWell.classList.add("adw-selection-focus-fill");
-  }
   view.pictures.forEach((picture, index) => {
     const key = view.art === "grey" ? source.disabledKey(picture.key) : picture.key;
     if (!source.hasArt(picture.key) && picture.fallback !== undefined) {
@@ -132,12 +123,12 @@ export function createHomeSelection(
       const art = sheetArt(doc, source, picture.key, key);
       paint.append(art.element);
       promises.push(art.ready);
-      parts.push((scale, motion) => {
+      parts.push((scale) => {
         const frame = frames.get(index);
         art.place(scale, origin, {
           projection: "layout",
           x: picture.x,
-          y: picture.y + (index === 0 ? motion.faceY : 0),
+          y: picture.y,
           ...(picture.tag === undefined ? {} : { tag: picture.tag }),
           scale: picture.scale,
           ...(frame === undefined ? {} : { frame }),
@@ -148,78 +139,70 @@ export function createHomeSelection(
       const size = source.imageSize(picture.key);
       paint.append(art.element);
       promises.push(art.ready);
-      parts.push((scale, motion) =>
+      parts.push((scale) =>
         art.place(scale, origin, {
           height: size.height * picture.scale,
           projection: "layout",
           width: size.width * picture.scale,
           x: picture.x,
-          y: picture.y + (index === 0 ? motion.faceY : 0),
+          y: picture.y,
         }),
       );
     }
   });
-  if (view.name !== undefined) {
-    const name = view.name;
-    // A centred name's line starts at its area's corner; its ink is placed on the area.
-    const at = "centreIn" in name ? { capTop: name.centreIn.y, x: name.centreIn.x } : name;
-    const line = {
-      capTop: at.capTop,
+  const addLabel = (rect: Rect, text: string, colour: number, left = false) => {
+    const ink = lineInk(body, plainMarks(text));
+    const line: DomTextLine = {
+      capTop: rect.y - ink.top,
       centre: "left",
-      centreX: at.x,
-      colour: homeSelectionColour(view),
+      centreX: rect.x - ink.left,
+      colour,
       font: "body",
+      projection: "layout",
       scale: TEXT_SCALE,
-      text: name.text,
-    } as const;
-    const label = createTextLine(doc, line);
-    label.classList.add("adw-selection-focus-ink");
-    const nameArea =
-      "centreIn" in name
-        ? name.centreIn
-        : {
-            height: fontMetrics(body).capHeight * TEXT_SCALE + 2,
-            width: view.rect.x + view.rect.width - 2 - name.x,
-            x: name.x,
-            y: name.capTop - 1,
-          };
-    fill(nameArea).classList.add("adw-selection-focus-fill", "adw-selection-name-cue");
-    paint.append(label);
-    parts.push((scale) => {
-      if ("centreIn" in name) {
-        placeBackedText(body, scale, origin, name.centreIn, [{ element: label, line }]);
-      } else {
-        placeText(body, scale, origin, label, line);
-      }
-    });
-  }
-  let plate: PricePlateView | undefined;
-  if (view.strip !== undefined) {
-    plate = plateStripView(view.tile.kind === "picked", view.strip);
-  } else if (view.plate !== undefined) {
-    const measure = {
-      capHeight: fontMetrics(body).capHeight,
-      padding: platePadding,
-      scale: TEXT_SCALE,
-      width: (text: string) => advanceWidth(body, TEXT_SCALE, plainMarks(text)),
+      text,
     };
-    plate = pricePlateView(measure, view.plate, view.plate.kind, view.plate.text);
-  }
-  if (plate !== undefined) {
-    for (const part of plate.fills) {
-      const backing = fill(part.rect, part.colour);
-      if (nameStrip && part.rect === plate.rect) {
-        backing.classList.add("adw-selection-focus-fill");
-      }
-    }
-    const label = createTextLine(doc, plate.label);
-    if (nameStrip) {
-      label.classList.add("adw-selection-focus-ink");
-    }
-    paint.append(label);
+    const element = createTextLine(doc, line);
+    element.classList.add("adw-selection-focus-ink");
+    paint.append(element);
     parts.push((scale) =>
-      placeBackedText(body, scale, origin, plate.rect, [{ element: label, line: plate.label }]),
+      left
+        ? placeText(body, scale, origin, element, line)
+        : placeBackedText(body, scale, origin, rect, [{ element, line }], "layout"),
     );
+    return element;
+  };
+  if (view.name !== undefined) {
+    const { align, rect, text } = view.name;
+    const picked = view.tile.kind === "picked";
+    const locked = view.art === "grey";
+    const colour = homeSelectionColour(view);
+    if (align === "strip") {
+      fill({ ...rect, height: 1 }, PALETTE[locked ? GREYED.edge : "plum"]);
+      const body = { ...rect, height: rect.height - 1, y: rect.y + 1 };
+      if (picked || locked) {
+        fill(body, PALETTE[picked ? "amber" : GREYED.plateFace]).classList.add(
+          "adw-start-name-strip",
+        );
+      }
+      addLabel({ ...body, width: body.width - 4, x: body.x + 2 }, text, colour);
+    } else {
+      addLabel(rect, text, colour, align === "left");
+    }
+  }
+  if (view.plate !== undefined) {
+    const { framed, kind, rect, text } = view.plate;
+    const colours = PLATE_LOOKS[kind];
+    if (framed) {
+      fill(rect, PALETTE[colours.edge]).classList.add("adw-selection-plate");
+    }
+    const inside = framed
+      ? { height: rect.height - 2, width: rect.width - 2, x: rect.x + 1, y: rect.y + 1 }
+      : rect;
+    fill(inside, PALETTE[colours.face]).classList.add("adw-selection-plate");
+    const label = addLabel(rect, text, PALETTE[colours.text]);
+    label.classList.remove("adw-selection-focus-ink");
+    label.classList.add("adw-selection-plate-ink");
   }
   if (view.badge !== undefined) {
     const badge = view.badge;
@@ -229,6 +212,7 @@ export function createHomeSelection(
     parts.push((scale) =>
       art.place(scale, origin, {
         ...source.imageSize(`icon-${badge.kind}`),
+        projection: "layout",
         x: badge.x,
         y: badge.y,
       }),
@@ -240,21 +224,14 @@ export function createHomeSelection(
     place: (scale, motion) => {
       control.element.toggleAttribute("data-picker-refusing", motion.refusing);
       control.setPressed(motion.pressed === true);
-      tile.place(scale, motion);
-      const key = [
-        scale.unit,
-        scale.dpr,
-        scale.origin.x,
-        scale.origin.y,
-        motion.faceY,
-        motion.refusing,
-      ].join(":");
+      tile.place(scale, { markY: 0, x: motion.x });
+      const key = [scale.unit, scale.dpr, scale.origin.x, scale.origin.y].join(":");
       if (key === lastPlacement) {
         return;
       }
       lastPlacement = key;
       for (const part of parts) {
-        part(scale, motion);
+        part(scale);
       }
     },
     ready: Promise.all(promises).then((groups) => groups.flat()),

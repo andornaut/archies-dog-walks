@@ -55,7 +55,7 @@
   :is(.adw-selection-focus-ink, .adw-selection-press-ink) {
   color: var(--ui-colour-button-pressed-text) !important;
 }
-.adw-selection-tile[aria-pressed="true"]:is(
+.adw-selection-tile:not(.adw-start-selection)[aria-pressed="true"]:is(
     :focus-visible,
     .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
   )

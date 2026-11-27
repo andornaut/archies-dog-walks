@@ -5,7 +5,6 @@ import type { DogId } from "../data/ids.ts";
 import {
   BUTTON_SIZE,
   HOME_SCREEN,
-  MARK_OFFSET,
   MIN_PRESS,
   SCREEN_CONFIG,
   TOP_BAR_HEIGHT,
@@ -24,8 +23,8 @@ import {
   type TopSectionControl,
   topSectionLayout,
 } from "../ui/index.ts";
-import { FEEDBACK } from "./feedback.ts";
 import type { SectionId } from "./sections.ts";
+import { START_PICKER_MARK } from "./startPickerArt.ts";
 
 // Every tappable thing presses at least MIN_PRESS game pixels on each side; the tiles' faces are
 // the stacked button gap apart both ways.
@@ -38,8 +37,8 @@ const SECTION_BADGE_GUTTER = HOME.sectionBadgeGutter;
 const SECTION_EDGE = HOME.sectionEdge;
 const SECTION_GAP = HOME.sectionGap;
 const TILE_OFFSET = HOME.tileOffset;
-const TILE_MOTION_RESERVE =
-  FEEDBACK.liftPx + FEEDBACK.badgePopPx - MARK_OFFSET.y + FEEDBACK.pressDipPx;
+// Keep the existing vertical space for cards and their markers below the heading.
+const TILE_CLEARANCE = 8;
 // Start walk, foot rows over the screen's bottom.
 const START_BUTTON: Rect = {
   ...BUTTON_SIZE.wide,
@@ -78,13 +77,12 @@ export function tileFace(inset: { readonly x: number; readonly y: number }, cell
 const WALKER_TILES = tiles(HOME.walkerTiles);
 const DOG_TILES = tiles(HOME.dogTiles);
 const POCKET_TILES = tiles(HOME.pocketTiles);
-const WALKER_BOX = HOME.walkerBox;
 // A grid's cells' span across.
 const gridSpan = ({ cellWidth, columns, gapX }: GridSpec) =>
   columns * cellWidth + (columns - 1) * gapX;
 // The walker tiles' faces' span across, which sets every section's width.
 const FACE_SPAN = gridSpan(WALKER_TILES) - 2 * WALKER_TILES.inset.x;
-const CARD_EDGE_INSET = Math.max(SECTION_CONTENT_PADDING, -MARK_OFFSET.x + SECTION_BADGE_GUTTER);
+const CARD_EDGE_INSET = Math.max(SECTION_CONTENT_PADDING, -START_PICKER_MARK.x - SECTION_EDGE);
 const SECTION_WIDTH = FACE_SPAN + 2 * (CARD_EDGE_INSET + SECTION_EDGE);
 const SECTION_X = (SCREEN_CONFIG.width - SECTION_WIDTH) / 2;
 // Centre the cards themselves, a half pixel rounded right; their left-overhanging checks do not
@@ -96,7 +94,7 @@ function sectionHeight(rows: number, grid: GridSpec, inset: number): number {
   return (
     TILE_OFFSET +
     2 * SECTION_CONTENT_PADDING +
-    TILE_MOTION_RESERVE +
+    TILE_CLEARANCE +
     rows * grid.cellHeight +
     (rows - 1) * grid.gapY -
     2 * inset +
@@ -105,9 +103,7 @@ function sectionHeight(rows: number, grid: GridSpec, inset: number): number {
 }
 
 function sectionTilesY(section: Rect, inset: number): number {
-  return (
-    section.y + TILE_OFFSET + SECTION_CONTENT_PADDING + Math.ceil(TILE_MOTION_RESERVE / 2) - inset
-  );
+  return section.y + TILE_OFFSET + SECTION_CONTENT_PADDING + Math.ceil(TILE_CLEARANCE / 2) - inset;
 }
 
 const WALKER_HEIGHT = sectionHeight(1, WALKER_TILES, WALKER_TILES.inset.y);
@@ -275,16 +271,15 @@ export const HOME_LAYOUT = {
   // its top-left corner, and the price on a strip strip rows tall across the tile's foot
   // (tileStrip).
   pocket: {
-    badge: HOME.pocket.badge,
-    box: HOME.pocket.box,
     cells: POCKET_TILES,
-    icon: HOME.pocket.icon,
     origin: {
       x: gridOriginX(POCKET_TILES),
       y: sectionTilesY(POCKET_SECTION, POCKET_TILES.inset.y),
     },
+    ownedIcon: HOME.pocket.ownedIcon,
     strip: HOME.pocket.strip,
     tileInset: POCKET_TILES.inset,
+    unownedIcon: HOME.pocket.unownedIcon,
   },
   porchDogOffset: HOME.porchDogOffset,
   // Before the first walk the starter dog's owner waits in the yard left of the path, behind
@@ -432,14 +427,7 @@ export const HOME_LAYOUT = {
   // top-left corner, and every walker's name on a strip strip rows tall across the tile's foot
   // (tileStrip). The tiles sit inside the shared card-edge padding; the selected mark overhangs
   // into its own gutter.
-  walkerTile: {
-    badge: HOME.walkerTile.badge,
-    box: WALKER_BOX,
-    face: HOME.walkerTile.face,
-    icons: HOME.walkerTile.icons,
-    strip: HOME.walkerTile.strip,
-  },
-  // Each walker tile is drawn this far inside its hit area.
+  walkerTile: HOME.walkerTile,
   walkerTileInset: WALKER_TILES.inset,
   walkerTiles: WALKER_TILES,
   // The yard sign's board, baked into screen-home, which the dog slot sign keeps clear of.

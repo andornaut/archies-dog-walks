@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 
 import { ownerFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { HOME_SCREEN, MIN_PRESS, PLATE_PAD } from "../data/layout.ts";
+import { HOME_SCREEN, MIN_PRESS } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import type { WalkerId } from "../data/types.ts";
 import { WALK_BAR } from "../hud/walkHud.ts";
@@ -25,7 +25,6 @@ import { inside } from "../testing/rects.ts";
 import { BUTTON_SIZE } from "../ui/buttonGeometry.ts";
 import { closeControl } from "../ui/closeControl.ts";
 import { gridRects } from "../ui/grid.ts";
-import { MARK_OFFSET } from "../ui/mark.ts";
 import { MODAL } from "../ui/modal/layout.ts";
 import { cardTitleRow } from "../ui/modal/titleRow.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
@@ -42,7 +41,6 @@ import {
   gearDetail,
   walkerDetail,
 } from "./details/detail.ts";
-import { FEEDBACK } from "./feedback.ts";
 import { overlayRegion } from "./homeBar.ts";
 import {
   CARD_TEXT_ROOM,
@@ -60,6 +58,7 @@ import {
   updateModalLayout,
   updateModalText,
 } from "./homeLayout.ts";
+import { START_PICKER_MARK } from "./startPickerArt.ts";
 
 const { dogOrigin, dogTiles, sectionFrame, sections, startButton, walkerOrigin, walkerTiles } =
   HOME_LAYOUT;
@@ -126,7 +125,7 @@ describe("home layout", () => {
     }
   });
 
-  it("centres card edges with balanced padding and keeps badge overhang clear of the frame", () => {
+  it("centres card edges and keeps badge overhang within the section", () => {
     const opaque = (key: string, frame = 0): Rect => {
       const sprite = key.startsWith("ui-");
       const png = decodePng(readFileSync(`public/art/${sprite ? "sprites" : "images"}/${key}.png`));
@@ -155,7 +154,6 @@ describe("home layout", () => {
     for (const [id, section, hits] of rows) {
       const fill = sectionFill(section);
       const safe = insetRect(HOME_LAYOUT.sectionContentPadding, fill);
-      const gutter = insetRect(HOME_LAYOUT.sectionBadgeGutter, fill);
       const cards = hits;
       const left = Math.min(...cards.map((tile) => tile.x)) - fill.x;
       const right = fill.x + fill.width - Math.max(...cards.map((tile) => tile.x + tile.width));
@@ -170,21 +168,16 @@ describe("home layout", () => {
           x: tile.x + offset.x + dx,
           y: tile.y + offset.y + dy,
         });
-        const visible = [
-          at({ ...tile, x: 0, y: 0 }, 0, FEEDBACK.pressDipPx),
-          at({ ...tile, x: 0, y: 0 }, REFUSE.shake, FEEDBACK.pressDipPx),
-          at({ ...tile, x: 0, y: 0 }, 0, -FEEDBACK.liftPx),
-        ];
-        for (const ink of visible) {
-          expect(inside(ink, safe), `${id}: ${JSON.stringify(ink)}`).toBe(true);
-        }
-        const overhang = [
-          at(tick, MARK_OFFSET.x, MARK_OFFSET.y - FEEDBACK.liftPx - FEEDBACK.badgePopPx),
-          ...badges.map((badge) => at(badge, -2, -3)),
-          ...badges.map((badge) => at(badge, -2 + REFUSE.shake, -3)),
-        ];
+        expect(inside(tile, safe), id).toBe(true);
+        expect(inside({ ...tile, x: tile.x + REFUSE.shake }, safe), id).toBe(true);
+        const overhang = [tick, ...badges].map((badge) =>
+          at(badge, START_PICKER_MARK.x, START_PICKER_MARK.y),
+        );
         for (const ink of overhang) {
-          expect(inside(ink, gutter), `${id}: ${JSON.stringify(ink)}`).toBe(true);
+          expect(
+            inside(ink, { ...section, height: fill.height + 1, y: fill.y }),
+            `${id}: ${JSON.stringify(ink)}`,
+          ).toBe(true);
         }
       }
     }
@@ -201,16 +194,16 @@ describe("home layout", () => {
 
   describe.each(rows)("%s tiles", (_, section, tiles) => {
     const inner = {
-      left: section.x + sectionFrame.edge,
+      left: section.x,
       right: section.x + section.width - sectionFrame.edge,
     };
-    it("keep the selected mark inside the frame and below the heading, evenly spaced", () => {
+    it("keeps the selected mark within the section and below the heading", () => {
       const { capHeight } = fontFileMetrics("font-title");
       const headingBottom = section.y + HOME_LAYOUT.bandText.y + capHeight * TEXT_SCALE;
-      expect(Math.min(...tiles.map((tile) => tile.x)) + MARK_OFFSET.x).toBeGreaterThanOrEqual(
+      expect(Math.min(...tiles.map((tile) => tile.x)) + START_PICKER_MARK.x).toBeGreaterThanOrEqual(
         inner.left,
       );
-      expect(Math.min(...tiles.map((tile) => tile.y)) + MARK_OFFSET.y).toBeGreaterThanOrEqual(
+      expect(Math.min(...tiles.map((tile) => tile.y)) + START_PICKER_MARK.y).toBeGreaterThanOrEqual(
         headingBottom,
       );
       expect(Math.max(...tiles.map((tile) => tile.x + tile.width))).toBeLessThanOrEqual(
@@ -226,7 +219,7 @@ describe("home layout", () => {
 });
 
 describe("the Pocket's tiles", () => {
-  const { box, cells, icon, origin, tileInset } = pocket;
+  const { cells, origin, ownedIcon, tileInset, unownedIcon } = pocket;
   const gear = Object.keys(gameData.shopGear).length;
   const tiles = gridRects(cells, gear, origin).map((cell) => tileFace(tileInset, cell));
 
@@ -246,19 +239,13 @@ describe("the Pocket's tiles", () => {
     }
   });
 
-  it("centre the icon box across the tile, the icon inside it", () => {
-    const tile = tiles[0]!;
-    expect(Math.abs(tile.width - box.size - 2 * box.dx)).toBeLessThanOrEqual(1);
-    const picture = { height: 32, width: 32, x: tile.x + icon.dx, y: tile.y + icon.dy };
-    expect(
-      inside(picture, {
-        height: box.size,
-        width: box.size,
-        x: tile.x + box.dx,
-        y: tile.y + box.dy,
-      }),
-    ).toBe(true);
-    expect(picture.y + picture.height).toBeLessThanOrEqual(tileStrip(tile, pocket.strip).y);
+  it("centres the picture regions and leaves the full unowned price strip under the ink", () => {
+    const tile = { ...tiles[0]!, x: 0, y: 0 };
+    expect(ownedIcon.x + ownedIcon.width / 2).toBe(tile.width / 2);
+    expect(unownedIcon.x + unownedIcon.width / 2).toBe(tile.width / 2);
+    expect(inside(ownedIcon, tile)).toBe(true);
+    expect(unownedIcon.y + unownedIcon.height).toBe(tileStrip(tile, pocket.strip).y);
+    expect(pocket.strip).toBe(18);
   });
 });
 
@@ -507,23 +494,13 @@ describe("the top bar's bank", () => {
   );
 });
 
-// A locked dog's name sits over its price plate, the plate's bottom edge on the portrait box's
-// bottom row, measured on the body font.
-describe("a dog tile's text", () => {
-  const body = fontFileMetrics("font-body");
-  const ink = inkRowsFromCapTop(body) * 2;
+it("keeps a dog's portrait and full name regions inside the face and apart", () => {
   const { dogTile, dogTileInset, dogTiles } = HOME_LAYOUT;
-  const tileHeight = dogTiles.cellHeight - 2 * dogTileInset.y;
-  expect(tileHeight).toBe(HOME_SCREEN.dogTiles.face.height);
-
-  it("keeps a locked dog's name over its plate and the plate inside the tile", () => {
-    const boxBottom = dogTile.face.dy + dogTile.face.size + 1;
-    const plateY = boxBottom - PLATE_PAD - body.capHeight * 2;
-    // Art's row for the plate's capitals.
-    expect(plateY).toBe(23);
-    expect(boxBottom).toBeLessThanOrEqual(tileHeight);
-    expect(dogTile.lockedNameY + ink).toBeLessThan(plateY);
-  });
+  const tile = { ...HOME_SCREEN.dogTiles.face, x: 0, y: 0 };
+  expect(dogTiles.cellHeight - 2 * dogTileInset.y).toBe(tile.height);
+  expect(inside(dogTile.face, tile)).toBe(true);
+  expect(inside(dogTile.name, tile)).toBe(true);
+  expect(rectsOverlap(dogTile.face, dogTile.name)).toBe(false);
 });
 
 // A row's lines at 2x as the card wraps them on the body font.

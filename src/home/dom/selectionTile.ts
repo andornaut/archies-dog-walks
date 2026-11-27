@@ -1,6 +1,6 @@
 import "./selectionTile.css";
 
-import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { ButtonView } from "@andornaut/game-kit/runtime/web/ui/dom/button";
 
@@ -49,6 +49,8 @@ export function createSelectionTile(
     readonly control: ButtonView;
     readonly focus: "content" | "face";
     readonly mark: "art" | "fallback" | "none";
+    readonly markOffset?: Point;
+    readonly variant?: "start";
     readonly hit: Rect;
     readonly rect: Rect;
     readonly selectable?: boolean;
@@ -61,7 +63,13 @@ export function createSelectionTile(
   element.setAttribute("data-picker-state", view.state);
   element.toggleAttribute("data-picker-selectable", view.selectable ?? view.state !== "disabled");
   const look = selectLook(view.state);
-  element.style.setProperty("--adw-selection-fill", cssHex(PALETTE[look.face]));
+  const isStart = view.variant === "start";
+  const markAt = view.markOffset ?? MARK_OFFSET;
+  element.classList.toggle("adw-start-selection", isStart);
+  element.style.setProperty(
+    "--adw-selection-fill",
+    cssHex(PALETTE[isStart && view.state === "selected" ? "yellow" : look.face]),
+  );
   element.style.setProperty(
     "--adw-selection-edge",
     cssHex(PALETTE[view.state === "disabled" ? GREYED.edge : "ink"]),
@@ -98,9 +106,9 @@ export function createSelectionTile(
   const fallbackLine =
     view.mark === "fallback"
       ? ({
-          capTop: view.rect.y + MARK_OFFSET.y + 4,
+          capTop: view.rect.y + markAt.y + 4,
           centre: "ink",
-          centreX: view.rect.x + MARK_OFFSET.x + CHECK_SIZE / 2,
+          centreX: view.rect.x + markAt.x + CHECK_SIZE / 2,
           colour: PALETTE.white,
           font: "title",
           scale: 1,
@@ -147,9 +155,10 @@ export function createSelectionTile(
         top: faceBox.top - gridY(scale, origin.y),
       });
       mark?.place(scale, origin, {
+        ...(isStart ? { projection: "layout" } : {}),
         tag: "tick",
-        x: view.rect.x + MARK_OFFSET.x,
-        y: view.rect.y + MARK_OFFSET.y + motion.markY,
+        x: view.rect.x + markAt.x,
+        y: view.rect.y + markAt.y + motion.markY,
       });
       if (fallbackBox !== undefined && fallbackLabel !== undefined && fallbackLine !== undefined) {
         setBox(
@@ -157,8 +166,8 @@ export function createSelectionTile(
           local(scale, {
             height: 12,
             width: 12,
-            x: view.rect.x + MARK_OFFSET.x + 2,
-            y: view.rect.y + MARK_OFFSET.y + 2 + motion.markY,
+            x: view.rect.x + markAt.x + 2,
+            y: view.rect.y + markAt.y + 2 + motion.markY,
           }),
         );
         placeText(title, scale, origin, fallbackLabel, {

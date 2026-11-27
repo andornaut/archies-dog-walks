@@ -2,13 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import { dogFaceKey } from "../assets/spriteKeys.ts";
 import { gameData } from "../data/index.ts";
-import { PLATE_PAD } from "../data/layout.ts";
-import { fontFileMetrics } from "../testing/fontInk.ts";
+import { gameFont } from "../testing/fontInk.ts";
 import { newPlayerSave } from "../testing/saves.ts";
+import { lineInk } from "../ui/lineInk.ts";
 import { cents } from "../units.ts";
 import { HOME_LAYOUT } from "./homeLayout.ts";
 import { type HomeSelectionSnapshot, homeSelectionViews } from "./selectionView.ts";
-const BODY = fontFileMetrics("font-body");
+import { START_PICKER_MARK } from "./startPickerArt.ts";
+const BODY = gameFont("font-body");
 const RECT = { height: 64, width: 92, x: 12, y: 240 };
 const snapshot = (save = newPlayerSave): HomeSelectionSnapshot => ({
   dogs: [{ feedbackId: "dog:kilo", hit: RECT, id: "kilo", rect: RECT }],
@@ -24,10 +25,14 @@ describe("native home selections", () => {
     expect(tile?.art).toBe("grey");
     expect(tile?.badge?.kind).toBe("lock");
     expect(tile?.name?.text).toBe(gameData.dogs.kilo.name);
-    // The plate's bottom edge on the portrait box's bottom row.
-    const { face } = HOME_LAYOUT.dogTile;
-    expect(tile?.plate).toMatchObject({
-      capTop: RECT.y + face.dy + face.size + 1 - PLATE_PAD - BODY.capHeight * 2,
+    const { name, priceGap } = HOME_LAYOUT.dogTile;
+    const titleInk = lineInk(BODY, gameData.dogs.kilo.name);
+    const priceInk = lineInk(BODY, tile!.plate!.text);
+    expect(tile?.plate?.rect).toEqual({
+      height: priceInk.bottom - priceInk.top + 2,
+      width: priceInk.right - priceInk.left + 4,
+      x: RECT.x + name.x,
+      y: RECT.y + name.y + 1 + titleInk.bottom - titleInk.top + priceGap,
     });
     expect(tile?.pictures[0]).toMatchObject({
       key: dogFaceKey(gameData, "kilo"),
@@ -48,7 +53,10 @@ describe("native home selections", () => {
     expect(tile?.art).toBe("colour");
     expect(tile?.plate).toBeUndefined();
     expect(tile?.badge).toBeUndefined();
-    expect(tile?.name).toMatchObject({ centreIn: { y: RECT.y + HOME_LAYOUT.dogTile.face.dy - 1 } });
+    expect(tile?.name).toMatchObject({
+      align: "centre",
+      rect: { y: RECT.y + HOME_LAYOUT.dogTile.name.y },
+    });
     expect(tile?.pictures[0]).toMatchObject({ moving: true, tag: "happy" });
     expect(homeSelectionViews(gameData, BODY, true, snapshot(save))[0]?.pictures[0]?.moving).toBe(
       false,
@@ -65,11 +73,10 @@ describe("native home selections", () => {
     expect(tile?.art).toBe("colour");
     expect(tile?.badge?.kind).toBe("bill");
     expect(tile?.plate?.kind).toBe("buy");
-    expect(tile?.fill.rect).toEqual({
-      height: HOME_LAYOUT.dogTile.face.size + 2,
-      width: HOME_LAYOUT.dogTile.face.size + 2,
-      x: RECT.x + HOME_LAYOUT.dogTile.face.dx - 1,
-      y: RECT.y + HOME_LAYOUT.dogTile.face.dy - 1,
+    expect(tile?.badge).toEqual({
+      kind: "bill",
+      x: RECT.x + START_PICKER_MARK.x,
+      y: RECT.y + START_PICKER_MARK.y,
     });
   });
 });

@@ -1815,18 +1815,19 @@
         "y": 261
       },
       "dogTile": {
-        "badge": {
-          "dx": -2,
-          "dy": -3
-        },
         "face": {
-          "dx": 4,
-          "dy": 5,
-          "size": 32
+          "height": 36,
+          "width": 34,
+          "x": 3,
+          "y": 3
         },
-        "lockedNameY": 6,
-        "padRight": 3,
-        "textX": 39
+        "name": {
+          "height": 40,
+          "width": 63,
+          "x": 39,
+          "y": 1
+        },
+        "priceGap": 4
       },
       "dogTileInset": {
         "x": 3,
@@ -1902,15 +1903,6 @@
         }
       },
       "pocket": {
-        "badge": {
-          "dx": -2,
-          "dy": -3
-        },
-        "box": {
-          "dx": 12,
-          "dy": 2,
-          "size": 34
-        },
         "cells": {
           "cellHeight": 50,
           "cellWidth": 58,
@@ -1922,19 +1914,26 @@
             "y": 0
           }
         },
-        "icon": {
-          "dx": 13,
-          "dy": 2,
-          "size": 32
-        },
         "origin": {
           "x": 19,
           "y": 447
         },
-        "strip": 15,
+        "ownedIcon": {
+          "height": 48,
+          "width": 52,
+          "x": 3,
+          "y": 1
+        },
+        "strip": 18,
         "tileInset": {
           "x": 0,
           "y": 0
+        },
+        "unownedIcon": {
+          "height": 30,
+          "width": 52,
+          "x": 3,
+          "y": 1
         }
       },
       "porchDogOffset": {
@@ -2105,25 +2104,17 @@
         "y": 173
       },
       "walkerTile": {
-        "badge": {
-          "dx": -2,
-          "dy": -3
-        },
-        "box": {
-          "dx": 3,
-          "dy": 2,
-          "size": 34
-        },
         "face": {
-          "dx": 4,
-          "dy": 0,
-          "size": 32
+          "height": 31,
+          "width": 34,
+          "x": 3,
+          "y": 1
         },
-        "icons": {
-          "dx": 44,
-          "dy": [
-            4
-          ]
+        "perk": {
+          "height": 31,
+          "width": 34,
+          "x": 41,
+          "y": 1
         },
         "strip": 17
       },

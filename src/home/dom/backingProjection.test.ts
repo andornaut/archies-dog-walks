@@ -18,7 +18,6 @@ import { gridRects, type GridSpec } from "../../ui/grid.ts";
 import { PALETTE } from "../../ui/palette.ts";
 import { GREYED } from "../../ui/selection.ts";
 import { TEXT_SCALE } from "../../ui/textFit.ts";
-import { FEEDBACK } from "../feedback.ts";
 import { HOME_LAYOUT, slotSignText, tileFace } from "../homeLayout.ts";
 import { packBonusLine } from "../homeLines.ts";
 import { homeSections } from "../sections.ts";
@@ -58,7 +57,7 @@ it("projects picker art into the available space with selected and locked treatm
     return { feedbackId: id, hit, id, rect: tileFace(inset, hit) };
   };
   const home = HOME_LAYOUT;
-  const models = homeSelectionViews(gameData, fontMetrics(fonts.body), false, {
+  const models = homeSelectionViews(gameData, fonts.body, false, {
     dogs: [cell("kilo", home.dogTiles, home.dogOrigin, home.dogTileInset)],
     gear: [
       cell("fannyPack", home.pocket.cells, home.pocket.origin, home.pocket.tileInset),
@@ -71,16 +70,8 @@ it("projects picker art into the available space with selected and locked treatm
       cell("ada", home.walkerTiles, home.walkerOrigin, home.walkerTileInset),
     ],
   });
-  const pictures = [
-    [4, 0, 32],
-    [4, 0, 32],
-    [4, 5, 32],
-    [13, 9, 32],
-    [13, 2, 32],
-  ] as const;
   await Promise.all(
-    pictures.map(async ([dx, dy, size], index) => {
-      const model = models[index]!;
+    models.map(async (model, index) => {
       const tile = createHomeSelection(
         doc as unknown as Document,
         {
@@ -89,11 +80,12 @@ it("projects picker art into the available space with selected and locked treatm
           isSheet: (key) => key.startsWith("face-"),
         },
         fonts,
-        { activate: () => undefined, focused: true, hold: () => undefined, platePadding: 2 },
+        { activate: () => undefined, focused: true, hold: () => undefined },
         model,
       );
       expect(tile.element.hasAttribute("data-picker-focused")).toBe(true);
-      expect(tile.element.querySelectorAll(".adw-selection-focus-fill")).toHaveLength(1);
+      expect(tile.element.classList.contains("adw-start-selection")).toBe(true);
+      expect(tile.element.querySelectorAll(".adw-selection-focus-fill")).toHaveLength(0);
       expect(tile.element.querySelectorAll(".adw-selection-focus-ink")).toHaveLength(
         index < 3 ? 1 : 0,
       );
@@ -120,13 +112,13 @@ it("projects picker art into the available space with selected and locked treatm
       }
       for (const scale of [domScale(1, { ...viewport, width: 575 }), domScale(2.625, viewport)]) {
         const hit = gridRect(scale, model.hit);
-        for (const faceY of [0, -FEEDBACK.hopPx]) {
-          tile.place(scale, { faceY, markY: 0, refusing: false, x: 0 });
+        for (const pressed of [false, true]) {
+          tile.place(scale, { pressed, refusing: false, x: 0 });
           const dest = gridRect(scale, {
-            height: size,
-            width: size,
-            x: model.rect.x + dx,
-            y: model.rect.y + dy + faceY,
+            height: 32,
+            width: 32,
+            x: primary.x,
+            y: primary.y,
           });
           expect(image.style).toMatchObject({
             height: `${dest.height}px`,
@@ -135,18 +127,14 @@ it("projects picker art into the available space with selected and locked treatm
             width: `${dest.width}px`,
           });
           expect(dest.width).toBeGreaterThan(32 * artPixel(scale));
-          const strip = model.strip?.rect;
-          if (strip !== undefined) {
-            expect(dest.top + dest.height).toBeLessThanOrEqual(gridY(scale, strip.y));
-          }
         }
         expect(tile.element.style.width).toBe(`${hit.width}px`);
         if (perkImage !== undefined) {
           const dest = gridRect(scale, {
             height: 24,
             width: 24,
-            x: model.rect.x + 44,
-            y: model.rect.y + 4,
+            x: model.pictures[1]!.x,
+            y: model.pictures[1]!.y,
           });
           expect(perkImage.style).toMatchObject({
             height: `${dest.height}px`,

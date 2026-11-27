@@ -72,7 +72,6 @@ export function createNativeHomeView(
   context: {
     readonly activate: (id: string) => void;
     readonly hold: (id: string) => void;
-    readonly platePadding: number;
     readonly pillColours: (index: number) =>
       | {
           readonly name: number;
@@ -136,7 +135,6 @@ export function createNativeHomeView(
           activate: () => context.activate(tile.id),
           focused: tile.id === focused,
           hold: () => context.hold(tile.id),
-          platePadding: context.platePadding,
         },
         tile,
       ),

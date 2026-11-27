@@ -1,7 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { PALETTE, type PanelText, PLATE_LOOKS, type PlateKind, TEXT_SCALE } from "../ui/index.ts";
-import type { TileStrip } from "./selectionView.ts";
+import { PALETTE, type PanelText, PLATE_LOOKS, type PlateKind } from "../ui/index.ts";
 
 export interface PricePlateMeasure {
   readonly capHeight: number;
@@ -59,34 +58,6 @@ export function pricePlateView(
       line: 0,
       scale: measure.scale,
       text,
-    },
-    rect,
-  };
-}
-
-// A label strip across a tile's foot: a rule in the plate's edge colour along its top row, the
-// plate's face under it, and the label centred on its ink in the face (rect). A picked tile's
-// strip wears the picked look.
-export function plateStripView(picked: boolean, strip: TileStrip): PricePlateView {
-  const colours = picked
-    ? ({ edge: "plum", face: "amber", text: "plum" } as const)
-    : PLATE_LOOKS[strip.kind];
-  const rect = { ...strip.rect, height: strip.rect.height - 1, y: strip.rect.y + 1 };
-  return {
-    fills: [
-      { colour: PALETTE[colours.edge], rect: { ...strip.rect, height: 1 } },
-      { colour: PALETTE[colours.face], rect },
-    ],
-    // The label's ink is centred on the strip's face (placeBackedText on rect).
-    label: {
-      capTop: rect.y,
-      centre: "ink",
-      centreX: rect.x + rect.width / 2,
-      colour: PALETTE[colours.text],
-      font: "body",
-      line: 0,
-      scale: TEXT_SCALE,
-      text: strip.text,
     },
     rect,
   };

@@ -10,7 +10,6 @@ import { startWalkOpensHelp } from "../help/index.ts";
 import { createNativeHomeSession, type NativeHomeView } from "../home/dom/index.ts";
 import {
   answerPurchase,
-  badgePopOffset,
   bankAtLastVisit,
   bobOffset,
   bubbleSpeech,
@@ -978,9 +977,7 @@ export class StartScene extends Scene {
         view.slot?.setAffordFrame(afford);
       }
       view.place(scale, (id) => ({
-        faceY: hopOffset(reduced, now, this.purchasePops.get(id)),
-        markY: badgePopOffset(reduced, now, this.purchasePops.get(id)),
-        pressed: dip(id) > 0,
+        pressed: pressed?.id === id && pressed.held,
         refusing: refusing(id),
         x: shakeOffset(reduced, now, this.shakes.get(id)),
       }));

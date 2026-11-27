@@ -1,12 +1,11 @@
 import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
-import { fontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { Scene } from "phaser";
 
 import { domArtUrl } from "../../assets/files/index.ts";
 import { gearIconKey, gearSmallIconKey } from "../../assets/index.ts";
 import { MANIFEST_CACHE_KEY } from "../../assets/phaser/index.ts";
-import { gameData, PLATE_PAD } from "../../data/index.ts";
+import { gameData } from "../../data/index.ts";
 import { createNativeHomeView } from "../../home/dom/index.ts";
 import {
   type bubbleSpeech,
@@ -81,7 +80,7 @@ export function createStartHomeView(
       const hit = itemAt(rects, index);
       return { feedbackId: targetId(target(id)), hit, id, rect: face(hit) };
     });
-  const selections = homeSelectionViews(gameData, fontMetrics(fonts.body), reduced, {
+  const selections = homeSelectionViews(gameData, fonts.body, reduced, {
     dogs: selection(rosterOrder(), dogTiles(), dogFace, (dog) => ({ dog, kind: "dog" })),
     gear: selection(gearIds(), gearSlots(), pocketTile, (gear) => ({ gear, kind: "gear" })),
     loadout,
@@ -138,7 +137,6 @@ export function createStartHomeView(
         const kind = pillKind(index);
         return kind === undefined ? undefined : pillColours(kind);
       },
-      platePadding: PLATE_PAD,
     },
     {
       bonus: packBonusLine(gameData, loadout),

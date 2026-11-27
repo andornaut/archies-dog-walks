@@ -1,10 +1,9 @@
-import { itemAt } from "@andornaut/game-kit/runtime/arrays";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
-import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { dogFaceKey, gearIconKey } from "../assets/index.ts";
 import type { DogId, GearId, WalkerId } from "../data/ids.ts";
-import { FACE_SIZE, type GameData, PLATE_PAD } from "../data/index.ts";
+import { FACE_SIZE, type GameData, GEAR_ICON, UI_FUNCTION_ICON_SIZE } from "../data/index.ts";
 import { dollarText, hudEffectIconKey, walkerEffectItems } from "../presentation/index.ts";
 import type { SaveDocument } from "../save/index.ts";
 import {
@@ -13,11 +12,11 @@ import {
   type ItemTile,
   itemTile,
   itemTileLook,
+  lineInk,
   PALETTE,
-  pictureBox,
+  plainMarks,
   type PlateKind,
   selectLook,
-  TEXT_SCALE,
 } from "../ui/index.ts";
 import { type GearPictureFallback, gearPictureFallback } from "./details/gearPictureView.ts";
 import {
@@ -28,6 +27,7 @@ import {
   purchasePrice,
 } from "./home.ts";
 import { HOME_LAYOUT, tileStrip } from "./homeLayout.ts";
+import { pickerPicture, START_PICKER_MARK } from "./startPickerArt.ts";
 import { walkerTile } from "./walkers.ts";
 export interface HomeSelectionCell<Id> {
   readonly id: Id;
@@ -51,18 +51,8 @@ export interface HomeSelectionPicture {
   readonly scale: number;
   readonly moving: boolean;
 }
-// A price or goal plate placed from its text at x, its capitals at capTop and originX of its width
-// left of x.
-export interface TilePlate {
-  readonly capTop: number;
-  readonly kind: PlateKind;
-  readonly originX: number;
-  readonly text: string;
-  readonly x: number;
-}
-// The label strip across a tile's foot (rect) that carries the text in the plate's colours.
-export interface TileStrip {
-  readonly kind: PlateKind;
+// A Start name or price measured within its own region.
+interface TileLabel {
   readonly rect: Rect;
   readonly text: string;
 }
@@ -73,17 +63,9 @@ export interface HomeSelectionView {
   readonly rect: Rect;
   readonly tile: ItemTile;
   readonly art: ArtLook;
-  readonly fill: {
-    readonly colour: number;
-    readonly rect: Rect;
-  };
   readonly pictures: readonly HomeSelectionPicture[];
-  // A name left-aligned at x, its capitals at capTop, or its ink centred across and down centreIn.
-  readonly name?:
-    | { readonly capTop: number; readonly text: string; readonly x: number }
-    | { readonly centreIn: Rect; readonly text: string };
-  readonly plate?: TilePlate;
-  readonly strip?: TileStrip;
+  readonly name?: TileLabel & { readonly align: "centre" | "left" | "strip" };
+  readonly plate?: TileLabel & { readonly kind: PlateKind; readonly framed: boolean };
   readonly badge?: {
     readonly kind: Badge;
     readonly x: number;
@@ -97,93 +79,69 @@ type SelectionData = Pick<
 // The home picker uses authored geometry and one interaction state for its art, copy and plate.
 export function homeSelectionViews(
   data: SelectionData,
-  body: FontMetrics,
+  body: BitmapFont,
   reducedMotion: boolean,
   snapshot: HomeSelectionSnapshot,
 ): readonly HomeSelectionView[] {
   const result: HomeSelectionView[] = [];
   const { loadout, save } = snapshot;
   const capacity = packCapacity(data, save.owned);
-  const make = (
-    cell: HomeSelectionCell<unknown>,
-    tile: ItemTile,
-    box: {
-      readonly dx: number;
-      readonly dy: number;
-      readonly size: number;
-    },
-    badgeAt: {
-      readonly dx: number;
-      readonly dy: number;
-    },
-  ): HomeSelectionView => {
+  const make = (cell: HomeSelectionCell<unknown>, tile: ItemTile, label: string) => {
     const look = itemTileLook(tile);
-    const { x, y } = cell.rect;
     return {
       art: look.art,
-      fill: {
-        colour: PALETTE[pictureBox(look)],
-        rect: {
-          height: box.size,
-          width: box.size,
-          x: x + box.dx,
-          y: y + box.dy,
-        },
-      },
       hit: cell.hit,
       id: cell.feedbackId,
-      label: "",
-      pictures: [],
+      label,
       rect: cell.rect,
       tile,
       ...(look.badge === null
         ? {}
-        : { badge: { kind: look.badge, x: x + badgeAt.dx, y: y + badgeAt.dy } }),
+        : {
+            badge: {
+              kind: look.badge,
+              x: cell.rect.x + START_PICKER_MARK.x,
+              y: cell.rect.y + START_PICKER_MARK.y,
+            },
+          }),
     };
   };
   const plateText = (tile: ItemTile) => {
     const kind = itemTileLook(tile).plate;
-    const text =
-      tile.kind === "locked" ? dollarText(tile.price) : tile.kind === "goal" ? tile.goal : null;
-    return text === null || kind === null ? undefined : { kind, text };
+    return tile.kind === "locked" && kind !== null
+      ? { kind, text: dollarText(tile.price) }
+      : undefined;
   };
-  const pricePlate = (tile: ItemTile, x: number, capTop: number) => {
-    const plate = plateText(tile);
-    return plate === undefined ? {} : { plate: { ...plate, capTop, originX: 0, x } };
-  };
-  const labelStrip = (tile: ItemTile, rect: Rect) => {
-    const plate = plateText(tile);
-    return plate === undefined ? {} : { strip: { ...plate, rect } };
-  };
+  const ink = (text: string) => lineInk(body, plainMarks(text));
   for (const cell of snapshot.walkers) {
     const { x, y } = cell.rect;
-    const { badge, box, face, icons, strip } = HOME_LAYOUT.walkerTile;
+    const { face, perk, strip } = HOME_LAYOUT.walkerTile;
     const walkerStrip = tileStrip(cell.rect, strip);
     const tile = walkerTile(data, save, cell.id);
     const walker = data.walkers[cell.id];
     const portrait = {
       key: walker.portraitKey,
       moving: !reducedMotion,
-      scale: face.size / FACE_SIZE,
+      scale: 1,
       tag: tile.kind === "picked" ? "happy" : "neutral",
-      x: x + face.dx,
-      y: y + face.dy,
+      ...pickerPicture(face, walker.portraitKey, x, y, FACE_SIZE),
     };
     const pictures = [
       portrait,
-      ...walkerEffectItems(data, cell.id).map((item, i) => ({
-        key: hudEffectIconKey(item),
-        moving: false,
-        scale: 1,
-        x: x + icons.dx,
-        y: y + itemAt(icons.dy, i),
-      })),
+      ...walkerEffectItems(data, cell.id).map((item) => {
+        const key = hudEffectIconKey(item);
+        return {
+          key,
+          moving: false,
+          scale: 1,
+          ...pickerPicture(perk, key, x, y, UI_FUNCTION_ICON_SIZE.standard),
+        };
+      }),
     ];
     result.push({
-      ...make(cell, tile, box, badge),
-      label: walker.name,
+      ...make(cell, tile, walker.name),
+      name: { align: "strip", rect: walkerStrip, text: walker.name },
       pictures,
-      strip: { kind: "goal", rect: walkerStrip, text: walker.name },
     });
   }
   for (const cell of snapshot.dogs) {
@@ -198,49 +156,50 @@ export function homeSelectionViews(
       pickedCount: loadout.dogs.length,
       price: purchasePrice(data, save.owned, purchase),
     });
-    const { badge, face, lockedNameY, textX } = HOME_LAYOUT.dogTile;
-    const box = { dx: face.dx - 1, dy: face.dy - 1, size: face.size + 2 };
-    const view = make(cell, tile, box, badge);
-    const locked = itemTileLook(tile).badge !== null;
-    // An owned dog's name is centred on its ink in the space right of the portrait's box, as tall
-    // as the box and keeping the box's left padding at the tile's right.
-    const beside = box.dx + box.size;
+    const { face, name, priceGap } = HOME_LAYOUT.dogTile;
+    const locked = tile.kind === "locked";
+    const nameRegion = { ...name, x: x + name.x, y: y + name.y };
+    const nameInk = ink(dog.name);
+    const nameHeight = nameInk.bottom - nameInk.top;
+    // The one-pixel inset leaves the complete name above the measured price, including descenders.
+    const nameTop = nameRegion.y + 1;
+    const price = plateText(tile);
+    const priceInk = price === undefined ? undefined : ink(price.text);
+    const key = dogFaceKey(data, cell.id);
     result.push({
-      ...view,
-      label: dog.name,
-      name: locked
-        ? { capTop: y + lockedNameY, text: dog.name, x: x + textX }
-        : {
-            centreIn: {
-              height: box.size,
-              width: cell.rect.width - beside - box.dx,
-              x: x + beside,
-              y: y + box.dy,
-            },
-            text: dog.name,
-          },
+      ...make(cell, tile, dog.name),
+      name: {
+        align: locked ? "left" : "centre",
+        rect: locked ? { ...nameRegion, height: nameHeight, y: nameTop } : nameRegion,
+        text: dog.name,
+      },
       pictures: [
         {
-          key: dogFaceKey(data, cell.id),
+          key,
           moving: !reducedMotion && !locked,
           scale: 1,
           tag: locked ? "neutral" : "happy",
-          x: x + face.dx,
-          y: y + face.dy,
+          ...pickerPicture(face, key, x, y, FACE_SIZE),
         },
       ],
-      // A locked dog's plate's bottom edge on the portrait box's bottom row.
-      ...(locked
-        ? pricePlate(
-            tile,
-            x + textX,
-            y + box.dy + box.size - PLATE_PAD - body.capHeight * TEXT_SCALE,
-          )
-        : {}),
+      ...(price === undefined || priceInk === undefined
+        ? {}
+        : {
+            plate: {
+              ...price,
+              framed: true,
+              rect: {
+                height: priceInk.bottom - priceInk.top + 2,
+                width: priceInk.right - priceInk.left + 4,
+                x: nameRegion.x,
+                y: nameTop + nameHeight + priceGap,
+              },
+            },
+          }),
     });
   }
   for (const cell of snapshot.gear) {
-    const { height, x, y } = cell.rect;
+    const { x, y } = cell.rect;
     const purchase: Purchase = { gear: cell.id, kind: "gear" };
     const tile = itemTile({
       affordable: isAffordable(data, save.owned, save.bankCents, purchase),
@@ -250,30 +209,24 @@ export function homeSelectionViews(
       pickedCount: loadout.gear === null ? 0 : 1,
       price: purchasePrice(data, save.owned, purchase),
     });
-    const { badge, box, icon, strip } = HOME_LAYOUT.pocket;
-    const gearStrip = tileStrip(cell.rect, strip);
-    const picked = tile.kind === "picked";
-    const boxY = picked ? Math.floor((height - box.size) / 2) : box.dy;
-    const iconY = y + (picked ? Math.floor((height - icon.size) / 2) : icon.dy);
+    const { ownedIcon, strip, unownedIcon } = HOME_LAYOUT.pocket;
+    const price = plateText(tile);
+    const key = gearIconKey(cell.id);
+    const at = pickerPicture(price === undefined ? ownedIcon : unownedIcon, key, x, y, GEAR_ICON);
     result.push({
-      ...make(cell, tile, { ...box, dy: boxY }, badge),
-      label: data.shopGear[cell.id].name,
+      ...make(cell, tile, data.shopGear[cell.id].name),
       pictures: [
         {
-          fallback: gearPictureFallback(data, {
-            gear: cell.id,
-            scale: 1,
-            x: x + icon.dx,
-            y: iconY,
-          }),
-          key: gearIconKey(cell.id),
+          fallback: gearPictureFallback(data, { ...at, gear: cell.id, scale: 1 }),
+          key,
           moving: false,
           scale: 1,
-          x: x + icon.dx,
-          y: iconY,
+          ...at,
         },
       ],
-      ...labelStrip(tile, gearStrip),
+      ...(price === undefined
+        ? {}
+        : { plate: { ...price, framed: false, rect: tileStrip(cell.rect, strip) } }),
     });
   }
   return result;

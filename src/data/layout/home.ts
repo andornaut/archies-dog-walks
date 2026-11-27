@@ -1,6 +1,6 @@
 import type { Point, Rect } from "@andornaut/game-kit/runtime/rect";
 
-import { FACE_SIZE, GEAR_ICON, LOCK_BADGE_OFFSET, WIDE_BUTTON_X } from "./controls.ts";
+import { FACE_SIZE, WIDE_BUTTON_X } from "./controls.ts";
 
 // Start screen
 
@@ -28,19 +28,11 @@ export const HOME_SCREEN = {
     // The card's widest.
     width: 300,
   },
-  // A dog tile, from its drawn top-left.
+  // A dog tile's portrait and name regions from the face corner.
   dogTile: {
-    // A locked dog's badge's offset.
-    badge: LOCK_BADGE_OFFSET,
-    // The face's offset and side.
-    face: { dx: 4, dy: 5, size: FACE_SIZE },
-    // A locked dog's name's capitals' top: its letters' top on the portrait box's top row, two
-    // rows over its 2x capitals.
-    lockedNameY: 6,
-    // The text's right end in from the tile's right.
-    padRight: 3,
-    // The text's left edge.
-    textX: 39,
+    face: { height: 36, width: 34, x: 3, y: 3 },
+    name: { height: 40, width: 63, x: 39, y: 1 },
+    priceGap: 4,
   },
   // art: the dog tiles' faces, each drawn inside a press cell grown round it to MIN_PRESS tall.
   dogTiles: { columns: 3, face: { height: 42, width: 105 } },
@@ -77,13 +69,11 @@ export const HOME_SCREEN = {
   // between the top bar and the Pet shop. art: screen-home draws the street-name plate this far
   // down.
   petShopDrop: 26,
-  // A Pocket tile: its badge's offset, its icon box's offset and side, its icon's offset and its
-  // price strip's rows at the tile's foot.
+  // A Pocket tile's icon region and its price strip when unowned.
   pocket: {
-    badge: LOCK_BADGE_OFFSET,
-    box: { dx: 12, dy: 2, size: 34 },
-    icon: { dx: 13, dy: 2, size: GEAR_ICON },
-    strip: 15,
+    ownedIcon: { height: 48, width: 52, x: 3, y: 1 },
+    strip: 18,
+    unownedIcon: { height: 30, width: 52, x: 3, y: 1 },
   },
   // art: the Pocket tiles' faces, each drawn inside a press cell grown round it to MIN_PRESS tall.
   pocketTiles: { columns: 5, face: { height: 50, width: 58 } },
@@ -143,14 +133,10 @@ export const HOME_SCREEN = {
   tileOffset: 24,
   // The walker's column at the gate.
   walkerAtGate: { x: 180 },
-  // A walker tile's portrait box: its offset and side.
-  walkerBox: { dx: 3, dy: 2, size: 34 },
-  // A walker tile: a locked walker's badge's offset, the portrait's offset and side, the perk icon's left
-  // edge and tops, and its name strip's rows at the tile's foot.
+  // A walker tile's portrait and perk regions, and its name strip's height.
   walkerTile: {
-    badge: LOCK_BADGE_OFFSET,
-    face: { dx: 4, dy: 0, size: FACE_SIZE },
-    icons: { dx: 44, dy: [4] },
+    face: { height: 31, width: 34, x: 3, y: 1 },
+    perk: { height: 31, width: 34, x: 41, y: 1 },
     strip: 17,
   },
   // art: the walker tiles' faces, each drawn inside a press cell grown round it to MIN_PRESS tall.

@@ -1,0 +1,49 @@
+/* Start changes the continuous face as one piece. The selected check is independent of its fill. */
+@media (forced-colors: none) {
+  .adw-selection-tile.adw-start-selection {
+    --ui-colour-button-focus-face: var(--adw-amber);
+    --ui-colour-button-focus-text: var(--adw-plum);
+    --ui-colour-button-pressed-face: var(--adw-deepAmber);
+    --ui-colour-button-pressed-text: var(--adw-plum);
+  }
+  .adw-start-selection[data-picker-refusing] {
+    --ui-colour-button-focus-face: var(--adw-darkRed);
+    --ui-colour-button-pressed-face: var(--adw-darkRed);
+  }
+}
+
+.adw-start-selection[data-picker-refusing] :is(.adw-selection-face, .adw-start-name-strip) {
+  background-color: var(--adw-darkRed) !important;
+}
+
+@media (forced-colors: active) {
+  .adw-selection-tile.adw-start-selection {
+    --ui-colour-button-focus-face: Highlight;
+    --ui-colour-button-focus-text: HighlightText;
+    --ui-colour-button-pressed-face: Highlight;
+    --ui-colour-button-pressed-text: HighlightText;
+  }
+  .adw-start-selection .adw-start-name-strip {
+    background-color: transparent !important;
+  }
+  .adw-start-selection:is(
+      :focus-visible,
+      [data-ui-pressed],
+      .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+    )
+    .adw-selection-focus-ink {
+    color: HighlightText !important;
+  }
+  .adw-start-selection[data-picker-refusing] :is(.adw-selection-face, .adw-start-name-strip) {
+    background-color: Highlight !important;
+  }
+}
+
+.adw-start-selection[aria-pressed="true"]:not([data-picker-refusing]):is(
+    :focus-visible,
+    [data-ui-pressed],
+    .adw-picker-surface:not(:has(:focus-visible)) [data-picker-focused]
+  )
+  .adw-start-name-strip {
+  background-color: transparent !important;
+}

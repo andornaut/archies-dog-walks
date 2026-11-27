@@ -1,7 +1,6 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import { type FontMetrics, inkRowsFromCapTop } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
-import { HOME_SCREEN } from "../data/index.ts";
 import { HOME_LAYOUT } from "./homeGeometry.ts";
 
 // A walker or Pocket tile's label strip, rows tall, from the drawn tile at tile: across the tile
@@ -17,8 +16,7 @@ export function tileStrip(tile: Rect, rows: number): Rect {
 }
 
 // How wide a dog tile's name may be: from its text column to padRight inside its face's edge.
-export const DOG_TILE_TEXT_ROOM =
-  HOME_SCREEN.dogTiles.face.width - HOME_LAYOUT.dogTile.textX - HOME_LAYOUT.dogTile.padRight;
+export const DOG_TILE_TEXT_ROOM = HOME_LAYOUT.dogTile.name.width;
 
 // The dog slot sign's cream inside its board's frame and lit and shaded rows, and where its two
 // lines go: each line's ink centred on the cream's middle column, the block from the call's
