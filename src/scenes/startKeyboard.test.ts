@@ -36,6 +36,22 @@ it("uses S/L for navigation and confirms the new loadout target once instead of 
   expect(state.nativeHome.element.focus).toHaveBeenCalledTimes(2);
 });
 
+it("keeps the legacy Start shortcut without making an unfocused E or F start a walk", () => {
+  const state = {
+    actAfterDip: vi.fn(),
+    focused: () => undefined,
+    nativeHome: { accepts: () => true },
+    nativeReady: true,
+    time: { now: 0 },
+  };
+  for (const code of ["KeyE", "KeyF"]) {
+    methods.onKey.call(state, { code, shiftKey: false });
+  }
+  expect(state.actAfterDip).not.toHaveBeenCalled();
+  methods.onKey.call(state, { code: "Enter", shiftKey: false });
+  expect(state.actAfterDip).toHaveBeenCalledExactlyOnceWith({ kind: "start" });
+});
+
 vi.mock("./questionPanel.ts", async (original) => ({
   ...(await original<typeof import("./questionPanel.ts")>()),
   htmlPanelInput: () => ({

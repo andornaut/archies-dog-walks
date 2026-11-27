@@ -37,7 +37,7 @@ import {
 import { coverHelpUnderlay, type DomSettings } from "../hud/dom/index.ts";
 import {
   focusDirectionForKey,
-  isForegroundConfirmKey,
+  isConfirmKey,
   isMuteKey,
   isPauseKey,
   menuKeyActs,
@@ -290,7 +290,7 @@ export class SettingsScene extends Scene {
 
   private onKey(code: string): void {
     if (this.steps !== undefined) {
-      if (isPauseKey(code) || isForegroundConfirmKey(code)) {
+      if (isPauseKey(code) || isConfirmKey(code)) {
         this.closeSteps();
       }
       return;
@@ -318,7 +318,7 @@ export class SettingsScene extends Scene {
       this.render();
     } else if (isPauseKey(code)) {
       this.close();
-    } else if (isForegroundConfirmKey(code)) {
+    } else if (isConfirmKey(code)) {
       this.confirm(focusedRow);
     } else if (isMuteKey(code)) {
       this.flipAfterDip("muted");

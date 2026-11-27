@@ -23,6 +23,7 @@ import {
 import {
   dragScroll,
   focusDirectionForKey,
+  isConfirmKey,
   isDragging,
   isForegroundConfirmKey,
   isPauseKey,
@@ -186,7 +187,7 @@ export class StatsScene extends Scene {
     if (!menuKeyActs(repeat, code)) {
       return false;
     }
-    if (isPauseKey(code) || isForegroundConfirmKey(code)) {
+    if (isPauseKey(code) || isConfirmKey(code)) {
       this.back();
       return true;
     }

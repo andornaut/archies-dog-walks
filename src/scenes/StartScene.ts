@@ -54,6 +54,7 @@ import {
   focusDirectionForKey,
   type HoldPress,
   holdRule,
+  isConfirmKey,
   isExitKey,
   isForegroundConfirmKey,
   isHelpKey,
@@ -517,7 +518,7 @@ export class StartScene extends Scene {
       return;
     }
     if (this.overlay !== undefined) {
-      if (isPauseKey(code) || isForegroundConfirmKey(code)) {
+      if (isPauseKey(code) || isConfirmKey(code)) {
         this.closeOverlay();
       }
       return;
@@ -560,7 +561,11 @@ export class StartScene extends Scene {
       return;
     }
     if (isForegroundConfirmKey(code)) {
-      const target = this.focused() ?? { kind: "start" };
+      const target: Target | undefined =
+        this.focused() ?? (isConfirmKey(code) ? { kind: "start" } : undefined);
+      if (target === undefined) {
+        return;
+      }
       this.press = { held: false, id: targetId(target), startedMs: this.time.now };
       this.actAfterDip(target);
       return;

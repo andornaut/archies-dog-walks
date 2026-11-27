@@ -22,7 +22,7 @@ import {
 } from "../home/index.ts";
 import { nativeFrames } from "../home/phaser/index.ts";
 import type { DomEndScreen } from "../hud/dom/index.ts";
-import { isForegroundConfirmKey, isMuteKey, sceneKeyAllowed, screenArea } from "../input/index.ts";
+import { isConfirmKey, isMuteKey, sceneKeyAllowed, screenArea } from "../input/index.ts";
 import { SCREEN_LAYOUT } from "../layout/index.ts";
 import { PackFigures } from "../pack/phaser/index.ts";
 import { stopWakeLock } from "../pwa/index.ts";
@@ -339,7 +339,7 @@ export class EndScene extends Scene {
         }
         return;
       }
-      if (!event.repeat && (isForegroundConfirmKey(event.code) || event.code === "Escape")) {
+      if (!event.repeat && (isConfirmKey(event.code) || event.code === "Escape")) {
         back();
       }
     });
