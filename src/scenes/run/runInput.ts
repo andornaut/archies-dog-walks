@@ -22,6 +22,7 @@ import {
   type PointerTrack,
   type Press,
   type PressMode,
+  sceneKeyAllowed,
   tickTrack,
   type TrackContext,
   trackPointer,
@@ -125,12 +126,12 @@ export class RunInput {
   // M, P and Escape are the walk bar's keys, which the HUD handles. Phaser hands a key down to
   // this listener as the browser fires it, auto-repeats included.
   private onKey(event: KeyboardEvent): void {
-    if (canvasInputBlocked(this.scene)) {
+    if (!sceneKeyAllowed(event) || canvasInputBlocked(this.scene)) {
       return;
     }
     const action = walkKeyAction(event.code, event.repeat);
-    if (action !== undefined) {
-      this.act(action);
+    if (action !== undefined && this.act(action)) {
+      event.preventDefault();
     }
   }
 
@@ -230,10 +231,12 @@ export class RunInput {
   }
 
   // Lane moves wait for the next simulation step, where they are logged.
-  private act(action: GestureAction): void {
-    if (this.steerable() !== undefined) {
-      this.pending = [...this.pending, { direction: action.direction, kind: "lane" }];
+  private act(action: GestureAction): boolean {
+    if (this.steerable() === undefined) {
+      return false;
     }
+    this.pending = [...this.pending, { direction: action.direction, kind: "lane" }];
+    return true;
   }
 
   // Whether a lane move that way, after the ones queued, would move the pack's target lane.

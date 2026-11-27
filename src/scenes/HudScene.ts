@@ -29,6 +29,7 @@ import {
   walkBarLayout,
   walkPaused,
 } from "../hud/index.ts";
+import { sceneKeyAllowed } from "../input/index.ts";
 import { BUFF_POP, SCREEN_LAYOUT, sparkleAt } from "../layout/index.ts";
 import {
   dollarAmountText,
@@ -61,7 +62,7 @@ import { HUD_DEPTH } from "./hudDepth.ts";
 import { createHudSceneProjection } from "./hudSceneProjection.ts";
 import type { HudRun, HudWalk, RunHudView } from "./hudWalk.ts";
 import { MESSAGE_EVENT, MessageStrip } from "./messageStripView.ts";
-import { BAR_MUTED_EVENT, onSceneEvent } from "./overlay.ts";
+import { BAR_MUTED_EVENT, nativeSceneAccepts, onSceneEvent } from "./overlay.ts";
 import { OwnerTabs } from "./ownerTabs.ts";
 import {
   isMuted,
@@ -294,16 +295,46 @@ export class HudScene extends Scene {
     if (picture !== undefined) {
       return;
     }
-    this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
-      const key = topBarKey(event.repeat, event.code);
-      if (key === "pause") {
-        const until = this.time.now + MENU_FEEDBACK.pressDipMs;
-        this.setBarPressed(key, () => this.time.now < until);
+    this.input.keyboard?.on("keydown", (event: KeyboardEvent) =>
+      this.onBarKey(layer.input.accepts(), event),
+    );
+  }
+
+  private onBarKey(baseAccepts: boolean, event: KeyboardEvent): void {
+    const run = this.run;
+    if (run === undefined || !sceneKeyAllowed(event)) {
+      return;
+    }
+    const key = topBarKey(event.repeat, event.code);
+    const pause = run.runPause();
+    if (key === undefined || pause.page !== "shown") {
+      return;
+    }
+
+    // The focused detail card's Escape closes that card, as browser Back does.
+    if (key === "pause" && this.explained.html?.accepts()) {
+      event.preventDefault();
+      run.closeExplanation();
+      return;
+    }
+
+    if (topBarAction(pause, "key", key) === undefined) {
+      return;
+    }
+    // The current card/celebration or Pause panel can forward Escape to its own HUD
+    // route. A different top modal must keep the underlying walk bar inactive.
+    if (!baseAccepts) {
+      const overlay = this.overlayScene();
+      if (key !== "pause" || overlay === this || !nativeSceneAccepts(overlay)) {
+        return;
       }
-      if (key !== undefined) {
-        this.press("key", key);
-      }
-    });
+    }
+    event.preventDefault();
+    if (key === "pause") {
+      const until = this.time.now + MENU_FEEDBACK.pressDipMs;
+      this.setBarPressed(key, () => this.time.now < until);
+    }
+    this.press("key", key);
   }
   // The topmost overlay over the walk that leaves the walk bar in view (Cheats, the settings, the
   // pause menu, the card or the zone celebration), else the HUD itself. A picture of the HUD has none.
