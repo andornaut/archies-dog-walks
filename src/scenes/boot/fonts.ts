@@ -3,7 +3,7 @@ import type { Scene } from "phaser";
 
 import type { AssetManifest } from "../../assets/index.ts";
 import { atlasManifest, queueFonts } from "../../assets/phaser/index.ts";
-import { unqueuedFonts } from "../requiredFontLoads.ts";
+import { unqueuedFonts } from "./requiredFontLoads.ts";
 
 export function queueBootFonts(
   scene: Scene,

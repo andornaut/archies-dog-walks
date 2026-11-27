@@ -82,7 +82,7 @@ import { packDogsOf } from "../state/index.ts";
 import { type NativeTopSection, uiLayer } from "../ui/dom/index.ts";
 import { refusalRed, REFUSE } from "../ui/index.ts";
 import type { Cents } from "../units.ts";
-import { artReady } from "./artReady.ts";
+import { artReady } from "./boot/artReady.ts";
 import type { CelebrationSceneData } from "./CelebrationScene.ts";
 import { CHEATS_CHANGED_EVENT, clearNextWalkAfterWalk } from "./cheatChoices.ts";
 import { exitGame, HOME_PAGE_OPENING_EVENT, openHomePage } from "./homeBarPress.ts";

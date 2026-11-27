@@ -11,7 +11,7 @@ import {
   MODAL,
   navigationMenuWidth,
 } from "../ui/index.ts";
-import { whenArtReady } from "./artReady.ts";
+import { whenArtReady } from "./boot/artReady.ts";
 import type { CheatsData } from "./CheatsScene.ts";
 import { openHelp } from "./helpScreen.ts";
 import { clearOnHomePageOpening } from "./homeBarPress.ts";

@@ -5,7 +5,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 
 import { DOG_IDS } from "../../data/ids.ts";
 import { gameData } from "../../data/index.ts";
-import { markArtReady } from "../artReady.ts";
+import { markArtReady } from "../boot/artReady.ts";
 import { HELP_CLOSED_EVENT } from "../HelpScene.ts";
 import type { RunPick } from "../run/runStart.ts";
 import { SCENE_KEYS } from "../sceneKeys.ts";

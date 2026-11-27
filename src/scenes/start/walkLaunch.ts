@@ -3,7 +3,7 @@ import { Core, type Scene, type Time } from "phaser";
 
 import { waitedLoad } from "../../loadingProgress.ts";
 import { startWakeLock } from "../../pwa/index.ts";
-import { artReady, waitForWalkArt, whenArtReady } from "../artReady.ts";
+import { artReady, waitForWalkArt, whenArtReady } from "../boot/artReady.ts";
 import { nextWalk } from "../cheatChoices.ts";
 import { HELP_CLOSED_EVENT } from "../HelpScene.ts";
 import { openHelp } from "../helpScreen.ts";

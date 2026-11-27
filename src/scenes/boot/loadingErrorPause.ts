@@ -1,4 +1,4 @@
-import type { LoadingErrorView } from "../ui/dom/index.ts";
+import type { LoadingErrorView } from "../../ui/dom/index.ts";
 
 // Game.pause leaves in-flight loader requests running. The failure dialog's Retry and progress stay
 // live as the only interactive subtree, with the page under it inert and no mute control, while

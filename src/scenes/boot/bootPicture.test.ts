@@ -1,9 +1,9 @@
 import type { Scene } from "phaser";
 import { expect, it, vi } from "vitest";
 
-import { LOADING_ART } from "../assets/spriteKeys.ts";
-import { LOADING_WALKER_START } from "../data/layout.ts";
-import { waitedLoad } from "../loadingProgress.ts";
+import { LOADING_ART } from "../../assets/spriteKeys.ts";
+import { LOADING_WALKER_START } from "../../data/layout.ts";
+import { waitedLoad } from "../../loadingProgress.ts";
 import { addBootPicture } from "./bootPicture.ts";
 
 it("keeps Boot decoration fixed while only the shared progress source changes", () => {

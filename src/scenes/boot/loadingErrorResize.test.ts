@@ -1,11 +1,11 @@
 import { afterEach, expect, it, vi } from "vitest";
 
-import { FakeDocument } from "../testing/fakeDom.ts";
-import { mountUiLayer } from "../ui/dom/uiLayer.ts";
-import { worldViewBox } from "../ui/worldFit.ts";
+import { FakeDocument } from "../../testing/fakeDom.ts";
+import { mountUiLayer } from "../../ui/dom/uiLayer.ts";
+import { worldViewBox } from "../../ui/worldFit.ts";
 import { pauseLoadingError } from "./loadingErrorPause.ts";
 
-vi.mock("../ui/dom/domCuts.ts", () => ({
+vi.mock("../../ui/dom/domCuts.ts", () => ({
   cutDomArt: vi.fn(() => Promise.resolve("blob:cut")),
 }));
 

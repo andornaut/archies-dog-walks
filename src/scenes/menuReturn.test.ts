@@ -16,7 +16,9 @@ vi.mock("phaser", () => ({
   Scenes: { Events: { PAUSE: "pause", RESUME: "resume", SHUTDOWN: "shutdown" } },
 }));
 vi.mock("virtual:art-files", () => ({ default: new Map() }));
-vi.mock("./artReady.ts", () => ({ whenArtReady: (_scene: unknown, ready: () => void) => ready() }));
+vi.mock("./boot/artReady.ts", () => ({
+  whenArtReady: (_scene: unknown, ready: () => void) => ready(),
+}));
 vi.mock("./modalMeasure.ts", () => ({ canvasPanelMeasure: () => ({ inkWidth: () => 60 }) }));
 vi.mock("./rampDim.ts", () => ({ addRampDim: vi.fn() }));
 vi.mock("./questionPanel.ts", () => ({

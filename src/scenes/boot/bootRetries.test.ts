@@ -3,7 +3,7 @@ import { watchLoader } from "@andornaut/game-kit/runtime/load/phaser/watchLoader
 import { createProgressState } from "@andornaut/game-kit/runtime/progressState";
 import { describe, expect, it, vi } from "vitest";
 
-import { fakeLoaderScene } from "../testing/phaser/fakeLoader.ts";
+import { fakeLoaderScene } from "../../testing/phaser/fakeLoader.ts";
 import { stopOnceRetried } from "./bootRetries.ts";
 
 // The loader and scene events watchLoader listens for, as Phaser names them.

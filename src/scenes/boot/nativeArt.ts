@@ -4,7 +4,7 @@ import { domArtUrl } from "../../assets/files/index.ts";
 import type { AssetManifest } from "../../assets/index.ts";
 import { hudArtResources } from "../../hud/dom/index.ts";
 import { uiLayer } from "../../ui/dom/index.ts";
-import type { RequiredUiController } from "../requiredUi.ts";
+import type { RequiredUiController } from "./requiredUi.ts";
 
 export const HOME_UI_KEYS: ReadonlySet<string> = new Set([
   "icon-menu",

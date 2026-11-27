@@ -1,7 +1,7 @@
 import type { LoaderWatch, LoadFailure } from "@andornaut/game-kit/runtime/load/phaser/watchLoader";
 
-import { type AssetManifest, type AtlasManifest, atlasPageKey } from "../assets/index.ts";
-import { fontXmlKey, MANIFEST_CACHE_KEY } from "../assets/phaser/index.ts";
+import { type AssetManifest, type AtlasManifest, atlasPageKey } from "../../assets/index.ts";
+import { fontXmlKey, MANIFEST_CACHE_KEY } from "../../assets/phaser/index.ts";
 
 export const REQUIRED_BITMAP_FONTS = [
   "font-body",

@@ -1,7 +1,7 @@
 import type { GameObjects, Scene } from "phaser";
 
-import { LOADING_ART, type SpriteAsset } from "../assets/index.ts";
-import { LOADING_WALKER_START } from "../data/index.ts";
+import { LOADING_ART, type SpriteAsset } from "../../assets/index.ts";
+import { LOADING_WALKER_START } from "../../data/index.ts";
 
 // Loading artwork has no progress input: the top-edge strip is the only loading gauge.
 export function addBootPicture(

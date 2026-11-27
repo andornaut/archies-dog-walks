@@ -5,7 +5,7 @@ import {
 } from "@andornaut/game-kit/runtime/load/loadingAttempts";
 import type { ProgressHandle } from "@andornaut/game-kit/runtime/progressState";
 
-import type { LoadingErrorView, UiLayer } from "../ui/dom/index.ts";
+import type { LoadingErrorView, UiLayer } from "../../ui/dom/index.ts";
 
 export const REQUIRED_UI = "required-ui";
 export type RequiredUiController = Pick<

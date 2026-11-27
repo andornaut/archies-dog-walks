@@ -1,4 +1,6 @@
 // The public entry of src/scenes/: modules outside it import only this file.
+export { pauseLoadingError } from "./boot/loadingErrorPause.ts";
+export { createRequiredUi, REQUIRED_UI } from "./boot/requiredUi.ts";
 export { BootScene } from "./BootScene.ts";
 export { CardScene } from "./CardScene.ts";
 export { CelebrationScene } from "./CelebrationScene.ts";
@@ -7,12 +9,10 @@ export { EndScene } from "./EndScene.ts";
 export { HelpPictureScene } from "./HelpPictureScene.ts";
 export { HelpScene } from "./HelpScene.ts";
 export { HudScene } from "./HudScene.ts";
-export { pauseLoadingError } from "./loadingErrorPause.ts";
 export { MenuScene } from "./MenuScene.ts";
 export { PauseScene } from "./PauseScene.ts";
 export { stopResuming } from "./profileStore.ts";
 export { QuitScene } from "./QuitScene.ts";
-export { createRequiredUi, REQUIRED_UI } from "./requiredUi.ts";
 export { RunScene } from "./RunScene.ts";
 export { SCENE_KEYS } from "./sceneKeys.ts";
 export { SettingsScene } from "./SettingsScene.ts";

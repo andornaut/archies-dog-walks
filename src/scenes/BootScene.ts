@@ -26,7 +26,7 @@ import {
 } from "../pwa/index.ts";
 import { uiLayer } from "../ui/dom/index.ts";
 import { addPillGlyphs, registerFallbackPixelFont } from "../ui/phaser/index.ts";
-import { markArtReady, setBootWatch, type WaitedLoad } from "./artReady.ts";
+import { markArtReady, setBootWatch, type WaitedLoad } from "./boot/artReady.ts";
 import {
   processBootAssets,
   queueBootArt,
@@ -34,10 +34,16 @@ import {
   queueLoadingArt,
   registerBootSprite,
 } from "./boot/assets.ts";
+import { addBootPicture } from "./boot/bootPicture.ts";
+import { stopOnceRetried } from "./boot/bootRetries.ts";
 import { queueBootFonts } from "./boot/fonts.ts";
 import { HOME_UI_KEYS, HUD_UI_KEYS, requireBootNativeUi } from "./boot/nativeArt.ts";
-import { addBootPicture } from "./bootPicture.ts";
-import { stopOnceRetried } from "./bootRetries.ts";
+import {
+  REQUIRED_BITMAP_FONTS,
+  requiredFontFailure,
+  retryRequiredFontLoads,
+} from "./boot/requiredFontLoads.ts";
+import { REQUIRED_UI, type RequiredUiController } from "./boot/requiredUi.ts";
 import { waitForNativeHome } from "./nativeHomeReady.ts";
 import {
   currentSettings,
@@ -48,12 +54,6 @@ import {
   takeResumedWalk,
   walkerInUse,
 } from "./profileStore.ts";
-import {
-  REQUIRED_BITMAP_FONTS,
-  requiredFontFailure,
-  retryRequiredFontLoads,
-} from "./requiredFontLoads.ts";
-import { REQUIRED_UI, type RequiredUiController } from "./requiredUi.ts";
 import { nextRunStart } from "./run/runRecorder.ts";
 import { resumedRunSceneData, runSceneData } from "./run/runStart.ts";
 import { SCENE_KEYS } from "./sceneKeys.ts";

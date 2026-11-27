@@ -4,7 +4,7 @@ import type { Scene } from "phaser";
 import { homeBarAction, type HomeBarButton, homeBarButtonAt } from "../home/index.ts";
 import { openGuard } from "../input/index.ts";
 import { exitShown } from "../pwa/index.ts";
-import { whenArtReady } from "./artReady.ts";
+import { whenArtReady } from "./boot/artReady.ts";
 import { openHelp } from "./helpScreen.ts";
 import type { MenuSceneData } from "./MenuScene.ts";
 import { BAR_MUTED_EVENT, onSceneEvent, openOverlay } from "./overlay.ts";

@@ -33,7 +33,7 @@ import type { EncounterId } from "../../data/ids.ts";
 import { FACE_SIZE, gameData, OWNER_CARD_FACE } from "../../data/index.ts";
 import { browserSoundFormat } from "../../pwa/index.ts";
 import { PALETTE } from "../../ui/index.ts";
-import { blockedFontAtlas } from "../requiredFontLoads.ts";
+import { blockedFontAtlas } from "./requiredFontLoads.ts";
 
 type Size = { colour: number; height: number; width: number };
 const box = (width: number, height: number, colour: number): Size => ({ colour, height, width });
