@@ -127,7 +127,7 @@ function ownerLead(slot: LeadSlot, line: Rect) {
   return { ...lead, panel: ownerLeadPanel(line, lead) };
 }
 
-// SettingsScene's rows with the install row: sound, music, effects, reduced motion, install and FPS,
+// SettingsScene's rows with the install row: sound, music, effects, reduced motion, FPS and install,
 // each note on the lines the shipped notes wrap to (src/home/settings.test.ts checks them).
 const installWidth = settingsInstallWidth(
   inkWidth(readBitmapFont("font-title"), 2, plainMarks(MENU_TEXT.settings.install).toUpperCase()),
@@ -143,12 +143,12 @@ export const SETTINGS_EXPORT_ROWS: readonly SettingsRowShape[] = [
   { kind: "slider" },
   { kind: "slider" },
   { kind: "switch", noteLines: noteLines(32, MENU_TEXT.settings.motionNote) },
+  { kind: "switch", noteLines: 0 },
   {
     controlWidth: installWidth,
     kind: "button",
     noteLines: 0,
   },
-  { kind: "switch", noteLines: 0 },
 ];
 
 // A top-bar button with where its icon sits.

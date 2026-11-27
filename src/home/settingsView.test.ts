@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { DOM_ART_KEYS } from "../assets/domArt.ts";
 import { BUILD_LABEL } from "../buildLabel.ts";
 import { gameData } from "../data/index.ts";
-import { ICON_LABEL_GAP, LABEL_ICON, ROWS_PAGE, SETTINGS_CARD } from "../data/layout.ts";
+import { ICON_LABEL_GAP, ROWS_PAGE, SETTINGS_CARD, UI_FUNCTION_ICON_SIZE } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { SCREEN_LAYOUT } from "../layout/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
@@ -117,7 +117,7 @@ describe("settingsView", () => {
     for (const reducedMotion of [false, true]) {
       const fpsCounter = !reducedMotion;
       const current = view({ settings: { ...DEFAULT_SETTINGS, fpsCounter, muted, reducedMotion } });
-      expect(current.rows.at(-1)).toMatchObject({
+      expect(current.rows.find(({ key }) => key === "fpsCounter")).toMatchObject({
         description: "",
         icon: { key: "icon-fps-counter-panel", tag: "idle" },
         key: "fpsCounter",
@@ -213,42 +213,40 @@ describe("settingsView", () => {
   });
 
   it.each([false, true])(
-    "keeps FPS last on the shared label axis with Install offered %s",
+    "puts FPS on the shared label axis and leaves Install last when offered %s",
     (installable) => {
       const configured = settingsRows(installable);
-      expect(configured.at(-1)?.key).toBe("fpsCounter");
-      expect(configured.at(-2)?.key).toBe(installable ? "install" : "reducedMotion");
-      const fps = view({}).rows.at(-1)!;
+      expect(configured.at(-1)?.key).toBe(installable ? "install" : "fpsCounter");
+      expect(configured.at(-2)?.key).toBe(installable ? "fpsCounter" : "reducedMotion");
+      const fps = view({}).rows.find(({ key }) => key === "fpsCounter")!;
       const sound = view({}).rows[0]!;
       const caps = MEASURE.title.capHeight * TEXT_SCALE;
       expect(fps.icon).toMatchObject({
         key: "icon-fps-counter-panel",
         x: sound.icon?.x,
-        y: fps.texts[0]!.capTop - Math.floor((LABEL_ICON - caps) / 2),
+        y: fps.texts[0]!.capTop - Math.floor((UI_FUNCTION_ICON_SIZE.standard - caps) / 2),
       });
-      expect(fps.texts[0]!.x - fps.icon!.x).toBe(LABEL_ICON + ICON_LABEL_GAP);
+      expect(fps.texts[0]!.x - fps.icon!.x).toBe(UI_FUNCTION_ICON_SIZE.standard + ICON_LABEL_GAP);
       expect(fps.texts[0]!.x - fps.rect.x).toBe(SETTINGS_ROW.label.dx);
-      expect(fps.icon!.y - fps.rect.y).toBe(Math.floor((fps.rect.height - LABEL_ICON) / 2));
+      expect(fps.icon!.y - fps.rect.y).toBe(
+        Math.floor((fps.rect.height - UI_FUNCTION_ICON_SIZE.standard) / 2),
+      );
       expect(fps.texts[0]!.x).toBe(sound.texts[0]!.x);
       expect(fps.texts.at(-1)!.x).toBe(sound.texts.at(-1)!.x);
     },
   );
 
-  it("centres the Install button in its row and its icon and label ink as one group on it", () => {
-    const install = view({}).rows.find(({ key }) => key === "install")!;
-    const { button, icon, rect } = install;
+  it("centres the final Install face under FPS with eight pixels after its separator", () => {
+    const { rows, separators } = view({});
+    const install = rows.at(-1)!;
+    const { button, rect } = install;
     const face = button!.rect;
     const ink = MEASURE.inkWidth("title", gameData.menuText.settings.install);
+    const divider = separators.at(-1)!;
+    expect(rows.at(-2)?.key).toBe("fpsCounter");
     expect(face.x - rect.x).toBe(rect.x + rect.width - face.x - face.width);
     expect(face.width).toBe(settingsInstallWidth(ink));
-    const inkLeft = button!.text.centreX - ink / 2;
-    expect(inkLeft - icon!.x).toBe(LABEL_ICON + ICON_LABEL_GAP);
-    const start = icon!.x + SETTINGS_CARD.installIconInk;
-    const [left, right] = [start - face.x, face.x + face.width - inkLeft - ink];
-    expect(left - right).toBeGreaterThanOrEqual(0);
-    expect(left - right).toBeLessThanOrEqual(1);
-    const caps = MEASURE.title.capHeight * TEXT_SCALE;
-    expect(icon!.y).toBe(button!.text.capTop - Math.floor((LABEL_ICON - caps) / 2));
+    expect(face.y - divider.y - divider.height).toBe(SETTINGS_CARD.installGap);
   });
 
   it("holds a pressed row pressed, its parts in place for its kit row's dip", () => {

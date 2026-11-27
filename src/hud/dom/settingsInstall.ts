@@ -1,18 +1,21 @@
+import { SETTINGS_CARD } from "../../data/index.ts";
 import type { SettingsRowView, SettingsView } from "../../home/index.ts";
 import {
   bindPanelFeedback,
+  capRows,
   createGameFormRow,
   createTextLine,
   type DomPart,
   type DomQuestionPanel,
   guardNativeInput,
   imageArt,
-  placeText,
   sheetArt,
+  shownText,
   textBlock,
+  textPlace,
   type UiLayer,
 } from "../../ui/dom/index.ts";
-import type { DomScale } from "../../ui/index.ts";
+import { artPixel, type DomScale, lineInk } from "../../ui/index.ts";
 import { showQuestionPanel } from "./questionPanel.ts";
 import type { DomSettingsInput, RowPart } from "./settingsTypes.ts";
 
@@ -77,9 +80,34 @@ export function installPart(
       view.dispose();
     },
     element: view.element,
-    place(scale: DomScale) {
-      icon.place(scale, button.rect, glyph);
-      placeText(input.fonts.title, scale, button.rect, label, button.text);
+    place(scale, placed) {
+      const face = placed.face;
+      if (face === undefined) {
+        return;
+      }
+      const font = input.fonts.title;
+      const pixel = scale.unit * scale.dpr * button.text.scale;
+      const ink = lineInk(font, shownText(button.text.font, button.text.text), pixel);
+      const height = ink.bottom - ink.top;
+      const crop = SETTINGS_CARD.installIconInk;
+      const ratio = height / crop.height;
+      const iconWidth = crop.width * ratio;
+      const gap = SETTINGS_CARD.installGap * scale.unit * scale.dpr;
+      const left = (face.width - iconWidth - gap - (ink.right - ink.left)) / 2;
+      const top = (face.height - height) / 2;
+      icon.place(
+        scale,
+        button.rect,
+        { ...glyph, crop, scale: ratio / artPixel(scale) },
+        { left, top },
+      );
+      const text = textPlace(font, scale, button.rect, button.text);
+      Object.assign(label.style, {
+        fontSize: `${text.fontSize}px`,
+        left: `${left + iconWidth + gap - ink.left}px`,
+        lineHeight: `${text.lineHeight}px`,
+        top: `${top - ink.top - capRows(font, button.text.font) * pixel}px`,
+      });
     },
     ready: icon.ready,
     refuse: () => undefined,

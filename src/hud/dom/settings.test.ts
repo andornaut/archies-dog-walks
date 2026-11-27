@@ -2,12 +2,13 @@ import type { InstallStepsKind } from "@andornaut/game-kit/runtime/web/pwa/insta
 import { expect, it, vi } from "vitest";
 
 import { BUILD_LABEL } from "../../buildLabel.ts";
-import { gameData } from "../../data/index.ts";
+import { gameData, LABEL_ICON, SETTINGS_CARD } from "../../data/index.ts";
 import { overlayRegion } from "../../home/homeBar.ts";
 import {
   installStepsLayout,
   SETTINGS_ROW,
   SETTINGS_SWITCH_GAP,
+  settingsInstallWidth,
   settingsLayout,
 } from "../../home/settings.ts";
 import { type SettingsMeasure, settingsRows, settingsView } from "../../home/settingsView.ts";
@@ -17,7 +18,7 @@ import { FakeDocument, type FakeElement, fakeLayer, layerViews } from "../../tes
 import { fontFileMetrics, fontInk, gameFont } from "../../testing/fontInk.ts";
 import { capRows, shownText, WEB_FONT_EM } from "../../ui/dom/pixelLine.ts";
 import { REFUSAL_RED } from "../../ui/dom/refusal.ts";
-import { artPixel, domScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
+import { artPixel, deviceY, domScale, gridRect, gridX, gridY } from "../../ui/domScale.ts";
 import { modalTitleInk } from "../../ui/modal/titleRole.ts";
 import { type DomSettingsInput, showSettings } from "./settings.ts";
 
@@ -42,7 +43,15 @@ function fixture(install = false, width = 360, dpr = 1) {
     configuredRows.map((row) =>
       row.kind === "slider"
         ? { kind: "slider" }
-        : { kind: row.kind, noteLines: row.kind === "button" || row.note === undefined ? 0 : 1 },
+        : row.kind === "button"
+          ? {
+              controlWidth: settingsInstallWidth(
+                measure.inkWidth("title", gameData.menuText.settings.install),
+              ),
+              kind: row.kind,
+              noteLines: 0,
+            }
+          : { kind: row.kind, noteLines: row.note === undefined ? 0 : 1 },
     ),
   );
   const view = (steps = false, kind: InstallStepsKind = "ios") =>
@@ -307,7 +316,7 @@ it("keeps the page's chrome fixed while revealing whole focused rows in its nati
 it.each([
   [575, 1],
   [390, 2.625],
-])("anchors state ink to the painted switch at width %i and DPR %f", (width, dpr) => {
+])("anchors switch states and volume art at width %i and DPR %f", (width, dpr) => {
   const { element, scale, shown, view } = fixture(false, width, dpr);
   const switches = element.all().filter((part) => part.getAttribute("role") === "switch");
   const views = view().rows.filter(({ kind }) => kind === "switch");
@@ -322,10 +331,15 @@ it.each([
       (part) => part.classList.contains("adw-lines") && part.children[0]?.textContent === word,
     )!;
     const span = block.children[0]!;
+    const switchNode = row.children
+      .flatMap((child) => child.all())
+      .find((part) => part.classList.contains("ui-switch"))!;
+    const right = gridX(scale, rect.x + rect.width - SETTINGS_ROW.pad) - gridX(scale, rect.x);
     const switchRight =
       gridX(scale, rect.x + rect.width - SETTINGS_ROW.pad) -
       gridX(scale, rect.x) -
-      pixels(row, "--ui-form-switch-end");
+      pixels(row, "--ui-form-switch-end") +
+      Number.parseFloat(switchNode.style.left!);
     const switchCentre = switchRight - pixels(row, "--ui-switch-width") / 2;
     const switchBottom = pixels(row, "--ui-form-value-offset") + pixels(row, "--ui-switch-height");
     const fontPixel = Number.parseFloat(span.style.fontSize!) / WEB_FONT_EM;
@@ -334,8 +348,34 @@ it.each([
       Number.parseFloat(span.style.left!) + ((ink.left + ink.right) * fontPixel) / 2;
     const capTop =
       Number.parseFloat(span.style.top!) + capRows(gameFont("font-title"), "title") * fontPixel;
-    expect(Math.abs(inkCentre - switchCentre)).toBeLessThanOrEqual(artPixel(scale) / 2);
+    expect(Math.abs(inkCentre - switchCentre)).toBeLessThanOrEqual(0.5);
+    const inkRight = Number.parseFloat(span.style.left!) + ink.right * fontPixel;
+    expect(Math.max(inkRight, switchRight)).toBe(right);
     expect(capTop - switchBottom).toBe(SETTINGS_SWITCH_GAP * artPixel(scale));
+  });
+  const sliders = element.all().filter((part) => part.getAttribute("role") === "slider");
+  const sliderViews = view().rows.filter(({ kind }) => kind === "slider");
+  sliders.forEach((row, i) => {
+    const { rect } = sliderViews[i]!;
+    const icon = row.all().find((part) => part.style.backgroundImage === "var(--adw-art-image)")!;
+    const track = row.all().find((part) => part.classList.contains("ui-slider-track"))!;
+    const iconInkTop =
+      pixels(row, "--ui-form-icon-offset") +
+      Number.parseFloat(icon.style.top!) +
+      (Number.parseFloat(icon.style.height!) * SETTINGS_ROW.slider.inkTop) / LABEL_ICON;
+    const knobInkBottom =
+      pixels(row, "--ui-slider-line") +
+      pixels(row, "--ui-slider-gap") +
+      pixels(row, "--ui-slider-track-top") +
+      pixels(row, "--ui-slider-thumb-top") +
+      pixels(row, "--ui-slider-thumb-height") +
+      Number.parseFloat(track.style.translate!.split(" ")[1]!);
+    expect(iconInkTop).toBeCloseTo(
+      deviceY(scale, rect.y + SETTINGS_ROW.slider.clearance) - gridY(scale, rect.y),
+    );
+    expect(knobInkBottom).toBe(
+      deviceY(scale, rect.y + rect.height - SETTINGS_ROW.slider.clearance) - gridY(scale, rect.y),
+    );
   });
   shown.destroy();
 });
@@ -389,6 +429,41 @@ it.each([
         })
         .join(" "),
     );
+    shown.destroy();
+  },
+);
+
+it.each([
+  [575, 1],
+  [390, 2.625],
+])(
+  "matches and centres the projected Install icon and word at width %i and DPR %f",
+  async (width, dpr) => {
+    const { element, scale, shown, view } = fixture(true, width, dpr);
+    await Promise.resolve();
+    const { label: word } = view().rows.at(-1)!;
+    const label = element
+      .all()
+      .find(
+        (part) =>
+          part.textContent === shownText("title", word) && part.classList.contains("adw-text"),
+      )!;
+    const face = element.all().find((part) => part.classList.contains("adw-standard-button-face"))!;
+    const icon = face.all().find((part) => part.classList.contains("adw-art"))!;
+    const font = gameFont("font-title");
+    const px = (part: FakeElement, key: string) => Number.parseFloat(part.style[key]!);
+    const pixel = px(label, "fontSize") / WEB_FONT_EM;
+    const ink = fontInk("font-title", { scale: 1 }, shownText("title", word));
+    const start = px(label, "left") + ink.left * pixel;
+    const end = px(label, "left") + ink.right * pixel;
+    const button = element.all().find((part) => part.children.includes(face))!;
+    const faceWidth = Number.parseFloat(button.style.getPropertyValue("--ui-form-action-width"));
+    expect(start - px(icon, "left") - px(icon, "width")).toBeCloseTo(
+      SETTINGS_CARD.installGap * scale.unit * dpr,
+    );
+    expect((px(icon, "left") + end) / 2).toBeCloseTo(faceWidth / 2);
+    expect(px(icon, "height")).toBeCloseTo(fontFileMetrics("font-title").capHeight * pixel);
+    expect(px(icon, "top")).toBeCloseTo(px(label, "top") + capRows(font, "title") * pixel);
     shown.destroy();
   },
 );

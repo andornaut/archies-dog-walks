@@ -125,8 +125,9 @@ const SETTINGS_ROW_INSET = 6;
 
 // The Settings page's rows and the install steps' card.
 export const SETTINGS_CARD = {
-  // art: icon-install-panel's first ink column in its 16px cell.
-  installIconInk: 2,
+  installGap: 8,
+  // art: icon-install-panel's opaque bounds in its 16px cell.
+  installIconInk: { height: 16, width: 12, x: 2, y: 0 },
   // The install steps card: the glyph's drop and side, the steps' line pitch and most lines,
   // and the steps' top under the title row.
   installSteps: {
@@ -148,7 +149,7 @@ export const SETTINGS_CARD = {
     // The track's inset from the row's sides, and a slider's value's right edge.
     pad: 8,
     // A slider row's height.
-    slider: { height: 56 },
+    slider: { clearance: 16, height: 73, iconY: 13, inkTop: 2, labelY: 20 },
     // art: the switch's size.
     switch: { height: 16, width: 32 },
     // The switch's inset from the row's right: far enough in that the widest state word (Hidden)
@@ -157,7 +158,7 @@ export const SETTINGS_CARD = {
     // The state word under a switch (On, Off, Shown, Hidden): its ink centred across the switch.
     switchState: { align: "switchCentre" },
     // The slider's track: its top and height, and art: the knob's size.
-    track: { dy: 30, height: 10, knobHeight: 16, knobWidth: 10 },
+    track: { dy: 44, height: 10, knobHeight: 16, knobWidth: 10 },
   },
 } as const;
 

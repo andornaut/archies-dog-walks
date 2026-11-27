@@ -107,6 +107,11 @@ export function showSettings(layer: UiLayer, input: DomSettingsInput): DomSettin
         rect: current.rows[0]!.rect,
         rows: current.rows.map((row, i) => ({
           element: rows[i]!.element,
+          ...(i === 0
+            ? {}
+            : {
+                gap: row.rect.y - current.rows[i - 1]!.rect.y - current.rows[i - 1]!.rect.height,
+              }),
           ...(row.kind === "slider" ? {} : { height: row.rect.height }),
         })),
       });

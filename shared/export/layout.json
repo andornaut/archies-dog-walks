@@ -2471,12 +2471,12 @@
             "height": 16,
             "width": 32,
             "x": 291,
-            "y": 121
+            "y": 123
           },
-          "labelY": 110,
-          "noteY": 132,
+          "labelY": 114,
+          "noteY": 136,
           "rect": {
-            "height": 67,
+            "height": 71,
             "width": 330,
             "x": 8,
             "y": 103
@@ -2484,24 +2484,24 @@
         },
         {
           "control": null,
-          "labelY": 183,
+          "labelY": 195,
           "noteY": null,
           "rect": {
-            "height": 56,
+            "height": 73,
             "width": 330,
             "x": 8,
-            "y": 171
+            "y": 175
           }
         },
         {
           "control": null,
-          "labelY": 240,
+          "labelY": 269,
           "noteY": null,
           "rect": {
-            "height": 56,
+            "height": 73,
             "width": 330,
             "x": 8,
-            "y": 228
+            "y": 249
           }
         },
         {
@@ -2509,15 +2509,31 @@
             "height": 16,
             "width": 32,
             "x": 291,
-            "y": 303
+            "y": 343
           },
-          "labelY": 292,
-          "noteY": 314,
+          "labelY": 334,
+          "noteY": 356,
           "rect": {
-            "height": 67,
+            "height": 71,
             "width": 330,
             "x": 8,
-            "y": 285
+            "y": 323
+          }
+        },
+        {
+          "control": {
+            "height": 16,
+            "width": 32,
+            "x": 291,
+            "y": 404
+          },
+          "labelY": 414,
+          "noteY": null,
+          "rect": {
+            "height": 48,
+            "width": 330,
+            "x": 8,
+            "y": 395
           }
         },
         {
@@ -2525,35 +2541,19 @@
             "height": 48,
             "width": 140,
             "x": 103,
-            "y": 353
+            "y": 452
           },
-          "labelY": 365,
+          "labelY": 472,
           "noteY": null,
           "rect": {
             "height": 48,
             "width": 330,
             "x": 8,
-            "y": 353
-          }
-        },
-        {
-          "control": {
-            "height": 16,
-            "width": 32,
-            "x": 291,
-            "y": 411
-          },
-          "labelY": 421,
-          "noteY": null,
-          "rect": {
-            "height": 48,
-            "width": 330,
-            "x": 8,
-            "y": 402
+            "y": 452
           }
         }
       ],
-      "rowsContentHeight": 347,
+      "rowsContentHeight": 397,
       "rowsViewport": {
         "height": 369,
         "width": 330,
@@ -2565,38 +2565,38 @@
           "height": 1,
           "width": 330,
           "x": 8,
-          "y": 170
+          "y": 174
         },
         {
           "height": 1,
           "width": 330,
           "x": 8,
-          "y": 227
+          "y": 248
         },
         {
           "height": 1,
           "width": 330,
           "x": 8,
-          "y": 284
+          "y": 322
         },
         {
           "height": 1,
           "width": 330,
           "x": 8,
-          "y": 352
+          "y": 394
         },
         {
           "height": 1,
           "width": 330,
           "x": 8,
-          "y": 401
+          "y": 443
         }
       ],
       "track": {
-        "dy": 30,
+        "dy": 44,
         "height": 10,
-        "width": 296,
-        "x": 34
+        "width": 288,
+        "x": 42
       }
     },
     "shop": {

@@ -6,7 +6,7 @@ import { buildLabel } from "@andornaut/game-kit/runtime/web/buildLabel";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
-import { MIN_PRESS, ROWS_PAGE } from "../data/layout.ts";
+import { MIN_PRESS, ROWS_PAGE, SETTINGS_CARD } from "../data/layout.ts";
 import { SCREEN_CONFIG } from "../data/screen.ts";
 import { DEFAULT_SETTINGS } from "../save/settings.ts";
 import {
@@ -86,8 +86,8 @@ const SHIPPED_ROWS: readonly ShippedRow[] = [
   { kind: "slider", label: words.music },
   { kind: "slider", label: words.effects },
   { kind: "switch", label: words.motion, note: words.motionNote, states: [words.on, words.off] },
-  { kind: "button", label: words.install },
   { kind: "switch", label: words.fpsCounter, states: [words.shown, words.hidden] },
+  { kind: "button", label: words.install },
 ];
 const notedRows = SHIPPED_ROWS.filter((row) => "note" in row && row.note !== undefined);
 const fittedNotes = notedRows.map((row) =>
@@ -160,7 +160,18 @@ function rowParts(i: number): [string, Rect][] {
   const labelTop = placed.labelY;
   const parts: [string, Rect][] = [
     ["label", labelInk("font-title", row.label, rect.x + label.dx, labelTop)],
-    ["icon", { height: 16, width: 16, x: rect.x + icon.dx, y: labelTop - (label.dy - icon.dy) }],
+    [
+      "icon",
+      {
+        height: icon.size,
+        width: icon.size,
+        x: rect.x + icon.dx,
+        y:
+          row.kind === "slider"
+            ? rect.y + SETTINGS_ROW.slider.iconY
+            : labelTop - Math.floor((icon.size - titleFont.capHeight * 2) / 2),
+      },
+    ],
   ];
   if (row.kind === "slider") {
     const { track } = layout;
@@ -229,7 +240,7 @@ describe("the Settings page", () => {
     ["the rows' column", [rows[0]!.rect.x, rows[0]!.rect.x + rows[0]!.rect.width], [8, 338]],
     ["the body's top", [layout.rowsViewport.y], [103]],
     ["a switch's columns", [switchFace.x, switchFace.x + switchFace.width], [291, 323]],
-    ["a slider's track", [layout.track.x, layout.track.x + layout.track.width], [34, 330]],
+    ["a slider's track", [layout.track.x, layout.track.x + layout.track.width], [42, 330]],
     ["Install's centre", [install.x + install.width / 2], [173]],
     ["the version label's lowest ink", [layout.buildLabelY + bodyFont.capHeight * 2], [492]],
   ])("places %s as Art's guide states", (_, placed, art) => {
@@ -288,7 +299,8 @@ describe("the Settings page", () => {
         x: rect.x,
         y: above.y + above.height,
       });
-      expect(rect.y).toBe(line.y + line.height);
+      const gap = SHIPPED_ROWS[i + 1]?.kind === "button" ? SETTINGS_CARD.installGap : 0;
+      expect(rect.y).toBe(line.y + line.height + gap);
     });
   });
 

@@ -3,13 +3,12 @@ import { fillLine } from "@andornaut/game-kit/runtime/lines";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 import type { InstallStepsKind } from "@andornaut/game-kit/runtime/web/pwa/installState";
 
-import { ICON_LABEL_GAP, LABEL_ICON, type MenuText, SETTINGS_CARD } from "../data/index.ts";
+import type { MenuText } from "../data/index.ts";
 import { MENU_TEXT } from "../data/menuText.ts";
 import type { Settings } from "../save/index.ts";
 import {
   dismissFooter,
   GREYED,
-  iconBesideLabel,
   modalCardView,
   PAGE_LAYOUT,
   PAGE_TITLE_ROW,
@@ -118,9 +117,7 @@ export const INSTALL_ROW: SettingsRow = {
 };
 // FPS stays last whether installation is offered or not.
 export function settingsRows(installable: boolean): readonly SettingsRow[] {
-  return installable
-    ? SETTING_ROWS.flatMap((row) => (row.key === "fpsCounter" ? [INSTALL_ROW, row] : [row]))
-    : SETTING_ROWS;
+  return installable ? [...SETTING_ROWS, INSTALL_ROW] : SETTING_ROWS;
 }
 
 // The button the install steps start from, drawn before them: the three-dot menu of Chrome or
@@ -262,26 +259,11 @@ function controlRow(
 ): SettingsRowView {
   const { control, labelY, noteY, rect } = layout;
   if (row.kind === "button" && control !== null) {
-    // The icon's ink, ICON_LABEL_GAP and the label's ink are one group centred on the face, a
-    // half pixel rounding right, the icon on the label's capitals.
-    const button = panelButton(measure, control, false, words.install);
-    const ink = measure.inkWidth("title", words.install);
-    const iconInk = LABEL_ICON - SETTINGS_CARD.installIconInk;
-    const start = Math.round(button.text.centreX - (iconInk + ICON_LABEL_GAP + ink) / 2);
-    const inkLeft = start + iconInk + ICON_LABEL_GAP;
     return {
-      button: { ...button, text: { ...button.text, centreX: inkLeft + ink / 2 } },
+      button: panelButton(measure, control, false, words.install),
       description: "",
       face: undefined,
-      icon: {
-        key: row.icon,
-        tag: "idle",
-        ...iconBesideLabel({
-          capHeight: measure.title.capHeight * TEXT_SCALE,
-          capTop: button.text.capTop,
-          inkLeft,
-        }),
-      },
+      icon: { key: row.icon, tag: "idle", x: control.x, y: control.y },
       key: row.key,
       kind: row.kind,
       label: words.install,
@@ -309,11 +291,10 @@ function controlRow(
           icon: {
             key: row.icon,
             tag: "idle",
-            ...iconBesideLabel({
-              capHeight: measure.title.capHeight * TEXT_SCALE,
-              capTop: labelY,
-              inkLeft: x + LABEL.dx,
-            }),
+            x: x + SETTINGS_ROW.icon.dx,
+            y:
+              labelY -
+              Math.floor((SETTINGS_ROW.icon.size - measure.title.capHeight * TEXT_SCALE) / 2),
           },
         }),
     key: row.key,
@@ -371,7 +352,6 @@ function controlRow(
 
 // A volume slider: drag along the row to set it. Muted, it is disabled and reads "Muted".
 function sliderRow(
-  measure: SettingsMeasure,
   words: MenuText["settings"],
   layout: SettingsLayout,
   rect: Rect,
@@ -394,11 +374,8 @@ function sliderRow(
     icon: {
       key: row.icon,
       tag: "idle",
-      ...iconBesideLabel({
-        capHeight: measure.title.capHeight * TEXT_SCALE,
-        capTop: title.capTop,
-        inkLeft: x + LABEL.dx,
-      }),
+      x: x + SETTINGS_ROW.icon.dx,
+      y: y + SETTINGS_ROW.slider.iconY,
     },
     key: row.key,
     kind: "slider",
@@ -497,7 +474,7 @@ export function settingsView(
     rows: rows.map((row, i) => {
       const at = itemAt(layout.rows, i);
       return row.kind === "slider"
-        ? sliderRow(measure, words, layout, at.rect, row, state)
+        ? sliderRow(words, layout, at.rect, row, state)
         : controlRow(measure, words, at, row, state);
     }),
     rowsContentHeight: layout.rowsContentHeight,

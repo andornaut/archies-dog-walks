@@ -11,11 +11,11 @@ import {
 import {
   BUTTON_SIZE,
   ICON_LABEL_GAP,
-  LABEL_ICON,
   MIN_PRESS,
   SCREEN_CONFIG,
   SETTINGS_CARD,
   SLICES,
+  UI_FUNCTION_ICON_SIZE,
 } from "../data/index.ts";
 import type { Settings } from "../save/index.ts";
 import {
@@ -124,7 +124,7 @@ export interface SettingsFonts {
   title: FontMetrics;
 }
 
-// Offsets from a row's top-left corner, every text at 2x. Each row has its 16x16 icon centred on
+// Offsets from a row's top-left corner, every text at 2x. Each row has its 24×24 icon centred on
 // its title-font label's capitals, ICON_LABEL_GAP before the label's first ink column
 // (iconBesideLabel). A switch or button row has its note under them in body text,
 // LABEL_HELP_GAP clear rows under the label font's lowest ink (helpCapDy), from the icon's
@@ -134,12 +134,13 @@ export interface SettingsFonts {
 // below it, from the labels' column to the row's right inset. A row spans the page's rows'
 // column (ROWS_PAGE_LAYOUT).
 const ROW = SETTINGS_CARD.row;
+const SETTINGS_ICON_SIZE = UI_FUNCTION_ICON_SIZE.standard;
 export const SETTINGS_ROW = {
   button: BUTTON_SIZE.compact,
   // Between a note's room and the control beside it.
   controlGap: ROW.controlGap,
-  icon: ROW.icon,
-  label: { dx: ROW.icon.dx + LABEL_ICON + ICON_LABEL_GAP, dy: ROW.label.dy },
+  icon: { ...ROW.icon, size: SETTINGS_ICON_SIZE },
+  label: { dx: ROW.icon.dx + SETTINGS_ICON_SIZE + ICON_LABEL_GAP, dy: ROW.slider.labelY },
   note: ROW.note,
   pad: ROW.pad,
   slider: ROW.slider,
@@ -150,10 +151,9 @@ export const SETTINGS_ROW = {
   width: ROWS_PAGE_LAYOUT.column.width,
 } as const;
 
-// The Install button's face: its icon's cell, ICON_LABEL_GAP and its label's ink, with a modal
-// action's padding.
+// Reserve room for Install's icon and gap beside the full action label.
 export function settingsInstallWidth(ink: number): number {
-  return modalActionWidth(ink) + LABEL_ICON + ICON_LABEL_GAP;
+  return modalActionWidth(ink) + SETTINGS_CARD.installIconInk.width + SETTINGS_CARD.installGap;
 }
 
 // The room a switch or button row's note wraps in: from the icon's column to controlGap short
@@ -217,7 +217,7 @@ export function settingsFormRows(title: FontMetrics, height: number): FormRowLay
     align: "center",
     gap: SEPARATOR.height,
     height,
-    icon: { size: LABEL_ICON, slot: LABEL_ICON },
+    icon: { size: SETTINGS_ICON_SIZE, slot: SETTINGS_ICON_SIZE },
     value: {
       ...SWITCH_ROWS.value,
       gap: SETTINGS_SWITCH_GAP,
@@ -251,11 +251,11 @@ function switchStackHeight(title: FontMetrics): number {
 
 function labelStack(fonts: SettingsFonts, noteLines: number) {
   const capHeight = fonts.title.capHeight * TEXT_SCALE;
-  const iconRise = Math.floor((LABEL_ICON - capHeight) / 2);
+  const iconRise = Math.floor((SETTINGS_ICON_SIZE - capHeight) / 2);
   const labelToNote = helpCapDy(fonts.title, TEXT_SCALE);
   const height =
     noteLines === 0
-      ? Math.max(LABEL_ICON, capHeight)
+      ? Math.max(SETTINGS_ICON_SIZE, capHeight)
       : iconRise + labelToNote + inkRowsOfLines(fonts.body, noteLines) * TEXT_SCALE;
   return { height, iconRise, labelToNote };
 }
@@ -318,6 +318,9 @@ export function settingsLayout(
   let rowY = bodyTop;
   const separators: Rect[] = [];
   const rows = shapes.map((shape, i) => {
+    if (i > 0 && shape.kind === "button") {
+      rowY += SETTINGS_CARD.installGap;
+    }
     const rect = { height: rowHeight(fonts, shape), width: column.width, x: column.x, y: rowY };
     const bottom = rect.y + rect.height;
     if (i < shapes.length - 1) {

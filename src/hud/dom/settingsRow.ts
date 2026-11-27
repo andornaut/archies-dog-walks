@@ -2,9 +2,10 @@ import type { BitmapFont } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import type { PlacedFormRow } from "@andornaut/game-kit/runtime/ui/formRow";
 import { createSlider } from "@andornaut/game-kit/runtime/web/ui/dom/slider";
 
-import { gameData } from "../../data/index.ts";
+import { gameData, LABEL_ICON } from "../../data/index.ts";
 import {
   FEEDBACK,
+  SETTINGS_ROW,
   SETTINGS_SLIDER,
   SETTINGS_SWITCH_GAP,
   type SettingsRowView,
@@ -20,16 +21,22 @@ import {
   guardNativeInput,
   refuse,
   rowIcon,
+  shownText,
   textBlock,
   type UiLayer,
 } from "../../ui/dom/index.ts";
 import {
   artPixel,
   cssHex,
+  deviceY,
   type DomScale,
   exactDeviceX,
   exactDeviceY,
+  fontPixel,
+  gridX,
   gridY,
+  lineInk,
+  wholeArtPixels,
 } from "../../ui/index.ts";
 import { hideKitText, installPart } from "./settingsInstall.ts";
 import type { DomSettingsInput, RowPart } from "./settingsTypes.ts";
@@ -61,21 +68,39 @@ function rowArt(doc: Document, input: DomSettingsInput, first: SettingsRowView) 
   return {
     face,
     icon,
-    place(scale: DomScale, row: SettingsRowView, placed: PlacedFormRow) {
+    place(scale: DomScale, row: SettingsRowView, placed: PlacedFormRow, toggle?: HTMLElement) {
       face.style.backgroundColor = row.face === undefined ? "" : cssHex(row.face);
       if (icon !== undefined && row.icon !== undefined && placed.icon !== undefined) {
         // The leading glyph follows the label's capitals, independently of the trailing stack.
         icon.element.style.position = "relative";
-        icon.element.style.top = `${gridY(scale, row.icon.y) - placed.icon.y}px`;
+        const size = SETTINGS_ROW.icon.size;
+        const height = gridY(scale, row.icon.y + size) - gridY(scale, row.icon.y);
+        const top =
+          row.kind === "slider"
+            ? deviceY(scale, row.rect.y + SETTINGS_ROW.slider.clearance) -
+              height * (SETTINGS_ROW.slider.inkTop / LABEL_ICON)
+            : gridY(scale, row.icon.y);
+        icon.element.style.top = `${top - placed.icon.y}px`;
+        icon.element.style.width = `${gridX(scale, row.icon.x + size) - gridX(scale, row.icon.x)}px`;
+        icon.element.style.height = `${height}px`;
       }
       row.texts.forEach((text, i) => {
         const face = placed.switch;
         let anchored = text;
-        if (text.anchor === "inkCentre" && face !== undefined) {
+        let shift = 0;
+        if (text.anchor === "inkCentre" && face !== undefined && toggle !== undefined) {
           // The switch is painted at a whole art-pixel size; its far edge does not follow the
           // fractional layout projection. Feed its actual anchor back to the ink placer.
           const deviceUnit = scale.unit * scale.dpr;
-          const centre = face.x + face.width / 2;
+          const word = shownText(text.font, text.lines[0] ?? "");
+          const ink = lineInk(input.fonts[text.font], word, fontPixel(scale, text.scale));
+          const inkWidth = ink.right - ink.left;
+          const right = gridX(scale, row.rect.x + row.rect.width - SETTINGS_ROW.pad);
+          const centre = right - Math.max(face.width, inkWidth) / 2;
+          const inkLeft = centre - inkWidth / 2;
+          shift = Math.round(inkLeft) - wholeArtPixels(scale, inkLeft);
+          toggle.style.position = "relative";
+          toggle.style.left = `${Math.round(centre - face.width / 2) - face.x}px`;
           const cap = face.y + face.height + SETTINGS_SWITCH_GAP * artPixel(scale);
           anchored = {
             ...text,
@@ -84,7 +109,7 @@ function rowArt(doc: Document, input: DomSettingsInput, first: SettingsRowView) 
           };
         }
         texts[i]?.update(anchored);
-        texts[i]?.place(scale, row.rect);
+        texts[i]?.place(scale, row.rect, shift);
       });
     },
     texts: texts.map(({ element }) => element),
@@ -152,7 +177,7 @@ function switchPart(
     place(scale: DomScale, placed: PlacedFormRow) {
       const row = view();
       element.toggleAttribute("data-ui-pressed", row.pressed);
-      art.place(scale, row, placed);
+      art.place(scale, row, placed, control.switch);
       control.refresh();
     },
     ready: art.icon?.ready ?? Promise.resolve([]),
@@ -218,8 +243,20 @@ function sliderPart(
     },
     element,
     place(scale: DomScale, placed: PlacedFormRow) {
-      art.place(scale, view(), placed);
+      const row = view();
+      art.place(scale, row, placed);
       slider.refresh();
+      if (placed.lane !== undefined) {
+        // The Kit knob keeps whole source pixels. Set its trailing clearance from the
+        // projected row edge so the extra pixels never eat into the divider padding.
+        const artPx = artPixel(scale);
+        const knobBottom = placed.lane.y + SETTINGS_SLIDER.art.thumb.height * artPx;
+        const lowerInk = deviceY(
+          scale,
+          row.rect.y + row.rect.height - SETTINGS_ROW.slider.clearance,
+        );
+        slider.track.style.translate = `0 ${lowerInk - knobBottom}px`;
+      }
     },
     ready: art.icon?.ready ?? Promise.resolve([]),
     refuse: (reducedMotion: boolean) => refuse(reducedMotion, element),
