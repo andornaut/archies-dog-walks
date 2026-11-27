@@ -323,6 +323,11 @@ export class StartScene extends Scene {
         openOverlay(this, SCENE_KEYS.quit, data);
       }
     });
+    const contextMenu = (event: MouseEvent) => this.onContextMenu(event);
+    this.game.canvas.addEventListener("contextmenu", contextMenu);
+    this.events.once(Scenes.Events.SHUTDOWN, () =>
+      this.game.canvas.removeEventListener("contextmenu", contextMenu),
+    );
     // A held key acts once, so an Enter held from the end screen cannot start a walk.
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
       if (!sceneKeyAllowed(event)) {
@@ -476,6 +481,32 @@ export class StartScene extends Scene {
       this.press.held = false;
     }
     this.actAfterDip(target);
+  }
+  // These two authored canvas targets share their existing hit geometry and accepted action.
+  private onContextMenu(event: MouseEvent): void {
+    if (
+      event.button !== 2 ||
+      event.defaultPrevented ||
+      event.cancelBubble ||
+      !this.sys.isActive() ||
+      !this.input.enabled ||
+      this.overlay !== undefined ||
+      this.nativeHome?.accepts() !== true
+    ) {
+      return;
+    }
+    const place = htmlPanelPlace(this);
+    if (place === undefined) {
+      return;
+    }
+    const point = htmlPanelInput(place).toGame({ x: event.clientX, y: event.clientY });
+    const target = this.targetAt(point.x, point.y);
+    if (target?.kind !== "petShop" && target?.kind !== "bubble") {
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    this.act(target);
   }
   private onKey({
     code,
