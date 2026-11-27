@@ -35,7 +35,7 @@ export const RUN_TEXT_FIELDS = {
   },
   explain: {
     dogHearts: ["hearts", "max"],
-    extraHearts: ["hearts", "name", "owner"],
+    extraHearts: ["hearts", "name"],
   },
   firedBy: ["owner"],
   foundGear: ["gear"],

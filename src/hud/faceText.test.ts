@@ -78,11 +78,8 @@ const PLACES: readonly (readonly [string, FaceText | null | undefined, keyof typ
   ["strip.treat", treatLine(gameData, hearts(2, 3)), "gain"],
 ];
 
-// Walk text lines that name an owner but draw the name as plain text: the held dog card's detail
-// (explain.extraHearts), whose card already shows the dog; and the firing line in a card's
-// breakdown and a heart change's label on the owner's own card (firedBy), and an option's
-// firing warning (card.fires), which set text at 1x in boxes too short for a face.
-const PLAIN_OWNER_LINES = ["card.fires", "explain.extraHearts", "firedBy"];
+// Owner names in a firing breakdown or warning stay plain at 1x in boxes too short for a face.
+const PLAIN_OWNER_LINES = ["card.fires", "firedBy"];
 
 // The path of every walk text line that names an owner.
 function ownerLinePaths(text: object, path = ""): string[] {

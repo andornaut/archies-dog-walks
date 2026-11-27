@@ -271,9 +271,8 @@ describe("found gear's marks", () => {
       ...(found ? { found: true as const } : {}),
     });
     const hearts = String(read(gameData.tuning, "hearts", "luckyCollarMax"));
-    const owner = gameData.dogs.buddy.owner.name;
     expect(extraHearts(gameData, run, "buddy")).toEqual([
-      fillNames(gameData.runText.explain.extraHearts, { hearts, name, owner }),
+      fillNames(gameData.runText.explain.extraHearts, { hearts, name }),
     ]);
   });
 });

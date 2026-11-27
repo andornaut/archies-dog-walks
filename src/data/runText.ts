@@ -35,7 +35,7 @@ export const RUN_TEXT = {
   explain: {
     debuffStatus: "Wears off on its own",
     dogHearts: "{hearts}/{max}♥ now",
-    extraHearts: "{name}: +{hearts}♥ max for {owner}",
+    extraHearts: "{name}: +{hearts}♥ max",
     foundStatus: "Found on this walk",
     smallPack: "Small pack",
     upgradeStatus: "Picked at a fork",

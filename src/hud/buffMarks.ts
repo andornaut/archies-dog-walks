@@ -443,12 +443,10 @@ export function walkStartMarks(
 // Each source of a dog's extra max hearts as a row of its held card's detail: the lead dog's
 // small-pack bonus, and each buff's, such as Lucky collar's.
 export function extraHearts(data: MarkData, run: StandingRun, dog: DogId): string[] {
-  const owner = data.dogs[dog].owner.name;
   const line = (name: string, hearts: number) =>
     fillLine(RUN_TEXT_FIELDS.explain, data.runText.explain, "extraHearts", {
       hearts: String(hearts),
       name,
-      owner,
     });
   const bonus = packSizeRaise(data.tuning, run.modifiers, placeInPack(run, dog), data.dogs[dog]);
   const value = standingModified(data, run).find(
