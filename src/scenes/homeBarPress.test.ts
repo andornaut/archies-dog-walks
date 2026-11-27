@@ -43,11 +43,18 @@ function fakeOverlay(key = "settings") {
     time: { now: 0 },
   }) as unknown as Scene;
   Object.assign(scene.sys, { settings: { key } });
-  const pointer = (point: Point) => ({ ...point, id: 1, isDown: false, wasCanceled: false });
+  const pointer = (point: Point, isDown: boolean) => ({
+    ...point,
+    button: 0,
+    buttons: isDown ? 1 : 0,
+    id: 1,
+    isDown,
+    wasCanceled: false,
+  });
   return {
-    down: (point: Point) => input.emit("pointerdown", pointer(point)),
+    down: (point: Point) => input.emit("pointerdown", pointer(point, true)),
     scene,
-    up: (point: Point) => input.emit("pointerup", pointer(point)),
+    up: (point: Point) => input.emit("pointerup", pointer(point, false)),
   };
 }
 

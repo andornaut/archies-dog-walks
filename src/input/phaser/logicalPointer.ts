@@ -26,6 +26,20 @@ export function logicalPointer(
   };
 }
 
+// Phaser shares one mouse pointer across buttons. Only a primary button change
+// starts or finishes a press; movement still counts while the primary is held.
+export function primaryCanvasContact(
+  phase: "down" | "move" | "up",
+  pointer: Pick<Input.Pointer, "button" | "buttons" | "wasTouch">,
+): boolean {
+  return (
+    pointer.wasTouch ||
+    (phase === "up"
+      ? pointer.button === 0
+      : (pointer.buttons & 1) !== 0 && (phase === "move" || pointer.button === 0))
+  );
+}
+
 // The published outside-tap adapter reads native pointer events. Supply its scene input
 // boundary in logical coordinates without altering the events delivered to other listeners.
 export function logicalInput(scene: Scene): Pick<Scene, "input"> {
@@ -36,7 +50,13 @@ export function logicalInput(scene: Scene): Pick<Scene, "input"> {
     context?: unknown,
   ) => {
     scene.input.on(event, (pointer: Input.Pointer, ...rest: unknown[]) => {
-      if (event === "pointerdown" && !canvasPressAllowed(scene)) {
+      if (
+        (event === "pointerdown" &&
+          (!primaryCanvasContact("down", pointer) || !canvasPressAllowed(scene))) ||
+        (event === "pointermove" && !primaryCanvasContact("move", pointer)) ||
+        ((event === "pointerup" || event === "pointerupoutside") &&
+          !primaryCanvasContact("up", pointer))
+      ) {
         return;
       }
       listener.call(context, logicalPointer(scene, pointer), ...rest);

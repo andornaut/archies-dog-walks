@@ -168,20 +168,21 @@ export function listenOutsideTap(
   const tapMaxDistance = read(gameData.tuning, "pixels", "tapMaxDistance");
   listenPageTap(scene, tapMaxDistance, () => area() !== undefined, onTap);
   const input = nativeSceneInput(scene);
+  const canvas = logicalInput(scene);
   const captured = new Map<number, () => boolean>();
   let released: (() => boolean) | undefined;
-  scene.input.on("pointerdown", (pointer: { id: number }) =>
+  canvas.input.on("pointerdown", (pointer: { id: number }) =>
     captured.set(pointer.id, input.capture()),
   );
   const release = (pointer: { id: number }) => {
     released = captured.get(pointer.id);
     captured.delete(pointer.id);
   };
-  scene.input.on("pointerup", release);
-  scene.input.on("pointerupoutside", release);
+  canvas.input.on("pointerup", release);
+  canvas.input.on("pointerupoutside", release);
   catchOutsideTaps(
     tapMaxDistance,
-    logicalInput(scene),
+    canvas,
     () => {
       const open = input.accepts() ? area() : undefined;
       if (open === undefined || !deviceFitOwned(scene.scale)) {

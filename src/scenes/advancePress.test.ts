@@ -12,7 +12,7 @@ import { listenTargetPress, sameByValue } from "./targetPress.ts";
 vi.mock("phaser", () => ({ Scenes: { Events: { SHUTDOWN: "shutdown", UPDATE: "update" } } }));
 
 function screen() {
-  const pointer = { id: 1, isDown: true, wasCanceled: false, x: 0, y: 0 };
+  const pointer = { button: 0, buttons: 1, id: 1, isDown: true, wasCanceled: false, x: 0, y: 0 };
   const input = Object.assign(new EventEmitter(), {
     enabled: true,
     keyboard: { enabled: true },
@@ -39,7 +39,13 @@ function screen() {
     },
   });
   const send = (phase: "down" | "up", x: number, y: number, cancelled = false) => {
-    Object.assign(pointer, { isDown: phase === "down", wasCanceled: cancelled, x, y });
+    Object.assign(pointer, {
+      buttons: phase === "down" ? 1 : 0,
+      isDown: phase === "down",
+      wasCanceled: cancelled,
+      x,
+      y,
+    });
     if (input.enabled) {
       input.emit(`pointer${phase}`, pointer);
     }

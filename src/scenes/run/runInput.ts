@@ -29,7 +29,12 @@ import {
   walkKeyAction,
   walkPagePoint,
 } from "../../input/index.ts";
-import { canvasInputBlocked, canvasPressAllowed, logicalPoint } from "../../input/phaser/index.ts";
+import {
+  canvasInputBlocked,
+  canvasPressAllowed,
+  logicalPoint,
+  primaryCanvasContact,
+} from "../../input/phaser/index.ts";
 import type { LaneDirection } from "../../layout/index.ts";
 import { read } from "../../rules/index.ts";
 import { type SessionInput, steerWalk, type Walk } from "../../runner/index.ts";
@@ -148,7 +153,10 @@ export class RunInput {
 
   // Phaser reports a cancelled touch as a release with wasCanceled set.
   private onPointer(phase: "down" | "move" | "up", pointer: Input.Pointer): void {
-    if (phase === "down" && !canvasPressAllowed(this.scene)) {
+    if (
+      !primaryCanvasContact(phase, pointer) ||
+      (phase === "down" && !canvasPressAllowed(this.scene))
+    ) {
       return;
     }
     const press = { downTime: pointer.downTime, id: pointer.id };

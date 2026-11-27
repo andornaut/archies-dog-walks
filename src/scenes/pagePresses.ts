@@ -22,6 +22,12 @@ interface PagePressHandlers {
   up: (press: Press, point: Point, onBare: boolean) => void;
 }
 
+// The kit's callback type lists only the fields it reads. Browser PointerEvents
+// also identify the changed button.
+function primaryPageButton(event: PagePointerEvent): boolean {
+  return "button" in event && event.button === 0;
+}
+
 // Follows each press that lands on the bare page beside the game's canvas (onBarePage: the
 // page's root, its body and #game, never the canvas or page UI such as the nav bar or the Cheats
 // page) while scene is running and takes input, wherever it then travels, until it lifts or the
@@ -44,7 +50,11 @@ export function listenPagePresses(scene: Scene, handlers: PagePressHandlers): vo
     );
   const press = ({ downTime, pointerId }: PagePress): Press => ({ downTime, id: -1 - pointerId });
   const remove = listenKitPagePresses(
-    (event) => scene.sys.isActive() && scene.input.enabled && onBarePage(bare, event.target),
+    (event) =>
+      primaryPageButton(event) &&
+      scene.sys.isActive() &&
+      scene.input.enabled &&
+      onBarePage(bare, event.target),
     {
       cancel: (pressed, event) => handlers.cancel?.(press(pressed), toGame(event)),
       down: (pressed, event) => {
@@ -52,9 +62,23 @@ export function listenPagePresses(scene: Scene, handlers: PagePressHandlers): vo
           handlers.down(press(pressed), toGame(event));
         }
       },
-      move: (pressed, event) => handlers.move?.(press(pressed), toGame(event)),
-      up: (pressed, event) =>
-        handlers.up(press(pressed), toGame(event), onBarePage(bare, event.target)),
+      move: (pressed, event) => {
+        if (
+          event.pointerType !== "mouse" ||
+          ("buttons" in event && typeof event.buttons === "number" && (event.buttons & 1) !== 0)
+        ) {
+          handlers.move?.(press(pressed), toGame(event));
+        }
+      },
+      up: (pressed, event) => {
+        if (primaryPageButton(event)) {
+          handlers.up(press(pressed), toGame(event), onBarePage(bare, event.target));
+        } else {
+          // Pointer Events report the last mouse button released. If that is a
+          // secondary button, retire the old tracking without activating it.
+          handlers.cancel?.(press(pressed), toGame(event));
+        }
+      },
     },
     document,
   );

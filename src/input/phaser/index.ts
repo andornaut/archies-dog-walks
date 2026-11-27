@@ -4,6 +4,7 @@ export {
   logicalPoint,
   type LogicalPointer,
   logicalPointer,
+  primaryCanvasContact,
 } from "./logicalPointer.ts";
 export {
   bindPressAdmission,
