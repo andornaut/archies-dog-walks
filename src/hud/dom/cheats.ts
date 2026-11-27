@@ -167,9 +167,10 @@ function buttonsPart(
     element,
     place: (scale, row) => {
       const { rect } = row;
+      const axis = row.buttons.some((button) => button.rect.y !== rect.y) ? "stack" : "row";
       const project = { x: (x: number) => gridX(scale, x), y: (y: number) => gridY(scale, y) };
       const { group: placed } = group.arrange(
-        { origin: rect, press: { margin: 0 }, project, width: rect.width },
+        { axis, origin: rect, press: { margin: 0 }, project, width: rect.width },
         row.buttons.flatMap((view, i) => {
           const button = buttons[i]?.button;
           return button === undefined

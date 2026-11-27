@@ -185,11 +185,15 @@ it.each([
   const scale = domScale(dpr, { height: h, width: w, x: 0, y: 0 });
   const { element, shown, view } = await cheatsScreen(false, true, scale);
   const { viewport } = view.layout;
+  const stacks = view.rows.some((row) => row.buttons.some((button) => button.rect.y > row.rect.y));
+  expect(stacks).toBe(true);
   const px = (value: string | undefined) => Number.parseFloat(value ?? "");
   for (const button of view.rows.flatMap((row) => row.buttons)) {
     const control = element.all().find((node) => node.getAttribute("aria-label") === button.label)!;
     const group = control.parent!;
     const at = (name: string) => px(control.style.getPropertyValue(`--ui-action-${name}`));
+    expect(Number.isInteger(button.rect.height)).toBe(true);
+    expect(button.lines.map(({ text }) => text).join(" ")).toBe(button.label);
     const box = gridRect(scale, button.rect);
     expect({
       height: at("height"),

@@ -32,7 +32,8 @@ import {
 import { quipCapsTop, quipTextY } from "./endLayout.ts";
 import { CARD_TEXT_ROOM, detailCardLayout, detailOwner, type DetailRow } from "./homeLayout.ts";
 import { MENU_TEXT_FIELDS } from "./menuText.ts";
-import { SETTINGS_ROW, settingsLayout } from "./settings.ts";
+import { settingsLayout } from "./settings.ts";
+import { settingsRows } from "./settingsView.ts";
 import { detailTextTops, STATS_LAYOUT, wallLineTops } from "./statsLayout.ts";
 
 type Font = "font-body" | "font-title";
@@ -75,19 +76,21 @@ const fontClearRows = (pair: Pair) =>
 
 // A settings row's title over its note.
 const SETTINGS_WORDS = gameData.menuText.settings;
-const settingsPairs: Pair[] = (["sound", "motion", "install"] as const).map((key) => {
-  const label = SETTINGS_WORDS[key];
-  const shape = { kind: "switch", noteLines: 1 } as const;
-  const [row] = settingsLayout(FONTS, [shape]).rows;
-  const top = row?.rect.y ?? 0;
-  return {
-    font: "font-title",
-    held: "exactly",
-    help: row?.noteY ?? 0,
-    label,
-    labelTop: top + SETTINGS_ROW.label.dy,
-    where: "settings row",
-  };
+const settingsPairs = settingsRows(false).flatMap((setting): Pair[] => {
+  if (setting.kind !== "switch" || setting.note === undefined) {
+    return [];
+  }
+  const [row] = settingsLayout(FONTS, [{ kind: "switch", noteLines: 1 }]).rows;
+  return [
+    {
+      font: "font-title",
+      held: "exactly",
+      help: row!.noteY!,
+      label: SETTINGS_WORDS[setting.label],
+      labelTop: row!.labelY,
+      where: "settings row",
+    },
+  ];
 });
 
 // A detail card's rows: each row of text's last line over the row under it (a row's top, or
