@@ -1339,8 +1339,8 @@
         },
         "button": {
           "height": 48,
-          "width": 137,
-          "x": 112,
+          "width": 127,
+          "x": 117,
           "y": 429
         },
         "greeting": {
@@ -1392,8 +1392,8 @@
         },
         "button": {
           "height": 48,
-          "width": 130,
-          "x": 115,
+          "width": 120,
+          "x": 120,
           "y": 410
         },
         "earningsY": 372,
@@ -1645,65 +1645,65 @@
             {
               "height": 8,
               "width": 8,
-              "x": 172,
+              "x": 169,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 184,
+              "x": 181,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 196,
+              "x": 193,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 208,
+              "x": 205,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 220,
+              "x": 217,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 232,
+              "x": 229,
               "y": 464
             }
           ],
           "next": {
             "face": {
               "height": 48,
-              "width": 87,
-              "x": 248,
+              "width": 82,
+              "x": 245,
               "y": 444
             },
             "press": {
               "height": 56,
-              "width": 95,
-              "x": 244,
+              "width": 90,
+              "x": 241,
               "y": 440
             }
           },
           "previous": {
             "face": {
               "height": 48,
-              "width": 140,
-              "x": 24,
+              "width": 129,
+              "x": 32,
               "y": 444
             },
             "press": {
               "height": 56,
-              "width": 148,
-              "x": 20,
+              "width": 137,
+              "x": 28,
               "y": 440
             }
           }
@@ -1713,65 +1713,65 @@
             {
               "height": 8,
               "width": 8,
-              "x": 166,
+              "x": 164,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 178,
+              "x": 176,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 190,
+              "x": 188,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 202,
+              "x": 200,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 214,
+              "x": 212,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 226,
+              "x": 224,
               "y": 464
             }
           ],
           "next": {
             "face": {
               "height": 48,
-              "width": 100,
-              "x": 242,
+              "width": 93,
+              "x": 240,
               "y": 444
             },
             "press": {
               "height": 56,
-              "width": 108,
-              "x": 238,
+              "width": 101,
+              "x": 236,
               "y": 440
             }
           },
           "previous": {
             "face": {
               "height": 48,
-              "width": 140,
-              "x": 18,
+              "width": 129,
+              "x": 27,
               "y": 444
             },
             "press": {
               "height": 56,
-              "width": 148,
-              "x": 14,
+              "width": 137,
+              "x": 23,
               "y": 440
             }
           }
@@ -2295,20 +2295,20 @@
       "updateModal": {
         "button": {
           "height": 48,
-          "width": 172,
-          "x": 94,
+          "width": 158,
+          "x": 101,
           "y": 308
         },
         "cancel": {
           "height": 48,
-          "width": 172,
-          "x": 94,
+          "width": 158,
+          "x": 101,
           "y": 252
         },
         "hit": {
           "height": 48,
-          "width": 172,
-          "x": 94,
+          "width": 158,
+          "x": 101,
           "y": 308
         },
         "panel": {
@@ -2317,7 +2317,7 @@
           "x": 48,
           "y": 189
         },
-        "capY": 325.75
+        "capY": 326.375
       },
       "walkerRects": [
         {
@@ -2389,64 +2389,64 @@
       "buttons": [
         {
           "height": 48,
-          "width": 192,
-          "x": 84,
+          "width": 176,
+          "x": 92,
           "y": 178
         },
         {
           "height": 48,
-          "width": 192,
-          "x": 84,
+          "width": 176,
+          "x": 92,
           "y": 234
         },
         {
           "height": 48,
-          "width": 192,
-          "x": 84,
+          "width": 176,
+          "x": 92,
           "y": 290
         },
         {
           "height": 48,
-          "width": 192,
-          "x": 84,
+          "width": 176,
+          "x": 92,
           "y": 346
         },
         {
           "height": 48,
-          "width": 192,
-          "x": 84,
+          "width": 176,
+          "x": 92,
           "y": 402
         }
       ],
       "hits": [
         {
           "height": 48,
-          "width": 192,
-          "x": 84,
+          "width": 176,
+          "x": 92,
           "y": 178
         },
         {
           "height": 48,
-          "width": 192,
-          "x": 84,
+          "width": 176,
+          "x": 92,
           "y": 234
         },
         {
           "height": 48,
-          "width": 192,
-          "x": 84,
+          "width": 176,
+          "x": 92,
           "y": 290
         },
         {
           "height": 48,
-          "width": 192,
-          "x": 84,
+          "width": 176,
+          "x": 92,
           "y": 346
         },
         {
           "height": 48,
-          "width": 192,
-          "x": 84,
+          "width": 176,
+          "x": 92,
           "y": 402
         }
       ],
@@ -2539,8 +2539,8 @@
         {
           "control": {
             "height": 48,
-            "width": 140,
-            "x": 103,
+            "width": 131,
+            "x": 107.5,
             "y": 432
           },
           "labelY": 452,

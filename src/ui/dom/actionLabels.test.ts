@@ -31,12 +31,12 @@ const labels = [
   gameData.menuText.cheats.reset.title,
 ];
 
-it("sizes fixed 2.5x action ink through the existing measured-width contract", () => {
+it("sizes fixed 2.25x action ink through the existing measured-width contract", () => {
   for (const label of labels) {
     const width = modalActionWidth(measure.inkWidth("title", label));
     const button = panelButton(measure, { height: 48, width, x: 0, y: 40 }, false, label);
     const ink = lineInk(font, label.toUpperCase(), ACTION_LABEL_SCALE);
-    expect(button.text.scale).toBe(2.5);
+    expect(button.text.scale).toBe(2.25);
     expect(button.text.projection).toBe("layout");
     expect(width - (ink.right - ink.left)).toBeGreaterThanOrEqual(32);
     expect(button.text.capTop + (ink.top + ink.bottom) / 2).toBe(64);
@@ -50,7 +50,9 @@ it("sizes fixed 2.5x action ink through the existing measured-width contract", (
 
 it.each([
   [360, 1],
+  [390, 2],
   [393, 3],
+  [575, 1],
   [575, 2.625],
 ])("keeps full ink centred on a painted face at width %s DPR %s", (width, dpr) => {
   const scale = domScale(dpr, { height: 640, width, x: 0, y: 0 });
@@ -74,7 +76,7 @@ it.each([
 
 it("enlarges only the recovery action role and removes its flat-fill padding bias", () => {
   const style = loadingFailurePresentation(1);
-  expect(style.text.action.sizePx).toBe(22.5);
+  expect(style.text.action.sizePx).toBe(20.25);
   expect(style.text.body.sizePx).toBe(18);
   expect(style.text.title.sizePx).toBe(24);
   expect(style.action.heightPx).toBe(48);

@@ -130,8 +130,8 @@ it("provides Back as the sole primary on every full-size Help page", () => {
 // Art's pager table (art/layout.md): Previous, the dots 4 apart and Next in one row, 8 between
 // the dots and each button, centred in the protected 328px page room; Back under it.
 it.each([
-  ["a middle page", 1, [24, 140], [172, 68], [248, 87]],
-  ["the last page", gameData.help.length - 1, [18, 140], [166, 68], [242, 100]],
+  ["a middle page", 1, [32, 129], [169, 68], [245, 82]],
+  ["the last page", gameData.help.length - 1, [27, 129], [164, 68], [240, 93]],
 ] as const)(
   "lays out the pager on %s and shares its press areas with the pointer",
   (_, page, [previousX, previousWidth], [countX, countWidth], [nextX, nextWidth]) => {
@@ -143,8 +143,8 @@ it.each([
     expect(view.dots.map(({ rect }) => rect.x)).toEqual(
       Array.from({ length: gameData.help.length }, (_, i) => countX + 12 * i),
     );
-    // Kit places the odd-width footer face on whole logical pixels; its ink follows that face.
-    expect(view.footer.rect).toEqual({ height: 48, width: 87, x: 136, y: 500 });
+    // The footer face is centred across the screen, and its ink follows that face.
+    expect(view.footer.rect).toEqual({ height: 48, width: 82, x: 139, y: 500 });
     expect(view.footer.text.centreX).toBe(view.footer.rect.x + view.footer.rect.width / 2);
     // The press areas are the faces and half the stacked gap round them: 4 short of the dots
     // and of Back.
