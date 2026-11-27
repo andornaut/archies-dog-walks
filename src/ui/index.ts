@@ -1,7 +1,7 @@
 // The public entry of src/ui/: modules outside it import only this file.
 export { arrowheadPixels } from "./arrowhead.ts";
 export { barTitleRoom } from "./barTitle.ts";
-export { raisedLabelCapTop } from "./buttonGeometry.ts";
+export { actionLabelCapTop, raisedLabelCapTop } from "./buttonGeometry.ts";
 export { cardHeader, cardRowRects, type CardRowSpec } from "./cardRow.ts";
 export { centredInkOffsets } from "./centredInkBlock.ts";
 export { type CloseControl, closeControl, closeFace } from "./closeControl.ts";
@@ -53,7 +53,13 @@ export type {
   PanelText,
   QuestionPanelView,
 } from "./modal/types.ts";
-export { modalCardView, panelButton, panelTitle, titleLabelInk } from "./modal/view.ts";
+export {
+  actionLabelInk,
+  modalCardView,
+  panelButton,
+  panelTitle,
+  titleLabelInk,
+} from "./modal/view.ts";
 export { MODAL } from "./modalGeometry.ts";
 export {
   centredPillBacking,
@@ -116,6 +122,8 @@ export {
 export { SEPARATOR_BAND, separatorBetween } from "./separator.ts";
 export { startupLoad, startupProgress } from "./startupProgress.ts";
 export {
+  ACTION_LABEL_SCALE,
+  actionLabelWidth,
   BODY_ASCENT_ROWS,
   BODY_INK_ROWS,
   TEXT_SCALE,

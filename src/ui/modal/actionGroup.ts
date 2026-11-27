@@ -33,7 +33,10 @@ export function arrangePanelActions(
       const button = buttons[action.key]!;
       const rect = {
         ...action.face,
-        x: panel.x + MODAL.pad + action.face.x,
+        x:
+          axis === "stack" || arrangement.actions.filter((action) => !action.hidden).length === 1
+            ? panel.x + (panel.width - action.face.width) / 2
+            : panel.x + MODAL.pad + action.face.x,
         y: top + action.face.y,
       };
       const dx = rect.x - button.rect.x;

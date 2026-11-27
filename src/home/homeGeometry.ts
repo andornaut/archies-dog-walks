@@ -12,9 +12,9 @@ import {
 } from "../data/index.ts";
 import { type PackPlacement, SCREEN_LAYOUT } from "../layout/index.ts";
 import {
+  actionLabelCapTop,
   type GridSpec,
   MODAL,
-  raisedLabelCapTop,
   TEXT_SCALE,
   TITLE_CAP_ROWS,
   TOP_BAR_FACE,
@@ -377,10 +377,10 @@ export const HOME_LAYOUT = {
   },
   startButton: START_BUTTON,
   startGap: START_GAP,
-  // Start walk's label caps at readyY on its raised face (raisedLabelCapTop); the label sinks
+  // Start walk's label caps at readyY on its painted face (actionLabelCapTop); the label sinks
   // with the face.
   startLabel: {
-    readyY: raisedLabelCapTop(
+    readyY: actionLabelCapTop(
       { height: START_BUTTON.height, y: 0 },
       { rows: TITLE_CAP_ROWS * HOME.startLabel.scale, top: 0 },
     ),

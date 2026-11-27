@@ -47,7 +47,7 @@ const FRAME: Rect = { ...FRAME_TOP, height: FACE_BOTTOM + FRAME_LINES - FRAME_TO
 const TITLE_Y = FRAME.y + FRAME.height - 1 + HELP.titleGap;
 const BUTTONS_Y = PAGE_LAYOUT.back.y - BUTTON_SIZE.stackGap - BUTTON_SIZE.compact.height;
 // The pager's room: the Large panel's body columns.
-const PAGER_X = MODAL.margin + MODAL.pad;
+const PAGER_X = MODAL.margin;
 const BODY_Y = TITLE_Y + TITLE_CAP_ROWS * TEXT_SCALE + LABEL_HELP_GAP;
 // Each body line's slot, lineHeight rows from its letters' top, holds the line's whole ink; the
 // viewport shows whole slots only.

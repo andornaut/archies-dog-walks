@@ -1,11 +1,13 @@
 import palette from "../../shared/palette.json" with { type: "json" };
 import { BUTTON_FACE_EDGE, BUTTON_LIP_PX, BUTTON_SIZE } from "../data/index.ts";
 import {
+  ACTION_LABEL_SCALE,
   CARD_PANEL,
   cssHex,
   MODAL,
   PALETTE,
   PAPER_PANEL,
+  TEXT_SCALE,
   TOP_BAR_FACE,
   topBarGlyphRect,
 } from "../ui/index.ts";
@@ -32,6 +34,7 @@ export function siteTokens(): Map<string, string> {
       `palette-${name}`,
       `#${hex}`,
     ]),
+    ["action-label-ratio", String(ACTION_LABEL_SCALE / TEXT_SCALE)],
     // A text button's ink outline, the lit row under its top outline, and its lip.
     ["button-bevel", px(BUTTON_FACE_EDGE.top - BUTTON_FACE_EDGE.bottom)],
     ["button-border", px(BUTTON_FACE_EDGE.bottom)],

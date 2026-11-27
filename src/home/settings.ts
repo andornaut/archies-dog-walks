@@ -152,7 +152,7 @@ export const SETTINGS_ROW = {
 // The Install button's face: its icon's cell, ICON_LABEL_GAP and its label's ink, with a modal
 // action's padding.
 export function settingsInstallWidth(ink: number): number {
-  return modalActionWidth(LABEL_ICON + ICON_LABEL_GAP + ink);
+  return modalActionWidth(ink) + LABEL_ICON + ICON_LABEL_GAP;
 }
 
 // The room a switch or button row's note wraps in: from the icon's column to controlGap short

@@ -4,19 +4,21 @@ import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 
 import { BUTTON_SIZE } from "../data/index.ts";
 import {
+  ACTION_LABEL_SCALE,
+  actionLabelCapTop,
   MODAL,
   modalActionWidth,
   modalFamilyWidth,
   modalRect,
-  raisedLabelCapTop,
-  TEXT_SCALE,
 } from "../ui/index.ts";
 import { HOME_LAYOUT } from "./homeGeometry.ts";
 
-// The update notice's compact button label's capitals on its raised face (raisedLabelCapTop),
+// The update notice's compact button label's capitals on its painted face (actionLabelCapTop),
 // as panelButton places them (updateModalLayout's button).
 export function updateModalText(title: FontMetrics, button: Rect): { capY: number } {
-  return { capY: raisedLabelCapTop(button, { rows: title.capHeight * TEXT_SCALE, top: 0 }) };
+  return {
+    capY: actionLabelCapTop(button, { rows: title.capHeight * ACTION_LABEL_SCALE, top: 0 }),
+  };
 }
 
 // The notice contains its title and actions, Cancel then Update now, without an empty body row.

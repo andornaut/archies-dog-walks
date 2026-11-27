@@ -12,7 +12,12 @@ import { modalTitleInk } from "../ui/modal/titleRole.ts";
 import type { PanelMeasure } from "../ui/modal/types.ts";
 import { PAGE_LAYOUT } from "../ui/pageLayout.ts";
 import { SEPARATOR } from "../ui/separator.ts";
-import { MODAL_TITLE_SCALE, TEXT_SCALE } from "../ui/textFit.ts";
+import {
+  ACTION_LABEL_SCALE,
+  actionLabelWidth,
+  MODAL_TITLE_SCALE,
+  TEXT_SCALE,
+} from "../ui/textFit.ts";
 import { cents } from "../units.ts";
 import { BANK_GRANTS, NEXT_WALK_OFF, startZones } from "./cheats.ts";
 import { balancedWords, type CheatsState, cheatsView } from "./cheatsView.ts";
@@ -213,6 +218,12 @@ describe("Cheats layout", () => {
       adds.map((add, i) => [unlocks[i]!, add]),
     ]) {
       for (const [left, right] of pairs) {
+        if (left!.rect.y !== right!.rect.y) {
+          expect(right!.rect.y).toBe(left!.rect.y + left!.rect.height + BUTTON_SIZE.stackGap);
+          expect([left!.rect.x, left!.rect.width]).toEqual([right!.rect.x, right!.rect.width]);
+          expect(rectsOverlap(left!.rect, right!.rect)).toBe(false);
+          continue;
+        }
         expect(left!.rect.y).toBe(right!.rect.y);
         expect([left!.rect.x, left!.rect.width, right!.rect.x, right!.rect.width]).toEqual([
           8,
@@ -229,14 +240,16 @@ describe("Cheats layout", () => {
       expect(lines.map(({ text }) => text).join(" ")).toBe(label);
       expect(rect.x + rect.width).toBeLessThan(PAGE_LAYOUT.scrollbar.x);
       for (const line of lines) {
-        expect(line.scale).toBe(TEXT_SCALE);
+        expect(line.scale).toBe(ACTION_LABEL_SCALE);
         // A line of words wraps at the label room; a single word may take the button's rows room.
-        expect(MEASURE.inkWidth("title", line.text)).toBeLessThanOrEqual(
+        expect(actionLabelWidth(MEASURE.inkWidth("title", line.text))).toBeLessThanOrEqual(
           rect.width - 2 * (line.text.includes(" ") ? MODAL.gap : MODAL.rowGap),
         );
         const ink = MEASURE.titleInk(line.text);
-        expect(line.capTop + (ink.top * TEXT_SCALE) / MODAL_TITLE_SCALE).toBeGreaterThan(rect.y);
-        expect(line.capTop + (ink.bottom * TEXT_SCALE) / MODAL_TITLE_SCALE).toBeLessThan(
+        expect(line.capTop + (ink.top * ACTION_LABEL_SCALE) / MODAL_TITLE_SCALE).toBeGreaterThan(
+          rect.y,
+        );
+        expect(line.capTop + (ink.bottom * ACTION_LABEL_SCALE) / MODAL_TITLE_SCALE).toBeLessThan(
           rect.y + rect.height,
         );
       }
@@ -251,24 +264,23 @@ describe("Cheats layout", () => {
     expect(balancedWords((line) => line.length, room, text)).toEqual(lines);
   });
 
-  // Labels at their room's limit: a one-word label within the button's rows room, and a two-word
-  // label at its wrap room (124 of 124 with the current font).
-  it.each([
-    ["Cabbagetown", gameData.world.zones.find(({ id }) => id === "cabbagetown")!.name],
-    ["Unlock Dogs", words.cheats.ownDogs],
-  ])("keeps %s on one full-size line", (_, label) => {
-    const button = buttons(HOME).find((candidate) => candidate.label === label)!;
-    expect(button.lines.map(({ text }) => text)).toEqual([label]);
-    expect(MEASURE.inkWidth("title", label)).toBeLessThanOrEqual(
-      button.rect.width - 2 * (label.includes(" ") ? MODAL.gap : MODAL.rowGap),
-    );
-  });
+  // An unbreakable neighbourhood name gets the existing stacked action-group fallback.
+  it.each([["Cabbagetown", gameData.world.zones.find(({ id }) => id === "cabbagetown")!.name]])(
+    "keeps %s on one full-size line",
+    (_, label) => {
+      const button = buttons(HOME).find((candidate) => candidate.label === label)!;
+      expect(button.lines.map(({ text }) => text)).toEqual([label]);
+      expect(actionLabelWidth(MEASURE.inkWidth("title", label))).toBeLessThanOrEqual(
+        button.rect.width - 2 * (label.includes(" ") ? MODAL.gap : MODAL.rowGap),
+      );
+    },
+  );
 
   it("wraps Unlock Dog Slots balanced in its button", () => {
     const button = buttons(HOME).find(({ label }) => label === words.cheats.ownDogSlots)!;
     expect(button.lines.map(({ text }) => text)).toEqual(
       balancedWords(
-        (line) => MEASURE.inkWidth("title", line),
+        (line) => actionLabelWidth(MEASURE.inkWidth("title", line)),
         button.rect.width - 2 * MODAL.gap,
         words.cheats.ownDogSlots,
       ),

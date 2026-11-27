@@ -128,10 +128,10 @@ it("provides Back as the sole primary on every full-size Help page", () => {
 });
 
 // Art's pager table (art/layout.md): Previous, the dots 4 apart and Next in one row, 8 between
-// the dots and each button, centred in the 296px body room; Back under it.
+// the dots and each button, centred in the protected 328px page room; Back under it.
 it.each([
-  ["a middle page", 1, [41, 118], [167, 68], [243, 76]],
-  ["the last page", gameData.help.length - 1, [36, 118], [162, 68], [238, 86]],
+  ["a middle page", 1, [24, 140], [172, 68], [248, 87]],
+  ["the last page", gameData.help.length - 1, [18, 140], [166, 68], [242, 100]],
 ] as const)(
   "lays out the pager on %s and shares its press areas with the pointer",
   (_, page, [previousX, previousWidth], [countX, countWidth], [nextX, nextWidth]) => {
@@ -143,7 +143,7 @@ it.each([
     expect(view.dots.map(({ rect }) => rect.x)).toEqual(
       Array.from({ length: gameData.help.length }, (_, i) => countX + 12 * i),
     );
-    expect(view.footer.rect).toEqual({ height: 48, width: 76, x: 142, y: 500 });
+    expect(view.footer.rect).toEqual({ height: 48, width: 87, x: 136.5, y: 500 });
     // The press areas are the faces and half the stacked gap round them: 4 short of the dots
     // and of Back.
     expect(previous!.hit).toEqual({

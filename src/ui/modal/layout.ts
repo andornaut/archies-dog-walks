@@ -6,7 +6,7 @@ import type { FontMetrics } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { MODAL_WIDTHS, SCREEN_CONFIG } from "../../data/index.ts";
 import { BUTTON_SIZE } from "../buttonGeometry.ts";
 import { MODAL } from "../modalGeometry.ts";
-import { MODAL_TITLE_SCALE, TITLE_CAP_ROWS } from "../textFit.ts";
+import { actionLabelWidth, MODAL_TITLE_SCALE, TITLE_CAP_ROWS } from "../textFit.ts";
 import { modalTitleWidthAtScale, type TitleInk } from "./titleRole.ts";
 
 export { MODAL };
@@ -63,7 +63,7 @@ export function modalFamilyWidth(availableWidth: number, family: ModalFamily): n
 
 // Modal actions follow full-size label ink; screen controls keep their separate size tokens.
 export function modalActionWidth(ink: number): number {
-  return Math.max(BUTTON_SIZE.icon.target, Math.ceil(ink + 2 * MODAL.pad));
+  return Math.max(BUTTON_SIZE.icon.target, Math.ceil(actionLabelWidth(ink) + 2 * MODAL.pad));
 }
 
 // Wrap full-size headings and grow the header from their actual visible ink block.

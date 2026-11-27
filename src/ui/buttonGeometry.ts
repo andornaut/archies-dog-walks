@@ -19,3 +19,8 @@ export function raisedLabelCapTop(face: Pick<Rect, "height" | "y">, ink: LabelIn
   const fill = face.height - BUTTON_FACE_EDGE.top - BUTTON_LIP_PX - BUTTON_FACE_EDGE.bottom;
   return face.y + BUTTON_FACE_EDGE.top + Math.floor((fill - ink.rows) / 2) - ink.top;
 }
+
+// Ordinary action ink is centred on the whole painted face; the existing pressed dip is separate.
+export function actionLabelCapTop(face: Pick<Rect, "height" | "y">, ink: LabelInk): number {
+  return face.y + (face.height - ink.rows) / 2 - ink.top;
+}

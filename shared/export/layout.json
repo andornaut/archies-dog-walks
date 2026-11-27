@@ -1340,8 +1340,8 @@
         },
         "button": {
           "height": 48,
-          "width": 116,
-          "x": 122,
+          "width": 137,
+          "x": 112,
           "y": 429
         },
         "greeting": {
@@ -1393,8 +1393,8 @@
         },
         "button": {
           "height": 48,
-          "width": 110,
-          "x": 125,
+          "width": 130,
+          "x": 115,
           "y": 410
         },
         "earningsY": 372,
@@ -1414,7 +1414,7 @@
         "y": 508
       },
       "backToTitleLabel": {
-        "readyY": 15,
+        "readyY": 16.5,
         "scale": 3
       },
       "badges": {
@@ -1613,8 +1613,8 @@
           "size": 8
         },
         "height": 48,
-        "width": 296,
-        "x": 32,
+        "width": 328,
+        "x": 16,
         "y": 444
       },
       "presses": {
@@ -1646,65 +1646,65 @@
             {
               "height": 8,
               "width": 8,
-              "x": 167,
+              "x": 172,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 179,
+              "x": 184,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 191,
+              "x": 196,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 203,
+              "x": 208,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 215,
+              "x": 220,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 227,
+              "x": 232,
               "y": 464
             }
           ],
           "next": {
             "face": {
               "height": 48,
-              "width": 76,
-              "x": 243,
+              "width": 87,
+              "x": 248,
               "y": 444
             },
             "press": {
               "height": 56,
-              "width": 84,
-              "x": 239,
+              "width": 95,
+              "x": 244,
               "y": 440
             }
           },
           "previous": {
             "face": {
               "height": 48,
-              "width": 118,
-              "x": 41,
+              "width": 140,
+              "x": 24,
               "y": 444
             },
             "press": {
               "height": 56,
-              "width": 126,
-              "x": 37,
+              "width": 148,
+              "x": 20,
               "y": 440
             }
           }
@@ -1714,65 +1714,65 @@
             {
               "height": 8,
               "width": 8,
-              "x": 162,
+              "x": 166,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 174,
+              "x": 178,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 186,
+              "x": 190,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 198,
+              "x": 202,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 210,
+              "x": 214,
               "y": 464
             },
             {
               "height": 8,
               "width": 8,
-              "x": 222,
+              "x": 226,
               "y": 464
             }
           ],
           "next": {
             "face": {
               "height": 48,
-              "width": 86,
-              "x": 238,
+              "width": 100,
+              "x": 242,
               "y": 444
             },
             "press": {
               "height": 56,
-              "width": 94,
-              "x": 234,
+              "width": 108,
+              "x": 238,
               "y": 440
             }
           },
           "previous": {
             "face": {
               "height": 48,
-              "width": 118,
-              "x": 36,
+              "width": 140,
+              "x": 18,
               "y": 444
             },
             "press": {
               "height": 56,
-              "width": 126,
-              "x": 32,
+              "width": 148,
+              "x": 14,
               "y": 440
             }
           }
@@ -2063,7 +2063,7 @@
       },
       "startGap": 2,
       "startLabel": {
-        "readyY": 15,
+        "readyY": 16.5,
         "scale": 3
       },
       "startLoading": {
@@ -2296,20 +2296,20 @@
       "updateModal": {
         "button": {
           "height": 48,
-          "width": 144,
-          "x": 108,
+          "width": 172,
+          "x": 94,
           "y": 308
         },
         "cancel": {
           "height": 48,
-          "width": 144,
-          "x": 108,
+          "width": 172,
+          "x": 94,
           "y": 252
         },
         "hit": {
           "height": 48,
-          "width": 144,
-          "x": 108,
+          "width": 172,
+          "x": 94,
           "y": 308
         },
         "panel": {
@@ -2318,7 +2318,7 @@
           "x": 48,
           "y": 189
         },
-        "capY": 325
+        "capY": 325.75
       },
       "walkerRects": [
         {
@@ -2390,64 +2390,64 @@
       "buttons": [
         {
           "height": 48,
-          "width": 160,
-          "x": 100,
+          "width": 192,
+          "x": 84,
           "y": 178
         },
         {
           "height": 48,
-          "width": 160,
-          "x": 100,
+          "width": 192,
+          "x": 84,
           "y": 234
         },
         {
           "height": 48,
-          "width": 160,
-          "x": 100,
+          "width": 192,
+          "x": 84,
           "y": 290
         },
         {
           "height": 48,
-          "width": 160,
-          "x": 100,
+          "width": 192,
+          "x": 84,
           "y": 346
         },
         {
           "height": 48,
-          "width": 160,
-          "x": 100,
+          "width": 192,
+          "x": 84,
           "y": 402
         }
       ],
       "hits": [
         {
           "height": 48,
-          "width": 160,
-          "x": 100,
+          "width": 192,
+          "x": 84,
           "y": 178
         },
         {
           "height": 48,
-          "width": 160,
-          "x": 100,
+          "width": 192,
+          "x": 84,
           "y": 234
         },
         {
           "height": 48,
-          "width": 160,
-          "x": 100,
+          "width": 192,
+          "x": 84,
           "y": 290
         },
         {
           "height": 48,
-          "width": 160,
-          "x": 100,
+          "width": 192,
+          "x": 84,
           "y": 346
         },
         {
           "height": 48,
-          "width": 160,
-          "x": 100,
+          "width": 192,
+          "x": 84,
           "y": 402
         }
       ],
@@ -2520,8 +2520,8 @@
         {
           "control": {
             "height": 48,
-            "width": 122,
-            "x": 112,
+            "width": 140,
+            "x": 103,
             "y": 447
           },
           "noteY": null,

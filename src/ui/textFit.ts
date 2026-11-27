@@ -6,6 +6,14 @@ import type { TextFitStyle } from "@andornaut/game-kit/runtime/text/textFit";
 // The scale menu and HUD text draws at, so it reads on a phone; 1x is for incidental marks only.
 export const TEXT_SCALE = 2;
 
+// Ordinary action labels grow independently of body text, headings and compact tabs.
+export const ACTION_LABEL_SCALE = 2.5;
+
+// PanelMeasure keeps its existing 2x ink contract for every other text role.
+export function actionLabelWidth(ink: number): number {
+  return (ink * ACTION_LABEL_SCALE) / TEXT_SCALE;
+}
+
 // Ordinary modal and framed-page headings share one role, separate from action labels.
 export const MODAL_TITLE_SCALE = 3;
 

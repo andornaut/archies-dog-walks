@@ -1,7 +1,7 @@
 import type { LoadingFailurePresentation } from "@andornaut/game-kit/runtime/web/progress/dom/loadingFailure";
 
 import { BUTTON_SIZE, MODAL_SPACING, MODAL_WIDTHS } from "../../data/index.ts";
-import { cssHex, MODAL, PALETTE, PAPER_PANEL } from "../index.ts";
+import { ACTION_LABEL_SCALE, cssHex, MODAL, PALETTE, PAPER_PANEL, TEXT_SCALE } from "../index.ts";
 
 const paper = (role: keyof typeof PAPER_PANEL.colours) =>
   cssHex(PALETTE[PAPER_PANEL.colours[role]]);
@@ -15,7 +15,7 @@ export function loadingFailurePresentation(unit: number): LoadingFailurePresenta
       borderWidthPx: Math.max(1, unit),
       heightPx: BUTTON_SIZE.compact.height * unit,
       highlightHeightPx: Math.max(1, unit),
-      paddingBottomPx: 4 * unit,
+      paddingBottomPx: 0,
       paddingXPx: MODAL.pad * unit,
       shadeHeightPx: 4 * unit,
       widthPx: "content",
@@ -46,7 +46,7 @@ export function loadingFailurePresentation(unit: number): LoadingFailurePresenta
       titleBodyGapPx: 16,
     },
     text: {
-      action: { lineHeight: 1.2, sizePx: 18, weight: 700 },
+      action: { lineHeight: 1.2, sizePx: (18 * ACTION_LABEL_SCALE) / TEXT_SCALE, weight: 700 },
       body: { lineHeight: 1.45, sizePx: 18, weight: 400 },
       title: { lineHeight: 1.2, sizePx: 24, weight: 700 },
     },

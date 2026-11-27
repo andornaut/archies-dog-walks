@@ -35,6 +35,7 @@ export interface PanelText {
   readonly colour: number;
   readonly font: PanelFont;
   readonly line: number;
+  readonly projection?: "layout";
   readonly scale: number;
   readonly text: string;
 }

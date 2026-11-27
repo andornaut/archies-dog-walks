@@ -7,8 +7,17 @@ import {
   placeText,
   REFUSAL_RED,
   setBox,
+  shownText,
 } from "../../ui/dom/index.ts";
-import { artPixel, BUTTON_COLOURS, type DomScale, gridRect, PALETTE } from "../../ui/index.ts";
+import {
+  actionLabelCapTop,
+  artPixel,
+  BUTTON_COLOURS,
+  type DomScale,
+  gridRect,
+  lineInk,
+  PALETTE,
+} from "../../ui/index.ts";
 import { HOME_LAYOUT } from "../index.ts";
 export interface NativeStartControl {
   readonly element: HTMLButtonElement;
@@ -46,6 +55,7 @@ export function createStartControl(
     centreX: rect.x + rect.width / 2,
     colour: PALETTE[BUTTON_COLOURS[ready ? "primary" : "disabled"].label],
     font: "title",
+    projection: "layout",
     scale: HOME_LAYOUT.startLabel.scale,
     text: input.label,
   } as const;
@@ -101,7 +111,12 @@ export function createStartControl(
       placeFrame(scale, rect, face, rect);
       face.style.left = `${Math.round(state.x) * pixel}px`;
       face.style.top = `${Math.round(state.y) * pixel}px`;
-      placeText(title, scale, rect, label, { ...text, text: words });
+      const ink = lineInk(title, shownText("title", words), text.scale);
+      placeText(title, scale, rect, label, {
+        ...text,
+        capTop: actionLabelCapTop(rect, { rows: ink.bottom - ink.top, top: ink.top }),
+        text: words,
+      });
     },
   };
 }

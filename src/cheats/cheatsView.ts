@@ -4,6 +4,7 @@
 // text origin is in game pixels.
 import { fillLine, wrapWords } from "@andornaut/game-kit/runtime/lines";
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
+import { arrangeActions } from "@andornaut/game-kit/runtime/ui/actionGroup";
 
 import type { DebuffId, UpgradeId, ZoneId } from "../data/ids.ts";
 import {
@@ -21,6 +22,10 @@ import {
 } from "../home/index.ts";
 import { dollarText } from "../presentation/index.ts";
 import {
+  ACTION_LABEL_SCALE,
+  actionLabelCapTop,
+  actionLabelInk,
+  actionLabelWidth,
   GREYED,
   MODAL,
   modalActionWidth,
@@ -33,12 +38,10 @@ import {
   type PanelMeasure,
   type PanelText,
   panelTitle,
-  raisedLabelCapTop,
   ROWS_PAGE_LAYOUT,
   selectLook,
   separatorBetween,
   TEXT_SCALE,
-  titleLabelInk,
 } from "../ui/index.ts";
 import type { Cents } from "../units.ts";
 import { BANK_GRANTS, type NextWalk, type OwnGrant, startZones } from "./cheats.ts";
@@ -224,31 +227,62 @@ function rowButtons(
   row: Extract<CheatLine, { kind: "buttons" }>,
   rect: Rect,
 ): CheatButtonView[] {
-  const cols = row.layout === "pair" ? columnsOf(rect) : [rect];
+  const pair = row.layout === "pair" ? columnsOf(rect) : undefined;
+  const stacked =
+    pair !== undefined &&
+    row.buttons.some((item, i) =>
+      item.label
+        .split(/\s+/u)
+        .some(
+          (word) =>
+            actionLabelWidth(measure.inkWidth("title", word)) > pair[i]!.width - 2 * MODAL.rowGap,
+        ),
+    );
+  const stackedWidth = Math.min(
+    rect.width,
+    Math.max(...row.buttons.map((item) => modalActionWidth(measure.inkWidth("title", item.label)))),
+  );
+  const cols = stacked
+    ? row.buttons.map(() => ({
+        ...rect,
+        width: stackedWidth,
+        x: rect.x + (rect.width - stackedWidth) / 2,
+      }))
+    : (pair ?? [rect]);
   const available = row.buttons.map((item, i) => {
     const column = cols[i]!;
     const preferred = modalActionWidth(measure.inkWidth("title", item.label));
     const width = row.layout === "compact" ? Math.min(column.width, preferred) : column.width;
     const x = column.x + (column.width - width) / 2;
-    const measureLine = (text: string) => measure.inkWidth("title", text);
+    const measureLine = (text: string) => actionLabelWidth(measure.inkWidth("title", text));
     const longest = Math.max(...item.label.split(/\s+/u).map(measureLine));
     if (longest > width - 2 * MODAL.rowGap) {
       throw new RangeError("Cheats label word exceeds its full-size button room");
     }
     const room = Math.max(width - 2 * MODAL.gap, longest);
     const lines = balancedWords(measureLine, room, item.label);
-    return { ink: titleLabelInk(measure, lines), item, lines, width, x };
+    return { ink: actionLabelInk(measure, lines), item, lines, width, x };
   });
   const height = Math.max(
     compact.height,
     rect.height,
     ...available.map(({ ink }) => ink.rows + BUTTON_LIP_PX + 2 * MODAL.rowGap),
   );
-  const pitch = measure.title.lineHeight * TEXT_SCALE;
-  return available.map(({ ink, item, lines, width, x }) => {
-    const face = { height, width, x, y: rect.y };
+  const pitch = measure.title.lineHeight * ACTION_LABEL_SCALE;
+  const placement = stacked
+    ? arrangeActions(
+        { axis: "stack", width: rect.width },
+        available.map(({ width }, key) => ({
+          key,
+          role: "secondary" as const,
+          size: { height, width },
+        })),
+      ).actions.flatMap((action) => (action.hidden ? [] : [action]))
+    : undefined;
+  return available.map(({ ink, item, lines, width, x }, index) => {
+    const face = { height, width, x, y: rect.y + (placement?.[index]?.face.y ?? 0) };
     const button = panelButton(measure, face, false, item.label);
-    const capTop = raisedLabelCapTop(face, ink);
+    const capTop = actionLabelCapTop(face, ink);
     return {
       ...button,
       action: item.action,
@@ -418,7 +452,13 @@ function rowView(measure: PanelMeasure, row: CheatLine, rect: Rect): CheatRowVie
         ...plain,
         buttons,
         label: row.buttons.map(({ label }) => label).join(", "),
-        rect: { ...rect, height: buttons[0]?.rect.height ?? compact.height },
+        rect: {
+          ...rect,
+          height: Math.max(
+            compact.height,
+            ...buttons.map((button) => button.rect.y + button.rect.height - rect.y),
+          ),
+        },
         texts: [],
       };
     }

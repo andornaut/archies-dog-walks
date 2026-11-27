@@ -1,11 +1,11 @@
 import type { Rect } from "@andornaut/game-kit/runtime/rect";
 
 import { barTitleLeft, barTitleRoom } from "../barTitle.ts";
-import { type LabelInk, raisedLabelCapTop } from "../buttonGeometry.ts";
+import { actionLabelCapTop, type LabelInk } from "../buttonGeometry.ts";
 import { closeControl } from "../closeControl.ts";
 import { PALETTE } from "../palette.ts";
 import { BUTTON_COLOURS } from "../selection.ts";
-import { MODAL_TITLE_SCALE, TEXT_SCALE } from "../textFit.ts";
+import { ACTION_LABEL_SCALE, MODAL_TITLE_SCALE, TEXT_SCALE } from "../textFit.ts";
 import { arrangePanelActions } from "./actionGroup.ts";
 import { modalTitleLayout } from "./layout.ts";
 import { modalTitleWidthAtScale } from "./titleRole.ts";
@@ -56,24 +56,39 @@ export function panelTitle(
 
 // The ink block of a title-font label's lines at TEXT_SCALE, a font line apart, from the first
 // line's capitals' top: the glyphs' visible rows, punctuation included.
-export function titleLabelInk(
+function labelInkAt(
+  scale: number,
   measure: Pick<PanelMeasure, "title" | "titleInk">,
   lines: readonly string[],
 ): LabelInk {
-  const pitch = measure.title.lineHeight * TEXT_SCALE;
+  const pitch = measure.title.lineHeight * scale;
   const inks = lines.map((line, i) => {
     const ink = measure.titleInk(line);
     return {
-      bottom: i * pitch + (ink.bottom * TEXT_SCALE) / MODAL_TITLE_SCALE,
-      top: i * pitch + (ink.top * TEXT_SCALE) / MODAL_TITLE_SCALE,
+      bottom: i * pitch + (ink.bottom * scale) / MODAL_TITLE_SCALE,
+      top: i * pitch + (ink.top * scale) / MODAL_TITLE_SCALE,
     };
   });
   const top = Math.min(...inks.map((ink) => ink.top));
   return { rows: Math.max(...inks.map((ink) => ink.bottom)) - top, top };
 }
 
-// A button with text as its label, primary or normal, its hit its face: the label's ink centred
-// across the face and down its flat fill (raisedLabelCapTop).
+// Compact tabs retain their existing text role.
+export function titleLabelInk(
+  measure: Pick<PanelMeasure, "title" | "titleInk">,
+  lines: readonly string[],
+): LabelInk {
+  return labelInkAt(TEXT_SCALE, measure, lines);
+}
+
+export function actionLabelInk(
+  measure: Pick<PanelMeasure, "title" | "titleInk">,
+  lines: readonly string[],
+): LabelInk {
+  return labelInkAt(ACTION_LABEL_SCALE, measure, lines);
+}
+
+// An ordinary action's complete visible ink centred across and down its painted face.
 export function panelButton(
   measure: Pick<PanelMeasure, "title" | "titleInk">,
   rect: Rect,
@@ -86,13 +101,14 @@ export function panelButton(
     primary,
     rect,
     text: {
-      capTop: raisedLabelCapTop(rect, titleLabelInk(measure, [text])),
+      capTop: actionLabelCapTop(rect, actionLabelInk(measure, [text])),
       centre: "ink",
       centreX: rect.x + rect.width / 2,
       colour: PALETTE[BUTTON_COLOURS[primary ? "primary" : "normal"].label],
       font: "title",
       line: 0,
-      scale: TEXT_SCALE,
+      projection: "layout",
+      scale: ACTION_LABEL_SCALE,
       text,
     },
   };

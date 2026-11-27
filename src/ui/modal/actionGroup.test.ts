@@ -62,7 +62,10 @@ it("does not reserve the widest action after it leaves the visible group", () =>
 });
 
 it("places the same primary rightmost in a horizontal action group", () => {
-  const row = arrangePanelActions(measure, SCREEN_LAYOUT.screen, "row", buttons);
+  const short = [gameData.homeText.shop.confirmBuy, gameData.homeText.shop.confirmCancel].map(
+    (label, index) => panelButton(measure, buttons[index]!.rect, index === 0, label),
+  );
+  const row = arrangePanelActions(measure, SCREEN_LAYOUT.screen, "row", short);
   expect(row.map(({ actionIndex }) => actionIndex)).toEqual([1, 0]);
   expect(row[0]!.rect.y).toBe(row[1]!.rect.y);
   expect(row[0]!.rect.x + row[0]!.rect.width + BUTTON_SIZE.gap).toBe(row[1]!.rect.x);
