@@ -204,7 +204,7 @@ export function createHomeSpeech(
       centreX: owner.name.x,
       colour: PALETTE.rust,
       font: "body",
-      scale: 1,
+      scale: TEXT_SCALE,
       text: owner.name.text,
     } as const;
     const name = createTextLine(doc, line);

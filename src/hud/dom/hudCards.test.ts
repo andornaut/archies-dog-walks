@@ -11,6 +11,7 @@ import { testState } from "../../testing/runState.ts";
 import { backedTextPlaces, shownText } from "../../ui/dom/pixelLine.ts";
 import { sheetFrame, sheetTagFrames } from "../../ui/dom/sheetFrames.ts";
 import { domScale, exactDeviceX, fontPixel, gridRect, wholeArtPixels } from "../../ui/domScale.ts";
+import { TEXT_SCALE } from "../../ui/textFit.ts";
 import { FEEDBACK } from "../feedback.ts";
 import { DOG_CARD, dogCardEmptyFace } from "../walkHud.ts";
 import { createHudCards, type HudCardsContext } from "./hudCards.ts";
@@ -141,16 +142,28 @@ describe("native HUD cards", () => {
     // FIRED and Empty centre their ink on the plate and the outline's face they sit on.
     const plate = DOG_CARD.firedPlate;
     const slot0 = SCREEN_LAYOUT.dogSlots[0]!;
-    for (const [index, label, backing] of [
-      [0, gameData.runText.fired, { ...plate, x: slot0.x + plate.x, y: slot0.y + plate.y }],
-      [2, gameData.runText.empty, dogCardEmptyFace(SCREEN_LAYOUT.dogSlots[2]!)],
+    for (const [index, label, backing, textScale] of [
+      [0, gameData.runText.fired, { ...plate, x: slot0.x + plate.x, y: slot0.y + plate.y }, 1],
+      [2, gameData.runText.empty, dogCardEmptyFace(SCREEN_LAYOUT.dogSlots[2]!), TEXT_SCALE],
     ] as const) {
       const value = shownText("title", label);
       const node = shown[index]?.all().find((n) => n.textContent === value);
       const [place] = backedTextPlaces(fonts.title, scale1, { x: 0, y: 0 }, backing, [
-        { capTop: 0, centre: "ink", centreX: 0, colour: 0, font: "title", scale: 1, text: label },
+        {
+          capTop: 0,
+          centre: "ink",
+          centreX: 0,
+          colour: 0,
+          font: "title",
+          scale: textScale,
+          text: label,
+        },
       ]);
-      expect([node?.style.left, node?.style.top]).toEqual([`${place!.left}px`, `${place!.top}px`]);
+      expect([node?.style.left, node?.style.top, node?.style.fontSize]).toEqual([
+        `${place!.left}px`,
+        `${place!.top}px`,
+        `${place!.fontSize}px`,
+      ]);
     }
     const fractionalScale = domScale(3, { height: 560, width: 575, x: 0, y: 0 });
     const fractional = fixture(fractionalScale);

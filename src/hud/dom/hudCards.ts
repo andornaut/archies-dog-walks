@@ -29,6 +29,7 @@ import {
   type DomScale,
   gridTransform,
   PALETTE,
+  TEXT_SCALE,
 } from "../../ui/index.ts";
 import {
   cardHearts,
@@ -236,7 +237,7 @@ export function createHudCards(
           centreX: rect.x,
           colour: PALETTE.cream,
           font: "title",
-          scale: 1,
+          scale: TEXT_SCALE,
           text: data.runText.empty,
         },
         true,

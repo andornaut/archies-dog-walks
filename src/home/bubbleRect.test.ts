@@ -4,7 +4,7 @@ import { decodePng } from "@andornaut/art-kit/build/png";
 import { wrapWords } from "@andornaut/game-kit/runtime/lines";
 import { keysOf } from "@andornaut/game-kit/runtime/records";
 import { insetRect, rectsOverlap } from "@andornaut/game-kit/runtime/rect";
-import { inkRowsFromCapTop, laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
+import { laidGlyphs } from "@andornaut/game-kit/runtime/text/bitmapFont";
 import { describe, expect, it } from "vitest";
 
 import { gameData } from "../data/index.ts";
@@ -13,7 +13,8 @@ import { withNamePills } from "../presentation/effectNames.ts";
 import type { Owned } from "../save/schema.ts";
 import { bodyTextWidth } from "../testing/bodyFont.ts";
 import { FakeDocument, type FakeElement } from "../testing/fakeDom.ts";
-import { fontFileMetrics, gameFont, inkWidth } from "../testing/fontInk.ts";
+import { fontFileMetrics, fontInkRows, gameFont, inkWidth } from "../testing/fontInk.ts";
+import { WEB_FONT_EM } from "../ui/dom/pixelLine.ts";
 import { artPixel, domScale, fontPixel, gridX, gridY } from "../ui/domScale.ts";
 import { PILL_IMAGE_GAP, PILL_SPACE } from "../ui/namePills.ts";
 import { plainMarks } from "../ui/pixelFont.ts";
@@ -121,8 +122,13 @@ describe("the walker's speech", () => {
   it.each(notices)("says the notice %j on 2 lines at most", (notice) => {
     expect(bubbleLines(width, null, [notice]).lines.length).toBeLessThanOrEqual(2);
   });
-  const nameInk = (dog: DogId) =>
-    inkWidth("font-body", { scale: 1 }, plainMarks(gameData.dogs[dog].owner.name));
+  function ownerInk(dog: DogId) {
+    const text = plainMarks(gameData.dogs[dog].owner.name);
+    const style = { scale: TEXT_SCALE };
+    const { bottom, top } = fontInkRows("font-body", style, text);
+    const width = inkWidth("font-body", style, text);
+    return { column: ownerColumn(width), inkHeight: bottom - top, width };
+  }
   const { padX } = HOME_LAYOUT.speech;
   const { gap } = HOME_LAYOUT.speech.owner;
   // The quip art's rim, which the owner's face and name stay inside.
@@ -130,12 +136,13 @@ describe("the walker's speech", () => {
 
   it("says every speech inside its bubble, beside its owner, clear of the board", () => {
     const offenders = speeches.filter(({ owner, parts }) => {
-      const column = owner === null ? null : ownerColumn(nameInk(owner));
+      const ink = owner === null ? null : ownerInk(owner);
+      const column = ink?.column ?? null;
       const { faced, lines } = bubbleLines(width, column, parts);
       const room = faced && column !== null ? SPEECH_ROOM - column - 4 : SPEECH_ROOM;
       const whole = parts.flatMap((part) => wrapWords(width, room, part));
       const widest = Math.ceil(Math.max(...lines.map(width)));
-      const size = bubbleSize(body, lines, widest, faced ? column : null);
+      const size = bubbleSize(body, lines, widest, ink);
       const rect = bubbleRect(board, HOME_LAYOUT.speech, { x: walkerAtGate.x, y: top }, size);
       const bubbleFits =
         lines.join("\n") === whole.join("\n") &&
@@ -143,12 +150,11 @@ describe("the walker's speech", () => {
         widest <= room &&
         !rectsOverlap(rect, board) &&
         rect.x >= HOME_LAYOUT.speech.margin;
-      if (!faced || column === null || owner === null) {
+      if (!faced || column === null || ink === null) {
         return !bubbleFits;
       }
       const { face, name } = ownerPlace(rect, column);
-      const ink = nameInk(owner);
-      const nameLeft = Math.round(name.x - ink / 2);
+      const nameLeft = Math.round(name.x - ink.width / 2);
       const inner = insetRect(rim, rect);
       const textRight = rect.x + padX + widest;
       return !(
@@ -157,8 +163,9 @@ describe("the walker's speech", () => {
         face.x + face.width <= inner.x + inner.width &&
         face.y >= inner.y &&
         nameLeft >= textRight + gap &&
-        nameLeft + ink <= inner.x + inner.width &&
-        name.capY + inkRowsFromCapTop(body) <= inner.y + inner.height
+        nameLeft + ink.width <= inner.x + inner.width &&
+        name.inkY + ink.inkHeight <= inner.y + inner.height &&
+        rect.y + rect.height <= HOME_LAYOUT.gateBar.y
       );
     });
     expect(offenders.map(({ parts }) => parts.join(" / "))).toEqual([]);
@@ -187,13 +194,15 @@ describe("the walker's speech", () => {
   ).length;
 
   it.each(dogs)("centres %s's owner's face over their name", (dog) => {
-    const column = ownerColumn(nameInk(dog));
-    const lines = bubbleLines(width, column, [gameData.quips[dog].parting[0] ?? ""]);
-    const size = bubbleSize(body, lines.lines, 100, column);
+    const ink = ownerInk(dog);
+    const lines = bubbleLines(width, ink.column, [gameData.quips[dog].parting[0] ?? ""]);
+    const size = bubbleSize(body, lines.lines, 100, ink);
     const rect = { ...size, x: 0, y: 0 };
-    const { face, name } = ownerPlace(rect, column);
+    const { face, name } = ownerPlace(rect, ink.column);
     expect(Math.abs(face.x + face.width / 2 - name.x)).toBeLessThanOrEqual(0.5);
-    expect(size.height).toBeGreaterThanOrEqual(face.height + HOME_LAYOUT.speech.owner.foot);
+    expect(name.inkY + ink.inkHeight + HOME_LAYOUT.speech.padBottom).toBeLessThanOrEqual(
+      size.height,
+    );
   });
 
   // Each bubble as the Start screen draws it at 360 wide and DPR 2: the clear art-pixel rows of
@@ -223,6 +232,7 @@ describe("the walker's speech", () => {
     // Each line's inked boxes in device pixels, by the paragraph that draws it: its pills' and
     // its glyphs'.
     const nodes = (speech.element as unknown as FakeElement).all();
+    const ownerName = nodes.find((node) => node.classList.contains("adw-speech-name"));
     const pills = nodes.filter((node) => node.classList.contains("adw-pill"));
     const box = (node: FakeElement) => ({
       bottom: px(node.style.top) + px(node.style.height),
@@ -287,6 +297,13 @@ describe("the walker's speech", () => {
       })),
       lines: view.lines.length,
       name: plainMarks(view.lines.join(" ").replaceAll(PILL_SPACE, " ")),
+      owner:
+        view.owner === undefined
+          ? null
+          : {
+              actual: ownerName?.style.fontSize,
+              expected: `${WEB_FONT_EM * pixel}px`,
+            },
       pills: pills.length === 0 ? null : clear(pills.map(box)),
     };
   });
@@ -308,6 +325,12 @@ describe("the walker's speech", () => {
     for (const { left, right } of columns) {
       expect(Math.abs(left - right)).toBeLessThanOrEqual(1);
     }
+  });
+
+  it("draws parting owners at the same size as the speech", () => {
+    const owners = drawn.flatMap(({ owner }) => (owner === null ? [] : [owner]));
+    expect(owners.length).toBeGreaterThan(0);
+    expect(owners.every(({ actual, expected }) => actual === expected)).toBe(true);
   });
 
   it.each(drawn.filter(({ pills }) => pills !== null))(

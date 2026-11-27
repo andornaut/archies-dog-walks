@@ -115,10 +115,9 @@ export const HOME_SCREEN = {
   speech: {
     // The columns the bubble keeps clear of the Pet shop's board.
     clearance: 2,
-    // An owner's column: the foot under the face, the gap from the text, the inset from the
-    // bubble's right, the name's capitals under the face, the text's narrowing, the face's side
-    // and its top.
-    owner: { foot: 18, gap: 6, inset: 3, nameGap: 3, roomCut: 4, size: FACE_SIZE, top: 4 },
+    // An owner's column: the gap from the text, the inset from the bubble's right, the gap under
+    // the face to their name's ink, the text's narrowing, the face's side and its top.
+    owner: { gap: 6, inset: 3, nameGap: 3, roomCut: 4, size: FACE_SIZE, top: 4 },
     // The rows under the last line's lowest ink, and over the first line's capitals: a row of
     // cream clear of the rims beyond the font's lowest ink and its letters' highest.
     padBottom: 4,

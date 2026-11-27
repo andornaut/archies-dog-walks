@@ -361,10 +361,9 @@ export const HOME_LAYOUT = {
   // clear of the Pet shop's board and margin inside the screen's left edge.
   // An owner's parting line has the owner's column at its right, inset from the bubble's right
   // edge and gap right of the text, as wide as the owner's size square face or their name's
-  // 1x ink, whichever is wider: the face, framed in 1px of ink over tan, centred in it top
-  // under the bubble's top, and the name in rust centred under it, its capitals nameGap under
-  // the face. The text then wraps roomCut narrower than the column, and the bubble is at least
-  // foot taller than the face, with the text centred down it.
+  // Body ink, whichever is wider. Centre the face and name in that column, with nameGap to the
+  // name's first ink row. Keep padBottom below its last ink row. The speech wraps beside the
+  // column and centres vertically within the measured bubble.
   speech: {
     clearance: HOME.speech.clearance,
     margin: BUTTON_SIZE.stackGap / 2,

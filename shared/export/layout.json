@@ -2037,7 +2037,6 @@
         "clearance": 2,
         "margin": 4,
         "owner": {
-          "foot": 18,
           "gap": 6,
           "inset": 3,
           "nameGap": 3,

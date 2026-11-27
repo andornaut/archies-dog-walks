@@ -49,31 +49,30 @@ export function bubbleLines(
   return { faced: column !== null, lines: speechLines(width, room, paragraphs) };
 }
 
-// The bubble's size for lines of text whose widest line is widest, beside an owner's column
-// column wide (null for none).
+// The bubble's size for its widest speech line and, where present, the owner's measured column.
 export function bubbleSize(
   body: FontMetrics,
   lines: readonly string[],
   widest: number,
-  column: number | null,
+  owner: { column: number; inkHeight: number } | null,
 ): { height: number; width: number } {
-  const { padX } = HOME_LAYOUT.speech;
+  const { padBottom, padX } = HOME_LAYOUT.speech;
   const natural = speechBubbleHeight(body, lines);
-  if (column === null) {
+  if (owner === null) {
     return { height: natural, width: widest + 2 * padX };
   }
   return {
-    height: Math.max(natural, OWNER.size + OWNER.foot),
-    width: padX + widest + OWNER.gap + column + OWNER.inset,
+    height: Math.max(natural, OWNER.top + OWNER.size + OWNER.nameGap + owner.inkHeight + padBottom),
+    width: padX + widest + OWNER.gap + owner.column + OWNER.inset,
   };
 }
 
 // Where the owner's face and name go in a bubble at rect with their column column wide: the
-// face's square, and the name's centre column and capitals' top row.
+// face's square, and the name's centre column and first visible ink row.
 export function ownerPlace(
   rect: Rect,
   column: number,
-): { face: Rect; name: { capY: number; x: number } } {
+): { face: Rect; name: { inkY: number; x: number } } {
   const left = rect.x + rect.width - OWNER.inset - column;
   const face = {
     height: OWNER.size,
@@ -81,5 +80,5 @@ export function ownerPlace(
     x: left + Math.floor((column - OWNER.size) / 2),
     y: rect.y + OWNER.top,
   };
-  return { face, name: { capY: face.y + OWNER.size + OWNER.nameGap, x: left + column / 2 } };
+  return { face, name: { inkY: face.y + OWNER.size + OWNER.nameGap, x: left + column / 2 } };
 }

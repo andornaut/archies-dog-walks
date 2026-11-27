@@ -3,14 +3,13 @@ import {
   advanceWidth,
   type BitmapFont,
   fontMetrics,
-  laidGlyphs,
 } from "@andornaut/game-kit/runtime/text/bitmapFont";
 
 import { ownerFaceKey } from "../assets/index.ts";
 import type { DogId } from "../data/ids.ts";
 import type { GameData } from "../data/index.ts";
 import { withNamePills } from "../presentation/index.ts";
-import { plainMarks, TEXT_SCALE } from "../ui/index.ts";
+import { lineInk, plainMarks, TEXT_SCALE } from "../ui/index.ts";
 import { bubbleLines, bubbleRect, bubbleSize, ownerColumn, ownerPlace } from "./bubbleRect.ts";
 import { HOME_LAYOUT } from "./homeLayout.ts";
 export interface HomeSpeechView {
@@ -49,22 +48,20 @@ export function homeSpeechView(
 ): HomeSpeechView {
   const { petShop, speech: layout, walkerAtGate } = HOME_LAYOUT;
   const name = speech.owner === null ? undefined : data.dogs[speech.owner].owner.name;
-  const nameInk =
-    name === undefined
-      ? []
-      : laidGlyphs(body, 1, plainMarks(name)).flatMap(({ ink }) => (ink === null ? [] : [ink]));
-  const column =
-    nameInk.length === 0
-      ? null
-      : ownerColumn(
-          Math.max(...nameInk.map(({ right }) => right)) -
-            Math.min(...nameInk.map(({ left }) => left)),
-        );
+  const nameInk = name === undefined ? null : lineInk(body, name, TEXT_SCALE);
+  const column = nameInk === null ? null : ownerColumn(nameInk.right - nameInk.left);
   const paragraphs = speech.paragraphs.map((line) => withNamePills(data, line));
   const measure = (line: string) => advanceWidth(body, TEXT_SCALE, plainMarks(line));
-  const { faced, lines } = bubbleLines(measure, column, paragraphs);
+  const { lines } = bubbleLines(measure, column, paragraphs);
   const widest = Math.ceil(Math.max(...lines.map(measure)));
-  const size = bubbleSize(fontMetrics(body), lines, widest, faced ? column : null);
+  const size = bubbleSize(
+    fontMetrics(body),
+    lines,
+    widest,
+    column === null || nameInk === null
+      ? null
+      : { column, inkHeight: nameInk.bottom - nameInk.top },
+  );
   const rect = bubbleRect(petShop.board, layout, { x: walkerAtGate.x, y: layout.top }, size);
   const place = column === null ? undefined : ownerPlace(rect, column);
   return {
@@ -76,14 +73,14 @@ export function homeSpeechView(
       : {
           tail: { key: tail.key, x: walkerAtGate.x - tail.tipX, y: layout.top + size.height - 1 },
         }),
-    ...(speech.owner === null || name === undefined || place === undefined
+    ...(speech.owner === null || name === undefined || nameInk === null || place === undefined
       ? {}
       : {
           owner: {
             dog: speech.owner,
             face: place.face,
             key: ownerFaceKey(data, speech.owner),
-            name: { capTop: place.name.capY, text: name, x: place.name.x },
+            name: { capTop: place.name.inkY - nameInk.top, text: name, x: place.name.x },
           },
         }),
   };
