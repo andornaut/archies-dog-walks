@@ -173,7 +173,7 @@ The Settings and Cheats state word keeps its own [switch-row](#switch-rows) plac
 | Gear initials, Pocket                                                                                                                                                    | 32×32 picture                                                                     | picture + 13                                    | 13 / 14                               |
 | Gear initials, 16×16 badge (scale 0.5)                                                                                                                                   | 16×16 picture                                                                     | picture + 5                                     | Not measured                          |
 
-The choice-card band tokens state the drawn margin they centre in: small `{ y: 2, height: 13 }`, large `{ y: 4, height: 26 }`. A band's press fill covers the same drawn margin, so its label stays centred on the visible fill. The `$` strings on the small plaque centre their own ink, 0 above and 1 below. Each road-banner line centres in its own half of the plate.
+The choice-card band tokens state the drawn margin they centre in: small `{ y: 2, height: 13 }`, large `{ y: 4, height: 26 }`. The refusal fill covers the same drawn margin and keeps the label centred. Keyboard selection and pointer holds use the [outer choice-card outline](controls.md#focus-and-press-fills). The `$` strings on the small plaque centre their own ink, 0 above and 1 below. Each road-banner line centres in its own half of the plate.
 
 ## Modals
 
