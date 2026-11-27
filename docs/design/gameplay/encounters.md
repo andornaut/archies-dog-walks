@@ -1,6 +1,6 @@
 # Encounters
 
-What happens on contact, what cards offer and how pickups and upgrades work. The [Tuning page](https://archie.tristamittermayer.com/tuning/) shows the current generated card wording. The `$` and `♥` shorthand gives the direction and rough size of a change. More symbols mean a larger change.
+What happens on contact, what cards offer and how pickups and upgrades work. The [game-data export](../../../shared/export/game-data.json) includes generated card wording. The `$` and `♥` shorthand gives the direction and rough size of a change. More symbols mean a larger change.
 
 ## Choice cards
 

@@ -1,6 +1,6 @@
 # Player copy
 
-Exact text and names live in [game data](../../../src/data/). Use [home text](../../../src/data/homeText.ts) for picker, shop and detail copy, [menu text](../../../src/data/menuText.ts) for navigation and Settings, and [walk text](../../../src/data/runText.ts) for walk and results messages. [Quips](../../../src/data/quips.ts) and [walkers](../../../src/data/walkers.ts) hold their authored lines. [Help](../../../src/data/help.ts) and [hints](../../../src/data/hints.ts) supply teaching copy. The [Tuning page](https://archie.tristamittermayer.com/tuning/) shows the generated card text.
+Exact text and names live in [game data](../../../src/data/). Use [home text](../../../src/data/homeText.ts) for picker, shop and detail copy, [menu text](../../../src/data/menuText.ts) for navigation and Settings, and [walk text](../../../src/data/runText.ts) for walk and results messages. [Quips](../../../src/data/quips.ts) and [walkers](../../../src/data/walkers.ts) hold their authored lines. [Help](../../../src/data/help.ts) and [hints](../../../src/data/hints.ts) supply teaching copy.
 
 ## Voice
 
@@ -25,6 +25,6 @@ Players never see the word agility, only a percentage against the base, amount f
 
 ## Card text
 
-- **Card text:** effect text is generated from the effects, so a numeric value edit updates it with no text edit. Authored strings that state an amount in words (for example "a spare treat" or "First card") assume their tuning value, so changing that value needs a text edit too. Check the result in the [data export](../../../shared/export/game-data.json) or on the [Tuning page](https://archie.tristamittermayer.com/tuning/).
+- **Card text:** effect text is generated from the effects, so a numeric value edit updates it with no text edit. Authored strings that state an amount in words (for example "a spare treat" or "First card") assume their tuning value, so changing that value needs a text edit too. Check the result in the [data export](../../../shared/export/game-data.json).
 
 The authored options are in [encounters](../../../src/data/encounters.ts) and [upgrades](../../../src/data/upgrades.ts).

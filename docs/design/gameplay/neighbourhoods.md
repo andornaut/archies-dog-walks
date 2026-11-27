@@ -1,6 +1,6 @@
 # Neighbourhoods
 
-Routes, obstacles and how they occupy the road. The [Tuning page](https://archie.tristamittermayer.com/tuning/) shows the current game data.
+Routes, obstacles and how they occupy the road. [Neighbourhood data](../../../src/data/zones/) defines the obstacle pools and weights.
 
 ## Forks
 
