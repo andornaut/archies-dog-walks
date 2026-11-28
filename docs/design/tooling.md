@@ -87,3 +87,4 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0289 | Organize documentation into guides, reference and design                     | [adw-0289.md](../work/adw-0289.md) |
 | adw-0296 | Adopt Delivery Kit 8.7.0                                                     | [adw-0296.md](../work/adw-0296.md) |
 | adw-0297 | Adopt Delivery Kit 8.8.0                                                     | [adw-0297.md](../work/adw-0297.md) |
+| adw-0299 | Adopt Game Kit 0.95.2 hard-refresh recovery                                  | [adw-0299.md](../work/adw-0299.md) |
