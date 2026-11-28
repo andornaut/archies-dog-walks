@@ -140,3 +140,4 @@ Reference: [Screens and UI](../../src/README.md#screens-and-ui), [Assets](../../
 | adw-0293 | Match the approved Start picker cards                                 | [adw-0293.md](../work/adw-0293.md) |
 | adw-0294 | Confirm platform Back on Start                                        | [adw-0294.md](../work/adw-0294.md) |
 | adw-0295 | Keep the Pet Shop right-aligned in Firefox                            | [adw-0295.md](../work/adw-0295.md) |
+| adw-0298 | Open the Start Menu with Escape                                       | [adw-0298.md](../work/adw-0298.md) |

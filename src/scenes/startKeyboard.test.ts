@@ -156,3 +156,28 @@ it.each(["pointer", "keyboard"])(
     expect(render).toHaveBeenCalledOnce();
   },
 );
+
+it("opens the existing Menu action with Escape only on the ready uncovered Start", () => {
+  const state = {
+    act: vi.fn(),
+    closeOverlay: vi.fn(),
+    nativeHome: { accepts: () => true },
+    nativeReady: true,
+    overlay: undefined as object | undefined,
+  };
+  methods.onKey.call(state, { code: "Escape", shiftKey: false });
+  expect(state.act).toHaveBeenCalledExactlyOnceWith({ kind: "menu" });
+  state.act.mockClear();
+  state.overlay = {};
+  methods.onKey.call(state, { code: "Escape", shiftKey: false });
+  expect(state.closeOverlay).toHaveBeenCalledOnce();
+  expect(state.act).not.toHaveBeenCalled();
+  state.overlay = undefined;
+  state.nativeReady = false;
+  methods.onKey.call(state, { code: "Escape", shiftKey: false });
+  state.nativeReady = true;
+  state.nativeHome.accepts = () => false;
+  methods.onKey.call(state, { code: "Escape", shiftKey: false });
+  expect(state.act).not.toHaveBeenCalled();
+  expect(state.closeOverlay).toHaveBeenCalledOnce();
+});

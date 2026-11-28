@@ -156,8 +156,8 @@ const LAST_VISIT_WALKERS_KEY = "homeLastVisitWalkers";
 // shop; the Walker, Dogs and Pocket sections and Start walk. Affordable items open their detail
 // purchase actions, while the building and unavailable item routes open
 // it on that item. Holding a dog or gear tile opens its detail card.
-// The arrow keys move a focus ring, Enter or Space picks, Escape, P or back closes a card, ?
-// opens help, S settings, L the logbook, M mutes and Q leaves the game as Exit does, where the
+// The arrow keys move focus, Enter or Space picks, and Escape opens Menu or closes a card.
+// P or back also closes a card; ? opens help, M mutes and Q leaves as Exit does, where the
 // top bar shows Exit. Start walk and help wait for boot to load the rest of the art, which it
 // does behind this screen. Native controls sit above the canvas yard and its actors.
 export class StartScene extends Scene {
@@ -518,6 +518,10 @@ export class StartScene extends Scene {
       if (isPauseKey(code) || isConfirmKey(code)) {
         this.closeOverlay();
       }
+      return;
+    }
+    if (code === "Escape") {
+      this.act({ kind: "menu" });
       return;
     }
     const direction = focusDirectionForKey(code);
