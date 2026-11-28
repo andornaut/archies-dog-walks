@@ -86,3 +86,4 @@ Reference: [Developing](../../README.md#developing), [Deploying](../../README.md
 | adw-0287 | Standardize the project documentation navigation                             | [adw-0287.md](../work/adw-0287.md) |
 | adw-0289 | Organize documentation into guides, reference and design                     | [adw-0289.md](../work/adw-0289.md) |
 | adw-0296 | Adopt Delivery Kit 8.7.0                                                     | [adw-0296.md](../work/adw-0296.md) |
+| adw-0297 | Adopt Delivery Kit 8.8.0                                                     | [adw-0297.md](../work/adw-0297.md) |
